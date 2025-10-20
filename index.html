@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alien Ball Clicker</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="hud">
+          <div id="points-display">Points: 0</div>
+          <div id="upgrades-display"></div>
+          <button id="achievements-btn" class="hud-button">🏆 Achievements</button>
+          <div id="boss-controls" style="display: none;">
+            <div style="margin-top: 10px; font-size: 14px;">
+              <div>ARROW KEYS / WASD: Move & Rotate</div>
+              <div>SPACE: Shoot</div>
+            </div>
+          </div>
+        </div>
+        <div id="level-bar-container">
+          <div id="level-info">
+            <span id="level-text">Level 1</span>
+            <span id="exp-text">0 / 100</span>
+          </div>
+          <div id="level-bar-bg">
+            <div id="level-bar-fill"></div>
+          </div>
+        </div>
+        <div id="boss-dialog" style="display: none;">
+          <div class="boss-dialog-content">
+            <h2>⚠️ BOSS ENCOUNTER ⚠️</h2>
+            <p class="boss-warning">A powerful alien entity approaches!</p>
+            <p class="boss-details">Your fleet has detected a massive energy signature. This is no ordinary target.</p>
+            <p class="boss-ready">Are you ready for battle?</p>
+            <div class="boss-dialog-buttons">
+              <button id="boss-start-btn" class="boss-btn boss-btn-start">ENGAGE!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="shop-panel">
+        <h2>UPGRADES</h2>
+        <div id="shop-tabs">
+          <button id="tab-available" class="shop-tab active">Available</button>
+          <button id="tab-owned" class="shop-tab">Owned</button>
+        </div>
+        <div id="shop-content"></div>
+        <div id="reset-container">
+          <button id="reset-btn" class="shop-button">Reset Save</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
