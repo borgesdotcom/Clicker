@@ -10,7 +10,7 @@ export class AchievementSystem {
 
   private initializeAchievements(): void {
     this.achievements = [
-      // Combat Achievements
+      // === COMBAT ACHIEVEMENTS ===
       {
         id: 'first_click',
         name: 'First Contact',
@@ -42,10 +42,19 @@ export class AchievementSystem {
         id: 'click_god',
         name: 'Click God',
         description: 'Click 10,000 times',
-        icon: '⚡',
+        icon: '👑',
         category: 'combat',
         unlocked: false,
         check: (state) => state.stats.totalClicks >= 10000,
+      },
+      {
+        id: 'click_transcendent',
+        name: 'Transcendent Clicker',
+        description: 'Click 50,000 times',
+        icon: '🌟',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.totalClicks >= 50000,
       },
       {
         id: 'first_blood',
@@ -93,6 +102,15 @@ export class AchievementSystem {
         check: (state) => state.stats.aliensKilled >= 5000,
       },
       {
+        id: 'alien_apocalypse',
+        name: 'Alien Apocalypse',
+        description: 'Destroy 10,000 aliens',
+        icon: '☠️',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.aliensKilled >= 10000,
+      },
+      {
         id: 'damage_dealer',
         name: 'Damage Dealer',
         description: 'Deal 10,000 total damage',
@@ -118,6 +136,24 @@ export class AchievementSystem {
         category: 'combat',
         unlocked: false,
         check: (state) => state.stats.totalDamage >= 1000000,
+      },
+      {
+        id: 'damage_deity',
+        name: 'Damage Deity',
+        description: 'Deal 100,000,000 total damage',
+        icon: '🌩️',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.totalDamage >= 100000000,
+      },
+      {
+        id: 'damage_universe',
+        name: 'Universe Destroyer',
+        description: 'Deal 1,000,000,000 total damage',
+        icon: '💫',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.totalDamage >= 1000000000,
       },
       {
         id: 'boss_slayer',
@@ -146,8 +182,55 @@ export class AchievementSystem {
         unlocked: false,
         check: (state) => state.stats.bossesKilled >= 50,
       },
+      {
+        id: 'boss_annihilator',
+        name: 'Boss Annihilator',
+        description: 'Defeat 100 bosses',
+        icon: '👾',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.bossesKilled >= 100,
+      },
 
-      // Progression Achievements
+      // === CRITICAL HIT ACHIEVEMENTS ===
+      {
+        id: 'first_crit',
+        name: 'Lucky Shot',
+        description: 'Land your first critical hit',
+        icon: '✨',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.criticalHits >= 1,
+      },
+      {
+        id: 'crit_hunter',
+        name: 'Crit Hunter',
+        description: 'Land 100 critical hits',
+        icon: '💎',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.criticalHits >= 100,
+      },
+      {
+        id: 'crit_master',
+        name: 'Crit Master',
+        description: 'Land 1,000 critical hits',
+        icon: '💥',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.criticalHits >= 1000,
+      },
+      {
+        id: 'crit_legend',
+        name: 'Crit Legend',
+        description: 'Land 10,000 critical hits',
+        icon: '⭐',
+        category: 'combat',
+        unlocked: false,
+        check: (state) => state.stats.criticalHits >= 10000,
+      },
+
+      // === PROGRESSION ACHIEVEMENTS ===
       {
         id: 'level_5',
         name: 'Novice',
@@ -202,8 +285,26 @@ export class AchievementSystem {
         unlocked: false,
         check: (state) => state.level >= 100,
       },
+      {
+        id: 'level_150',
+        name: 'Transcendent',
+        description: 'Reach level 150',
+        icon: '👑',
+        category: 'progression',
+        unlocked: false,
+        check: (state) => state.level >= 150,
+      },
+      {
+        id: 'level_200',
+        name: 'Ascended',
+        description: 'Reach level 200',
+        icon: '🌌',
+        category: 'progression',
+        unlocked: false,
+        check: (state) => state.level >= 200,
+      },
 
-      // Collection Achievements (Ships)
+      // === COLLECTION ACHIEVEMENTS (Ships) ===
       {
         id: 'first_ship',
         name: 'Fleet Commander',
@@ -249,8 +350,17 @@ export class AchievementSystem {
         unlocked: false,
         check: (state) => state.shipsCount >= 30,
       },
+      {
+        id: 'armada_supreme',
+        name: 'Supreme Armada',
+        description: 'Command 50 ships',
+        icon: '💫',
+        category: 'collection',
+        unlocked: false,
+        check: (state) => state.shipsCount >= 50,
+      },
 
-      // Upgrade Achievements
+      // === UPGRADE ACHIEVEMENTS ===
       {
         id: 'first_upgrade',
         name: 'Innovator',
@@ -279,6 +389,24 @@ export class AchievementSystem {
         check: (state) => state.stats.totalUpgrades >= 100,
       },
       {
+        id: 'upgrade_legend',
+        name: 'Upgrade Legend',
+        description: 'Purchase 500 upgrades',
+        icon: '🛠️',
+        category: 'collection',
+        unlocked: false,
+        check: (state) => state.stats.totalUpgrades >= 500,
+      },
+      {
+        id: 'upgrade_deity',
+        name: 'Upgrade Deity',
+        description: 'Purchase 1,000 upgrades',
+        icon: '🏭',
+        category: 'collection',
+        unlocked: false,
+        check: (state) => state.stats.totalUpgrades >= 1000,
+      },
+      {
         id: 'first_subupgrade',
         name: 'Researcher',
         description: 'Unlock your first special technology',
@@ -305,8 +433,26 @@ export class AchievementSystem {
         unlocked: false,
         check: (state) => state.stats.totalSubUpgrades >= 10,
       },
+      {
+        id: 'tech_legend',
+        name: 'Tech Legend',
+        description: 'Unlock 20 special technologies',
+        icon: '🔭',
+        category: 'collection',
+        unlocked: false,
+        check: (state) => state.stats.totalSubUpgrades >= 20,
+      },
+      {
+        id: 'tech_god',
+        name: 'Technology God',
+        description: 'Unlock all special technologies',
+        icon: '🌐',
+        category: 'collection',
+        unlocked: false,
+        check: (state) => state.stats.totalSubUpgrades >= 33,
+      },
 
-      // Wealth Achievements
+      // === WEALTH ACHIEVEMENTS ===
       {
         id: 'first_thousand',
         name: 'Starter Capital',
@@ -352,8 +498,26 @@ export class AchievementSystem {
         unlocked: false,
         check: (state) => state.points >= 10000000,
       },
+      {
+        id: 'hundred_million',
+        name: 'Magnate',
+        description: 'Accumulate 100,000,000 points',
+        icon: '💫',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.points >= 100000000,
+      },
+      {
+        id: 'billion',
+        name: 'Billionaire',
+        description: 'Accumulate 1,000,000,000 points',
+        icon: '🌟',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.points >= 1000000000,
+      },
 
-      // Time-based Achievements
+      // === TIME-BASED ACHIEVEMENTS ===
       {
         id: 'five_minutes',
         name: 'Getting Started',
@@ -390,8 +554,26 @@ export class AchievementSystem {
         unlocked: false,
         check: (state) => state.stats.playTime >= 10800,
       },
+      {
+        id: 'ten_hours',
+        name: 'Obsessed',
+        description: 'Play for 10 hours',
+        icon: '🕰️',
+        category: 'progression',
+        unlocked: false,
+        check: (state) => state.stats.playTime >= 36000,
+      },
+      {
+        id: 'one_day',
+        name: 'No Life',
+        description: 'Play for 24 hours (total)',
+        icon: '📅',
+        category: 'progression',
+        unlocked: false,
+        check: (state) => state.stats.playTime >= 86400,
+      },
 
-      // Mastery Achievements (specific upgrade levels)
+      // === MASTERY ACHIEVEMENTS (specific upgrade levels) ===
       {
         id: 'speed_demon',
         name: 'Speed Demon',
@@ -400,6 +582,15 @@ export class AchievementSystem {
         category: 'mastery',
         unlocked: false,
         check: (state) => state.attackSpeedLevel >= 20,
+      },
+      {
+        id: 'speed_god',
+        name: 'Speed God',
+        description: 'Reach Attack Speed level 50',
+        icon: '⚡',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.attackSpeedLevel >= 50,
       },
       {
         id: 'damage_king',
@@ -411,19 +602,73 @@ export class AchievementSystem {
         check: (state) => state.pointMultiplierLevel >= 20,
       },
       {
+        id: 'damage_emperor',
+        name: 'Damage Emperor',
+        description: 'Reach Damage Amplifier level 50',
+        icon: '🔥',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.pointMultiplierLevel >= 50,
+      },
+      {
+        id: 'crit_specialist',
+        name: 'Crit Specialist',
+        description: 'Reach Critical Strike level 20',
+        icon: '✨',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.critChanceLevel >= 20,
+      },
+      {
+        id: 'passive_master',
+        name: 'Passive Master',
+        description: 'Reach Passive Income level 30',
+        icon: '🏭',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.resourceGenLevel >= 30,
+      },
+      {
+        id: 'scholar',
+        name: 'Scholar',
+        description: 'Reach Knowledge Core level 25',
+        icon: '📚',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => state.xpBoostLevel >= 25,
+      },
+      {
         id: 'balanced',
         name: 'Balanced',
-        description: 'Have all three main upgrades at level 10 or higher',
+        description: 'Have all main upgrades at level 10 or higher',
         icon: '⚖️',
         category: 'mastery',
         unlocked: false,
         check: (state) => 
           state.shipsCount >= 10 && 
           state.attackSpeedLevel >= 10 && 
-          state.pointMultiplierLevel >= 10,
+          state.pointMultiplierLevel >= 10 &&
+          state.critChanceLevel >= 10 &&
+          state.resourceGenLevel >= 10 &&
+          state.xpBoostLevel >= 10,
+      },
+      {
+        id: 'well_rounded',
+        name: 'Well Rounded',
+        description: 'Have all main upgrades at level 25 or higher',
+        icon: '🎯',
+        category: 'mastery',
+        unlocked: false,
+        check: (state) => 
+          state.shipsCount >= 25 && 
+          state.attackSpeedLevel >= 25 && 
+          state.pointMultiplierLevel >= 25 &&
+          state.critChanceLevel >= 25 &&
+          state.resourceGenLevel >= 25 &&
+          state.xpBoostLevel >= 25,
       },
 
-      // Secret Achievements
+      // === SECRET ACHIEVEMENTS ===
       {
         id: 'secret_patience',
         name: 'Patience is a Virtue',
@@ -433,6 +678,16 @@ export class AchievementSystem {
         unlocked: false,
         hidden: true,
         check: (state) => state.stats.totalClicks === 0 && state.stats.playTime >= 30,
+      },
+      {
+        id: 'secret_speed',
+        name: 'Speed Clicker',
+        description: 'Click 100 times in the first minute',
+        icon: '💨',
+        category: 'secret',
+        unlocked: false,
+        hidden: true,
+        check: (state) => state.stats.totalClicks >= 100 && state.stats.playTime <= 60,
       },
       {
         id: 'secret_cosmic',
@@ -453,6 +708,15 @@ export class AchievementSystem {
         check: (state) => state.subUpgrades['singularity_core'] === true,
       },
       {
+        id: 'secret_meaning',
+        name: 'The Meaning of Life',
+        description: 'Unlock the Meaning of Life upgrade',
+        icon: '🔮',
+        category: 'secret',
+        unlocked: false,
+        check: (state) => state.subUpgrades['meaning_of_life'] === true,
+      },
+      {
         id: 'secret_perfect',
         name: 'Perfection',
         description: 'Unlock all special technologies',
@@ -460,7 +724,43 @@ export class AchievementSystem {
         category: 'secret',
         unlocked: false,
         hidden: true,
-        check: (state) => state.stats.totalSubUpgrades >= 15,
+        check: (state) => state.stats.totalSubUpgrades >= 33,
+      },
+      {
+        id: 'secret_coffee',
+        name: 'Caffeine Addict',
+        description: 'Unlock the Crew Coffee Machine',
+        icon: '☕',
+        category: 'secret',
+        unlocked: false,
+        check: (state) => state.subUpgrades['coffee_machine'] === true,
+      },
+      {
+        id: 'secret_answer',
+        name: '42',
+        description: 'Unlock the Answer to Everything',
+        icon: '4️⃣2️⃣',
+        category: 'secret',
+        unlocked: false,
+        check: (state) => state.subUpgrades['answer_to_everything'] === true,
+      },
+      {
+        id: 'secret_dragon',
+        name: 'Dragon Tamer',
+        description: 'Unlock the Dragon Egg',
+        icon: '🥚',
+        category: 'secret',
+        unlocked: false,
+        check: (state) => state.subUpgrades['dragon_egg'] === true,
+      },
+      {
+        id: 'secret_gauntlet',
+        name: 'Perfectly Balanced',
+        description: 'Unlock the Infinity Gauntlet (Replica)',
+        icon: '💍',
+        category: 'secret',
+        unlocked: false,
+        check: (state) => state.subUpgrades['infinity_gauntlet'] === true,
       },
     ];
   }
@@ -503,4 +803,3 @@ export class AchievementSystem {
     return (this.getUnlockedCount() / this.getTotalCount()) * 100;
   }
 }
-

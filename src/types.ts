@@ -9,11 +9,16 @@ export interface SaveData {
   attackSpeedLevel: number;
   autoFireUnlocked: boolean;
   pointMultiplierLevel: number;
+  critChanceLevel: number;
+  resourceGenLevel: number;
+  xpBoostLevel: number;
   level: number;
   experience: number;
   subUpgrades: Record<string, boolean>;
   achievements: Record<string, boolean>;
   stats: GameStats;
+  prestigeLevel: number;
+  prestigePoints: number;
 }
 
 export interface GameStats {
@@ -25,6 +30,9 @@ export interface GameStats {
   totalSubUpgrades: number;
   maxLevel: number;
   playTime: number; // seconds
+  criticalHits: number;
+  totalPrestige: number;
+  milestonesReached: number;
 }
 
 export interface GameState {
@@ -33,11 +41,16 @@ export interface GameState {
   attackSpeedLevel: number;
   autoFireUnlocked: boolean;
   pointMultiplierLevel: number;
+  critChanceLevel: number;
+  resourceGenLevel: number;
+  xpBoostLevel: number;
   level: number;
   experience: number;
   subUpgrades: Record<string, boolean>;
   achievements: Record<string, boolean>;
   stats: GameStats;
+  prestigeLevel: number;
+  prestigePoints: number;
 }
 
 export interface UpgradeConfig {

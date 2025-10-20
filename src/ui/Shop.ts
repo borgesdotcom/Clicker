@@ -253,6 +253,7 @@ export class Shop {
 
   private getUpgradeEmoji(upgradeId: string): string {
     const emojiMap: Record<string, string> = {
+      // Original
       'auto_fire': '🔥',
       'death_pact': '💀',
       'laser_focusing': '💎',
@@ -269,6 +270,28 @@ export class Shop {
       'temporal_acceleration': '⏰',
       'singularity_core': '🕳️',
       'cosmic_ascension': '🌟',
+      // New V1.0 Upgrades
+      'coffee_machine': '☕',
+      'lucky_dice': '🎲',
+      'space_pizza': '🍕',
+      'rubber_duck': '🦆',
+      'motivational_posters': '📋',
+      'disco_ball': '🪩',
+      'lucky_horseshoe': '🍀',
+      'arcade_machine': '🕹️',
+      'chaos_emeralds': '💚',
+      'time_machine': '⏱️',
+      'philosophers_stone': '🗿',
+      'golden_goose': '🦢',
+      'infinity_gauntlet': '💍',
+      'alien_cookbook': '📖',
+      'nuclear_reactor': '☢️',
+      'cheat_codes': '🎮',
+      'dragon_egg': '🥚',
+      'universe_map': '🗺️',
+      'answer_to_everything': '4️⃣2️⃣',
+      'heart_of_galaxy': '❤️',
+      'meaning_of_life': '🔮',
     };
     return emojiMap[upgradeId] || '⭐';
   }

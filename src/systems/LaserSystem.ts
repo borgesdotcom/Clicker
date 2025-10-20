@@ -9,11 +9,11 @@ export class LaserSystem {
     this.lasers.push(new Laser(origin, target, damage, upgrades));
   }
 
-  update(dt: number, onHit?: (damage: number) => void): void {
+  update(dt: number, onHit?: (damage: number, isCrit: boolean) => void): void {
     for (const laser of this.lasers) {
       laser.update(dt);
       if (onHit && laser.checkHit()) {
-        onHit(laser.damage);
+        onHit(laser.damage, laser.isCrit);
       }
     }
     this.lasers = this.lasers.filter((laser) => laser.alive);

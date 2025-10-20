@@ -11,11 +11,16 @@ export class Save {
       attackSpeedLevel: state.attackSpeedLevel,
       autoFireUnlocked: state.autoFireUnlocked,
       pointMultiplierLevel: state.pointMultiplierLevel,
+      critChanceLevel: state.critChanceLevel,
+      resourceGenLevel: state.resourceGenLevel,
+      xpBoostLevel: state.xpBoostLevel,
       level: state.level,
       experience: state.experience,
       subUpgrades: state.subUpgrades,
       achievements: state.achievements,
       stats: state.stats,
+      prestigeLevel: state.prestigeLevel,
+      prestigePoints: state.prestigePoints,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -46,17 +51,29 @@ export class Save {
   }
 
   private static validate(data: SaveData): GameState {
+    const defaultStats = Save.getDefaultStats();
     return {
       points: clamp(data.points ?? 0, 0, 1e15),
       shipsCount: clamp(data.shipsCount ?? 1, 1, 1000),
       attackSpeedLevel: clamp(data.attackSpeedLevel ?? 0, 0, 1000),
       autoFireUnlocked: data.autoFireUnlocked ?? false,
       pointMultiplierLevel: clamp(data.pointMultiplierLevel ?? 0, 0, 1000),
+      critChanceLevel: clamp(data.critChanceLevel ?? 0, 0, 1000),
+      resourceGenLevel: clamp(data.resourceGenLevel ?? 0, 0, 1000),
+      xpBoostLevel: clamp(data.xpBoostLevel ?? 0, 0, 1000),
       level: clamp(data.level ?? 1, 1, 10000),
       experience: clamp(data.experience ?? 0, 0, 1e15),
       subUpgrades: data.subUpgrades ?? {},
       achievements: data.achievements ?? {},
-      stats: data.stats ?? Save.getDefaultStats(),
+      stats: {
+        ...defaultStats,
+        ...data.stats,
+        criticalHits: data.stats?.criticalHits ?? 0,
+        totalPrestige: data.stats?.totalPrestige ?? 0,
+        milestonesReached: data.stats?.milestonesReached ?? 0,
+      },
+      prestigeLevel: clamp(data.prestigeLevel ?? 0, 0, 1000),
+      prestigePoints: clamp(data.prestigePoints ?? 0, 0, 1e15),
     };
   }
 
@@ -67,11 +84,16 @@ export class Save {
       attackSpeedLevel: 0,
       autoFireUnlocked: false,
       pointMultiplierLevel: 0,
+      critChanceLevel: 0,
+      resourceGenLevel: 0,
+      xpBoostLevel: 0,
       level: 1,
       experience: 0,
       subUpgrades: {},
       achievements: {},
       stats: Save.getDefaultStats(),
+      prestigeLevel: 0,
+      prestigePoints: 0,
     };
   }
 
@@ -85,6 +107,9 @@ export class Save {
       totalSubUpgrades: 0,
       maxLevel: 1,
       playTime: 0,
+      criticalHits: 0,
+      totalPrestige: 0,
+      milestonesReached: 0,
     };
   }
 }

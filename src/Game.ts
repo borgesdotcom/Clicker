@@ -19,6 +19,7 @@ import { Shop } from './ui/Shop';
 import { UpgradesDisplay } from './ui/UpgradesDisplay';
 import { AchievementSnackbar } from './ui/AchievementSnackbar';
 import { AchievementsModal } from './ui/AchievementsModal';
+import { StatsPanel } from './ui/StatsPanel';
 import { Layout } from './ui/Layout';
 import { ColorManager } from './math/ColorManager';
 import type { Vec2, GameMode } from './types';
@@ -41,11 +42,13 @@ export class Game {
   private achievementSystem: AchievementSystem;
   private achievementSnackbar: AchievementSnackbar;
   private achievementsModal: AchievementsModal;
+  private statsPanel: StatsPanel;
   private hud: Hud;
   private upgradesDisplay: UpgradesDisplay;
   private saveTimer = 0;
   private saveInterval = 3;
   private playTimeAccumulator = 0;
+  private passiveGenAccumulator = 0;
   private shakeTime = 0;
   private shakeAmount = 0;
   private mode: GameMode = 'normal';
@@ -58,8 +61,10 @@ export class Game {
   constructor() {
     const canvasElement = document.getElementById(
       'game-canvas',
-    ) as HTMLCanvasElement;
-    if (!canvasElement) throw new Error('Canvas not found');
+    ) as HTMLCanvasElement | null;
+    if (!canvasElement) {
+      throw new Error('Canvas not found');
+    }
 
     this.canvas = new Canvas(canvasElement);
     this.draw = new Draw(this.canvas.getContext());
@@ -71,6 +76,7 @@ export class Game {
     this.achievementSystem = new AchievementSystem();
     this.achievementSnackbar = new AchievementSnackbar();
     this.achievementsModal = new AchievementsModal(this.achievementSystem);
+    this.statsPanel = new StatsPanel();
     this.hud = new Hud();
     this.upgradesDisplay = new UpgradesDisplay(this.upgradeSystem);
     new Shop(this.store, this.upgradeSystem);
@@ -82,8 +88,8 @@ export class Game {
 
     this.input = new Input(canvasElement);
     this.loop = new Loop(
-      (dt) => this.update(dt),
-      () => this.render(),
+      (dt) => { this.update(dt); },
+      () => { this.render(); },
     );
 
     this.initGame();
@@ -92,7 +98,7 @@ export class Game {
     this.setupAutoSave();
     this.setupBossDialog();
     this.setupAchievementsButton();
-    Layout.setupResetButton(() => this.resetGame());
+    Layout.setupResetButton(() => { this.resetGame(); });
   }
 
   private setupBossDialog(): void {
@@ -100,7 +106,9 @@ export class Game {
     if (startBtn) {
       startBtn.addEventListener('click', () => {
         const dialog = document.getElementById('boss-dialog');
-        if (dialog) dialog.style.display = 'none';
+        if (dialog) {
+          dialog.style.display = 'none';
+        }
         this.startBossFight();
       });
     }
@@ -179,7 +187,7 @@ export class Game {
   }
 
   private setupInput(): void {
-    this.input.onClick((pos) => this.handleClick(pos));
+    this.input.onClick((pos) => { this.handleClick(pos); });
     this.store.subscribe(() => {
       const state = this.store.getState();
       if (this.ships.length !== state.shipsCount) {
@@ -257,17 +265,28 @@ export class Game {
     this.laserSystem.spawnLaser(ship.getFrontPosition(), target, damage, laserVisuals);
   }
 
-  private getLaserVisuals(state: any): { isCrit: boolean; color: string; width: number } {
+  private getLaserVisuals(state: GameState): { isCrit: boolean; color: string; width: number } {
     let color = '#fff';
     let width = 2;
     let isCrit = false;
 
-    // Check for perfect precision crit
+    // Check for critical hit
+    const critChance = this.upgradeSystem.getCritChance(state);
+    if (Math.random() * 100 < critChance) {
+      isCrit = true;
+      color = '#ffff00'; // Yellow for crit
+      width = 5;
+      this.store.getState().stats.criticalHits++;
+      return { isCrit, color, width };
+    }
+
+    // Check for perfect precision super crit
     if (state.subUpgrades['perfect_precision']) {
       if (Math.random() < 0.05) {
         isCrit = true;
-        color = '#ffff00'; // Yellow for crit
-        width = 4;
+        color = '#ff00ff'; // Magenta for super crit
+        width = 6;
+        this.store.getState().stats.criticalHits++;
         return { isCrit, color, width };
       }
     }
@@ -275,12 +294,18 @@ export class Game {
     // Laser color based on damage upgrades
     if (state.subUpgrades['cosmic_ascension']) {
       color = '#ff00ff'; // Magenta for cosmic
-      width = 3;
+      width = 3.5;
     } else if (state.subUpgrades['singularity_core']) {
       color = '#8800ff'; // Purple for singularity
-      width = 3;
+      width = 3.5;
+    } else if (state.subUpgrades['heart_of_galaxy']) {
+      color = '#ff0044'; // Red for heart of galaxy
+      width = 3.5;
     } else if (state.subUpgrades['antimatter_rounds']) {
       color = '#ff0088'; // Pink for antimatter
+      width = 3;
+    } else if (state.subUpgrades['chaos_emeralds']) {
+      color = '#00ff88'; // Emerald green
       width = 3;
     } else if (state.subUpgrades['overclocked_reactors']) {
       color = '#ff6600'; // Orange for overclocked
@@ -296,16 +321,30 @@ export class Game {
     return { isCrit, color, width };
   }
 
-  private handleDamage(damage: number): void {
+  private handleDamage(damage: number, isCrit: boolean = false): void {
+    let finalDamage = damage;
+    
+    // Apply critical damage multiplier
+    if (isCrit) {
+      const state = this.store.getState();
+      const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+      finalDamage = damage * critMultiplier;
+    }
+    
+    // Record damage for DPS calculation
+    this.hud.recordDamage(finalDamage);
+    
     if (this.mode === 'normal' && this.ball) {
-      const broken = this.ball.takeDamage(damage);
-      this.store.addPoints(damage);
+      const broken = this.ball.takeDamage(finalDamage);
+      this.store.addPoints(finalDamage);
       if (broken) {
         this.onBallDestroyed();
       }
     } else if (this.mode === 'boss' && this.bossBall) {
-      const broken = this.bossBall.takeDamage(damage);
-      this.store.addPoints(damage * 2);
+      const broken = this.bossBall.takeDamage(finalDamage);
+      const state = this.store.getState();
+      const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
+      this.store.addPoints(finalDamage * 2 * bossBonus);
       if (broken) {
         this.onBossDestroyed();
       }
@@ -417,7 +456,7 @@ export class Game {
           new BossProjectile(bossPos.x, bossPos.y, targetX, targetY, projectileSpeed)
         );
       }
-    } else if (pattern === 'spiral') {
+    } else {
       // 8 projectiles in all directions (spiral pattern)
       const numProjectiles = 8;
       for (let i = 0; i < numProjectiles; i++) {
@@ -441,6 +480,26 @@ export class Game {
       this.playTimeAccumulator = this.playTimeAccumulator % 1;
     }
 
+    // Passive point generation
+    this.passiveGenAccumulator += dt;
+    if (this.passiveGenAccumulator >= 1) {
+      const passiveGen = this.upgradeSystem.getPassiveGen(state);
+      if (passiveGen > 0) {
+        this.store.addPoints(passiveGen);
+      }
+      this.passiveGenAccumulator = this.passiveGenAccumulator % 1;
+    }
+
+    // Update HUD stats
+    try {
+      const dps = this.hud.calculateDPS();
+      const passiveGen = this.upgradeSystem.getPassiveGen(state);
+      const critChance = this.upgradeSystem.getCritChance(state);
+      this.hud.updateStats(dps, passiveGen, critChance);
+    } catch (e) {
+      // Ignore errors in stat updates
+    }
+
     // Check achievements every frame
     this.achievementSystem.checkAchievements(state);
 
@@ -453,7 +512,7 @@ export class Game {
 
     this.ball?.update(dt);
     this.bossBall?.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
-    this.laserSystem.update(dt, (damage) => this.handleDamage(damage));
+    this.laserSystem.update(dt, (damage, isCrit) => { this.handleDamage(damage, isCrit); });
     this.rippleSystem.update(dt);
 
     // Rotate ships around the alien
