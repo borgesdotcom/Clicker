@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Alien Ball Clicker</title>
+    <title>Space Clicker</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content="Space-themed idle clicker game - Click aliens, upgrade your fleet, and conquer the galaxy!" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -15,12 +17,6 @@
           <div id="upgrades-display"></div>
           <button id="achievements-btn" class="hud-button">🏆 Achievements</button>
           <button id="stats-btn" class="hud-button">📊 Statistics</button>
-          <div id="boss-controls" style="display: none;">
-            <div style="margin-top: 10px; font-size: 14px;">
-              <div>ARROW KEYS / WASD: Move & Rotate</div>
-              <div>SPACE: Shoot</div>
-            </div>
-          </div>
         </div>
         <div id="level-bar-container">
           <div id="level-info">
@@ -31,19 +27,12 @@
             <div id="level-bar-fill"></div>
           </div>
         </div>
-        <div id="boss-progress-container" style="display: none;">
-          <div class="boss-progress-label">⚔️ BOSS BATTLE - CLICK TO WIN! ⚔️</div>
-          <div id="boss-progress-bg">
-            <div id="boss-progress-fill"></div>
-            <span id="boss-progress-text">0%</span>
-          </div>
-        </div>
         <div id="boss-dialog" style="display: none;">
           <div class="boss-dialog-content">
             <h2>⚠️ BOSS ENCOUNTER ⚠️</h2>
-            <p class="boss-warning">A powerful alien entity approaches!</p>
-            <p class="boss-details">Click rapidly on the boss to fill the progress bar!</p>
-            <p class="boss-ready">Reach 100% before it drains to defeat the boss!</p>
+            <p class="boss-warning">A massive alien entity approaches!</p>
+            <p class="boss-details">This enemy is larger and much more powerful!</p>
+            <p class="boss-ready">Click to unleash your entire fleet - build your combo for maximum damage!</p>
             <div class="boss-dialog-buttons">
               <button id="boss-start-btn" class="boss-btn boss-btn-start">ENGAGE!</button>
             </div>

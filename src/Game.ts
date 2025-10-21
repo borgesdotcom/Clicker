@@ -61,6 +61,7 @@ export class Game {
   private saveInterval = 3;
   private playTimeAccumulator = 0;
   private passiveGenAccumulator = 0;
+  private titleUpdateTimer = 0;
   private shakeTime = 0;
   private shakeAmount = 0;
   private mode: GameMode = 'normal';
@@ -219,6 +220,14 @@ export class Game {
         this.startBossFight();
       });
     }
+  }
+  
+  start(): void {
+    // Initialize page title
+    const state = this.store.getState();
+    this.updatePageTitle(state.points);
+    
+    this.loop.start();
   }
 
   private setupAchievementsButton(): void {
@@ -904,10 +913,35 @@ export class Game {
       Save.save(state);
       this.saveTimer = 0;
     }
+    
+    // Update page title with current points (like Cookie Clicker)
+    this.titleUpdateTimer += dt;
+    if (this.titleUpdateTimer >= 1.0) { // Update every second
+      this.updatePageTitle(state.points);
+      this.titleUpdateTimer = 0;
+    }
 
     if (this.shakeTime > 0) {
       this.shakeTime = Math.max(0, this.shakeTime - dt);
     }
+  }
+  
+  private updatePageTitle(points: number): void {
+    // Format large numbers for readability
+    let formattedPoints: string;
+    if (points >= 1e12) {
+      formattedPoints = `${(points / 1e12).toFixed(2)}T`;
+    } else if (points >= 1e9) {
+      formattedPoints = `${(points / 1e9).toFixed(2)}B`;
+    } else if (points >= 1e6) {
+      formattedPoints = `${(points / 1e6).toFixed(2)}M`;
+    } else if (points >= 1e3) {
+      formattedPoints = `${(points / 1e3).toFixed(1)}K`;
+    } else {
+      formattedPoints = Math.floor(points).toString();
+    }
+    
+    document.title = `${formattedPoints} points - Space Clicker`;
   }
 
   private render(): void {
@@ -977,10 +1011,6 @@ export class Game {
     }
 
     this.draw.resetAlpha();
-  }
-
-  start(): void {
-    this.loop.start();
   }
 
   private resetGame(): void {
