@@ -14,15 +14,24 @@ import { RippleSystem } from './systems/RippleSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
 import { AutoFireSystem } from './systems/AutoFireSystem';
 import { AchievementSystem } from './systems/AchievementSystem';
+import { AscensionSystem } from './systems/AscensionSystem';
+import { ParticleSystem } from './entities/Particle';
+import { DamageNumberSystem } from './systems/DamageNumberSystem';
+import { ComboSystem } from './systems/ComboSystem';
+import { SoundManager } from './systems/SoundManager';
 import { Hud } from './ui/Hud';
 import { Shop } from './ui/Shop';
 import { UpgradesDisplay } from './ui/UpgradesDisplay';
 import { AchievementSnackbar } from './ui/AchievementSnackbar';
 import { AchievementsModal } from './ui/AchievementsModal';
+import { AscensionModal } from './ui/AscensionModal';
 import { StatsPanel } from './ui/StatsPanel';
+import { SettingsModal } from './ui/SettingsModal';
 import { Layout } from './ui/Layout';
 import { ColorManager } from './math/ColorManager';
+import { Settings } from './core/Settings';
 import type { Vec2, GameMode } from './types';
+import type { UserSettings } from './core/Settings';
 
 export class Game {
   private canvas: Canvas;
@@ -37,12 +46,19 @@ export class Game {
   private bossProjectiles: BossProjectile[] = [];
   private laserSystem: LaserSystem;
   private rippleSystem: RippleSystem;
+  private particleSystem: ParticleSystem;
+  private damageNumberSystem: DamageNumberSystem;
+  private comboSystem: ComboSystem;
+  private soundManager: SoundManager;
   private upgradeSystem: UpgradeSystem;
   private autoFireSystem: AutoFireSystem;
   private achievementSystem: AchievementSystem;
+  private ascensionSystem: AscensionSystem;
   private achievementSnackbar: AchievementSnackbar;
   private achievementsModal: AchievementsModal;
+  private ascensionModal: AscensionModal;
   private statsPanel: StatsPanel;
+  private settingsModal: SettingsModal;
   private hud: Hud;
   private upgradesDisplay: UpgradesDisplay;
   private saveTimer = 0;
@@ -57,6 +73,18 @@ export class Game {
   private keys: Set<string> = new Set();
   private shootCooldown = 0;
   private shootCooldownMax = 0.2;
+  private userSettings: UserSettings = Settings.getDefault();
+  
+  // Boss clicking competition
+  private bossClickProgress = 0; // 0-100
+  private bossProgressDecayRate = 5; // Progress lost per second
+  private bossClickIncrement = 2; // Progress gained per click
+  
+  // Damage batching for performance
+  private damageBatch = 0;
+  private critBatch = false;
+  private batchTimer = 0;
+  private batchInterval = 0.05; // Apply damage every 50ms
 
   constructor() {
     const canvasElement = document.getElementById(
@@ -69,27 +97,105 @@ export class Game {
     this.canvas = new Canvas(canvasElement);
     this.draw = new Draw(this.canvas.getContext());
     this.store = new Store(Save.load());
+    
+    // Load user settings
+    this.userSettings = Settings.load();
+    
+    // Handle window resize to reposition game elements
+    window.addEventListener('resize', () => {
+      this.handleResize();
+    });
     this.upgradeSystem = new UpgradeSystem();
     this.laserSystem = new LaserSystem();
     this.rippleSystem = new RippleSystem();
+    this.particleSystem = new ParticleSystem();
+    this.damageNumberSystem = new DamageNumberSystem();
+    this.comboSystem = new ComboSystem();
+    this.soundManager = new SoundManager();
+    this.soundManager.setEnabled(this.userSettings.soundEnabled);
+    this.soundManager.setVolume(this.userSettings.volume);
     this.autoFireSystem = new AutoFireSystem();
     this.achievementSystem = new AchievementSystem();
+    this.ascensionSystem = new AscensionSystem();
+    this.upgradeSystem.setAscensionSystem(this.ascensionSystem);
     this.achievementSnackbar = new AchievementSnackbar();
     this.achievementsModal = new AchievementsModal(this.achievementSystem);
+    this.ascensionModal = new AscensionModal(this.ascensionSystem, this.store, () => { this.performAscension(); });
     this.statsPanel = new StatsPanel();
+    this.settingsModal = new SettingsModal(this.soundManager);
+    
+    // Connect settings modal to callbacks and save on change
+    this.settingsModal.setGraphicsCallback((enabled: boolean) => {
+      this.userSettings.highGraphics = enabled;
+      if (!enabled) {
+        this.particleSystem.clear();
+      }
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setShipLasersCallback((enabled: boolean) => {
+      this.userSettings.showShipLasers = enabled;
+      this.laserSystem.setShowShipLasers(enabled);
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setRipplesCallback((enabled: boolean) => {
+      this.userSettings.showRipples = enabled;
+      if (!enabled) {
+        this.rippleSystem.clear();
+      }
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setDamageNumbersCallback((enabled: boolean) => {
+      this.userSettings.showDamageNumbers = enabled;
+      this.damageNumberSystem.setEnabled(enabled);
+      if (!enabled) {
+        this.damageNumberSystem.clear();
+      }
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setSoundCallback((enabled: boolean) => {
+      this.userSettings.soundEnabled = enabled;
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setVolumeCallback((volume: number) => {
+      this.userSettings.volume = volume;
+      Settings.save(this.userSettings);
+    });
+    
+    // Apply loaded settings
+    this.laserSystem.setShowShipLasers(this.userSettings.showShipLasers);
+    this.damageNumberSystem.setEnabled(this.userSettings.showDamageNumbers);
+    this.settingsModal.updateGraphicsToggles(
+      this.userSettings.highGraphics,
+      this.userSettings.showShipLasers,
+      this.userSettings.showRipples,
+      this.userSettings.showDamageNumbers
+    );
+    // Setup stats panel button
+    const statsBtn = document.getElementById('stats-btn');
+    if (statsBtn) {
+      statsBtn.addEventListener('click', () => {
+        this.statsPanel.show();
+      });
+    }
     this.hud = new Hud();
     this.upgradesDisplay = new UpgradesDisplay(this.upgradeSystem);
-    new Shop(this.store, this.upgradeSystem);
+    const shop = new Shop(this.store, this.upgradeSystem);
+    shop.setSoundManager(this.soundManager);
 
     this.achievementSystem.setOnUnlock((achievement) => {
       this.achievementSnackbar.show(achievement);
+      this.soundManager.playAchievement();
     });
     this.achievementSystem.updateFromState(this.store.getState());
 
     this.input = new Input(canvasElement);
     this.loop = new Loop(
-      (dt) => { this.update(dt); },
-      () => { this.render(); },
+      (dt) => {
+        this.update(dt);
+      },
+      () => {
+        this.render();
+      },
     );
 
     this.initGame();
@@ -98,7 +204,17 @@ export class Game {
     this.setupAutoSave();
     this.setupBossDialog();
     this.setupAchievementsButton();
-    Layout.setupResetButton(() => { this.resetGame(); });
+    this.setupAscensionButton();
+    this.setupSettingsButton();
+    this.setupGraphicsToggle();
+    Layout.setupResetButton(() => {
+      this.resetGame();
+    });
+  }
+
+  private setupGraphicsToggle(): void {
+    // Graphics and sound toggles are now in the Settings modal
+    // This method is kept for backwards compatibility but does nothing
   }
 
   private setupBossDialog(): void {
@@ -123,15 +239,125 @@ export class Game {
     }
   }
 
+  private setupAscensionButton(): void {
+    // Create ascension button dynamically
+    const hudElement = document.getElementById('hud');
+    if (hudElement) {
+      const ascensionBtn = document.createElement('button');
+      ascensionBtn.id = 'ascension-btn';
+      ascensionBtn.className = 'hud-button ascension-hud-btn';
+      ascensionBtn.textContent = '🌟 Ascend';
+      ascensionBtn.addEventListener('click', () => {
+        this.ascensionModal.show();
+      });
+      
+      // Update button visibility based on whether ascension is unlocked
+      const updateAscensionBtn = () => {
+        const state = this.store.getState();
+        const canAscend = this.ascensionSystem.canAscend(state);
+        ascensionBtn.style.display = canAscend || state.prestigeLevel > 0 ? 'block' : 'none';
+      };
+      
+      this.store.subscribe(updateAscensionBtn);
+      updateAscensionBtn();
+      
+      hudElement.appendChild(ascensionBtn);
+    }
+  }
+
+  private setupSettingsButton(): void {
+    const hudElement = document.getElementById('hud');
+    if (hudElement) {
+      const settingsBtn = document.createElement('button');
+      settingsBtn.id = 'settings-btn';
+      settingsBtn.className = 'hud-button';
+      settingsBtn.textContent = '⚙️ Settings';
+      settingsBtn.addEventListener('click', () => {
+        this.settingsModal.show();
+      });
+      hudElement.appendChild(settingsBtn);
+    }
+  }
+
+  private performAscension(): void {
+    const state = this.store.getState();
+    
+    // Calculate prestige points to gain
+    const prestigeGain = this.ascensionSystem.calculatePrestigePoints(state);
+    
+    // Save what we're keeping
+    const keepSubUpgrades = { ...state.subUpgrades };
+    const keepAchievements = { ...state.achievements };
+    const keepStats = { ...state.stats };
+    const keepPrestigeUpgrades = { ...state.prestigeUpgrades };
+    const newPrestigePoints = state.prestigePoints + prestigeGain;
+    const newPrestigeLevel = state.prestigeLevel + 1;
+    
+    // Update prestige stats
+    keepStats.totalPrestige = newPrestigeLevel;
+    
+    // Get starting level from prestige upgrades
+    const startingLevel = this.ascensionSystem.getStartingLevel(state);
+    
+    // Create a completely fresh state (NOT from save file)
+    const freshState: import('./types').GameState = {
+      points: 0,
+      shipsCount: 1,
+      attackSpeedLevel: 0,
+      autoFireUnlocked: false,
+      pointMultiplierLevel: 0,
+      critChanceLevel: 0,
+      resourceGenLevel: 0,
+      xpBoostLevel: 0,
+      level: startingLevel,
+      experience: 0,
+      subUpgrades: keepSubUpgrades, // Keep special upgrades
+      achievements: keepAchievements, // Keep achievements
+      stats: keepStats, // Keep stats
+      prestigeLevel: newPrestigeLevel,
+      prestigePoints: newPrestigePoints,
+      prestigeUpgrades: keepPrestigeUpgrades, // Keep prestige upgrades
+      harmonicState: {
+        streak: 0,
+        harmonicCores: 0,
+        tuningForkLevel: 0,
+        metronomePurchased: false,
+        chorusLevel: 0,
+        quantizedRipplesLevel: 0,
+        sigils: {
+          tempo: 0,
+          echo: 0,
+          focus: 0,
+        },
+        echoAccumulator: 0,
+      },
+    };
+    
+    this.store.setState(freshState);
+    Save.save(this.store.getState());
+    
+    // Reinitialize game
+    this.mode = 'normal';
+    this.createBall();
+    this.createShips();
+    this.laserSystem.clear();
+    this.rippleSystem.clear();
+    this.particleSystem.clear();
+    this.damageNumberSystem.clear();
+    this.comboSystem.reset();
+    this.autoFireSystem.reset();
+    this.saveTimer = 0;
+  }
+
   private setupKeyboard(): void {
-    window.addEventListener('keydown', (e) => {
-      this.keys.add(e.key.toLowerCase());
-      if (e.key === ' ' && this.mode === 'boss') {
-        e.preventDefault();
+    window.addEventListener('keydown', (event) => {
+      this.keys.add(event.key.toLowerCase());
+      if (event.key === ' ' && this.mode === 'boss') {
+        event.preventDefault();
       }
     });
-    window.addEventListener('keyup', (e) => {
-      this.keys.delete(e.key.toLowerCase());
+    window.addEventListener('keyup', (event) => {
+      this.keys.delete(event.key.toLowerCase());
     });
   }
 
@@ -179,15 +405,20 @@ export class Game {
 
     this.ships = [];
     for (let i = 0; i < state.shipsCount; i++) {
-      const angle = (i / state.shipsCount) * Math.PI * 2;
+      // Random angle for each ship instead of perfect circle
+      const angle = Math.random() * Math.PI * 2;
       const isMain = i === 0;
-      this.ships.push(new Ship(angle, cx, cy, orbitRadius, isMain));
+      // Random radius for each ship
+      const randomRadius = orbitRadius * (0.7 + Math.random() * 0.6); // 70% to 130% of base radius
+      this.ships.push(new Ship(angle, cx, cy, randomRadius, isMain));
     }
     this.autoFireSystem.setShipCount(state.shipsCount);
   }
 
   private setupInput(): void {
-    this.input.onClick((pos) => { this.handleClick(pos); });
+    this.input.onClick((pos) => {
+      this.handleClick(pos);
+    });
     this.store.subscribe(() => {
       const state = this.store.getState();
       if (this.ships.length !== state.shipsCount) {
@@ -205,7 +436,8 @@ export class Game {
 
   private setupAutoSave(): void {
     window.addEventListener('beforeunload', () => {
-      Save.save(this.store.getState());
+      const state = this.store.getState();
+      Save.save(state);
     });
   }
 
@@ -214,7 +446,19 @@ export class Game {
 
     if (this.mode === 'normal' && this.ball?.isPointInside(pos) && this.ball.currentHp > 0) {
       this.store.incrementClick();
+      this.soundManager.playClick();
       this.fireVolley();
+    } else if (this.mode === 'boss' && this.bossBall?.isPointInside(pos)) {
+      // Boss clicking competition
+      this.store.incrementClick();
+      this.soundManager.playClick();
+      this.bossClickProgress = Math.min(100, this.bossClickProgress + this.bossClickIncrement);
+      this.updateBossProgressBar();
+      
+      // Check if won
+      if (this.bossClickProgress >= 100) {
+        this.onBossDefeated();
+      }
     }
   }
 
@@ -227,9 +471,24 @@ export class Game {
     // Only fire from the main ship (index 0) when clicking
     if (this.ships[0]) {
       this.laserSystem.spawnLaser(this.ships[0].getFrontPosition(), target, damage, laserVisuals);
+      
+      // Rapid fire upgrade: fire additional lasers
+      if (state.subUpgrades['rapid_fire']) {
+        // Fire from 2 random other ships
+        const otherShips = this.ships.slice(1);
+        for (let i = 0; i < Math.min(2, otherShips.length); i++) {
+          const randomShip = otherShips[Math.floor(Math.random() * otherShips.length)];
+          if (randomShip) {
+            // These are from the player's click, so not marked as isFromShip
+            this.laserSystem.spawnLaser(randomShip.getFrontPosition(), target, damage, laserVisuals);
+          }
+        }
+      }
     }
 
-    this.rippleSystem.spawnRipple(target, (this.ball?.radius ?? 50) * 2);
+    // Spawn visual ripple
+    const rippleRadius = this.ball ? this.ball.radius * 2 : 100;
+    this.rippleSystem.spawnRipple(target, rippleRadius);
   }
 
   private shootLaser(): void {
@@ -262,12 +521,24 @@ export class Game {
     const target = { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
     const laserVisuals = this.getLaserVisuals(state);
 
-    this.laserSystem.spawnLaser(ship.getFrontPosition(), target, damage, laserVisuals);
+    // Mark laser as from ship so it can be hidden for performance
+    this.laserSystem.spawnLaser(ship.getFrontPosition(), target, damage, { 
+      ...laserVisuals, 
+      isFromShip: true
+    });
   }
 
-  private getLaserVisuals(state: GameState): { isCrit: boolean; color: string; width: number } {
+  // Debug method to check laser statistics
+  private debugLaserStats(): void {
+    const stats = this.laserSystem.getLaserStats();
+    if (stats.total > 200) {
+      console.log(`Lasers: ${stats.total.toString()} total (${stats.playerLasers.toString()} player, ${stats.shipLasers.toString()} ship)`);
+    }
+  }
+
+  private getLaserVisuals(state: import('./types').GameState): { isCrit: boolean; color: string; width: number } {
     let color = '#fff';
-    let width = 2;
+    let width = 1.5; // Thin lasers
     let isCrit = false;
 
     // Check for critical hit
@@ -275,7 +546,7 @@ export class Game {
     if (Math.random() * 100 < critChance) {
       isCrit = true;
       color = '#ffff00'; // Yellow for crit
-      width = 5;
+      width = 2; // Thin even for crits
       this.store.getState().stats.criticalHits++;
       return { isCrit, color, width };
     }
@@ -285,37 +556,37 @@ export class Game {
       if (Math.random() < 0.05) {
         isCrit = true;
         color = '#ff00ff'; // Magenta for super crit
-        width = 6;
+        width = 2; // Thin even for super crits
         this.store.getState().stats.criticalHits++;
         return { isCrit, color, width };
       }
     }
 
-    // Laser color based on damage upgrades
+    // Laser color based on damage upgrades (all thin)
     if (state.subUpgrades['cosmic_ascension']) {
       color = '#ff00ff'; // Magenta for cosmic
-      width = 3.5;
+      width = 2;
     } else if (state.subUpgrades['singularity_core']) {
       color = '#8800ff'; // Purple for singularity
-      width = 3.5;
+      width = 2;
     } else if (state.subUpgrades['heart_of_galaxy']) {
       color = '#ff0044'; // Red for heart of galaxy
-      width = 3.5;
+      width = 2;
     } else if (state.subUpgrades['antimatter_rounds']) {
       color = '#ff0088'; // Pink for antimatter
-      width = 3;
+      width = 1.5;
     } else if (state.subUpgrades['chaos_emeralds']) {
       color = '#00ff88'; // Emerald green
-      width = 3;
+      width = 1.5;
     } else if (state.subUpgrades['overclocked_reactors']) {
       color = '#ff6600'; // Orange for overclocked
-      width = 2.5;
+      width = 1.5;
     } else if (state.subUpgrades['laser_focusing']) {
       color = '#00ffff'; // Cyan for focusing
-      width = 2.5;
+      width = 1.5;
     } else if (state.pointMultiplierLevel >= 10) {
       color = '#88ff88'; // Light green for high level
-      width = 2.5;
+      width = 1.5;
     }
 
     return { isCrit, color, width };
@@ -331,12 +602,48 @@ export class Game {
       finalDamage = damage * critMultiplier;
     }
     
+    // Apply combo multiplier (boss mode only)
+    if (this.mode === 'boss') {
+      const comboMult = this.comboSystem.getMultiplier();
+      finalDamage *= comboMult;
+      const oldCombo = this.comboSystem.getCombo();
+      this.comboSystem.hit();
+      const newCombo = this.comboSystem.getCombo();
+      
+      // Play combo sound on milestone combos
+      if (newCombo % 10 === 0 && newCombo > oldCombo) {
+        this.soundManager.playCombo(newCombo / 10);
+      }
+    }
+    
     // Record damage for DPS calculation
     this.hud.recordDamage(finalDamage);
+    
+    // Batch damage instead of applying immediately
+    this.damageBatch += finalDamage;
+    if (isCrit) {
+      this.critBatch = true;
+    }
+  }
+
+  private applyDamageBatch(): void {
+    if (this.damageBatch <= 0) return;
+    
+    const finalDamage = this.damageBatch;
+    const isCrit = this.critBatch;
     
     if (this.mode === 'normal' && this.ball) {
       const broken = this.ball.takeDamage(finalDamage);
       this.store.addPoints(finalDamage);
+      
+      // Spawn one damage number for the batched damage
+      this.damageNumberSystem.spawnDamageNumber(
+        this.ball.x,
+        this.ball.y - this.ball.radius - 20,
+        finalDamage,
+        isCrit
+      );
+      
       if (broken) {
         this.onBallDestroyed();
       }
@@ -345,17 +652,59 @@ export class Game {
       const state = this.store.getState();
       const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
       this.store.addPoints(finalDamage * 2 * bossBonus);
+      
+      // Spawn one damage number for the batched damage
+      const bossPos = this.bossBall.getPosition();
+      this.damageNumberSystem.spawnDamageNumber(
+        bossPos.x,
+        bossPos.y - this.bossBall.radius - 40,
+        finalDamage,
+        isCrit
+      );
+      
+      // Spawn hit particles occasionally (only if high graphics)
+      if (this.userSettings.highGraphics && Math.random() < 0.3) {
+        const hitColor = isCrit ? '#ffff00' : '#ffffff';
+        this.particleSystem.spawnParticles({
+          x: bossPos.x + (Math.random() - 0.5) * this.bossBall.radius,
+          y: bossPos.y + (Math.random() - 0.5) * this.bossBall.radius,
+          count: isCrit ? 10 : 5,
+          color: hitColor,
+          spread: Math.PI,
+          speed: 150,
+          size: isCrit ? 4 : 3,
+          life: 0.6,
+          glow: false, // No glow for performance
+        });
+      }
+      
       if (broken) {
         this.onBossDestroyed();
+        // Epic explosion (only if high graphics)
+        if (this.userSettings.highGraphics) {
+          this.particleSystem.spawnExplosion(bossPos.x, bossPos.y, '#ff0000');
+        }
       }
     }
+    
+    // Reset batch
+    this.damageBatch = 0;
+    this.critBatch = false;
   }
 
   private onBallDestroyed(): void {
+    // Apply any remaining batched damage before destroying
+    if (this.damageBatch > 0) {
+      this.applyDamageBatch();
+    }
+    
     const state = this.store.getState();
     this.store.incrementAlienKill();
     
-    const bonusXP = this.upgradeSystem.getBonusXP(state);
+    // XP scales with level to match increased alien difficulty
+    // Increased base XP gain significantly for better progression
+    const baseXP = Math.floor(5 + state.level * 2);
+    const bonusXP = this.upgradeSystem.getBonusXP(state) * baseXP;
     state.experience += bonusXP;
 
     const expRequired = ColorManager.getExpRequired(state.level);
@@ -363,36 +712,59 @@ export class Game {
       state.experience -= expRequired;
       state.level++;
       this.store.updateMaxLevel();
+      this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
         this.showBossDialog();
       } else {
-        setTimeout(() => this.createBall(), 400);
+        setTimeout(() => {
+          this.createBall();
+        }, 400);
       }
     } else {
-      setTimeout(() => this.createBall(), 400);
+      setTimeout(() => {
+        this.createBall();
+      }, 400);
     }
 
     this.store.setState(state);
   }
 
-  private onBossDestroyed(): void {
+  private onBossDefeated(): void {
     const state = this.store.getState();
     this.store.incrementBossKill();
+    
+    // Grant massive points for boss defeat
+    const bossReward = Math.floor(state.level * 10000);
+    this.store.addPoints(bossReward);
+    
     state.experience = 0;
     state.level++;
     this.store.updateMaxLevel();
     this.store.setState(state);
+    this.soundManager.playBossDefeat();
+
+    // Hide boss progress bar
+    const bossBar = document.getElementById('boss-progress-container');
+    if (bossBar) {
+      bossBar.style.display = 'none';
+    }
 
     setTimeout(() => {
       this.startTransitionToNormal();
     }, 600);
   }
 
+  private onBossDestroyed(): void {
+    // Legacy method - redirects to onBossDefeated
+    this.onBossDefeated();
+  }
+
   private showBossDialog(): void {
     const dialog = document.getElementById('boss-dialog');
     if (dialog) {
       dialog.style.display = 'flex';
+      this.soundManager.playBossAppear();
     }
   }
 
@@ -403,13 +775,33 @@ export class Game {
   private startTransitionToBoss(): void {
     this.mode = 'transition';
     this.transitionTime = 0;
+    this.comboSystem.reset();
+    this.bossClickProgress = 0;
     const bossControls = document.getElementById('boss-controls');
     if (bossControls) bossControls.style.display = 'none';
     setTimeout(() => {
       this.createBoss();
       this.mode = 'boss';
       if (bossControls) bossControls.style.display = 'block';
+      
+      // Show boss progress bar
+      const bossBar = document.getElementById('boss-progress-container');
+      if (bossBar) {
+        bossBar.style.display = 'block';
+      }
+      this.updateBossProgressBar();
     }, this.transitionDuration * 500);
+  }
+
+  private updateBossProgressBar(): void {
+    const fill = document.getElementById('boss-progress-fill');
+    const text = document.getElementById('boss-progress-text');
+    if (fill) {
+      fill.style.width = `${this.bossClickProgress.toString()}%`;
+    }
+    if (text) {
+      text.textContent = `${Math.floor(this.bossClickProgress).toString()}%`;
+    }
   }
 
   private startTransitionToNormal(): void {
@@ -496,7 +888,7 @@ export class Game {
       const passiveGen = this.upgradeSystem.getPassiveGen(state);
       const critChance = this.upgradeSystem.getCritChance(state);
       this.hud.updateStats(dps, passiveGen, critChance);
-    } catch (e) {
+    } catch {
       // Ignore errors in stat updates
     }
 
@@ -512,69 +904,107 @@ export class Game {
 
     this.ball?.update(dt);
     this.bossBall?.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
-    this.laserSystem.update(dt, (damage, isCrit) => { this.handleDamage(damage, isCrit); });
+    
+    this.laserSystem.update(dt, (damage, isCrit) => {
+      this.handleDamage(damage, isCrit);
+    });
     this.rippleSystem.update(dt);
+    this.particleSystem.update(dt);
+    this.damageNumberSystem.update(dt);
+    this.comboSystem.update(dt);
+    
+    // Debug laser stats occasionally
+    if (Math.random() < 0.01) { // 1% chance per frame
+      this.debugLaserStats();
+    }
+    
+    // Apply damage batches periodically
+    this.batchTimer += dt;
+    if (this.batchTimer >= this.batchInterval) {
+      this.applyDamageBatch();
+      this.batchTimer = 0;
+    }
+    
+    // Add boss trail particles (only if high graphics)
+    if (this.userSettings.highGraphics && this.mode === 'boss' && this.bossBall) {
+      const bossPos = this.bossBall.getPosition();
+      const phase = this.bossBall.getPhase();
+      let trailColor = '#ffffff';
+      if (phase === 3) trailColor = '#ff0000';
+      else if (phase === 2) trailColor = '#ffaa00';
+      
+      this.particleSystem.spawnTrail(bossPos.x, bossPos.y, trailColor);
+    }
 
-    // Rotate ships around the alien
+    // Rotate ships around the alien (uses each ship's own fixed rotation speed)
     if (this.mode === 'normal') {
       for (const ship of this.ships) {
-        ship.rotate(dt, 0.3);
+        ship.rotate(dt); // Uses ship's fixed rotation speed
       }
     }
 
-    if (this.mode === 'boss' && this.playerShip) {
-      if (this.keys.has('arrowleft') || this.keys.has('a')) {
-        this.playerShip.rotate(-1, dt);
+    if (this.mode === 'boss') {
+      // Boss clicking competition - decay progress over time
+      if (this.bossClickProgress > 0) {
+        this.bossClickProgress = Math.max(0, this.bossClickProgress - (this.bossProgressDecayRate * dt));
+        this.updateBossProgressBar();
       }
-      if (this.keys.has('arrowright') || this.keys.has('d')) {
-        this.playerShip.rotate(1, dt);
-      }
-      if (this.keys.has('arrowup') || this.keys.has('w')) {
-        this.playerShip.thrust(dt);
-      }
-      if (this.keys.has(' ') || this.keys.has('spacebar')) {
-        this.shootLaser();
-      }
-
-      this.playerShip.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
-
-      if (this.shootCooldown > 0) {
-        this.shootCooldown = Math.max(0, this.shootCooldown - dt);
-      }
-
-      // Boss attacks
-      if (this.bossBall && this.bossBall.shouldAttack()) {
-        this.spawnBossProjectiles();
-      }
-
-      // Update boss projectiles
-      this.bossProjectiles = this.bossProjectiles.filter(proj => {
-        const shouldRemove = proj.update(dt);
-        
-        // Check collision with player
-        if (!shouldRemove && this.playerShip) {
-          const playerPos = this.playerShip.getPosition();
-          if (proj.checkCollision(playerPos, 15)) {
-            // Hit player - small damage feedback
-            this.triggerShake(3, 0.1);
-            return true; // Remove projectile
-          }
+      
+      // Original boss projectile logic (keeping for visual effects)
+      if (this.playerShip) {
+        if (this.keys.has('arrowleft') || this.keys.has('a')) {
+          this.playerShip.rotate(-1, dt);
         }
-        
-        return !shouldRemove;
-      });
+        if (this.keys.has('arrowright') || this.keys.has('d')) {
+          this.playerShip.rotate(1, dt);
+        }
+        if (this.keys.has('arrowup') || this.keys.has('w')) {
+          this.playerShip.thrust(dt);
+        }
+        if (this.keys.has(' ') || this.keys.has('spacebar')) {
+          this.shootLaser();
+        }
+
+        this.playerShip.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
+
+        if (this.shootCooldown > 0) {
+          this.shootCooldown = Math.max(0, this.shootCooldown - dt);
+        }
+
+        // Boss attacks
+        if (this.bossBall && this.bossBall.shouldAttack()) {
+          this.spawnBossProjectiles();
+        }
+
+        // Update boss projectiles
+        this.bossProjectiles = this.bossProjectiles.filter(proj => {
+          const shouldRemove = proj.update(dt);
+          
+          // Check collision with player
+          if (!shouldRemove && this.playerShip) {
+            const playerPos = this.playerShip.getPosition();
+            if (proj.checkCollision(playerPos, 15)) {
+              // Hit player - small damage feedback
+              this.triggerShake(3, 0.1);
+              return true; // Remove projectile
+            }
+          }
+          
+          return !shouldRemove;
+        });
+      }
     } else if (this.mode === 'normal') {
       // Auto-fire for all ships except the main ship (index 0)
+      // Always fire (for damage), but may not render visually
       this.autoFireSystem.update(
         dt,
         true, // Auto-fire always enabled for non-main ships
         this.upgradeSystem.getFireCooldown(state),
         (shipIndex) => {
-          // Skip main ship (index 0)
           if (shipIndex > 0) {
             this.fireSingleShip(shipIndex);
           }
-        },
+        }
       );
     }
 
@@ -605,10 +1035,22 @@ export class Game {
     if (this.mode === 'transition') {
       this.renderTransition();
     } else {
-      this.rippleSystem.draw(this.draw);
+      // Layer 1: Background effects
+      if (this.userSettings.highGraphics) {
+        this.particleSystem.draw(this.draw);
+      }
+      if (this.userSettings.showRipples) {
+        this.rippleSystem.draw(this.draw);
+      }
+      
+      // Layer 2: Lasers (behind the ball for 3D depth effect)
+      this.laserSystem.draw(this.draw);
+      
+      // Layer 3: Main entities (ball appears in front of lasers)
       this.ball?.draw(this.draw);
       this.bossBall?.draw(this.draw);
 
+      // Layer 4: Ships and projectiles
       if (this.mode === 'boss') {
         this.playerShip?.draw(this.draw);
         // Draw boss projectiles
@@ -621,7 +1063,13 @@ export class Game {
         }
       }
 
-      this.laserSystem.draw(this.draw);
+      // Layer 5: UI elements on top
+      this.damageNumberSystem.draw(this.draw);
+      
+      // Draw combo in boss mode
+      if (this.mode === 'boss') {
+        this.comboSystem.draw(this.draw, this.canvas.getWidth());
+      }
     }
 
     ctx.restore();
@@ -660,9 +1108,40 @@ export class Game {
     this.createShips();
     this.laserSystem.clear();
     this.rippleSystem.clear();
+    this.particleSystem.clear();
+    this.damageNumberSystem.clear();
+    this.comboSystem.reset();
     this.autoFireSystem.reset();
     this.saveTimer = 0;
   }
+
+  private handleResize(): void {
+    // Reposition ball to center
+    if (this.ball) {
+      this.ball.x = this.canvas.getCenterX();
+      this.ball.y = this.canvas.getCenterY();
+    }
+    
+    // Reposition boss ball
+    if (this.bossBall) {
+      const cx = this.canvas.getCenterX();
+      const cy = this.canvas.getCenterY();
+      this.bossBall.x = cx;
+      this.bossBall.y = cy;
+    }
+    
+    // Recreate ships with new positions
+    if (this.ships.length > 0 && this.mode === 'normal') {
+      this.createShips();
+    }
+    
+    // Reposition player ship if in boss mode
+    if (this.playerShip) {
+      this.playerShip.x = this.canvas.getCenterX();
+      this.playerShip.y = this.canvas.getHeight() - 100;
+    }
+  }
 }
+
 
 

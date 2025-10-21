@@ -116,6 +116,18 @@ export class Hud {
     this.expText.textContent = `${Math.floor(experience)} / ${expToNext}`;
     const percent = Math.min(100, (experience / expToNext) * 100);
     this.levelBarFill.style.width = `${percent}%`;
+    
+    // Add visual feedback for milestone levels
+    if (level % 10 === 0 && level > 0) {
+      this.levelText.style.color = '#ffd700';
+      this.levelText.style.textShadow = '0 0 10px #ffd700';
+    } else if (level % 5 === 0) {
+      this.levelText.style.color = '#ffaa00';
+      this.levelText.style.textShadow = '0 0 8px #ffaa00';
+    } else {
+      this.levelText.style.color = '#fff';
+      this.levelText.style.textShadow = '0 0 2px rgba(255, 255, 255, 0.8)';
+    }
   }
 
   private formatNumber(num: number): string {

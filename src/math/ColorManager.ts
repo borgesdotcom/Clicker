@@ -30,11 +30,16 @@ export class ColorManager {
   }
 
   static getExpRequired(level: number): number {
-    return Math.floor(10 + level * 5);
+    // Smoother exponential XP requirements - balanced for better progression
+    // Changed from 1.15 to 1.12 and added logarithmic damping for high levels
+    const baseXP = 10 * Math.pow(1.12, level);
+    const dampingFactor = Math.max(1, Math.log10(level + 1));
+    return Math.floor(baseXP / dampingFactor);
   }
 
   static isBossLevel(level: number): boolean {
-    return level === 100;
+    // Boss battles only at levels 50 and 100
+    return level === 50 || level === 100;
   }
 
   static getBossHp(level: number): number {

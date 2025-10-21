@@ -19,6 +19,21 @@ export interface SaveData {
   stats: GameStats;
   prestigeLevel: number;
   prestigePoints: number;
+  prestigeUpgrades?: Record<string, number>;
+  harmonicState?: {
+    streak: number;
+    harmonicCores: number;
+    tuningForkLevel: number;
+    metronomePurchased: boolean;
+    chorusLevel: number;
+    quantizedRipplesLevel: number;
+    sigils: {
+      tempo: number;
+      echo: number;
+      focus: number;
+    };
+    echoAccumulator: number;
+  };
 }
 
 export interface GameStats {
@@ -51,6 +66,21 @@ export interface GameState {
   stats: GameStats;
   prestigeLevel: number;
   prestigePoints: number;
+  prestigeUpgrades?: Record<string, number>;
+  harmonicState?: {
+    streak: number;
+    harmonicCores: number;
+    tuningForkLevel: number;
+    metronomePurchased: boolean;
+    chorusLevel: number;
+    quantizedRipplesLevel: number;
+    sigils: {
+      tempo: number;
+      echo: number;
+      focus: number;
+    };
+    echoAccumulator: number;
+  };
 }
 
 export interface UpgradeConfig {

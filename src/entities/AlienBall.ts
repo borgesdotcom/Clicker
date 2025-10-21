@@ -43,10 +43,22 @@ export class AlienBall {
 
   static createRandom(x: number, y: number, radius: number, level: number): AlienBall {
     const color = AlienBall.getRandomColor();
-    // HP scales with level
+    // HP scales exponentially with level to prevent endgame spam killing
+    // Scales more aggressively at higher levels
+    let scalingFactor: number;
+    if (level <= 25) {
+      scalingFactor = Math.pow(1.15, level); // Gentle early game
+    } else if (level <= 50) {
+      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.22, level - 25); // Steeper mid game
+    } else if (level <= 75) {
+      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.22, 25) * Math.pow(1.28, level - 50); // Even steeper
+    } else {
+      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.22, 25) * Math.pow(1.28, 25) * Math.pow(1.35, level - 75); // Exponential endgame
+    }
+    
     const levelScaledColor = {
       ...color,
-      hp: Math.floor(color.hp * (1 + level * 0.3))
+      hp: Math.floor(color.hp * scalingFactor)
     };
     return new AlienBall(x, y, radius, levelScaledColor);
   }
@@ -60,7 +72,10 @@ export class AlienBall {
   takeDamage(amount: number): boolean {
     const wasAlive = this.currentHp > 0;
     this.currentHp = Math.max(0, this.currentHp - amount);
-    this.triggerFlash();
+    // Only flash on significant damage (>5% of max HP) or if not already flashing
+    if (this.flashTime <= 0 || amount > this.maxHp * 0.05) {
+      this.triggerFlash();
+    }
     if (this.currentHp <= 0 && wasAlive) {
       this.breakAnimTime = this.breakAnimDuration;
       return true;

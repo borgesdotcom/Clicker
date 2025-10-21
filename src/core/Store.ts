@@ -3,9 +3,28 @@ import type { GameState } from '../types';
 export class Store {
   private state: GameState;
   private listeners: (() => void)[] = [];
+  private notifyThrottle = 0;
+  private notifyThrottleTime = 0.05; // Notify at most every 50ms
+  private pendingNotify = false;
+  private lastNotifyPoints = 0;
 
   constructor(initialState: GameState) {
     this.state = { ...initialState };
+    
+    // Set up periodic notification for throttled updates
+    setInterval(() => {
+      if (this.pendingNotify) {
+        // Always notify if points changed significantly (>5%)
+        const pointDiff = Math.abs(this.state.points - this.lastNotifyPoints);
+        const shouldNotify = pointDiff > this.lastNotifyPoints * 0.05;
+        
+        if (shouldNotify || this.pendingNotify) {
+          this.notifyListeners();
+          this.lastNotifyPoints = this.state.points;
+          this.pendingNotify = false;
+        }
+      }
+    }, 30); // Reduced from 50ms to 30ms for more responsive UI
   }
 
   getState(): GameState {
@@ -20,7 +39,8 @@ export class Store {
   addPoints(amount: number): void {
     this.state.points += amount;
     this.state.stats.totalDamage += amount;
-    this.notifyListeners();
+    // Mark that we need to notify, but don't do it immediately (throttled by interval)
+    this.pendingNotify = true;
   }
 
   spendPoints(amount: number): boolean {

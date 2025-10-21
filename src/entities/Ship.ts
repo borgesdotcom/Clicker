@@ -4,6 +4,7 @@ import type { Vec2 } from '../types';
 export class Ship {
   public x = 0;
   public y = 0;
+  private rotationSpeed: number; // Fixed rotation speed per ship
 
   constructor(
     public angle: number,
@@ -12,6 +13,8 @@ export class Ship {
     private orbitRadius: number,
     public isMainShip = false,
   ) {
+    // Give each ship a fixed, slow rotation speed
+    this.rotationSpeed = isMainShip ? 0.15 : 0.1 + Math.random() * 0.1; // 0.1 to 0.2 for non-main ships
     this.updatePosition();
   }
 
@@ -20,9 +23,15 @@ export class Ship {
     this.y = this.centerY + Math.sin(this.angle) * this.orbitRadius;
   }
 
-  rotate(dt: number, speed = 0.5): void {
-    this.angle += speed * dt;
+  rotate(dt: number, speed?: number): void {
+    // Use the ship's fixed rotation speed if no speed is provided
+    const actualSpeed = speed !== undefined ? speed : this.rotationSpeed;
+    this.angle += actualSpeed * dt;
     this.updatePosition();
+  }
+  
+  getRotationSpeed(): number {
+    return this.rotationSpeed;
   }
 
   setOrbit(centerX: number, centerY: number, orbitRadius: number): void {

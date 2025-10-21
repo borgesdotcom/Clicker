@@ -9,6 +9,11 @@ export class Shop {
   private isProcessingPurchase = false;
   private lastAffordability: Map<string, boolean> = new Map();
   private currentTab: 'available' | 'owned' = 'available';
+  private buttonCache: Map<string, HTMLButtonElement> = new Map();
+  private soundManager: { playPurchase: () => void } | null = null;
+  private lastUpdateTime = 0;
+  private updateThrottle = 30; // Update at most every 30ms (much more responsive)
+  private lastPoints = 0;
 
   constructor(
     private store: Store,
@@ -29,6 +34,10 @@ export class Shop {
     this.setupTabs();
     this.render();
     this.store.subscribe(() => { this.scheduleRender(); });
+  }
+
+  setSoundManager(soundManager: { playPurchase: () => void }): void {
+    this.soundManager = soundManager;
   }
 
   private setupTabs(): void {
@@ -54,27 +63,69 @@ export class Shop {
     // Don't schedule renders while processing a purchase
     if (this.isProcessingPurchase) return;
     
-    // Only re-render if affordability changed
-    if (!this.hasAffordabilityChanged()) return;
+    const state = this.store.getState();
+    const currentPoints = state.points;
     
-    if (this.renderTimeout !== null) {
-      clearTimeout(this.renderTimeout);
+    // Check if we're close to affording something (within 10%)
+    const nearAffordable = this.isNearAffordable(currentPoints);
+    
+    // Use faster updates when close to affording something
+    const throttle = nearAffordable ? 10 : this.updateThrottle;
+    
+    // Throttle updates to prevent lag
+    const now = Date.now();
+    if (now - this.lastUpdateTime < throttle) {
+      return;
     }
-    this.renderTimeout = window.setTimeout(() => {
-      this.render();
+    this.lastUpdateTime = now;
+    this.lastPoints = currentPoints;
+    
+    // Use requestAnimationFrame for immediate smooth update
+    if (this.renderTimeout !== null) {
+      cancelAnimationFrame(this.renderTimeout);
+    }
+    this.renderTimeout = requestAnimationFrame(() => {
+      // Check if affordability changed before updating
+      if (this.hasAffordabilityChanged()) {
+        this.updateButtonStates();
+      }
       this.renderTimeout = null;
-    }, 100);
+    });
+  }
+
+  private isNearAffordable(points: number): boolean {
+    const state = this.store.getState();
+    const upgrades = this.upgradeSystem.getUpgrades();
+    
+    // Check if we're within 10% of affording any upgrade
+    for (const upgrade of upgrades) {
+      const cost = upgrade.getCost(upgrade.getLevel(state));
+      if (points >= cost * 0.9 && points < cost) {
+        return true;
+      }
+    }
+    
+    // Also check sub-upgrades
+    const subUpgrades = this.upgradeSystem.getSubUpgrades();
+    for (const upgrade of subUpgrades) {
+      if (!upgrade.isVisible(state) || upgrade.owned) continue;
+      if (points >= upgrade.cost * 0.9 && points < upgrade.cost) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   private hasAffordabilityChanged(): boolean {
     const state = this.store.getState();
     const upgrades = this.upgradeSystem.getUpgrades();
-    const subUpgrades = this.upgradeSystem.getSubUpgrades();
     
     let changed = false;
     
+    // Check main upgrades
     for (const upgrade of upgrades) {
-      const key = upgrade.name;
+      const key = upgrade.id;
       const canAfford = upgrade.canBuy(state);
       const wasAffordable = this.lastAffordability.get(key);
       
@@ -84,9 +135,11 @@ export class Shop {
       }
     }
     
+    // Always check sub-upgrades (they're important for user experience)
+    const subUpgrades = this.upgradeSystem.getSubUpgrades();
     for (const upgrade of subUpgrades) {
       if (!upgrade.isVisible(state)) continue;
-      const key = `sub_${upgrade.name}`;
+      const key = `sub_${upgrade.id}`;
       const canAfford = !upgrade.owned && state.points >= upgrade.cost;
       const wasAffordable = this.lastAffordability.get(key);
       
@@ -97,6 +150,50 @@ export class Shop {
     }
     
     return changed;
+  }
+
+  private updateButtonStates(): void {
+    const state = this.store.getState();
+    
+    // Use requestAnimationFrame for smoother updates
+    requestAnimationFrame(() => {
+      // Update main upgrade buttons
+      const upgrades = this.upgradeSystem.getUpgrades();
+      for (const upgrade of upgrades) {
+        const button = this.buttonCache.get(upgrade.id);
+        if (button) {
+          const canAfford = upgrade.canBuy(state);
+          
+          // Only update if state changed
+          const wasDisabled = button.disabled;
+          if (wasDisabled === canAfford) {
+            button.disabled = !canAfford;
+            
+            // Use CSS classes instead of inline styles (faster)
+            if (canAfford) {
+              button.classList.remove('disabled');
+            } else {
+              button.classList.add('disabled');
+            }
+          }
+        }
+      }
+      
+      // Update sub-upgrade affordability classes
+      const subUpgrades = this.upgradeSystem.getSubUpgrades();
+      for (const subUpgrade of subUpgrades) {
+        const card = document.querySelector(`[data-upgrade-id="${subUpgrade.id}"]`) as HTMLElement;
+        if (card && !subUpgrade.owned) {
+          const canAfford = state.points >= subUpgrade.cost;
+          
+          // Always update to ensure responsiveness
+          card.style.opacity = canAfford ? '1' : '0.7';
+          card.style.cursor = canAfford ? 'pointer' : 'not-allowed';
+          card.style.border = canAfford ? '2px solid #fff' : '1px solid #666';
+          card.style.pointerEvents = 'auto';
+        }
+      }
+    });
   }
 
   private render(): void {
@@ -119,6 +216,9 @@ export class Shop {
   private renderAvailableTab(state: any): void {
     const upgrades = this.upgradeSystem.getUpgrades();
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
+
+    // Clear button cache for fresh render
+    this.buttonCache.clear();
 
     // Render special upgrades box at the top
     const visibleSubUpgrades = allSubUpgrades.filter(sub => sub.isVisible(state) && !sub.owned);
@@ -177,9 +277,13 @@ export class Shop {
 
       const button = new Button('BUY', () => { this.buyUpgrade(upgrade); });
       button.setEnabled(upgrade.canBuy(state));
+      
+      // Cache the button element for quick updates
+      const buttonElement = button.getElement();
+      this.buttonCache.set(upgrade.id, buttonElement);
 
       footer.appendChild(cost);
-      footer.appendChild(button.getElement());
+      footer.appendChild(buttonElement);
 
       item.appendChild(header);
       item.appendChild(description);
@@ -218,6 +322,7 @@ export class Shop {
   private createSubUpgradeCard(subUpgrade: any, state: any): HTMLElement {
     const card = document.createElement('div');
     card.className = `sub-upgrade ${subUpgrade.owned ? 'owned' : ''}`;
+    card.setAttribute('data-upgrade-id', subUpgrade.id);
 
     const icon = document.createElement('div');
     icon.className = 'sub-upgrade-icon';
@@ -241,8 +346,14 @@ export class Shop {
     card.appendChild(tooltip);
 
     if (!subUpgrade.owned) {
+      // Set initial affordability state
+      const canAfford = state.points >= subUpgrade.cost;
+      card.style.opacity = canAfford ? '1' : '0.7';
+      card.style.cursor = canAfford ? 'pointer' : 'not-allowed';
+      
       card.addEventListener('click', () => {
-        if (state.points >= subUpgrade.cost) {
+        const currentState = this.store.getState();
+        if (currentState.points >= subUpgrade.cost) {
           this.buySubUpgrade(subUpgrade);
         }
       });
@@ -292,6 +403,12 @@ export class Shop {
       'answer_to_everything': '4️⃣2️⃣',
       'heart_of_galaxy': '❤️',
       'meaning_of_life': '🔮',
+      // Click-focused upgrades
+      'master_clicker': '👆',
+      'rapid_fire': '⚡',
+      'click_multiplier': '✨',
+      'super_clicker': '💪',
+      'missile_launcher': '🚀',
     };
     return emojiMap[upgradeId] || '⭐';
   }
@@ -314,6 +431,11 @@ export class Shop {
       this.store.incrementUpgrade();
       this.store.setState(state);
       
+      // Play purchase sound
+      if (this.soundManager) {
+        this.soundManager.playPurchase();
+      }
+      
       // Force immediate UI update
       this.lastAffordability.clear();
       this.render();
@@ -334,6 +456,11 @@ export class Shop {
       upgrade.buy(state);
       this.store.incrementSubUpgrade();
       this.store.setState(state);
+      
+      // Play purchase sound
+      if (this.soundManager) {
+        this.soundManager.playPurchase();
+      }
       
       // Force immediate UI update
       this.lastAffordability.clear();

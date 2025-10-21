@@ -41,6 +41,16 @@ export class Draw {
     this.ctx.globalAlpha = 1;
   }
 
+  setGlow(color: string, blur: number): void {
+    this.ctx.shadowColor = color;
+    this.ctx.shadowBlur = blur;
+  }
+
+  clearGlow(): void {
+    this.ctx.shadowColor = 'transparent';
+    this.ctx.shadowBlur = 0;
+  }
+
   triangle(p1: Vec2, p2: Vec2, p3: Vec2, fill = true): void {
     this.ctx.beginPath();
     this.ctx.moveTo(p1.x, p1.y);
@@ -52,6 +62,20 @@ export class Draw {
     } else {
       this.ctx.stroke();
     }
+  }
+
+  text(
+    text: string,
+    x: number,
+    y: number,
+    color = '#fff',
+    font = '16px monospace',
+    align: CanvasTextAlign = 'left'
+  ): void {
+    this.ctx.fillStyle = color;
+    this.ctx.font = font;
+    this.ctx.textAlign = align;
+    this.ctx.fillText(text, x, y);
   }
 }
 

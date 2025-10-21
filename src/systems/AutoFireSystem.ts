@@ -3,7 +3,10 @@ export class AutoFireSystem {
 
   setShipCount(count: number): void {
     while (this.shipTimers.length < count) {
-      this.shipTimers.push(0);
+      // Add random initial delay to prevent synchronized firing
+      // Use a reasonable delay that works for most cooldown times
+      const randomDelay = Math.random() * 0.3; // 0-0.3 seconds random delay
+      this.shipTimers.push(randomDelay);
     }
     while (this.shipTimers.length > count) {
       this.shipTimers.pop();
@@ -31,7 +34,13 @@ export class AutoFireSystem {
   }
 
   reset(): void {
-    this.shipTimers = this.shipTimers.map(() => 0);
+    // Reset with random delays to prevent synchronized firing
+    this.shipTimers = this.shipTimers.map(() => Math.random() * 0.5);
+  }
+
+  staggerExistingShips(): void {
+    // Add random delays to all existing ships to prevent synchronized firing
+    this.shipTimers = this.shipTimers.map(() => Math.random() * 0.5);
   }
 }
 
