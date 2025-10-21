@@ -26,24 +26,80 @@ export class ColorManager {
 
   static getColorForLevel(level: number): BallColor {
     const index = Math.min(level - 1, this.colors.length - 1);
-    return this.colors[index] ?? this.colors[this.colors.length - 1]!;
+    const color = this.colors[index];
+    if (!color) {
+      return this.colors[this.colors.length - 1] || this.colors[0] || { fill: '#fff', stroke: '#ccc', hp: 10 };
+    }
+    return color;
   }
 
   static getExpRequired(level: number): number {
-    // Smoother exponential XP requirements - balanced for better progression
-    // Changed from 1.15 to 1.12 and added logarithmic damping for high levels
-    const baseXP = 10 * Math.pow(1.12, level);
-    const dampingFactor = Math.max(1, Math.log10(level + 1));
+    // Smooth exponential XP requirements for levels 1-1000+
+    // Uses softcaps to prevent runaway growth at high levels
+    
+    let baseXP = 10 * Math.pow(1.10, level);
+    
+    // Apply softcaps at specific thresholds
+    if (level >= 800) {
+      // Severe softcap: reduce by 25%
+      baseXP *= 0.75;
+    } else if (level >= 500) {
+      // Major softcap: reduce by 15%
+      baseXP *= 0.85;
+    } else if (level >= 200) {
+      // Minor softcap: reduce by 10%
+      baseXP *= 0.90;
+    }
+    
+    // Add logarithmic damping for very high levels
+    const dampingFactor = Math.max(1, Math.log10(level + 10) / Math.log10(11));
+    
     return Math.floor(baseXP / dampingFactor);
   }
 
   static isBossLevel(level: number): boolean {
-    // Boss battles only at levels 50 and 100
-    return level === 50 || level === 100;
+    // Boss battles at regular intervals throughout progression
+    // Early game: every 25 levels
+    // Mid game: every 50 levels after 100
+    // Late game: every 100 levels after 500
+    
+    if (level < 1) return false;
+    
+    // Special milestone bosses
+    if (level === 50 || level === 100 || level === 250 || level === 500 || level === 750 || level === 1000) {
+      return true;
+    }
+    
+    // Regular boss intervals
+    if (level <= 100) {
+      return level % 25 === 0; // Bosses at 25, 50, 75, 100
+    } else if (level <= 500) {
+      return level % 50 === 0; // Bosses at 150, 200, 250, etc.
+    } else {
+      return level % 100 === 0; // Bosses at 600, 700, 800, etc.
+    }
   }
 
   static getBossHp(level: number): number {
-    return Math.floor(5000 * Math.pow(1.5, (level / 5) - 1));
+    // Boss HP formula with smooth exponential growth and softcaps
+    // Formula matches BossSystem.ts for consistency
+    
+    const BASE_HP = 5000;
+    const GROWTH = 1.18;
+    let levelExponent = 0.92;
+    
+    // Apply softcaps
+    if (level >= 800) {
+      levelExponent -= 0.12;
+    } else if (level >= 500) {
+      levelExponent -= 0.08;
+    } else if (level >= 200) {
+      levelExponent -= 0.05;
+    }
+    
+    const hp = BASE_HP * Math.pow(GROWTH, Math.pow(level, levelExponent));
+    
+    return Math.floor(hp);
   }
 }
 

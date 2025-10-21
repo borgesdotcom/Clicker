@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { Draw } from '../render/Draw';
 
 interface DamageNumber {

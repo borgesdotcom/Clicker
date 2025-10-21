@@ -1,5 +1,4 @@
 import type { Draw } from '../render/Draw';
-import type { Vec2 } from '../types';
 
 export interface ParticleConfig {
   x: number;

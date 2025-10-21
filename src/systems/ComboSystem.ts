@@ -1,15 +1,48 @@
 import type { Draw } from '../render/Draw';
 
+/**
+ * ComboSystem.ts - Click combo system with linear damage scaling
+ * 
+ * Features:
+ * - Linear multiplier: 1 + (combo × 0.001)
+ * - 5-second decay timer (resets combo if no hits)
+ * - Visual timer bar showing remaining time
+ * - Optional max combo cap (configurable, default: unlimited)
+ */
+
+// ===== CONFIGURATION CONSTANTS =====
+
+/** Combo multiplier per hit */
+const COMBO_MULTIPLIER_PER_HIT = 0.001;
+
+/** Time in seconds before combo resets */
+const COMBO_TIMEOUT = 5.0;
+
+/** Maximum combo count (null = unlimited) */
+const COMBO_MAX_MULTIPLIER: number | null = null; // Set to a number to cap, e.g., 3000 for max 4x
+
+// ===== CLASS =====
+
 export class ComboSystem {
   private combo = 0;
   private comboTimer = 0;
-  private comboTimeout = 3; // Seconds before combo resets
   private maxCombo = 0;
   private comboAnimationTime = 0;
 
+  /**
+   * Register a hit (click or QTE success)
+   * Increments combo and resets decay timer
+   */
   hit(): void {
     this.combo++;
-    this.comboTimer = this.comboTimeout;
+    
+    // Apply cap if configured
+    if (COMBO_MAX_MULTIPLIER !== null) {
+      const maxCombo = Math.floor(COMBO_MAX_MULTIPLIER / COMBO_MULTIPLIER_PER_HIT);
+      this.combo = Math.min(this.combo, maxCombo);
+    }
+    
+    this.comboTimer = COMBO_TIMEOUT;
     this.comboAnimationTime = 0.3;
     
     if (this.combo > this.maxCombo) {
@@ -17,11 +50,18 @@ export class ComboSystem {
     }
   }
 
+  /**
+   * Manually reset combo (on miss or death)
+   */
   miss(): void {
     this.combo = 0;
     this.comboTimer = 0;
   }
 
+  /**
+   * Update combo decay timer
+   * @param dt - Delta time in seconds
+   */
   update(dt: number): void {
     if (this.comboTimer > 0) {
       this.comboTimer -= dt;
@@ -35,24 +75,54 @@ export class ComboSystem {
     }
   }
 
+  /**
+   * Get current combo count
+   */
   getCombo(): number {
     return this.combo;
   }
 
+  /**
+   * Get max combo reached this session
+   */
   getMaxCombo(): number {
     return this.maxCombo;
   }
 
+  /**
+   * Get damage multiplier: 1 + (combo × 0.001)
+   * Examples:
+   * - 0 hits: 1.000×
+   * - 100 hits: 1.100×
+   * - 500 hits: 1.500×
+   * - 1000 hits: 2.000×
+   */
   getMultiplier(): number {
-    if (this.combo < 10) return 1;
-    if (this.combo < 25) return 1.1;
-    if (this.combo < 50) return 1.25;
-    if (this.combo < 100) return 1.5;
-    return 2.0;
+    return 1 + (this.combo * COMBO_MULTIPLIER_PER_HIT);
+  }
+  
+  /**
+   * Get remaining time before combo resets
+   */
+  getTimeRemaining(): number {
+    return Math.max(0, this.comboTimer);
+  }
+  
+  /**
+   * Get time remaining as percentage (0-1)
+   */
+  getTimePercent(): number {
+    return this.comboTimer / COMBO_TIMEOUT;
   }
 
+  /**
+   * Draw combo UI with timer bar
+   * @param drawer - Drawing context
+   * @param canvasWidth - Canvas width for positioning
+   */
   draw(drawer: Draw, canvasWidth: number): void {
-    if (this.combo < 5) return; // Don't show combo until at least 5
+    // Only show combo if active
+    if (this.combo < 1 || this.comboTimer <= 0) return;
 
     const ctx = drawer.getContext();
     const x = canvasWidth - 150;
@@ -69,56 +139,70 @@ export class ComboSystem {
     ctx.scale(scale, scale);
     ctx.translate(-x, -y);
     
-    // Combo background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(x - 70, y - 35, 140, 70);
-    ctx.strokeStyle = this.getComboColor();
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x - 70, y - 35, 140, 70);
-    
-    // Combo number
-    ctx.font = 'bold 32px "Courier New", monospace';
+    // Multiplier text (large, primary)
+    const multiplier = this.getMultiplier();
+    ctx.font = 'bold 26px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Glow
+    // Glow effect
     ctx.shadowColor = this.getComboColor();
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 20;
     
-    // Text
     ctx.fillStyle = this.getComboColor();
-    ctx.fillText(`${this.combo}x`, x, y - 5);
+    ctx.fillText(`${multiplier.toFixed(3)}×`, x, y - 10);
     
-    // "COMBO!" text
-    ctx.font = 'bold 14px "Courier New", monospace';
-    ctx.shadowBlur = 5;
-    ctx.fillText('COMBO!', x, y + 20);
+    // Combo count (smaller, secondary)
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillText(`${this.combo.toString()} COMBO`, x, y + 15);
     
-    // Multiplier indicator
-    const mult = this.getMultiplier();
-    if (mult > 1) {
-      ctx.font = 'bold 12px "Courier New", monospace';
-      ctx.fillStyle = '#ffaa00';
-      ctx.fillText(`${mult.toFixed(1)}x DMG`, x, y - 25);
+    // Timer bar (shows remaining time before reset)
+    const timePercent = this.getTimePercent();
+    const barWidth = 120;
+    const barHeight = 4;
+    const barX = x - barWidth / 2;
+    const barY = y + 30;
+    
+    ctx.shadowBlur = 0;
+    
+    // Bar background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+    
+    // Bar fill with color based on time remaining
+    let barColor = this.getComboColor();
+    if (timePercent < 0.3) {
+      barColor = '#ff0000'; // Red when low
+    } else if (timePercent < 0.6) {
+      barColor = '#ffaa00'; // Orange when medium
     }
     
-    // Timeout bar
-    const timeoutPercent = this.comboTimer / this.comboTimeout;
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(x - 65, y + 30, 130, 4);
-    ctx.fillStyle = this.getComboColor();
-    ctx.fillRect(x - 65, y + 30, 130 * timeoutPercent, 4);
+    ctx.fillStyle = barColor;
+    ctx.fillRect(barX, barY, barWidth * timePercent, barHeight);
     
+    // Bar border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, barY, barWidth, barHeight);
+    
+    // Time remaining text
     ctx.restore();
   }
 
+  /**
+   * Get color based on combo multiplier
+   */
   private getComboColor(): string {
-    if (this.combo >= 100) return '#ff00ff'; // Magenta
-    if (this.combo >= 50) return '#ff0000';  // Red
-    if (this.combo >= 25) return '#ffaa00';  // Orange
-    if (this.combo >= 10) return '#ffff00';  // Yellow
-    return '#ffffff'; // White
+    const mult = this.getMultiplier();
+    
+    if (mult >= 3.0) return '#ff00ff'; // Magenta for insane combos (3000+)
+    if (mult >= 2.0) return '#ff0000'; // Red for high combos (1000+)
+    if (mult >= 1.5) return '#ffaa00'; // Orange for good combos (500+)
+    if (mult >= 1.2) return '#ffff00'; // Yellow for decent combos (200+)
+    if (mult >= 1.05) return '#00ff00'; // Green for building combos (50+)
+    return '#ffffff'; // White for low combos
   }
 
   reset(): void {

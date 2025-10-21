@@ -5,8 +5,8 @@ import type { Vec2 } from '../types';
 export class LaserSystem {
   private lasers: Laser[] = [];
   private showShipLasers = true;
-  private maxLasers = 500; // Increased limit for max attack speed
-  private maxShipLasers = 400; // Separate limit for ship lasers
+  private maxLasers = 1000; // Increased limit for max attack speed
+  private maxShipLasers = 800; // Separate limit for ship lasers
 
   setShowShipLasers(show: boolean): void {
     this.showShipLasers = show;

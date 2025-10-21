@@ -728,6 +728,181 @@ export class UpgradeSystem {
           state.subUpgrades['missile_launcher'] = true;
         },
       },
+      
+      // === ULTRA LATE GAME UPGRADES (Level 200-500) ===
+      {
+        id: 'multiversal_matrix',
+        name: 'Multiversal Probability Matrix',
+        description: 'Damage x5, Critical chance +15%',
+        flavor: 'Exists in all timelines simultaneously. Very confusing.',
+        cost: 500000000,
+        owned: false,
+        requires: (state) => state.level >= 200,
+        isVisible: (state) => state.level >= 200,
+        buy: (state) => {
+          state.subUpgrades['multiversal_matrix'] = true;
+        },
+      },
+      {
+        id: 'entropy_reversal',
+        name: 'Entropy Reversal Engine',
+        description: 'Passive generation x15, XP gain +100%',
+        flavor: 'Time flows backwards. Or forwards. Hard to tell.',
+        cost: 750000000,
+        owned: false,
+        requires: (state) => state.resourceGenLevel >= 70,
+        isVisible: (state) => state.resourceGenLevel >= 70,
+        buy: (state) => {
+          state.subUpgrades['entropy_reversal'] = true;
+        },
+      },
+      {
+        id: 'omniscient_ai',
+        name: 'Omniscient AI Core',
+        description: 'All stats +75%, Upgrades 30% cheaper',
+        flavor: 'Knows what you\'re going to buy before you do.',
+        cost: 1000000000,
+        owned: false,
+        requires: (state) => state.level >= 250,
+        isVisible: (state) => state.level >= 250,
+        buy: (state) => {
+          state.subUpgrades['omniscient_ai'] = true;
+        },
+      },
+      {
+        id: 'big_bang_generator',
+        name: 'Big Bang Generator',
+        description: 'All damage x10, Creates universes per hit',
+        flavor: 'Let there be light! And death! Mostly death.',
+        cost: 2500000000,
+        owned: false,
+        requires: (state) => state.level >= 300,
+        isVisible: (state) => state.level >= 300,
+        buy: (state) => {
+          state.subUpgrades['big_bang_generator'] = true;
+        },
+      },
+      {
+        id: 'dimensional_collapse',
+        name: 'Dimensional Collapse Weapon',
+        description: 'Critical damage x5, Attack speed +200%',
+        flavor: 'Collapses dimensions. Please aim responsibly.',
+        cost: 5000000000,
+        owned: false,
+        requires: (state) => state.critChanceLevel >= 60,
+        isVisible: (state) => state.critChanceLevel >= 60,
+        buy: (state) => {
+          state.subUpgrades['dimensional_collapse'] = true;
+        },
+      },
+      
+      // === TRANSCENDENT UPGRADES (Level 500-750) ===
+      {
+        id: 'reality_compiler',
+        name: 'Reality Compiler',
+        description: 'Recompile reality: All gains x20',
+        flavor: 'Compiled in Release mode for maximum performance.',
+        cost: 10000000000,
+        owned: false,
+        requires: (state) => state.level >= 500,
+        isVisible: (state) => state.level >= 500,
+        buy: (state) => {
+          state.subUpgrades['reality_compiler'] = true;
+        },
+      },
+      {
+        id: 'akashic_records',
+        name: 'Akashic Records Access',
+        description: 'XP x10, Retain all knowledge between lives',
+        flavor: 'The universe\'s library card. No late fees.',
+        cost: 25000000000,
+        owned: false,
+        requires: (state) => state.xpBoostLevel >= 75,
+        isVisible: (state) => state.xpBoostLevel >= 75,
+        buy: (state) => {
+          state.subUpgrades['akashic_records'] = true;
+        },
+      },
+      {
+        id: 'void_heart',
+        name: 'Heart of the Void',
+        description: 'Boss damage +500%, Absorb enemy essence',
+        flavor: 'The void stares back. You stare harder.',
+        cost: 50000000000,
+        owned: false,
+        requires: (state) => state.stats.bossesKilled >= 100,
+        isVisible: (state) => state.stats.bossesKilled >= 75,
+        buy: (state) => {
+          state.subUpgrades['void_heart'] = true;
+        },
+      },
+      {
+        id: 'eternal_engine',
+        name: 'Eternal Engine',
+        description: 'Passive generation x50, Never stops',
+        flavor: 'Perpetual motion achieved. Physics weeps.',
+        cost: 100000000000,
+        owned: false,
+        requires: (state) => state.resourceGenLevel >= 100,
+        isVisible: (state) => state.resourceGenLevel >= 100,
+        buy: (state) => {
+          state.subUpgrades['eternal_engine'] = true;
+        },
+      },
+      
+      // === ULTIMATE UPGRADES (Level 750-1000+) ===
+      {
+        id: 'omega_protocol',
+        name: 'Omega Protocol: Final Form',
+        description: 'ALL MULTIPLIERS x25',
+        flavor: 'This isn\'t even my final form. Wait, yes it is.',
+        cost: 500000000000,
+        owned: false,
+        requires: (state) => state.level >= 750,
+        isVisible: (state) => state.level >= 750,
+        buy: (state) => {
+          state.subUpgrades['omega_protocol'] = true;
+        },
+      },
+      {
+        id: 'infinity_engine',
+        name: 'Infinity Engine',
+        description: 'Clicks deal ∞ × 0.01 damage (effectively x100)',
+        flavor: 'Infinity contained in a box. Do not open.',
+        cost: 1000000000000,
+        owned: false,
+        requires: (state) => state.stats.totalClicks >= 100000,
+        isVisible: (state) => state.stats.totalClicks >= 75000,
+        buy: (state) => {
+          state.subUpgrades['infinity_engine'] = true;
+        },
+      },
+      {
+        id: 'universe_seed',
+        name: 'Universe Seed',
+        description: 'Plant new universes: All gains x100',
+        flavor: 'Water daily. Harvest in 13.8 billion years.',
+        cost: 5000000000000,
+        owned: false,
+        requires: (state) => state.level >= 1000,
+        isVisible: (state) => state.level >= 1000,
+        buy: (state) => {
+          state.subUpgrades['universe_seed'] = true;
+        },
+      },
+      {
+        id: 'transcendence',
+        name: 'True Transcendence',
+        description: 'Ascend beyond ascension: Prestige points x10',
+        flavor: 'You have become clicking itself.',
+        cost: 10000000000000,
+        owned: false,
+        requires: (state) => state.prestigeLevel >= 5,
+        isVisible: (state) => state.prestigeLevel >= 3,
+        buy: (state) => {
+          state.subUpgrades['transcendence'] = true;
+        },
+      },
     ];
   }
 
@@ -934,6 +1109,11 @@ export class UpgradeSystem {
       discount *= 0.80;
     }
     
+    // Omniscient AI: 30% discount
+    if (this.subUpgrades.find(u => u.id === 'omniscient_ai')?.owned) {
+      discount *= 0.70;
+    }
+    
     return Math.floor(cost * discount);
   }
 
@@ -1061,6 +1241,35 @@ export class UpgradeSystem {
       }
     }
 
+    // Late-game upgrades
+    if (state.subUpgrades['multiversal_matrix']) {
+      multiplier *= 5;
+    }
+    
+    if (state.subUpgrades['omniscient_ai']) {
+      multiplier *= 1.75;
+    }
+    
+    if (state.subUpgrades['big_bang_generator']) {
+      multiplier *= 10;
+    }
+    
+    if (state.subUpgrades['reality_compiler']) {
+      multiplier *= 20;
+    }
+    
+    if (state.subUpgrades['omega_protocol']) {
+      multiplier *= 25;
+    }
+    
+    if (state.subUpgrades['infinity_engine']) {
+      multiplier *= 100;
+    }
+    
+    if (state.subUpgrades['universe_seed']) {
+      multiplier *= 100;
+    }
+
     // Apply ascension bonuses
     if (this.ascensionSystem) {
       multiplier *= this.ascensionSystem.getDamageMultiplier(state);
@@ -1093,13 +1302,18 @@ export class UpgradeSystem {
     if (state.subUpgrades['hyper_reactor']) {
       chance += 5;
     }
+    
+    // Multiversal matrix: +15%
+    if (state.subUpgrades['multiversal_matrix']) {
+      chance += 15;
+    }
 
     // Apply ascension bonuses
     if (this.ascensionSystem) {
       chance += this.ascensionSystem.getCritBonus(state);
     }
 
-    return Math.min(chance, 75); // Cap at 75%
+    return Math.min(chance, 95); // Cap increased to 95% for late game
   }
 
   getCritMultiplier(state: GameState): number {
@@ -1124,6 +1338,11 @@ export class UpgradeSystem {
     // Reality anchor: x3
     if (state.subUpgrades['reality_anchor']) {
       multiplier *= 3;
+    }
+    
+    // Dimensional collapse: x5
+    if (state.subUpgrades['dimensional_collapse']) {
+      multiplier *= 5;
     }
 
     return multiplier;
@@ -1183,6 +1402,31 @@ export class UpgradeSystem {
     if (state.subUpgrades['answer_to_everything']) {
       gen *= 10;
     }
+    
+    // Entropy reversal: x15
+    if (state.subUpgrades['entropy_reversal']) {
+      gen *= 15;
+    }
+    
+    // Eternal engine: x50
+    if (state.subUpgrades['eternal_engine']) {
+      gen *= 50;
+    }
+    
+    // Reality compiler: x20
+    if (state.subUpgrades['reality_compiler']) {
+      gen *= 20;
+    }
+    
+    // Omega protocol: x25
+    if (state.subUpgrades['omega_protocol']) {
+      gen *= 25;
+    }
+    
+    // Universe seed: x100
+    if (state.subUpgrades['universe_seed']) {
+      gen *= 100;
+    }
 
     // Apply ascension bonuses
     if (this.ascensionSystem) {
@@ -1220,6 +1464,31 @@ export class UpgradeSystem {
     if (state.subUpgrades['universe_map']) {
       multiplier *= 3;
     }
+    
+    // Entropy reversal: +100%
+    if (state.subUpgrades['entropy_reversal']) {
+      multiplier *= 2;
+    }
+    
+    // Akashic records: x10
+    if (state.subUpgrades['akashic_records']) {
+      multiplier *= 10;
+    }
+    
+    // Reality compiler: x20
+    if (state.subUpgrades['reality_compiler']) {
+      multiplier *= 20;
+    }
+    
+    // Omega protocol: x25
+    if (state.subUpgrades['omega_protocol']) {
+      multiplier *= 25;
+    }
+    
+    // Universe seed: x100
+    if (state.subUpgrades['universe_seed']) {
+      multiplier *= 100;
+    }
 
     // Apply ascension bonuses
     if (this.ascensionSystem) {
@@ -1232,7 +1501,7 @@ export class UpgradeSystem {
   getFireCooldown(state: GameState): number {
     this.updateSubUpgradesFromState(state);
     let cooldown = Math.max(
-      Math.floor(1000 * Math.pow(0.95, state.attackSpeedLevel)),
+      Math.floor(10000 * Math.pow(0.985, state.attackSpeedLevel)),
       120,
     );
 
@@ -1290,6 +1559,16 @@ export class UpgradeSystem {
     if (state.subUpgrades['infinity_gauntlet']) {
       cooldown *= 0.60;
     }
+    
+    // Dimensional collapse: +200% speed
+    if (state.subUpgrades['dimensional_collapse']) {
+      cooldown *= 0.33; // 3x speed = 1/3 cooldown
+    }
+    
+    // Omega protocol: x25 speed
+    if (state.subUpgrades['omega_protocol']) {
+      cooldown *= 0.04; // 25x speed
+    }
 
     // Apply ascension bonuses
     if (this.ascensionSystem) {
@@ -1297,7 +1576,7 @@ export class UpgradeSystem {
       cooldown /= speedMult;
     }
 
-    return Math.max(Math.floor(cooldown), 50);
+    return Math.max(Math.floor(cooldown), 25); // Lower minimum for late game
   }
 
   getBonusXP(state: GameState): number {

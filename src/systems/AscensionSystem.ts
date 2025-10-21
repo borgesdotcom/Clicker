@@ -24,7 +24,7 @@ export class AscensionSystem {
         name: 'Eternal Power',
         description: 'Permanently increase all damage',
         cost: 1,
-        maxLevel: 50,
+        maxLevel: 100, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_damage ?? 0,
         effect: '+10% damage per level',
       },
@@ -33,7 +33,7 @@ export class AscensionSystem {
         name: 'Cosmic Fortune',
         description: 'Permanently increase point gains',
         cost: 1,
-        maxLevel: 50,
+        maxLevel: 100, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_points ?? 0,
         effect: '+15% points per level',
       },
@@ -42,7 +42,7 @@ export class AscensionSystem {
         name: 'Ancient Wisdom',
         description: 'Permanently increase XP gains',
         cost: 1,
-        maxLevel: 50,
+        maxLevel: 100, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_xp ?? 0,
         effect: '+20% XP per level',
       },
@@ -51,7 +51,7 @@ export class AscensionSystem {
         name: 'Lucky Stars',
         description: 'Permanently increase critical hit chance',
         cost: 2,
-        maxLevel: 25,
+        maxLevel: 50, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_crit ?? 0,
         effect: '+2% crit chance per level',
       },
@@ -60,7 +60,7 @@ export class AscensionSystem {
         name: 'Idle Mastery',
         description: 'Permanently increase passive generation',
         cost: 2,
-        maxLevel: 30,
+        maxLevel: 75, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_passive ?? 0,
         effect: '+25% passive per level',
       },
@@ -69,7 +69,7 @@ export class AscensionSystem {
         name: 'Time Dilation',
         description: 'Permanently increase attack speed',
         cost: 3,
-        maxLevel: 20,
+        maxLevel: 50, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_speed ?? 0,
         effect: '+5% attack speed per level',
       },
@@ -78,7 +78,7 @@ export class AscensionSystem {
         name: 'Head Start',
         description: 'Start at a higher level after ascension',
         cost: 5,
-        maxLevel: 10,
+        maxLevel: 20, // Extended to allow starting at level 100
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_starting_level ?? 0,
         effect: 'Start +5 levels per level',
       },
@@ -87,9 +87,27 @@ export class AscensionSystem {
         name: 'Persistent Memory',
         description: 'Retain a percentage of upgrade levels',
         cost: 10,
-        maxLevel: 5,
+        maxLevel: 10, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_retain_upgrades ?? 0,
         effect: 'Retain +10% upgrades per level',
+      },
+      {
+        id: 'prestige_boss_power',
+        name: 'Boss Slayer',
+        description: 'Deal extra damage to bosses',
+        cost: 3,
+        maxLevel: 50,
+        getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_boss_power ?? 0,
+        effect: '+20% boss damage per level',
+      },
+      {
+        id: 'prestige_combo_boost',
+        name: 'Combo Master',
+        description: 'Combo multiplier builds faster',
+        cost: 5,
+        maxLevel: 20,
+        getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_combo_boost ?? 0,
+        effect: '+0.0005× combo per level (total +0.001×)',
       },
     ];
   }
@@ -99,19 +117,43 @@ export class AscensionSystem {
   }
 
   calculatePrestigePoints(state: GameState): number {
-    // Clicker game formula: generous early gains, exponential growth
-    // Formula based on level milestones
+    // Enhanced prestige point formula for levels 100-1000+
+    // Smooth exponential growth with milestone bonuses
+    
     if (state.level < 100) return 0;
     
     // Base formula: levels past 100 give prestige points
-    // Level 100 = 5 PP, Level 150 = 10 PP, Level 200 = 20 PP
+    // Level 100 = 5 PP
+    // Level 200 = ~20 PP
+    // Level 500 = ~100 PP
+    // Level 1000 = ~500 PP
     const levelPast100 = state.level - 100;
-    const levelBonus = Math.floor(5 + Math.pow(levelPast100 / 10, 1.5));
+    const levelBonus = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
     
-    // Boss bonus
+    // Boss bonus: every 2 bosses killed = +1 PP
     const bossBonus = Math.floor(state.stats.bossesKilled / 2);
     
-    return Math.max(5, levelBonus + bossBonus);
+    // Milestone bonuses for reaching specific levels
+    let milestoneBonus = 0;
+    if (state.level >= 1000) milestoneBonus += 200;
+    else if (state.level >= 750) milestoneBonus += 100;
+    else if (state.level >= 500) milestoneBonus += 50;
+    else if (state.level >= 250) milestoneBonus += 20;
+    
+    // Achievement bonus: certain achievements grant extra PP
+    const achievementBonus = this.calculateAchievementBonus(state);
+    
+    return Math.max(5, levelBonus + bossBonus + milestoneBonus + achievementBonus);
+  }
+  
+  private calculateAchievementBonus(state: GameState): number {
+    let bonus = 0;
+    
+    // Count unlocked achievements for bonus PP
+    const achievementCount = Object.values(state.achievements).filter(unlocked => unlocked).length;
+    bonus += Math.floor(achievementCount / 10); // +1 PP per 10 achievements
+    
+    return bonus;
   }
 
   canAscend(state: GameState): boolean {
@@ -157,6 +199,17 @@ export class AscensionSystem {
   getRetainPercentage(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_retain_upgrades ?? 0;
     return level * 0.1;
+  }
+  
+  getBossDamageMultiplier(state: GameState): number {
+    const level = state.prestigeUpgrades?.prestige_boss_power ?? 0;
+    return 1 + (level * 0.2);
+  }
+  
+  getComboBoostMultiplier(state: GameState): number {
+    const level = state.prestigeUpgrades?.prestige_combo_boost ?? 0;
+    // Adds extra combo multiplier rate
+    return 0.001 + (level * 0.0005);
   }
 
   buyPrestigeUpgrade(state: GameState, upgradeId: string): boolean {

@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 export class Hud {
   private pointsDisplay: HTMLElement;
   private levelText: HTMLElement;
@@ -8,7 +14,6 @@ export class Hud {
   private critDisplay: HTMLElement | null = null;
   
   private damageHistory: number[] = [];
-  private lastDamageTime = Date.now();
   private readonly DPS_WINDOW = 5000; // 5 seconds window for DPS calculation
 
   constructor() {

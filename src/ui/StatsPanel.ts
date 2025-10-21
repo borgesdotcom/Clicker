@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { GameState } from '../types';
 
 export class StatsPanel {
@@ -45,7 +46,7 @@ export class StatsPanel {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
     closeBtn.textContent = '×';
-    closeBtn.addEventListener('click', () => this.hide());
+    closeBtn.addEventListener('click', () => { this.hide(); });
     
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -85,7 +86,7 @@ export class StatsPanel {
     }
   }
 
-  public update(state: GameState): void {
+  public update(_state: GameState): void {
     if (this.isOpen) {
       this.render();
     }

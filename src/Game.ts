@@ -1,8 +1,6 @@
 import { AlienBall } from './entities/AlienBall';
 import { BossBall } from './entities/BossBall';
-import { BossProjectile } from './entities/BossProjectile';
 import { Ship } from './entities/Ship';
-import { PlayerShip } from './entities/PlayerShip';
 import { Canvas } from './render/Canvas';
 import { Draw } from './render/Draw';
 import { Loop } from './core/Loop';
@@ -42,8 +40,6 @@ export class Game {
   private ball: AlienBall | null = null;
   private bossBall: BossBall | null = null;
   private ships: Ship[] = [];
-  private playerShip: PlayerShip | null = null;
-  private bossProjectiles: BossProjectile[] = [];
   private laserSystem: LaserSystem;
   private rippleSystem: RippleSystem;
   private particleSystem: ParticleSystem;
@@ -71,14 +67,7 @@ export class Game {
   private transitionTime = 0;
   private transitionDuration = 2;
   private keys: Set<string> = new Set();
-  private shootCooldown = 0;
-  private shootCooldownMax = 0.2;
   private userSettings: UserSettings = Settings.getDefault();
-  
-  // Boss clicking competition
-  private bossClickProgress = 0; // 0-100
-  private bossProgressDecayRate = 5; // Progress lost per second
-  private bossClickIncrement = 2; // Progress gained per click
   
   // Damage batching for performance
   private damageBatch = 0;
@@ -187,6 +176,8 @@ export class Game {
       this.soundManager.playAchievement();
     });
     this.achievementSystem.updateFromState(this.store.getState());
+    
+    // Boss system is simplified - no callbacks needed
 
     this.input = new Input(canvasElement);
     this.loop = new Loop(
@@ -352,9 +343,6 @@ export class Game {
   private setupKeyboard(): void {
     window.addEventListener('keydown', (event) => {
       this.keys.add(event.key.toLowerCase());
-      if (event.key === ' ' && this.mode === 'boss') {
-        event.preventDefault();
-      }
     });
     window.addEventListener('keyup', (event) => {
       this.keys.delete(event.key.toLowerCase());
@@ -387,13 +375,13 @@ export class Game {
   private createBoss(): void {
     const cx = this.canvas.getCenterX();
     const cy = this.canvas.getCenterY();
+    // Boss is 50% bigger than normal aliens
     const radius =
-      Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.12;
+      Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.15;
     const state = this.store.getState();
     const hp = ColorManager.getBossHp(state.level);
     this.bossBall = new BossBall(cx, cy, radius, hp);
     this.ball = null;
-    this.playerShip = new PlayerShip(cx, this.canvas.getHeight() - 100);
   }
 
   private createShips(): void {
@@ -444,21 +432,17 @@ export class Game {
   private handleClick(pos: Vec2): void {
     if (this.mode === 'transition') return;
 
+    // Both normal and boss modes work the same way now - just click and shoot!
     if (this.mode === 'normal' && this.ball?.isPointInside(pos) && this.ball.currentHp > 0) {
       this.store.incrementClick();
       this.soundManager.playClick();
+      this.comboSystem.hit();
       this.fireVolley();
-    } else if (this.mode === 'boss' && this.bossBall?.isPointInside(pos)) {
-      // Boss clicking competition
+    } else if (this.mode === 'boss' && this.bossBall?.isPointInside(pos) && this.bossBall.currentHp > 0) {
       this.store.incrementClick();
       this.soundManager.playClick();
-      this.bossClickProgress = Math.min(100, this.bossClickProgress + this.bossClickIncrement);
-      this.updateBossProgressBar();
-      
-      // Check if won
-      if (this.bossClickProgress >= 100) {
-        this.onBossDefeated();
-      }
+      this.comboSystem.hit();
+      this.fireBossVolley();
     }
   }
 
@@ -472,15 +456,14 @@ export class Game {
     if (this.ships[0]) {
       this.laserSystem.spawnLaser(this.ships[0].getFrontPosition(), target, damage, laserVisuals);
       
-      // Rapid fire upgrade: fire additional lasers
-      if (state.subUpgrades['rapid_fire']) {
-        // Fire from 2 random other ships
+      // Rapid fire upgrade: fire additional lasers from 2 random ships
+      if (state.subUpgrades['rapid_fire'] && this.ships.length > 1) {
         const otherShips = this.ships.slice(1);
-        for (let i = 0; i < Math.min(2, otherShips.length); i++) {
-          const randomShip = otherShips[Math.floor(Math.random() * otherShips.length)];
-          if (randomShip) {
-            // These are from the player's click, so not marked as isFromShip
-            this.laserSystem.spawnLaser(randomShip.getFrontPosition(), target, damage, laserVisuals);
+        const count = Math.min(2, otherShips.length);
+        for (let i = 0; i < count; i++) {
+          const ship = otherShips[i];
+          if (ship) {
+            this.laserSystem.spawnLaser(ship.getFrontPosition(), target, damage, laserVisuals);
           }
         }
       }
@@ -491,28 +474,34 @@ export class Game {
     this.rippleSystem.spawnRipple(target, rippleRadius);
   }
 
-  private shootLaser(): void {
-    if (!this.playerShip) return;
-    if (this.shootCooldown > 0) return;
-
+  private fireBossVolley(): void {
     const state = this.store.getState();
-    const damage = this.upgradeSystem.getPointsPerHit(state);
-    const origin = this.playerShip.getFrontPosition();
-    const angle = this.playerShip.getAngle();
+    let damage = this.upgradeSystem.getPointsPerHit(state);
+    
+    // Apply boss damage bonus from prestige
+    const prestigeBossLevel = state.prestigeUpgrades?.prestige_boss_power ?? 0;
+    const bossDamageBonus = 1 + (prestigeBossLevel * 0.2);
+    damage *= bossDamageBonus;
+    
+    // Check for void heart upgrade (extra boss damage)
+    const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1; // +500% = 6x
+    const bossTargetDamage = damage * voidHeartBonus;
+    
+    const target = { x: this.bossBall?.x ?? 0, y: this.bossBall?.y ?? 0 };
     const laserVisuals = this.getLaserVisuals(state);
-    
-    // Shoot in the direction the ship is facing, not at the boss
-    const laserRange = 2000;
-    const target = {
-      x: origin.x + Math.cos(angle) * laserRange,
-      y: origin.y + Math.sin(angle) * laserRange,
-    };
-    
-    this.laserSystem.spawnLaser(origin, target, damage, laserVisuals);
-    this.shootCooldown = this.shootCooldownMax;
+
+    // Fire from ALL ships at the boss for epic effect!
+    for (const ship of this.ships) {
+      this.laserSystem.spawnLaser(ship.getFrontPosition(), target, bossTargetDamage, laserVisuals);
+    }
+
+    // Bigger ripple for boss
+    const rippleRadius = this.bossBall ? this.bossBall.radius * 2.5 : 150;
+    this.rippleSystem.spawnRipple(target, rippleRadius);
   }
 
   private fireSingleShip(shipIndex: number): void {
+    if (shipIndex >= this.ships.length) return;
     const ship = this.ships[shipIndex];
     if (!ship) return;
 
@@ -602,17 +591,15 @@ export class Game {
       finalDamage = damage * critMultiplier;
     }
     
-    // Apply combo multiplier (boss mode only)
+    // Apply combo multiplier (works in all modes now!)
+    const comboMult = this.comboSystem.getMultiplier();
+    finalDamage *= comboMult;
+    
+    // Play combo sound on milestone combos (boss mode only for sound)
     if (this.mode === 'boss') {
-      const comboMult = this.comboSystem.getMultiplier();
-      finalDamage *= comboMult;
-      const oldCombo = this.comboSystem.getCombo();
-      this.comboSystem.hit();
-      const newCombo = this.comboSystem.getCombo();
-      
-      // Play combo sound on milestone combos
-      if (newCombo % 10 === 0 && newCombo > oldCombo) {
-        this.soundManager.playCombo(newCombo / 10);
+      const currentCombo = this.comboSystem.getCombo();
+      if (currentCombo % 10 === 0 && currentCombo > 0) {
+        this.soundManager.playCombo(currentCombo / 10);
       }
     }
     
@@ -679,11 +666,8 @@ export class Game {
       }
       
       if (broken) {
-        this.onBossDestroyed();
-        // Epic explosion (only if high graphics)
-        if (this.userSettings.highGraphics) {
-          this.particleSystem.spawnExplosion(bossPos.x, bossPos.y, '#ff0000');
-        }
+        // Boss defeated!
+        this.handleBossDefeat();
       }
     }
     
@@ -701,17 +685,23 @@ export class Game {
     const state = this.store.getState();
     this.store.incrementAlienKill();
     
-    // XP scales with level to match increased alien difficulty
-    // Increased base XP gain significantly for better progression
-    const baseXP = Math.floor(5 + state.level * 2);
+    // Reduced XP gain - more balanced progression
+    // Base XP is just 1 per kill, scales with multipliers
+    const baseXP = 1;
     const bonusXP = this.upgradeSystem.getBonusXP(state) * baseXP;
     state.experience += bonusXP;
 
-    const expRequired = ColorManager.getExpRequired(state.level);
-    if (state.experience >= expRequired) {
+    // Handle multiple level ups if we gained enough XP
+    let leveledUp = false;
+    while (state.experience >= ColorManager.getExpRequired(state.level)) {
+      const expRequired = ColorManager.getExpRequired(state.level);
       state.experience -= expRequired;
       state.level++;
       this.store.updateMaxLevel();
+      leveledUp = true;
+    }
+
+    if (leveledUp) {
       this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
@@ -730,34 +720,51 @@ export class Game {
     this.store.setState(state);
   }
 
-  private onBossDefeated(): void {
+  /**
+   * Handle boss defeat - now works just like normal alien
+   */
+  private handleBossDefeat(): void {
     const state = this.store.getState();
     this.store.incrementBossKill();
     
-    // Grant massive points for boss defeat
-    const bossReward = Math.floor(state.level * 10000);
+    // Boss rewards scale with level
+    const baseReward = state.level * 10000;
+    const bonusMultiplier = 1 + (this.comboSystem.getCombo() * 0.01); // Combo gives extra bonus
+    const bossReward = Math.floor(baseReward * bonusMultiplier);
+    
+    // Grant points
     this.store.addPoints(bossReward);
     
-    state.experience = 0;
-    state.level++;
-    this.store.updateMaxLevel();
-    this.store.setState(state);
-    this.soundManager.playBossDefeat();
-
-    // Hide boss progress bar
-    const bossBar = document.getElementById('boss-progress-container');
-    if (bossBar) {
-      bossBar.style.display = 'none';
+    // Boss XP - reduced from 100 to 50 per level for better balance
+    const bossXP = Math.floor(state.level * 50);
+    state.experience += bossXP;
+    
+    // Handle level ups (should always level up at least once after boss)
+    while (state.experience >= ColorManager.getExpRequired(state.level)) {
+      const expRequired = ColorManager.getExpRequired(state.level);
+      state.experience -= expRequired;
+      state.level++;
+      this.store.updateMaxLevel();
     }
-
+    
+    this.store.setState(state);
+    
+    this.soundManager.playBossDefeat();
+    this.comboSystem.reset(); // Reset combo after boss fight
+    
+    // Visual celebration
+    if (this.userSettings.highGraphics && this.bossBall) {
+      const bossPos = { x: this.bossBall.x, y: this.bossBall.y };
+      this.particleSystem.spawnExplosion(bossPos.x, bossPos.y, '#ffaa00');
+      // Second delayed explosion
+      setTimeout(() => {
+        this.particleSystem.spawnExplosion(bossPos.x, bossPos.y, '#ff0000');
+      }, 200);
+    }
+    
     setTimeout(() => {
       this.startTransitionToNormal();
-    }, 600);
-  }
-
-  private onBossDestroyed(): void {
-    // Legacy method - redirects to onBossDefeated
-    this.onBossDefeated();
+    }, 1000);
   }
 
   private showBossDialog(): void {
@@ -776,90 +783,22 @@ export class Game {
     this.mode = 'transition';
     this.transitionTime = 0;
     this.comboSystem.reset();
-    this.bossClickProgress = 0;
-    const bossControls = document.getElementById('boss-controls');
-    if (bossControls) bossControls.style.display = 'none';
+    
     setTimeout(() => {
       this.createBoss();
       this.mode = 'boss';
-      if (bossControls) bossControls.style.display = 'block';
-      
-      // Show boss progress bar
-      const bossBar = document.getElementById('boss-progress-container');
-      if (bossBar) {
-        bossBar.style.display = 'block';
-      }
-      this.updateBossProgressBar();
     }, this.transitionDuration * 500);
-  }
-
-  private updateBossProgressBar(): void {
-    const fill = document.getElementById('boss-progress-fill');
-    const text = document.getElementById('boss-progress-text');
-    if (fill) {
-      fill.style.width = `${this.bossClickProgress.toString()}%`;
-    }
-    if (text) {
-      text.textContent = `${Math.floor(this.bossClickProgress).toString()}%`;
-    }
   }
 
   private startTransitionToNormal(): void {
     this.mode = 'transition';
     this.transitionTime = 0;
-    this.playerShip = null;
-    this.bossProjectiles = [];
-    const bossControls = document.getElementById('boss-controls');
-    if (bossControls) bossControls.style.display = 'none';
+    this.bossBall = null; // Clear boss
+    
     setTimeout(() => {
       this.createBall();
       this.mode = 'normal';
     }, this.transitionDuration * 500);
-  }
-
-  private triggerShake(amount: number, duration: number): void {
-    this.shakeAmount = amount;
-    this.shakeTime = duration;
-  }
-
-  private spawnBossProjectiles(): void {
-    if (!this.bossBall || !this.playerShip) return;
-
-    const bossPos = this.bossBall.getPosition();
-    const playerPos = this.playerShip.getPosition();
-    const pattern = this.bossBall.getAttackPattern();
-    const projectileSpeed = 200;
-
-    if (pattern === 'single') {
-      // Single projectile aimed at player
-      this.bossProjectiles.push(
-        new BossProjectile(bossPos.x, bossPos.y, playerPos.x, playerPos.y, projectileSpeed)
-      );
-    } else if (pattern === 'spread') {
-      // 3 projectiles in a spread pattern
-      const angleToPlayer = Math.atan2(playerPos.y - bossPos.y, playerPos.x - bossPos.x);
-      const spreadAngle = Math.PI / 6; // 30 degrees spread
-      
-      for (let i = -1; i <= 1; i++) {
-        const angle = angleToPlayer + (i * spreadAngle);
-        const targetX = bossPos.x + Math.cos(angle) * 1000;
-        const targetY = bossPos.y + Math.sin(angle) * 1000;
-        this.bossProjectiles.push(
-          new BossProjectile(bossPos.x, bossPos.y, targetX, targetY, projectileSpeed)
-        );
-      }
-    } else {
-      // 8 projectiles in all directions (spiral pattern)
-      const numProjectiles = 8;
-      for (let i = 0; i < numProjectiles; i++) {
-        const angle = (i / numProjectiles) * Math.PI * 2;
-        const targetX = bossPos.x + Math.cos(angle) * 1000;
-        const targetY = bossPos.y + Math.sin(angle) * 1000;
-        this.bossProjectiles.push(
-          new BossProjectile(bossPos.x, bossPos.y, targetX, targetY, projectileSpeed * 1.2)
-        );
-      }
-    }
   }
 
   private update(dt: number): void {
@@ -943,57 +882,9 @@ export class Game {
       }
     }
 
-    if (this.mode === 'boss') {
-      // Boss clicking competition - decay progress over time
-      if (this.bossClickProgress > 0) {
-        this.bossClickProgress = Math.max(0, this.bossClickProgress - (this.bossProgressDecayRate * dt));
-        this.updateBossProgressBar();
-      }
-      
-      // Original boss projectile logic (keeping for visual effects)
-      if (this.playerShip) {
-        if (this.keys.has('arrowleft') || this.keys.has('a')) {
-          this.playerShip.rotate(-1, dt);
-        }
-        if (this.keys.has('arrowright') || this.keys.has('d')) {
-          this.playerShip.rotate(1, dt);
-        }
-        if (this.keys.has('arrowup') || this.keys.has('w')) {
-          this.playerShip.thrust(dt);
-        }
-        if (this.keys.has(' ') || this.keys.has('spacebar')) {
-          this.shootLaser();
-        }
-
-        this.playerShip.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
-
-        if (this.shootCooldown > 0) {
-          this.shootCooldown = Math.max(0, this.shootCooldown - dt);
-        }
-
-        // Boss attacks
-        if (this.bossBall && this.bossBall.shouldAttack()) {
-          this.spawnBossProjectiles();
-        }
-
-        // Update boss projectiles
-        this.bossProjectiles = this.bossProjectiles.filter(proj => {
-          const shouldRemove = proj.update(dt);
-          
-          // Check collision with player
-          if (!shouldRemove && this.playerShip) {
-            const playerPos = this.playerShip.getPosition();
-            if (proj.checkCollision(playerPos, 15)) {
-              // Hit player - small damage feedback
-              this.triggerShake(3, 0.1);
-              return true; // Remove projectile
-            }
-          }
-          
-          return !shouldRemove;
-        });
-      }
-    } else if (this.mode === 'normal') {
+    // Auto-fire only in normal mode
+    // In boss mode, player manually fires all ships with each click
+    if (this.mode === 'normal') {
       // Auto-fire for all ships except the main ship (index 0)
       // Always fire (for damage), but may not render visually
       this.autoFireSystem.update(
@@ -1050,24 +941,16 @@ export class Game {
       this.ball?.draw(this.draw);
       this.bossBall?.draw(this.draw);
 
-      // Layer 4: Ships and projectiles
-      if (this.mode === 'boss') {
-        this.playerShip?.draw(this.draw);
-        // Draw boss projectiles
-        for (const proj of this.bossProjectiles) {
-          proj.draw(this.draw);
-        }
-      } else {
-        for (const ship of this.ships) {
-          ship.draw(this.draw);
-        }
+      // Layer 4: Ships (always visible now)
+      for (const ship of this.ships) {
+        ship.draw(this.draw);
       }
 
       // Layer 5: UI elements on top
       this.damageNumberSystem.draw(this.draw);
       
-      // Draw combo in boss mode
-      if (this.mode === 'boss') {
+      // Draw combo
+      if (this.comboSystem.getCombo() > 0) {
         this.comboSystem.draw(this.draw, this.canvas.getWidth());
       }
     }
@@ -1131,14 +1014,8 @@ export class Game {
     }
     
     // Recreate ships with new positions
-    if (this.ships.length > 0 && this.mode === 'normal') {
+    if (this.ships.length > 0) {
       this.createShips();
-    }
-    
-    // Reposition player ship if in boss mode
-    if (this.playerShip) {
-      this.playerShip.x = this.canvas.getCenterX();
-      this.playerShip.y = this.canvas.getHeight() - 100;
     }
   }
 }

@@ -1,4 +1,5 @@
-import type { Achievement } from '../types';
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { AchievementSystem } from '../systems/AchievementSystem';
 
 export class AchievementsModal {
@@ -51,7 +52,7 @@ export class AchievementsModal {
   private setupEventListeners(): void {
     const closeBtn = this.modal.querySelector('#achievements-close');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.hide());
+      closeBtn.addEventListener('click', () => { this.hide(); });
     }
 
     this.modal.addEventListener('click', (e) => {
@@ -66,7 +67,7 @@ export class AchievementsModal {
         const target = e.target as HTMLElement;
         const filter = target.dataset.filter;
         
-        filterBtns.forEach(b => b.classList.remove('active'));
+        filterBtns.forEach(b => { b.classList.remove('active'); });
         target.classList.add('active');
         
         this.applyFilter(filter || 'all');

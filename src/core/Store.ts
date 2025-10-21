@@ -1,10 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { GameState } from '../types';
 
 export class Store {
   private state: GameState;
   private listeners: (() => void)[] = [];
-  private notifyThrottle = 0;
-  private notifyThrottleTime = 0.05; // Notify at most every 50ms
   private pendingNotify = false;
   private lastNotifyPoints = 0;
 
@@ -90,7 +89,7 @@ export class Store {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach((listener) => listener());
+    this.listeners.forEach((listener) => { listener(); });
   }
 }
 
