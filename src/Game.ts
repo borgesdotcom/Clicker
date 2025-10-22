@@ -632,20 +632,56 @@ export class Game {
   }
 
   private initGame(): void {
-    this.createBall();
-    this.createShips();
     const state = this.store.getState();
 
-    // Restore blocked boss level state from save
-    if (
-      state.blockedOnBossLevel !== undefined &&
-      state.blockedOnBossLevel !== null
-    ) {
-      this.blockedOnBossLevel = state.blockedOnBossLevel;
-      // Show the retry button if blocked
+    // Check if player is blocked by a boss (lost previously)
+    const isBlockedByBoss = state.blockedOnBossLevel !== undefined && 
+                           state.blockedOnBossLevel !== null;
+
+    // Check if player is currently on a boss level
+    const isOnBossLevel = ColorManager.isBossLevel(state.level);
+
+    if (isBlockedByBoss) {
+      // Player lost to boss previously - show retry button and normal mode
+      this.blockedOnBossLevel = state.blockedOnBossLevel ?? null;
+      this.mode = 'normal';
+      this.createBall();
+      this.createShips();
+      
+      // Show retry button
       if (this.bossRetryButton) {
         this.bossRetryButton.style.display = 'block';
       }
+    } else if (isOnBossLevel) {
+      // Player is on a boss level and NOT blocked = they refreshed during boss fight
+      // Treat this as a loss - apply penalties
+      const expRequired = ColorManager.getExpRequired(state.level);
+      const xpLoss = Math.floor(expRequired * 0.5); // 50% XP loss
+      state.experience = Math.max(0, state.experience - xpLoss);
+      
+      // Block progression until boss is defeated
+      this.blockedOnBossLevel = state.level;
+      state.blockedOnBossLevel = state.level;
+      
+      // Save the penalized state
+      this.store.setState(state);
+      
+      // Normal mode with aliens
+      this.mode = 'normal';
+      this.createBall();
+      this.createShips();
+      
+      // Show retry button
+      if (this.bossRetryButton) {
+        this.bossRetryButton.style.display = 'block';
+      }
+      
+      // Show loss message
+      this.hud.showMessage(`💀 Boss Fight Lost (Refresh)\n-${xpLoss.toString()} XP`, '#ff4444', 3000);
+    } else {
+      // Normal initialization
+      this.createBall();
+      this.createShips();
     }
 
     this.hud.update(state.points);

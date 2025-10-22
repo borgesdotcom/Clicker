@@ -1,4 +1,5 @@
 import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
+import { NumberFormatter } from '../utils/NumberFormatter';
 
 export class UpgradeSystem {
   private basePoints = 1;
@@ -1746,8 +1747,13 @@ export class UpgradeSystem {
         state.pointMultiplierLevel++;
       },
       getLevel: (state: GameState) => state.pointMultiplierLevel,
-      getDisplayText: (state: GameState) =>
-        `Lv.${state.pointMultiplierLevel.toString()} (${this.getMainShipDamage(state).toFixed(1)}/hit)`,
+      getDisplayText: (state: GameState) => {
+        const damage = this.getMainShipDamage(state);
+        const formattedDamage = damage >= 1000 
+          ? NumberFormatter.format(damage)
+          : damage.toFixed(1);
+        return `Lv.${state.pointMultiplierLevel.toString()} (${formattedDamage}/hit)`;
+      },
       subUpgrades: pointMultiplierSubUpgrades,
     };
 
@@ -1790,8 +1796,13 @@ export class UpgradeSystem {
         state.resourceGenLevel++;
       },
       getLevel: (state: GameState) => state.resourceGenLevel,
-      getDisplayText: (state: GameState) =>
-        `Lv.${state.resourceGenLevel.toString()} (${this.formatPassiveGen(this.getPassiveGen(state))}/sec)`,
+      getDisplayText: (state: GameState) => {
+        const passiveGen = this.getPassiveGen(state);
+        const formatted = passiveGen >= 1000
+          ? NumberFormatter.format(passiveGen)
+          : this.formatPassiveGen(passiveGen);
+        return `Lv.${state.resourceGenLevel.toString()} (${formatted}/sec)`;
+      },
       subUpgrades: resourceSubUpgrades,
     };
 
@@ -1849,8 +1860,13 @@ export class UpgradeSystem {
         state.weaponMasteryLevel++;
       },
       getLevel: (state: GameState) => state.weaponMasteryLevel,
-      getDisplayText: (state: GameState) =>
-        `Lv.${state.weaponMasteryLevel.toString()} (+${(state.weaponMasteryLevel * 10).toString()}% damage)`,
+      getDisplayText: (state: GameState) => {
+        const bonusPercent = state.weaponMasteryLevel * 10;
+        const formatted = bonusPercent >= 1000
+          ? NumberFormatter.format(bonusPercent)
+          : bonusPercent.toString();
+        return `Lv.${state.weaponMasteryLevel.toString()} (+${formatted}% damage)`;
+      },
       subUpgrades: weaponMasterySubUpgrades,
     };
 
@@ -1887,8 +1903,13 @@ export class UpgradeSystem {
         state.fleetCommandLevel++;
       },
       getLevel: (state: GameState) => state.fleetCommandLevel,
-      getDisplayText: (state: GameState) =>
-        `Lv.${state.fleetCommandLevel.toString()} (+${(state.fleetCommandLevel * 5).toString()}% fleet dmg)`,
+      getDisplayText: (state: GameState) => {
+        const bonusPercent = state.fleetCommandLevel * 5;
+        const formatted = bonusPercent >= 1000
+          ? NumberFormatter.format(bonusPercent)
+          : bonusPercent.toString();
+        return `Lv.${state.fleetCommandLevel.toString()} (+${formatted}% fleet dmg)`;
+      },
       subUpgrades: fleetCommandSubUpgrades,
     };
 
@@ -1961,8 +1982,13 @@ export class UpgradeSystem {
         state.energyCoreLevel++;
       },
       getLevel: (state: GameState) => state.energyCoreLevel,
-      getDisplayText: (state: GameState) =>
-        `Lv.${state.energyCoreLevel.toString()} (+${state.energyCoreLevel.toString()}% speed)`,
+      getDisplayText: (state: GameState) => {
+        const bonusPercent = state.energyCoreLevel;
+        const formatted = bonusPercent >= 1000
+          ? NumberFormatter.format(bonusPercent)
+          : bonusPercent.toString();
+        return `Lv.${state.energyCoreLevel.toString()} (+${formatted}% speed)`;
+      },
       subUpgrades: energyCoreSubUpgrades,
     };
 
