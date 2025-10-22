@@ -24,6 +24,13 @@ export class Save {
       prestigeUpgrades: state.prestigeUpgrades,
       harmonicState: state.harmonicState,
       blockedOnBossLevel: state.blockedOnBossLevel,
+      // v3.0: New upgrades
+      weaponMasteryLevel: state.weaponMasteryLevel,
+      fleetCommandLevel: state.fleetCommandLevel,
+      mutationEngineLevel: state.mutationEngineLevel,
+      energyCoreLevel: state.energyCoreLevel,
+      cosmicKnowledgeLevel: state.cosmicKnowledgeLevel,
+      discoveredUpgrades: state.discoveredUpgrades,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -101,6 +108,13 @@ export class Save {
         },
       } : defaultHarmonicState,
       blockedOnBossLevel: data.blockedOnBossLevel ?? null,
+      // v3.0: New upgrades
+      weaponMasteryLevel: data.weaponMasteryLevel ?? 0,
+      fleetCommandLevel: data.fleetCommandLevel ?? 0,
+      mutationEngineLevel: data.mutationEngineLevel ?? 0,
+      energyCoreLevel: data.energyCoreLevel ?? 0,
+      cosmicKnowledgeLevel: data.cosmicKnowledgeLevel ?? 0,
+      discoveredUpgrades: data.discoveredUpgrades ?? { ship: true }, // Ship is always visible
     };
   }
 
@@ -137,6 +151,13 @@ export class Save {
         echoAccumulator: 0,
       },
       blockedOnBossLevel: null,
+      // v3.0: New upgrades
+      weaponMasteryLevel: 0,
+      fleetCommandLevel: 0,
+      mutationEngineLevel: 0,
+      energyCoreLevel: 0,
+      cosmicKnowledgeLevel: 0,
+      discoveredUpgrades: { ship: true }, // Ship is always visible
     };
   }
 

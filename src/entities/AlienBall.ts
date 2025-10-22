@@ -1,5 +1,6 @@
 import type { Draw } from '../render/Draw';
 import type { Vec2, BallColor } from '../types';
+import { ColorManager } from '../math/ColorManager';
 
 export class AlienBall {
   private flashTime = 0;
@@ -44,22 +45,12 @@ export class AlienBall {
 
   static createRandom(x: number, y: number, radius: number, level: number): AlienBall {
     const color = AlienBall.getRandomColor();
-    // HP scales exponentially with level to prevent endgame spam killing
-    // Scales more aggressively at higher levels
-    let scalingFactor: number;
-    if (level <= 25) {
-      scalingFactor = Math.pow(1.15, level); // Gentle early game
-    } else if (level <= 50) {
-      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.22, level - 25); // Steeper mid game
-    } else if (level <= 75) {
-      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.22, 25) * Math.pow(1.28, level - 50); // Even steeper
-    } else {
-      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.22, 25) * Math.pow(1.28, 25) * Math.pow(1.35, level - 75); // Exponential endgame
-    }
+    // Use ColorManager for consistent HP scaling across the game
+    const hp = ColorManager.getHp(level);
     
     const levelScaledColor = {
       ...color,
-      hp: Math.floor(color.hp * scalingFactor)
+      hp: hp
     };
     return new AlienBall(x, y, radius, levelScaledColor);
   }

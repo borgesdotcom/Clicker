@@ -71,6 +71,15 @@ export class Shop {
     const state = this.store.getState();
     const currentPoints = state.points;
     
+    // Check for new discoveries (this might trigger a full re-render)
+    const discoveredSomethingNew = this.checkForDiscoveries(state);
+    
+    // If we discovered something new, do a full render
+    if (discoveredSomethingNew) {
+      this.render();
+      return;
+    }
+    
     // Check if we're close to affording something (within 10%)
     const nearAffordable = this.isNearAffordable(currentPoints);
     
@@ -95,6 +104,68 @@ export class Shop {
       }
       this.renderTimeout = null;
     });
+  }
+
+  private checkForDiscoveries(state: any): boolean {
+    // Initialize discoveredUpgrades if not present
+    if (!state.discoveredUpgrades) {
+      state.discoveredUpgrades = { ship: true };
+    }
+
+    let discoveredNew = false;
+    const upgrades = this.upgradeSystem.getUpgrades();
+    const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
+
+    // Check main upgrades
+    for (const upgrade of upgrades) {
+      if (upgrade.id === 'misc') continue;
+      
+      // Skip if already discovered or already purchased
+      if (state.discoveredUpgrades[upgrade.id] || upgrade.getLevel(state) > 0) {
+        if (upgrade.getLevel(state) > 0) {
+          state.discoveredUpgrades[upgrade.id] = true;
+        }
+        continue;
+      }
+      
+      // Check if player has 75% of the cost
+      const cost = upgrade.getCost(upgrade.getLevel(state));
+      if (state.points >= cost * 0.75) {
+        state.discoveredUpgrades[upgrade.id] = true;
+        discoveredNew = true;
+      }
+    }
+
+    // Check subupgrades
+    for (const subUpgrade of allSubUpgrades) {
+      const subKey = `sub_${subUpgrade.id}`;
+      
+      // Skip if already owned or already discovered
+      if (subUpgrade.owned || state.discoveredUpgrades[subKey]) {
+        if (subUpgrade.owned) {
+          state.discoveredUpgrades[subKey] = true;
+        }
+        continue;
+      }
+      
+      // Check if base requirements are met
+      if (!subUpgrade.requires(state)) {
+        continue;
+      }
+      
+      // Check if player has 75% of the cost
+      if (state.points >= subUpgrade.cost * 0.75) {
+        state.discoveredUpgrades[subKey] = true;
+        discoveredNew = true;
+      }
+    }
+
+    // If we discovered something new, save the state
+    if (discoveredNew) {
+      this.store.setState(state);
+    }
+
+    return discoveredNew;
   }
 
   private isNearAffordable(points: number): boolean {
@@ -221,11 +292,24 @@ export class Shop {
     const upgrades = this.upgradeSystem.getUpgrades();
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
 
+    // Discovery check is now done in scheduleRender for automatic updates
+    // Just ensure it's initialized here
+    if (!state.discoveredUpgrades) {
+      state.discoveredUpgrades = { ship: true };
+    }
+
     // Clear button cache for fresh render
     this.buttonCache.clear();
 
     // Render special upgrades box at the top
-    const visibleSubUpgrades = allSubUpgrades.filter(sub => sub.isVisible(state) && !sub.owned);
+    // Filter: must meet requirements AND be discovered (75% of cost OR already owned)
+    const visibleSubUpgrades = allSubUpgrades.filter(sub => {
+      const subKey = `sub_${sub.id}`;
+      return !sub.owned && 
+             sub.requires(state) && 
+             (state.discoveredUpgrades[subKey] || sub.owned);
+    });
+    
     if (visibleSubUpgrades.length > 0) {
       const specialBox = document.createElement('div');
       specialBox.className = 'special-upgrades-box';
@@ -246,9 +330,14 @@ export class Shop {
       this.container.appendChild(specialBox);
     }
 
-    // Render main upgrades (exclude R&D category)
+    // Render main upgrades (exclude R&D category and undiscovered upgrades)
     for (const upgrade of upgrades) {
       if (upgrade.id === 'misc') continue;
+      
+      // Only show if discovered OR already purchased
+      if (!state.discoveredUpgrades[upgrade.id] && upgrade.getLevel(state) === 0) {
+        continue;
+      }
 
       const item = document.createElement('div');
       item.className = 'upgrade-item';

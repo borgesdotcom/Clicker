@@ -80,26 +80,67 @@ export class ColorManager {
     }
   }
 
-  static getBossHp(level: number): number {
-    // Boss HP formula with smooth exponential growth and softcaps
-    // Formula matches BossSystem.ts for consistency
+  // New method: Get alien HP with proper scaling for level 1-1000
+  static getHp(level: number): number {
+    const baseHp = 10;
     
-    const BASE_HP = 5000;
-    const GROWTH = 1.18;
-    let levelExponent = 0.92;
-    
-    // Apply softcaps
-    if (level >= 800) {
-      levelExponent -= 0.12;
-    } else if (level >= 500) {
-      levelExponent -= 0.08;
-    } else if (level >= 200) {
-      levelExponent -= 0.05;
+    // Tier 1: Levels 1-100 - Moderate growth
+    if (level <= 100) {
+      return Math.floor(baseHp * Math.pow(1.15, level - 1));
     }
     
-    const hp = BASE_HP * Math.pow(GROWTH, Math.pow(level, levelExponent));
+    // Tier 2: Levels 101-500 - Stronger growth
+    const tier1Hp = baseHp * Math.pow(1.15, 99);
+    if (level <= 500) {
+      return Math.floor(tier1Hp * Math.pow(1.25, level - 100));
+    }
     
-    return Math.floor(hp);
+    // Tier 3: Levels 501-1000 - Exponential growth
+    const tier2Hp = tier1Hp * Math.pow(1.25, 400);
+    return Math.floor(tier2Hp * Math.pow(1.35, level - 500));
+  }
+
+  static getBossHp(level: number): number {
+    // Boss HP: 20x normal alien HP with additional scaling
+    const baseHp = this.getHp(level) * 20;
+    
+    // Early game bosses (< 30): Just 20x
+    if (level < 30) {
+      return Math.floor(baseHp);
+    }
+    
+    // Tier 1: Levels 30-99 - Moderate additional scaling
+    if (level < 100) {
+      return Math.floor(baseHp * Math.pow(1.1, level - 30));
+    }
+    
+    // Tier 2: Levels 100-499 - Stronger additional scaling
+    const tier1Bonus = Math.pow(1.1, 70);
+    if (level < 500) {
+      return Math.floor(baseHp * tier1Bonus * Math.pow(1.15, level - 100));
+    }
+    
+    // Tier 3: Levels 500-1000 - Maximum scaling
+    const tier2Bonus = tier1Bonus * Math.pow(1.15, 400);
+    return Math.floor(baseHp * tier2Bonus * Math.pow(1.20, level - 500));
+  }
+
+  // Get boss timer limit (scales with level)
+  static getBossTimeLimit(level: number): number {
+    const baseTime = 30;
+    
+    if (level < 50) {
+      return baseTime;
+    } else if (level < 200) {
+      // +5s per 10 levels
+      return baseTime + Math.floor((level - 50) / 10) * 5;
+    } else if (level < 500) {
+      // Previous bonus + 10s per 10 levels
+      return baseTime + 75 + Math.floor((level - 200) / 10) * 10;
+    } else {
+      // Previous bonuses + 15s per 10 levels
+      return baseTime + 75 + 300 + Math.floor((level - 500) / 10) * 15;
+    }
   }
 }
 

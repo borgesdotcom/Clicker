@@ -35,6 +35,13 @@ export interface SaveData {
     echoAccumulator: number;
   };
   blockedOnBossLevel?: number | null;
+  // v3.0: New upgrade systems
+  weaponMasteryLevel?: number;
+  fleetCommandLevel?: number;
+  mutationEngineLevel?: number;
+  energyCoreLevel?: number;
+  cosmicKnowledgeLevel?: number;
+  discoveredUpgrades?: Record<string, boolean>;
 }
 
 export interface GameStats {
@@ -83,6 +90,14 @@ export interface GameState {
     echoAccumulator: number;
   };
   blockedOnBossLevel?: number | null;
+  // v3.0: New upgrade systems
+  weaponMasteryLevel: number;
+  fleetCommandLevel: number;
+  mutationEngineLevel: number;
+  energyCoreLevel: number;
+  cosmicKnowledgeLevel: number;
+  // Upgrade discovery tracking (appear when you have 75% of cost)
+  discoveredUpgrades?: Record<string, boolean>;
 }
 
 export interface UpgradeConfig {

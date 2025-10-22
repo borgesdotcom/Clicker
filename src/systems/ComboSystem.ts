@@ -119,14 +119,20 @@ export class ComboSystem {
    * Draw combo UI with timer bar
    * @param drawer - Drawing context
    * @param canvasWidth - Canvas width for positioning
+   * @param canvasHeight - Canvas height for positioning (optional, for mobile)
    */
-  draw(drawer: Draw, canvasWidth: number): void {
+  draw(drawer: Draw, canvasWidth: number, canvasHeight?: number): void {
     // Only show combo if active
     if (this.combo < 1 || this.comboTimer <= 0) return;
 
     const ctx = drawer.getContext();
-    const x = canvasWidth - 150;
-    const y = 100;
+    
+    // Mobile detection: if canvas is in portrait mode or small width
+    const isMobile = canvasWidth <= 768;
+    
+    // Position: top-right on desktop, below center on mobile
+    const x = isMobile ? canvasWidth / 2 : canvasWidth - 150;
+    const y = isMobile && canvasHeight ? canvasHeight * 0.65 : 100;
 
     ctx.save();
     

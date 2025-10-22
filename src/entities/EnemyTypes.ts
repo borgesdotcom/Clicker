@@ -1,5 +1,6 @@
 import { AlienBall } from './AlienBall';
 import type { Draw } from '../render/Draw';
+import { ColorManager } from '../math/ColorManager';
 
 export type EnemyType = 'normal' | 'scout' | 'tank' | 'healer';
 
@@ -94,6 +95,7 @@ export class EnhancedAlienBall extends AlienBall {
   private stats: EnemyStats;
   private healTimer = 0;
   private healInterval = 2;
+  private animationTime = 0; // For movement animations
   private onDamageCallback?: (damage: number, x: number, y: number, radius: number) => void;
 
   constructor(
@@ -138,20 +140,10 @@ export class EnhancedAlienBall extends AlienBall {
     this.enemyType = enemyType;
     this.stats = stats;
 
-    // Apply stat modifiers to HP
-    const baseHp = this.maxHp;
+    // Use ColorManager for consistent HP scaling
+    const baseHp = ColorManager.getHp(level);
     
-    // Scale with level
-    let scalingFactor: number;
-    if (level <= 25) {
-      scalingFactor = Math.pow(1.15, level);
-    } else if (level <= 50) {
-      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.2, level - 25);
-    } else {
-      scalingFactor = Math.pow(1.15, 25) * Math.pow(1.2, 25) * Math.pow(1.25, level - 50);
-    }
-    
-    this.maxHp = Math.floor(baseHp * scalingFactor * this.stats.hpMultiplier);
+    this.maxHp = Math.floor(baseHp * this.stats.hpMultiplier);
     this.currentHp = this.maxHp;
     
     // Apply size modifier
@@ -178,6 +170,9 @@ export class EnhancedAlienBall extends AlienBall {
 
   public override update(dt: number, _canvasWidth?: number, _canvasHeight?: number): void {
     super.update(dt);
+
+    // Update animation time for all enemy types
+    this.animationTime += dt;
 
     // Healer ability: slowly regenerates health
     if (this.enemyType === 'healer' && this.currentHp < this.maxHp) {
@@ -289,32 +284,51 @@ export class EnhancedAlienBall extends AlienBall {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
     
-    // Draw armor plating
+    // Slow rotation for armor plating (heavy movement)
+    const armorRotation = this.animationTime * 0.3; // Slow rotation
+    
+    // Pulsing effect for shield (breathing effect)
+    const shieldPulse = Math.sin(this.animationTime * 2) * 2;
+    
+    // Draw rotating armor plating
     ctx.strokeStyle = '#ff6666';
     ctx.lineWidth = 4;
     for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
+      const angle = (i / 6) * Math.PI * 2 + armorRotation;
       ctx.beginPath();
       ctx.arc(centerX, centerY, this.radius + 5, angle - 0.3, angle + 0.3);
       ctx.stroke();
     }
 
-    // Draw main body
+    // Draw main body with subtle breathing effect
+    const bodyScale = 1 + Math.sin(this.animationTime * 1.5) * 0.02;
     ctx.fillStyle = this.stats.color;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, this.radius * bodyScale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Draw shield indicator
-    const shieldRadius = this.radius + 8;
-    ctx.strokeStyle = 'rgba(255, 68, 68, 0.4)';
+    // Draw pulsing shield indicator
+    const shieldRadius = this.radius + 8 + shieldPulse;
+    const shieldAlpha = 0.3 + Math.sin(this.animationTime * 2) * 0.1;
+    ctx.strokeStyle = `rgba(255, 68, 68, ${String(shieldAlpha)})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(centerX, centerY, shieldRadius, 0, Math.PI * 2);
     ctx.stroke();
+    
+    // Add inner armor detail that counter-rotates
+    ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2 - armorRotation; // Counter rotation
+      const innerRadius = this.radius * 0.6;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, innerRadius, angle - 0.4, angle + 0.4);
+      ctx.stroke();
+    }
   }
 
   private drawHealer(ctx: CanvasRenderingContext2D, centerX: number, centerY: number): void {

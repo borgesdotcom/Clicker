@@ -296,9 +296,8 @@ export class Game {
 
   private startBossTimer(): void {
     const state = this.store.getState();
-    // Time limit scales with level - starts at 60s, increases slightly
-    // But caps at 90s for very high levels
-    this.bossTimeLimit = Math.min(30 + Math.floor(state.level / 20) * 5, 90);
+    // Use ColorManager for dynamic boss timer scaling
+    this.bossTimeLimit = ColorManager.getBossTimeLimit(state.level);
     this.bossTimeRemaining = this.bossTimeLimit;
     
     // Show timer
@@ -497,8 +496,7 @@ export class Game {
     // Calculate prestige points to gain
     const prestigeGain = this.ascensionSystem.calculatePrestigePoints(state);
     
-    // Save what we're keeping
-    const keepSubUpgrades = { ...state.subUpgrades };
+    // Save what we're keeping (ONLY artifacts, achievements, stats, and prestige)
     const keepAchievements = { ...state.achievements };
     const keepStats = { ...state.stats };
     const keepPrestigeUpgrades = { ...state.prestigeUpgrades };
@@ -523,7 +521,7 @@ export class Game {
       xpBoostLevel: 0,
       level: startingLevel,
       experience: 0,
-      subUpgrades: keepSubUpgrades, // Keep special upgrades
+      subUpgrades: {}, // Reset all subupgrades - only artifacts persist!
       achievements: keepAchievements, // Keep achievements
       stats: keepStats, // Keep stats
       prestigeLevel: newPrestigeLevel,
@@ -544,6 +542,13 @@ export class Game {
         echoAccumulator: 0,
       },
       blockedOnBossLevel: null, // Reset boss block on ascension
+      // v3.0: New upgrades (reset on ascension - only artifacts persist)
+      weaponMasteryLevel: 0,
+      fleetCommandLevel: 0,
+      mutationEngineLevel: 0,
+      energyCoreLevel: 0,
+      cosmicKnowledgeLevel: 0,
+      discoveredUpgrades: { ship: true }, // Reset discoveries, ship always visible
     };
     
     // Clear local boss block state
@@ -712,7 +717,8 @@ export class Game {
 
   private fireVolley(): void {
     const state = this.store.getState();
-    let damage = this.upgradeSystem.getPointsPerHit(state);
+    // Use main ship damage (stronger!)
+    let damage = this.upgradeSystem.getMainShipDamage(state);
     
     // v2.0: Apply artifact bonuses
     damage *= (1 + this.artifactSystem.getDamageBonus());
@@ -788,10 +794,11 @@ export class Game {
     if (!ship) return false;
 
     const state = this.store.getState();
-    let damage = this.upgradeSystem.getPointsPerHit(state);
+    // Use auto-fire damage (weaker but scales with ship count)
+    let damage = this.upgradeSystem.getAutoFireDamage(state);
     
-    // v2.0: Apply artifact bonuses
-    damage *= (1 + this.artifactSystem.getDamageBonus());
+    // v2.0: Apply artifact bonuses (at reduced rate for auto-fire)
+    damage *= (1 + this.artifactSystem.getDamageBonus() * 0.5);
     
     // Apply boss damage bonus in boss mode
     if (this.mode === 'boss') {
@@ -1369,7 +1376,7 @@ export class Game {
       
       // Draw combo
       if (this.comboSystem.getCombo() > 0) {
-        this.comboSystem.draw(this.draw, this.canvas.getWidth());
+        this.comboSystem.draw(this.draw, this.canvas.getWidth(), this.canvas.getHeight());
       }
     }
 
