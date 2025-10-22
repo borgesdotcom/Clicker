@@ -7,6 +7,7 @@
 import type { Store } from '../core/Store';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
 import { Button } from './Button';
+import { NumberFormatter } from '../utils/NumberFormatter';
 
 export class Shop {
   private container: HTMLElement;
@@ -435,16 +436,20 @@ export class Shop {
       
       // Calculate cost based on buy quantity
       const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
+      const actualAffordable = quantity;
+      const requestedQty = this.buyQuantity === 'max' ? quantity : this.buyQuantity;
+      
       const costText = quantity > 1 
         ? `Cost: ${this.formatNumber(totalCost)} (x${quantity})`
         : `Cost: ${this.formatNumber(totalCost)}`;
       cost.textContent = costText;
 
-      const canAffordBulk = state.points >= totalCost;
+      // Can buy if we can afford at least 1, or the exact quantity requested (not MAX)
+      const canAffordAny = state.points >= totalCost && (this.buyQuantity === 'max' || actualAffordable === requestedQty);
       const button = new Button(quantity > 1 ? `BUY x${quantity}` : 'BUY', () => {
         this.buyUpgrade(upgrade, quantity);
       });
-      button.setEnabled(canAffordBulk);
+      button.setEnabled(canAffordAny);
 
       // Cache the button element for quick updates
       const buttonElement = button.getElement();
@@ -612,12 +617,27 @@ export class Shop {
         return { totalCost: upgrade.getCost(currentLevel), quantity: 1 };
       }
     } else {
-      // Calculate cost for specific quantity
+      // Calculate cost for specific quantity (only what's affordable)
       const targetQuantity = this.buyQuantity;
+      let tempPoints = state.points;
+      
       for (let i = 0; i < targetQuantity; i++) {
         const cost = upgrade.getCost(currentLevel + i);
-        totalCost += cost;
-        quantity++;
+        if (tempPoints >= cost) {
+          tempPoints -= cost;
+          totalCost += cost;
+          quantity++;
+        } else {
+          break; // Can't afford more
+        }
+      }
+      
+      // If can't afford any, show cost of requested quantity anyway for display
+      if (quantity === 0) {
+        for (let i = 0; i < targetQuantity; i++) {
+          totalCost += upgrade.getCost(currentLevel + i);
+        }
+        quantity = targetQuantity;
       }
     }
 
@@ -713,10 +733,8 @@ export class Shop {
     this.isProcessingPurchase = false;
   }
 
+  // Deprecated - use NumberFormatter instead
   private formatNumber(num: number): string {
-    if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
-    if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-    if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
-    return Math.floor(num).toString();
+    return NumberFormatter.format(num);
   }
 }

@@ -1715,7 +1715,7 @@ export class UpgradeSystem {
           Math.ceil(50 * Math.pow(1.25, state.attackSpeedLevel)),
         );
         const cooldown = this.getFireCooldown(state);
-        // Don't allow buying if already at minimum cooldown
+        // Don't allow buying if already at minimum cooldown (50ms)
         return state.points >= cost && cooldown > 50;
       },
       buy: (state: GameState) => {
@@ -1850,7 +1850,7 @@ export class UpgradeSystem {
       },
       getLevel: (state: GameState) => state.weaponMasteryLevel,
       getDisplayText: (state: GameState) =>
-        `Lv.${state.weaponMasteryLevel.toString()} (+${(state.weaponMasteryLevel * 25).toString()}% damage)`,
+        `Lv.${state.weaponMasteryLevel.toString()} (+${(state.weaponMasteryLevel * 10).toString()}% damage)`,
       subUpgrades: weaponMasterySubUpgrades,
     };
 
@@ -1925,7 +1925,7 @@ export class UpgradeSystem {
       },
       getLevel: (state: GameState) => state.mutationEngineLevel,
       getDisplayText: (state: GameState) =>
-        `Lv.${state.mutationEngineLevel.toString()} (+${(state.mutationEngineLevel * 2).toString()}% all dmg)`,
+        `Lv.${state.mutationEngineLevel.toString()} (+${(state.mutationEngineLevel * 1).toString()}% all dmg)`,
       subUpgrades: mutationEngineSubUpgrades,
     };
 
@@ -2505,8 +2505,9 @@ export class UpgradeSystem {
 
   getFireCooldown(state: GameState): number {
     this.updateSubUpgradesFromState(state);
+    // Slower scaling: 0.990 instead of 0.985 makes it much harder to reach low cooldowns
     let cooldown = Math.max(
-      Math.floor(10000 * Math.pow(0.985, state.attackSpeedLevel)),
+      Math.floor(10000 * Math.pow(0.990, state.attackSpeedLevel)),
       120,
     );
 
@@ -2598,7 +2599,7 @@ export class UpgradeSystem {
       cooldown /= speedMult;
     }
 
-    return Math.max(Math.floor(cooldown), 25); // Lower minimum for late game
+    return Math.max(Math.floor(cooldown), 50); // Minimum 50ms (20 attacks/sec max)
   }
 
   getBonusXP(state: GameState): number {
@@ -2630,14 +2631,14 @@ export class UpgradeSystem {
     // Base damage: +0.1 per level (1.0 -> 1.1 -> 1.2 -> 1.3, etc.)
     let multiplier = this.basePoints * (1 + 0.1 * state.pointMultiplierLevel);
 
-    // v3.0: Weapon Mastery bonus (+25% per level)
+    // v3.0: Weapon Mastery bonus (+10% per level, reduced from 25% for balance)
     if (state.weaponMasteryLevel > 0) {
-      multiplier *= 1 + state.weaponMasteryLevel * 0.25;
+      multiplier *= 1 + state.weaponMasteryLevel * 0.10;
     }
 
-    // v3.0: Mutation Engine bonus (+2% all damage per level)
+    // v3.0: Mutation Engine bonus (+1% all damage per level, reduced from 2%)
     if (state.mutationEngineLevel > 0) {
-      multiplier *= 1 + state.mutationEngineLevel * 0.02;
+      multiplier *= 1 + state.mutationEngineLevel * 0.01;
     }
 
     // v3.0: WEAPON MASTERY SUBUPGRADES
@@ -2828,9 +2829,9 @@ export class UpgradeSystem {
       multiplier *= 1 + state.fleetCommandLevel * 0.05;
     }
 
-    // v3.0: Mutation Engine bonus (+2% all damage per level)
+    // v3.0: Mutation Engine bonus (+1% all damage per level, reduced from 2%)
     if (state.mutationEngineLevel > 0) {
-      multiplier *= 1 + state.mutationEngineLevel * 0.02;
+      multiplier *= 1 + state.mutationEngineLevel * 0.01;
     }
 
     // v3.0: FLEET COMMAND SUBUPGRADES

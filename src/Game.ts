@@ -142,6 +142,8 @@ export class Game {
     this.artifactSystem = new ArtifactSystem();
     this.missionSystem = new MissionSystem(this.store);
     this.upgradeSystem.setAscensionSystem(this.ascensionSystem);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    this.comboSystem.setAscensionSystem(this.ascensionSystem);
     this.achievementSnackbar = new AchievementSnackbar();
     this.achievementsModal = new AchievementsModal(this.achievementSystem);
     this.ascensionModal = new AscensionModal(
@@ -987,7 +989,7 @@ export class Game {
     }
 
     // Apply combo multiplier (works in all modes now!)
-    const comboMult = this.comboSystem.getMultiplier();
+    const comboMult = this.comboSystem.getMultiplier(this.store.getState());
     finalDamage *= comboMult;
 
     // Play combo sound on milestone combos (boss mode only for sound)
@@ -1418,6 +1420,7 @@ export class Game {
           this.draw,
           this.canvas.getWidth(),
           this.canvas.getHeight(),
+          this.store.getState(),
         );
       }
     }

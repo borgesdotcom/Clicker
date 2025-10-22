@@ -4,6 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
+import { NumberFormatter } from '../utils/NumberFormatter';
+
 export class Hud {
   private pointsDisplay: HTMLElement;
   private levelText: HTMLElement;
@@ -15,6 +17,11 @@ export class Hud {
 
   private damageHistory: number[] = [];
   private readonly DPS_WINDOW = 5000; // 5 seconds window for DPS calculation
+  
+  // Cache last values to avoid unnecessary DOM updates
+  private lastPointsText = '';
+  private lastStatsText = { dps: '', passive: '', crit: '' };
+  private lastLevelText = { level: '', exp: '', percent: -1 };
 
   constructor() {
     const pointsEl = document.getElementById('points-display');
@@ -76,18 +83,29 @@ export class Hud {
   }
 
   update(points: number): void {
-    this.pointsDisplay.textContent = `💰 Points: ${this.formatNumber(points)}`;
+    const newText = `💰 Points: ${NumberFormatter.format(points)}`;
+    if (newText !== this.lastPointsText) {
+      this.pointsDisplay.textContent = newText;
+      this.lastPointsText = newText;
+    }
   }
 
   updateStats(dps: number, passive: number, critChance: number): void {
-    if (this.dpsDisplay) {
-      this.dpsDisplay.textContent = `⚔️ DPS: ${this.formatNumber(dps)}`;
+    const dpsText = `⚔️ DPS: ${NumberFormatter.format(dps)}`;
+    const passiveText = `🏭 Passive: ${NumberFormatter.format(passive)}/sec`;
+    const critText = `✨ Crit: ${NumberFormatter.formatDecimal(critChance, 1)}%`;
+
+    if (this.dpsDisplay && dpsText !== this.lastStatsText.dps) {
+      this.dpsDisplay.textContent = dpsText;
+      this.lastStatsText.dps = dpsText;
     }
-    if (this.passiveDisplay) {
-      this.passiveDisplay.textContent = `🏭 Passive: ${this.formatNumber(passive)}/sec`;
+    if (this.passiveDisplay && passiveText !== this.lastStatsText.passive) {
+      this.passiveDisplay.textContent = passiveText;
+      this.lastStatsText.passive = passiveText;
     }
-    if (this.critDisplay) {
-      this.critDisplay.textContent = `✨ Crit: ${critChance.toFixed(1)}%`;
+    if (this.critDisplay && critText !== this.lastStatsText.crit) {
+      this.critDisplay.textContent = critText;
+      this.lastStatsText.crit = critText;
     }
   }
 
@@ -122,10 +140,23 @@ export class Hud {
   }
 
   updateLevel(level: number, experience: number, expToNext: number): void {
-    this.levelText.textContent = `⭐ Level ${level}`;
-    this.expText.textContent = `${Math.floor(experience)} / ${expToNext}`;
+    const levelText = `⭐ Level ${level}`;
+    const expText = `${Math.floor(experience)} / ${expToNext}`;
     const percent = Math.min(100, (experience / expToNext) * 100);
-    this.levelBarFill.style.width = `${percent}%`;
+    
+    // Only update DOM if changed
+    if (levelText !== this.lastLevelText.level) {
+      this.levelText.textContent = levelText;
+      this.lastLevelText.level = levelText;
+    }
+    if (expText !== this.lastLevelText.exp) {
+      this.expText.textContent = expText;
+      this.lastLevelText.exp = expText;
+    }
+    if (Math.abs(percent - this.lastLevelText.percent) > 0.1) {
+      this.levelBarFill.style.width = `${percent}%`;
+      this.lastLevelText.percent = percent;
+    }
 
     // Add visual feedback for milestone levels
     if (level % 10 === 0 && level > 0) {
@@ -140,11 +171,9 @@ export class Hud {
     }
   }
 
+  // Deprecated - use NumberFormatter instead
   private formatNumber(num: number): string {
-    if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
-    if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-    if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
-    return Math.floor(num).toString();
+    return NumberFormatter.format(num);
   }
 
   showMessage(

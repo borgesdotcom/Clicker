@@ -12,8 +12,8 @@ import type { Draw } from '../render/Draw';
 
 // ===== CONFIGURATION CONSTANTS =====
 
-/** Combo multiplier per hit */
-const COMBO_MULTIPLIER_PER_HIT = 0.001;
+/** Base combo multiplier per hit */
+const BASE_COMBO_MULTIPLIER = 0.001;
 
 /** Time in seconds before combo resets */
 const COMBO_TIMEOUT = 5.0;
@@ -28,6 +28,15 @@ export class ComboSystem {
   private comboTimer = 0;
   private maxCombo = 0;
   private comboAnimationTime = 0;
+  private ascensionSystem: any = null;
+
+  /**
+   * Set ascension system for combo bonuses
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setAscensionSystem(ascensionSystem: any): void {
+    this.ascensionSystem = ascensionSystem;
+  }
 
   /**
    * Register a hit (click or QTE success)
@@ -39,7 +48,7 @@ export class ComboSystem {
     // Apply cap if configured
     if (COMBO_MAX_MULTIPLIER !== null) {
       const maxCombo = Math.floor(
-        COMBO_MAX_MULTIPLIER / COMBO_MULTIPLIER_PER_HIT,
+        COMBO_MAX_MULTIPLIER / BASE_COMBO_MULTIPLIER,
       );
       this.combo = Math.min(this.combo, maxCombo);
     }
@@ -92,15 +101,20 @@ export class ComboSystem {
   }
 
   /**
-   * Get damage multiplier: 1 + (combo × 0.001)
+   * Get damage multiplier: 1 + (combo × multiplier)
+   * Multiplier affected by ascension upgrades
    * Examples:
    * - 0 hits: 1.000×
    * - 100 hits: 1.100×
    * - 500 hits: 1.500×
    * - 1000 hits: 2.000×
    */
-  getMultiplier(): number {
-    return 1 + this.combo * COMBO_MULTIPLIER_PER_HIT;
+  getMultiplier(state?: any): number {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const multiplierPerHit = this.ascensionSystem && state
+      ? this.ascensionSystem.getComboBoostMultiplier(state)
+      : BASE_COMBO_MULTIPLIER;
+    return 1 + this.combo * multiplierPerHit;
   }
 
   /**
@@ -122,8 +136,10 @@ export class ComboSystem {
    * @param drawer - Drawing context
    * @param canvasWidth - Canvas width for positioning
    * @param canvasHeight - Canvas height for positioning (optional, for mobile)
+   * @param state - Game state for ascension bonuses
    */
-  draw(drawer: Draw, canvasWidth: number, canvasHeight?: number): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  draw(drawer: Draw, canvasWidth: number, canvasHeight?: number, state?: any): void {
     // Only show combo if active
     if (this.combo < 1 || this.comboTimer <= 0) return;
 
@@ -149,7 +165,7 @@ export class ComboSystem {
     ctx.translate(-x, -y);
 
     // Multiplier text (large, primary)
-    const multiplier = this.getMultiplier();
+    const multiplier = this.getMultiplier(state);
     ctx.font = 'bold 26px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
