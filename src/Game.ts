@@ -727,11 +727,13 @@ export class Game {
       damage *= voidHeartBonus;
     }
     
-    // Target the appropriate enemy
-    const target = this.mode === 'boss'
-      ? { x: this.bossBall?.x ?? 0, y: this.bossBall?.y ?? 0 }
-      : { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
+    // Don't fire if there's no valid target
+    const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+    if (!targetEntity || targetEntity.currentHp <= 0) {
+      return; // No target to shoot at
+    }
     
+    const target = { x: targetEntity.x, y: targetEntity.y };
     const laserVisuals = this.getLaserVisuals(state);
 
     // Only fire from the main ship (index 0) when clicking
@@ -801,11 +803,13 @@ export class Game {
       damage *= voidHeartBonus;
     }
     
-    // Target the appropriate enemy
-    const target = this.mode === 'boss' 
-      ? { x: this.bossBall?.x ?? 0, y: this.bossBall?.y ?? 0 }
-      : { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
+    // Don't fire if there's no valid target
+    const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+    if (!targetEntity || targetEntity.currentHp <= 0) {
+      return; // No target to shoot at
+    }
     
+    const target = { x: targetEntity.x, y: targetEntity.y };
     const laserVisuals = this.getLaserVisuals(state);
 
     // Mark laser as from ship so it can be hidden for performance
