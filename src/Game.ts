@@ -1089,18 +1089,20 @@ export class Game {
         this.ball = null;
         this.showBossDialog();
       } else {
+        // Instant respawn for better late-game flow
         setTimeout(() => {
           if (this.mode === 'normal' && !this.ball) {
             this.createBall();
           }
-        }, 400);
+        }, 250); // Reduced from 400ms to 50ms
       }
     } else {
+      // Instant respawn for better late-game flow
       setTimeout(() => {
         if (this.mode === 'normal' && !this.ball) {
           this.createBall();
         }
-      }, 400);
+      }, 250); // Reduced from 400ms to 50ms
     }
 
     this.store.setState(state);
