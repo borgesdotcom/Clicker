@@ -35,6 +35,7 @@ import { MissionsModal } from './ui/MissionsModal';
 import { ArtifactsModal } from './ui/ArtifactsModal';
 import { VersionSplash } from './ui/VersionSplash';
 import { Layout } from './ui/Layout';
+import { CreditsModal } from './ui/CreditsModal';
 import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
 import type { Vec2, GameMode } from './types';
@@ -69,6 +70,7 @@ export class Game {
   private artifactsModal: ArtifactsModal;
   private statsPanel: StatsPanel;
   private settingsModal: SettingsModal;
+  private creditsModal: CreditsModal;
   private hud: Hud;
   private saveTimer = 0;
   private saveInterval = 3;
@@ -157,6 +159,7 @@ export class Game {
     this.artifactsModal = new ArtifactsModal(this.artifactSystem, this.store);
     this.statsPanel = new StatsPanel(this.upgradeSystem);
     this.settingsModal = new SettingsModal(this.soundManager);
+    this.creditsModal = new CreditsModal(this.store);
     (this as any).debugPanel = new DebugPanel(
       this.store,
       () => {
@@ -261,6 +264,7 @@ export class Game {
     this.setupSettingsButton();
     this.setupMissionsButton();
     this.setupArtifactsButton();
+    this.setupCreditsButton();
     this.setupGraphicsToggle();
     Layout.setupResetButton(() => {
       this.resetGame();
@@ -508,6 +512,28 @@ export class Game {
         this.artifactsModal.show();
       });
       hudElement.appendChild(artifactsBtn);
+    }
+  }
+
+  private setupCreditsButton(): void {
+    // Add Credits button to the shop panel instead of HUD (more space)
+    const shopPanel = document.getElementById('shop-panel');
+    const resetContainer = document.getElementById('reset-container');
+    
+    if (shopPanel && resetContainer) {
+      const creditsBtn = document.createElement('button');
+      creditsBtn.id = 'credits-button';
+      creditsBtn.className = 'shop-button';
+      creditsBtn.textContent = '🎮 Credits & Share';
+      creditsBtn.style.marginBottom = '10px';
+      creditsBtn.style.marginTop = '10px';
+      creditsBtn.style.width = '100%';
+      creditsBtn.addEventListener('click', () => {
+        this.creditsModal.show();
+      });
+      
+      // Insert before reset button
+      shopPanel.insertBefore(creditsBtn, resetContainer);
     }
   }
 
