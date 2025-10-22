@@ -2,6 +2,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Prevent text selection and context menu for cleaner game experience */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  /* Prevent drag and touch callout */
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 html {
@@ -20,6 +29,9 @@ body {
   height: 100vh;
   position: fixed;
   -webkit-overflow-scrolling: touch;
+  /* Disable drag and drop */
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
 #app {
