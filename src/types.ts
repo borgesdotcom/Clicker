@@ -34,6 +34,7 @@ export interface SaveData {
     };
     echoAccumulator: number;
   };
+  blockedOnBossLevel?: number | null;
 }
 
 export interface GameStats {
@@ -81,6 +82,7 @@ export interface GameState {
     };
     echoAccumulator: number;
   };
+  blockedOnBossLevel?: number | null;
 }
 
 export interface UpgradeConfig {

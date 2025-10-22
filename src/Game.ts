@@ -378,6 +378,7 @@ export class Game {
     
     // Block progression until boss is defeated
     this.blockedOnBossLevel = state.level;
+    state.blockedOnBossLevel = state.level; // Save to state for persistence
     
     this.store.setState(state);
     
@@ -542,7 +543,14 @@ export class Game {
         },
         echoAccumulator: 0,
       },
+      blockedOnBossLevel: null, // Reset boss block on ascension
     };
+    
+    // Clear local boss block state
+    this.blockedOnBossLevel = null;
+    if (this.bossRetryButton) {
+      this.bossRetryButton.style.display = 'none';
+    }
     
     this.store.setState(freshState);
     Save.save(this.store.getState());
@@ -573,6 +581,16 @@ export class Game {
     this.createBall();
     this.createShips();
     const state = this.store.getState();
+    
+    // Restore blocked boss level state from save
+    if (state.blockedOnBossLevel !== undefined && state.blockedOnBossLevel !== null) {
+      this.blockedOnBossLevel = state.blockedOnBossLevel;
+      // Show the retry button if blocked
+      if (this.bossRetryButton) {
+        this.bossRetryButton.style.display = 'block';
+      }
+    }
+    
     this.hud.update(state.points);
     this.hud.updateLevel(
       state.level,
@@ -961,10 +979,18 @@ export class Game {
   }
 
   private onBallDestroyed(): void {
+    // Don't process if in transition or boss mode
+    if (this.mode === 'transition' || this.mode === 'boss') {
+      return;
+    }
+    
     // Apply any remaining batched damage before destroying
     if (this.damageBatch > 0) {
       this.applyDamageBatch();
     }
+    
+    // Clear the current ball
+    this.ball = null;
     
     const state = this.store.getState();
     this.store.incrementAlienKill();
@@ -982,10 +1008,10 @@ export class Game {
     
     state.experience += bonusXP;
 
-    // BLOCKING MECHANIC: Cannot level up during boss fights OR if blocked on a boss level!
+    // BLOCKING MECHANIC: Cannot level up if blocked on a boss level!
     // XP is accumulated but level-up is deferred until boss is defeated
     let leveledUp = false;
-    if (this.mode !== 'boss' && this.blockedOnBossLevel === null) {
+    if (this.blockedOnBossLevel === null) {
       // Handle multiple level ups if we gained enough XP
       while (state.experience >= ColorManager.getExpRequired(state.level)) {
         const expRequired = ColorManager.getExpRequired(state.level);
@@ -1000,15 +1026,22 @@ export class Game {
       this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
+        this.ball = null; // Ensure ball is cleared before boss
         this.showBossDialog();
       } else {
         setTimeout(() => {
-          this.createBall();
+          // Only create if still in normal mode
+          if (this.mode === 'normal' && !this.ball) {
+            this.createBall();
+          }
         }, 400);
       }
     } else {
       setTimeout(() => {
-        this.createBall();
+        // Only create if still in normal mode
+        if (this.mode === 'normal' && !this.ball) {
+          this.createBall();
+        }
       }, 400);
     }
 
@@ -1019,6 +1052,11 @@ export class Game {
    * Handle boss defeat - now works just like normal alien
    */
   private handleBossDefeat(): void {
+    // Prevent multiple boss defeat calls
+    if (this.mode !== 'boss' || !this.bossBall || this.bossBall.currentHp > 0) {
+      return;
+    }
+    
     const state = this.store.getState();
     this.store.incrementBossKill();
     
@@ -1066,6 +1104,9 @@ export class Game {
     
     // Unblock progression
     this.blockedOnBossLevel = null;
+    state.blockedOnBossLevel = null; // Save to state for persistence
+    this.store.setState(state); // Save immediately
+    
     if (this.bossRetryButton) {
       this.bossRetryButton.style.display = 'none';
     }
@@ -1074,12 +1115,13 @@ export class Game {
     this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
     
     // Visual celebration
-    if (this.userSettings.highGraphics && this.bossBall) {
-      const bossPos = { x: this.bossBall.x, y: this.bossBall.y };
-      this.particleSystem.spawnExplosion(bossPos.x, bossPos.y, '#ffaa00');
+    if (this.userSettings.highGraphics) {
+      const centerX = this.canvas.getCenterX();
+      const centerY = this.canvas.getCenterY();
+      this.particleSystem.spawnExplosion(centerX, centerY, '#ffaa00');
       // Second delayed explosion
       setTimeout(() => {
-        this.particleSystem.spawnExplosion(bossPos.x, bossPos.y, '#ff0000');
+        this.particleSystem.spawnExplosion(centerX, centerY, '#ff0000');
       }, 200);
     }
     
@@ -1103,12 +1145,16 @@ export class Game {
   private startTransitionToBoss(): void {
     this.mode = 'transition';
     this.transitionTime = 0;
+    this.ball = null; // Clear any existing ball
     this.comboSystem.reset();
     
     setTimeout(() => {
-      this.createBoss();
-      this.mode = 'boss';
-      this.startBossTimer(); // Start the countdown!
+      // Only create boss if still in transition mode
+      if (this.mode === 'transition') {
+        this.createBoss();
+        this.mode = 'boss';
+        this.startBossTimer(); // Start the countdown!
+      }
     }, this.transitionDuration * 500);
   }
 
@@ -1118,8 +1164,11 @@ export class Game {
     this.bossBall = null; // Clear boss
     
     setTimeout(() => {
-      this.createBall();
-      this.mode = 'normal';
+      // Only create ball if still in transition mode
+      if (this.mode === 'transition') {
+        this.mode = 'normal';
+        this.createBall();
+      }
     }, this.transitionDuration * 500);
   }
 
@@ -1294,8 +1343,13 @@ export class Game {
       this.laserSystem.draw(this.draw);
       
       // Layer 3: Main entities (ball appears in front of lasers)
-      this.ball?.draw(this.draw);
-      this.bossBall?.draw(this.draw);
+      // Only draw if alive
+      if (this.ball && this.ball.currentHp > 0) {
+        this.ball.draw(this.draw);
+      }
+      if (this.bossBall && this.bossBall.currentHp > 0) {
+        this.bossBall.draw(this.draw);
+      }
 
       // Layer 4: Ships (always visible now)
       const state = this.store.getState();

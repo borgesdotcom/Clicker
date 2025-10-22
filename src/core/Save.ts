@@ -23,6 +23,7 @@ export class Save {
       prestigePoints: state.prestigePoints,
       prestigeUpgrades: state.prestigeUpgrades,
       harmonicState: state.harmonicState,
+      blockedOnBossLevel: state.blockedOnBossLevel,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -99,6 +100,7 @@ export class Save {
           ...(data.harmonicState.sigils ?? {}),
         },
       } : defaultHarmonicState,
+      blockedOnBossLevel: data.blockedOnBossLevel ?? null,
     };
   }
 
@@ -134,6 +136,7 @@ export class Save {
         },
         echoAccumulator: 0,
       },
+      blockedOnBossLevel: null,
     };
   }
 
