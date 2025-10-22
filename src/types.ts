@@ -42,6 +42,8 @@ export interface SaveData {
   energyCoreLevel?: number;
   cosmicKnowledgeLevel?: number;
   discoveredUpgrades?: Record<string, boolean>;
+  // Ascension tracking: highest level reached for prestige point calculation
+  highestLevelReached?: number;
 }
 
 export interface GameStats {
@@ -98,6 +100,8 @@ export interface GameState {
   cosmicKnowledgeLevel: number;
   // Upgrade discovery tracking (appear when you have 75% of cost)
   discoveredUpgrades?: Record<string, boolean>;
+  // Ascension tracking: highest level reached for prestige point calculation
+  highestLevelReached?: number;
 }
 
 export interface UpgradeConfig {

@@ -125,35 +125,52 @@ export class AscensionSystem {
 
   calculatePrestigePoints(state: GameState): number {
     // Enhanced prestige point formula for levels 100-1000+
-    // Smooth exponential growth with milestone bonuses
+    // IMPORTANT: Only award points for NEW levels beyond previous highest
 
     if (state.level < 100) return 0;
 
-    // Base formula: levels past 100 give prestige points
-    // Level 100 = 5 PP
-    // Level 200 = ~20 PP
-    // Level 500 = ~100 PP
-    // Level 1000 = ~500 PP
-    const levelPast100 = state.level - 100;
-    const levelBonus = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
+    // Get the highest level previously reached (default to 99 if first ascension)
+    const previousHighest = state.highestLevelReached ?? 99;
 
-    // Boss bonus: every 2 bosses killed = +1 PP
-    const bossBonus = Math.floor(state.stats.bossesKilled / 2);
+    // If current level doesn't exceed previous highest, no points awarded
+    if (state.level <= previousHighest) {
+      return 0;
+    }
 
-    // Milestone bonuses for reaching specific levels
-    let milestoneBonus = 0;
-    if (state.level >= 1000) milestoneBonus += 200;
-    else if (state.level >= 750) milestoneBonus += 100;
-    else if (state.level >= 500) milestoneBonus += 50;
-    else if (state.level >= 250) milestoneBonus += 20;
+    // Calculate points only for the NEW levels (previousHighest + 1 to current level)
+    let totalPoints = 0;
 
-    // Achievement bonus: certain achievements grant extra PP
+    // Add points for each new level reached
+    for (let level = Math.max(100, previousHighest + 1); level <= state.level; level++) {
+      const levelPast100 = level - 100;
+      const levelPoints = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
+      totalPoints += levelPoints;
+    }
+
+    // Milestone bonuses: only award if we're crossing the milestone for the first time
+    const milestones = [
+      { level: 1000, bonus: 200 },
+      { level: 750, bonus: 100 },
+      { level: 500, bonus: 50 },
+      { level: 250, bonus: 20 },
+    ];
+
+    for (const milestone of milestones) {
+      // Award milestone bonus if we just crossed it (prev < milestone <= current)
+      if (previousHighest < milestone.level && state.level >= milestone.level) {
+        totalPoints += milestone.bonus;
+      }
+    }
+
+    // Boss bonus: only count NEW bosses killed since last ascension
+    // This is tracked separately, so we skip it for now to keep it simple
+    // (bosses killed is cumulative and doesn't reset on ascension)
+
+    // Achievement bonus: certain achievements grant extra PP (one-time bonuses)
     const achievementBonus = this.calculateAchievementBonus(state);
+    totalPoints += achievementBonus;
 
-    return Math.max(
-      5,
-      levelBonus + bossBonus + milestoneBonus + achievementBonus,
-    );
+    return Math.max(0, totalPoints);
   }
 
   private calculateAchievementBonus(state: GameState): number {

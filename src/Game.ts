@@ -545,6 +545,9 @@ export class Game {
     // Calculate prestige points to gain
     const prestigeGain = this.ascensionSystem.calculatePrestigePoints(state);
 
+    // Update highest level reached before resetting
+    const newHighestLevel = Math.max(state.level, state.highestLevelReached ?? 0);
+
     // Save what we're keeping (ONLY artifacts, achievements, stats, and prestige)
     const keepAchievements = { ...state.achievements };
     const keepStats = { ...state.stats };
@@ -598,6 +601,8 @@ export class Game {
       energyCoreLevel: 0,
       cosmicKnowledgeLevel: 0,
       discoveredUpgrades: { ship: true }, // Reset discoveries, ship always visible
+      // Track highest level for ascension point calculation
+      highestLevelReached: newHighestLevel,
     };
 
     // Clear local boss block state
@@ -1142,6 +1147,10 @@ export class Game {
         state.experience -= expRequired;
         state.level++;
         this.store.updateMaxLevel();
+        
+        // Update highest level reached for ascension tracking
+        state.highestLevelReached = Math.max(state.level, state.highestLevelReached ?? 0);
+        
         leveledUp = true;
       }
     }
@@ -1208,6 +1217,9 @@ export class Game {
       state.experience -= expRequired;
       state.level++;
       this.store.updateMaxLevel();
+      
+      // Update highest level reached for ascension tracking
+      state.highestLevelReached = Math.max(state.level, state.highestLevelReached ?? 0);
     }
 
     this.store.setState(state);
