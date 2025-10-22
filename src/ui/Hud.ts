@@ -171,11 +171,6 @@ export class Hud {
     }
   }
 
-  // Deprecated - use NumberFormatter instead
-  private formatNumber(num: number): string {
-    return NumberFormatter.format(num);
-  }
-
   showMessage(
     message: string,
     color: string = '#ffffff',
