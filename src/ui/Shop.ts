@@ -17,8 +17,10 @@ export class Shop {
   private currentTab: 'available' | 'owned' = 'available';
   private buttonCache: Map<string, HTMLButtonElement> = new Map();
   private soundManager: { playPurchase: () => void } | null = null;
+  private missionSystem: { trackUpgrade: () => void } | null = null;
   private lastUpdateTime = 0;
   private updateThrottle = 30; // Update at most every 30ms (much more responsive)
+  private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
 
   constructor(
     private store: Store,
@@ -43,6 +45,7 @@ export class Shop {
     }
 
     this.setupTabs();
+    this.setupBuyQuantityButtons();
     this.render();
     this.store.subscribe(() => {
       this.scheduleRender();
@@ -51,6 +54,10 @@ export class Shop {
 
   setSoundManager(soundManager: { playPurchase: () => void }): void {
     this.soundManager = soundManager;
+  }
+
+  setMissionSystem(missionSystem: { trackUpgrade: () => void }): void {
+    this.missionSystem = missionSystem;
   }
 
   private setupTabs(): void {
@@ -70,6 +77,51 @@ export class Shop {
       availableTab?.classList.remove('active');
       this.render();
     });
+  }
+
+  private setupBuyQuantityButtons(): void {
+    const shopHeader = document.getElementById('shop-tabs');
+    if (!shopHeader) return;
+
+    // Create buy quantity container
+    const quantityContainer = document.createElement('div');
+    quantityContainer.className = 'buy-quantity-selector';
+
+    const label = document.createElement('span');
+    label.textContent = 'Buy: ';
+    label.style.cssText = 'color: #fff; font-size: 12px; margin-right: 5px;';
+    quantityContainer.appendChild(label);
+
+    const quantities: (1 | 5 | 10 | 'max')[] = [1, 5, 10, 'max'];
+    quantities.forEach((qty) => {
+      const btn = document.createElement('button');
+      btn.textContent = qty === 'max' ? 'MAX' : `x${qty}`;
+      btn.className = 'buy-quantity-btn';
+      if (this.buyQuantity === qty) {
+        btn.style.background = '#4CAF50';
+        btn.style.borderColor = '#4CAF50';
+      }
+      btn.addEventListener('click', () => {
+        this.buyQuantity = qty;
+        // Update all button styles
+        quantities.forEach((q, i) => {
+          const button = quantityContainer.children[i + 1] as HTMLElement;
+          if (button) {
+            if (q === qty) {
+              button.style.background = '#4CAF50';
+              button.style.borderColor = '#4CAF50';
+            } else {
+              button.style.background = '#333';
+              button.style.borderColor = '#666';
+            }
+          }
+        });
+        this.render();
+      });
+      quantityContainer.appendChild(btn);
+    });
+
+    shopHeader.appendChild(quantityContainer);
   }
 
   private scheduleRender(): void {
@@ -380,13 +432,19 @@ export class Shop {
 
       const cost = document.createElement('div');
       cost.className = 'upgrade-cost';
-      const currentCost = upgrade.getCost(upgrade.getLevel(state));
-      cost.textContent = `Cost: ${this.formatNumber(currentCost)}`;
+      
+      // Calculate cost based on buy quantity
+      const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
+      const costText = quantity > 1 
+        ? `Cost: ${this.formatNumber(totalCost)} (x${quantity})`
+        : `Cost: ${this.formatNumber(totalCost)}`;
+      cost.textContent = costText;
 
-      const button = new Button('BUY', () => {
-        this.buyUpgrade(upgrade);
+      const canAffordBulk = state.points >= totalCost;
+      const button = new Button(quantity > 1 ? `BUY x${quantity}` : 'BUY', () => {
+        this.buyUpgrade(upgrade, quantity);
       });
-      button.setEnabled(upgrade.canBuy(state));
+      button.setEnabled(canAffordBulk);
 
       // Cache the button element for quick updates
       const buttonElement = button.getElement();
@@ -525,27 +583,87 @@ export class Shop {
     return emojiMap[upgradeId] || '⭐';
   }
 
+  private calculateBulkCost(upgrade: {
+    getCost: (level: number) => number;
+    getLevel: (state: any) => number;
+  }, state: any): { totalCost: number; quantity: number } {
+    const currentLevel = upgrade.getLevel(state);
+    let totalCost = 0;
+    let quantity = 0;
+
+    if (this.buyQuantity === 'max') {
+      // Calculate max affordable quantity
+      let cost = 0;
+      let tempLevel = currentLevel;
+      let tempPoints = state.points;
+      
+      while (tempPoints >= (cost = upgrade.getCost(tempLevel))) {
+        tempPoints -= cost;
+        totalCost += cost;
+        tempLevel++;
+        quantity++;
+        
+        // Safety limit to prevent infinite loops
+        if (quantity >= 1000) break;
+      }
+      
+      // If can't afford any, show cost of 1
+      if (quantity === 0) {
+        return { totalCost: upgrade.getCost(currentLevel), quantity: 1 };
+      }
+    } else {
+      // Calculate cost for specific quantity
+      const targetQuantity = this.buyQuantity;
+      for (let i = 0; i < targetQuantity; i++) {
+        const cost = upgrade.getCost(currentLevel + i);
+        totalCost += cost;
+        quantity++;
+      }
+    }
+
+    return { totalCost, quantity };
+  }
+
   private buyUpgrade(upgrade: {
     canBuy: (state: any) => boolean;
     getCost: (level: number) => number;
     getLevel: (state: any) => number;
     buy: (state: any) => void;
-  }): void {
+  }, quantity: number = 1): void {
     // Prevent concurrent purchases
     if (this.isProcessingPurchase) return;
     this.isProcessingPurchase = true;
 
     const state = this.store.getState();
-    if (!upgrade.canBuy(state)) {
-      this.isProcessingPurchase = false;
-      return;
+    
+    // Calculate actual cost for the quantity
+    let totalCost = 0;
+    let actualQuantity = 0;
+    const currentLevel = upgrade.getLevel(state);
+    
+    for (let i = 0; i < quantity; i++) {
+      const cost = upgrade.getCost(currentLevel + i);
+      if (state.points >= totalCost + cost) {
+        totalCost += cost;
+        actualQuantity++;
+      } else {
+        break;
+      }
     }
 
-    const price = upgrade.getCost(upgrade.getLevel(state));
-    if (state.points >= price) {
-      state.points -= price;
-      upgrade.buy(state);
-      this.store.incrementUpgrade();
+    if (actualQuantity > 0 && state.points >= totalCost) {
+      state.points -= totalCost;
+      
+      // Buy multiple times
+      for (let i = 0; i < actualQuantity; i++) {
+        upgrade.buy(state);
+        this.store.incrementUpgrade();
+        // Track for missions
+        if (this.missionSystem) {
+          this.missionSystem.trackUpgrade();
+        }
+      }
+      
       this.store.setState(state);
 
       // Play purchase sound
@@ -576,6 +694,10 @@ export class Shop {
       state.points -= upgrade.cost;
       upgrade.buy(state);
       this.store.incrementSubUpgrade();
+      // Track for missions
+      if (this.missionSystem) {
+        this.missionSystem.trackUpgrade();
+      }
       this.store.setState(state);
 
       // Play purchase sound

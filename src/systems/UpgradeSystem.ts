@@ -1747,7 +1747,7 @@ export class UpgradeSystem {
       },
       getLevel: (state: GameState) => state.pointMultiplierLevel,
       getDisplayText: (state: GameState) =>
-        `Lv.${state.pointMultiplierLevel.toString()} (${this.getPointsPerHit(state).toFixed(1)}/hit)`,
+        `Lv.${state.pointMultiplierLevel.toString()} (${this.getMainShipDamage(state).toFixed(1)}/hit)`,
       subUpgrades: pointMultiplierSubUpgrades,
     };
 
@@ -2627,8 +2627,8 @@ export class UpgradeSystem {
   getMainShipDamage(state: GameState): number {
     this.updateSubUpgradesFromState(state);
 
-    // Base damage: much stronger scaling for late game
-    let multiplier = this.basePoints * (1 + 0.5 * state.pointMultiplierLevel);
+    // Base damage: +0.1 per level (1.0 -> 1.1 -> 1.2 -> 1.3, etc.)
+    let multiplier = this.basePoints * (1 + 0.1 * state.pointMultiplierLevel);
 
     // v3.0: Weapon Mastery bonus (+25% per level)
     if (state.weaponMasteryLevel > 0) {
@@ -2663,6 +2663,11 @@ export class UpgradeSystem {
     if (state.subUpgrades['transcendent_form']) multiplier *= 1.75;
     if (state.subUpgrades['living_weapon']) multiplier *= 2.0;
     if (state.subUpgrades['apex_predator']) multiplier *= 2.5;
+
+    // Ship swarm: +20%
+    if (state.subUpgrades['ship_swarm']) {
+      multiplier *= 1.2;
+    }
 
     // Laser focusing crystals: +15%
     if (state.subUpgrades['laser_focusing']) {

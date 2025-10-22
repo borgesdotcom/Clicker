@@ -92,7 +92,7 @@ export class ColorManager {
 
   // New method: Get alien HP with proper scaling for level 1-1000
   static getHp(level: number): number {
-    const baseHp = 10;
+    const baseHp = 100;
 
     // Tier 1: Levels 1-100 - Moderate growth
     if (level <= 100) {

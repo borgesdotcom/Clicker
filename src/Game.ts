@@ -231,6 +231,7 @@ export class Game {
     this.hud = new Hud();
     const shop = new Shop(this.store, this.upgradeSystem);
     shop.setSoundManager(this.soundManager);
+    shop.setMissionSystem(this.missionSystem);
 
     this.achievementSystem.setOnUnlock((achievement) => {
       this.achievementSnackbar.show(achievement);
@@ -1168,9 +1169,10 @@ export class Game {
       }, 200);
     }
 
+    // Faster transition - immediately start returning to normal mode
     setTimeout(() => {
       this.startTransitionToNormal();
-    }, 1000);
+    }, 1000); // Reduced from 1000ms to 300ms
   }
 
   private showBossDialog(): void {
@@ -1205,6 +1207,7 @@ export class Game {
     this.transitionTime = 0;
     this.bossBall = null;
 
+    // Faster transition back to normal - reduced delay
     setTimeout(() => {
       if (this.mode === 'transition') {
         this.mode = 'normal';
@@ -1240,7 +1243,9 @@ export class Game {
       const passiveGen = this.upgradeSystem.getPassiveGen(state);
       const critChance = this.upgradeSystem.getCritChance(state);
       this.hud.updateStats(dps, passiveGen, critChance);
-    } catch {}
+    } catch {
+      // Ignore errors in HUD update
+    }
 
     this.achievementSystem.checkAchievements(state);
 
