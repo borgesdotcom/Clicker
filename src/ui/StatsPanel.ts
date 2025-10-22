@@ -27,7 +27,7 @@ export class StatsPanel {
     this.modalElement = document.createElement('div');
     this.modalElement.className = 'modal stats-modal';
     this.modalElement.style.display = 'none';
-    
+
     // Close on background click
     this.modalElement.addEventListener('click', (e) => {
       if (e.target === this.modalElement) {
@@ -38,31 +38,33 @@ export class StatsPanel {
     // Modal content
     const content = document.createElement('div');
     content.className = 'modal-content stats-content';
-    
+
     // Header
     const header = document.createElement('div');
     header.className = 'modal-header';
-    
+
     const title = document.createElement('h2');
     title.textContent = '📊 Statistics';
-    
+
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
     closeBtn.textContent = '×';
-    closeBtn.addEventListener('click', () => { this.hide(); });
-    
+    closeBtn.addEventListener('click', () => {
+      this.hide();
+    });
+
     header.appendChild(title);
     header.appendChild(closeBtn);
-    
+
     // Stats container
     const statsContainer = document.createElement('div');
     statsContainer.id = 'stats-container';
     statsContainer.className = 'stats-container';
-    
+
     content.appendChild(header);
     content.appendChild(statsContainer);
     this.modalElement.appendChild(content);
-    
+
     document.body.appendChild(this.modalElement);
   }
 
@@ -102,7 +104,7 @@ export class StatsPanel {
     // Get state from somewhere - for now we'll get it from the game
     const stateStr = localStorage.getItem('alien-clicker-save');
     if (!stateStr) return;
-    
+
     const state = JSON.parse(stateStr) as GameState;
 
     container.innerHTML = '';
@@ -112,19 +114,40 @@ export class StatsPanel {
       {
         title: '⚔️ Combat Stats',
         stats: [
-          { label: 'Total Clicks', value: this.formatNumber(state.stats.totalClicks) },
-          { label: 'Total Damage', value: this.formatNumber(state.stats.totalDamage) },
-          { label: 'Aliens Killed', value: this.formatNumber(state.stats.aliensKilled) },
-          { label: 'Bosses Defeated', value: this.formatNumber(state.stats.bossesKilled) },
-          { label: 'Critical Hits', value: this.formatNumber(state.stats.criticalHits) },
+          {
+            label: 'Total Clicks',
+            value: this.formatNumber(state.stats.totalClicks),
+          },
+          {
+            label: 'Total Damage',
+            value: this.formatNumber(state.stats.totalDamage),
+          },
+          {
+            label: 'Aliens Killed',
+            value: this.formatNumber(state.stats.aliensKilled),
+          },
+          {
+            label: 'Bosses Defeated',
+            value: this.formatNumber(state.stats.bossesKilled),
+          },
+          {
+            label: 'Critical Hits',
+            value: this.formatNumber(state.stats.criticalHits),
+          },
         ],
       },
       {
         title: '📈 Progression Stats',
         stats: [
           { label: 'Current Level', value: state.level.toString() },
-          { label: 'Max Level Reached', value: state.stats.maxLevel.toString() },
-          { label: 'Total Experience', value: this.formatNumber(Math.floor(state.experience)) },
+          {
+            label: 'Max Level Reached',
+            value: state.stats.maxLevel.toString(),
+          },
+          {
+            label: 'Total Experience',
+            value: this.formatNumber(Math.floor(state.experience)),
+          },
           { label: 'Play Time', value: this.formatTime(state.stats.playTime) },
         ],
       },
@@ -132,26 +155,47 @@ export class StatsPanel {
         title: '🛸 Fleet Stats',
         stats: [
           { label: 'Ships', value: state.shipsCount.toString() },
-          { label: 'Attack Speed Level', value: state.attackSpeedLevel.toString() },
-          { label: 'Damage Level', value: state.pointMultiplierLevel.toString() },
+          {
+            label: 'Attack Speed Level',
+            value: state.attackSpeedLevel.toString(),
+          },
+          {
+            label: 'Damage Level',
+            value: state.pointMultiplierLevel.toString(),
+          },
           { label: 'Crit Level', value: state.critChanceLevel.toString() },
-          { label: 'Passive Gen Level', value: state.resourceGenLevel.toString() },
+          {
+            label: 'Passive Gen Level',
+            value: state.resourceGenLevel.toString(),
+          },
           { label: 'XP Boost Level', value: state.xpBoostLevel.toString() },
         ],
       },
       {
         title: '🔬 Technology Stats',
         stats: [
-          { label: 'Total Upgrades', value: this.formatNumber(state.stats.totalUpgrades) },
-          { label: 'Special Technologies', value: `${state.stats.totalSubUpgrades} / ${this.upgradeSystem.getSubUpgrades().length}` },
-          { label: 'Technology Progress', value: `${Math.floor((state.stats.totalSubUpgrades / this.upgradeSystem.getSubUpgrades().length) * 100)}%` },
+          {
+            label: 'Total Upgrades',
+            value: this.formatNumber(state.stats.totalUpgrades),
+          },
+          {
+            label: 'Special Technologies',
+            value: `${state.stats.totalSubUpgrades} / ${this.upgradeSystem.getSubUpgrades().length}`,
+          },
+          {
+            label: 'Technology Progress',
+            value: `${Math.floor((state.stats.totalSubUpgrades / this.upgradeSystem.getSubUpgrades().length) * 100)}%`,
+          },
         ],
       },
       {
         title: '💰 Wealth Stats',
         stats: [
           { label: 'Current Points', value: this.formatNumber(state.points) },
-          { label: 'Total Points Earned', value: this.formatNumber(state.stats.totalDamage) },
+          {
+            label: 'Total Points Earned',
+            value: this.formatNumber(state.stats.totalDamage),
+          },
         ],
       },
     ];
@@ -202,7 +246,7 @@ export class StatsPanel {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m ${secs}s`;
     } else if (minutes > 0) {
@@ -212,4 +256,3 @@ export class StatsPanel {
     }
   }
 }
-

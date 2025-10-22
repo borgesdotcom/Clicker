@@ -45,10 +45,16 @@ const HEALER_COLORS = [
   { color: '#00cc88', glow: 'rgba(0, 204, 136, 0.5)' }, // Teal green
 ];
 
-function getRandomColor(colors: Array<{ color: string; glow: string }>): { color: string; glow: string } {
+function getRandomColor(colors: Array<{ color: string; glow: string }>): {
+  color: string;
+  glow: string;
+} {
   const index = Math.floor(Math.random() * colors.length);
   const selected = colors[index];
-  return selected ?? colors[0] ?? { color: '#ff6666', glow: 'rgba(255, 102, 102, 0.5)' };
+  return (
+    selected ??
+    colors[0] ?? { color: '#ff6666', glow: 'rgba(255, 102, 102, 0.5)' }
+  );
 }
 
 export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
@@ -96,7 +102,12 @@ export class EnhancedAlienBall extends AlienBall {
   private healTimer = 0;
   private healInterval = 2;
   private animationTime = 0; // For movement animations
-  private onDamageCallback?: (damage: number, x: number, y: number, radius: number) => void;
+  private onDamageCallback?: (
+    damage: number,
+    x: number,
+    y: number,
+    radius: number,
+  ) => void;
 
   constructor(
     x: number,
@@ -107,7 +118,7 @@ export class EnhancedAlienBall extends AlienBall {
   ) {
     // Get stats first to determine color
     const stats = { ...ENEMY_TYPES[enemyType] };
-    
+
     // Randomize color based on enemy type
     let colorData;
     switch (enemyType) {
@@ -123,29 +134,29 @@ export class EnhancedAlienBall extends AlienBall {
       default:
         colorData = getRandomColor(NORMAL_COLORS);
     }
-    
+
     stats.color = colorData.color;
     stats.glowColor = colorData.glow;
-    
+
     // Create a color based on enemy type
     const color = {
       fill: stats.color,
       stroke: '#ffffff',
       hp: 100,
     };
-    
+
     // Call parent constructor
     super(x, y, radius, color);
-    
+
     this.enemyType = enemyType;
     this.stats = stats;
 
     // Use ColorManager for consistent HP scaling
     const baseHp = ColorManager.getHp(level);
-    
+
     this.maxHp = Math.floor(baseHp * this.stats.hpMultiplier);
     this.currentHp = this.maxHp;
-    
+
     // Apply size modifier
     this.radius = radius * this.stats.size;
   }
@@ -154,7 +165,9 @@ export class EnhancedAlienBall extends AlienBall {
     return Math.floor(basePoints * this.stats.pointsMultiplier);
   }
 
-  public setOnDamageCallback(callback: (damage: number, x: number, y: number, radius: number) => void): void {
+  public setOnDamageCallback(
+    callback: (damage: number, x: number, y: number, radius: number) => void,
+  ): void {
     this.onDamageCallback = callback;
   }
 
@@ -163,12 +176,16 @@ export class EnhancedAlienBall extends AlienBall {
     if (this.onDamageCallback) {
       this.onDamageCallback(amount, this.x, this.y, this.radius);
     }
-    
+
     // Call parent takeDamage
     return super.takeDamage(amount);
   }
 
-  public override update(dt: number, _canvasWidth?: number, _canvasHeight?: number): void {
+  public override update(
+    dt: number,
+    _canvasWidth?: number,
+    _canvasHeight?: number,
+  ): void {
     super.update(dt);
 
     // Update animation time for all enemy types
@@ -189,13 +206,25 @@ export class EnhancedAlienBall extends AlienBall {
     const ctx = drawer.getContext();
     const centerX = this.x;
     const centerY = this.y;
-    
+
     // Draw glow effect
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, this.radius * 2);
+    const gradient = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      this.radius * 2,
+    );
     gradient.addColorStop(0, this.stats.glowColor);
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = gradient;
-    ctx.fillRect(centerX - this.radius * 2, centerY - this.radius * 2, this.radius * 4, this.radius * 4);
+    ctx.fillRect(
+      centerX - this.radius * 2,
+      centerY - this.radius * 2,
+      this.radius * 4,
+      this.radius * 4,
+    );
 
     // Draw enemy-specific effects
     switch (this.enemyType) {
@@ -213,38 +242,47 @@ export class EnhancedAlienBall extends AlienBall {
     }
   }
 
-  private drawHealthBar(ctx: CanvasRenderingContext2D, centerX: number, centerY: number): void {
+  private drawHealthBar(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+  ): void {
     const barWidth = this.radius * 2;
     const barHeight = 6;
     const barX = centerX - barWidth / 2;
     // Adjust position based on enemy type for better spacing
     const extraOffset = this.enemyType === 'tank' ? 5 : 0; // Tanks need more space due to armor
     const barY = centerY - this.radius - 18 - extraOffset;
-    
+
     // Background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(barX, barY, barWidth, barHeight);
-    
+
     // Health fill - color changes based on health percentage
     const healthPercent = this.currentHp / this.maxHp;
-    
+
     let fillColor = '#00ff00'; // Green
-    if (healthPercent < 0.3) fillColor = '#ff0000'; // Red
+    if (healthPercent < 0.3)
+      fillColor = '#ff0000'; // Red
     else if (healthPercent < 0.6) fillColor = '#ffaa00'; // Orange
-    
+
     ctx.fillStyle = fillColor;
     ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-    
+
     // Border
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
     ctx.strokeRect(barX, barY, barWidth, barHeight);
   }
 
-  private drawScout(ctx: CanvasRenderingContext2D, centerX: number, centerY: number): void {
+  private drawScout(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+  ): void {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
-    
+
     // Draw speed trails
     for (let i = 0; i < 3; i++) {
       const alpha = 0.3 - i * 0.1;
@@ -280,16 +318,20 @@ export class EnhancedAlienBall extends AlienBall {
     }
   }
 
-  private drawTank(ctx: CanvasRenderingContext2D, centerX: number, centerY: number): void {
+  private drawTank(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+  ): void {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
-    
+
     // Slow rotation for armor plating (heavy movement)
     const armorRotation = this.animationTime * 0.3; // Slow rotation
-    
+
     // Pulsing effect for shield (breathing effect)
     const shieldPulse = Math.sin(this.animationTime * 2) * 2;
-    
+
     // Draw rotating armor plating
     ctx.strokeStyle = '#ff6666';
     ctx.lineWidth = 4;
@@ -318,7 +360,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.beginPath();
     ctx.arc(centerX, centerY, shieldRadius, 0, Math.PI * 2);
     ctx.stroke();
-    
+
     // Add inner armor detail that counter-rotates
     ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
     ctx.lineWidth = 2;
@@ -331,10 +373,14 @@ export class EnhancedAlienBall extends AlienBall {
     }
   }
 
-  private drawHealer(ctx: CanvasRenderingContext2D, centerX: number, centerY: number): void {
+  private drawHealer(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+  ): void {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
-    
+
     // Draw healing aura
     const pulseSize = Math.sin(Date.now() * 0.003) * 5;
     const gradient = ctx.createRadialGradient(
@@ -372,13 +418,16 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.stroke();
 
     // Draw heal particles if healing
-    if (this.currentHp < this.maxHp && this.healTimer > this.healInterval * 0.5) {
+    if (
+      this.currentHp < this.maxHp &&
+      this.healTimer > this.healInterval * 0.5
+    ) {
       for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2 + Date.now() * 0.001;
         const distance = this.radius + 20;
         const px = centerX + Math.cos(angle) * distance;
         const py = centerY + Math.sin(angle) * distance;
-        
+
         ctx.fillStyle = 'rgba(0, 255, 136, 0.8)';
         ctx.beginPath();
         ctx.arc(px, py, 2, 0, Math.PI * 2);
@@ -406,7 +455,7 @@ export function selectEnemyType(level: number): EnemyType {
   if (level < 10) return 'normal';
 
   const types: EnemyType[] = ['normal'];
-  
+
   if (level >= 10) types.push('scout');
   if (level >= 20) types.push('tank');
   if (level >= 30) types.push('healer');
@@ -414,8 +463,7 @@ export function selectEnemyType(level: number): EnemyType {
   // Weight towards normal enemies
   const rand = Math.random();
   if (rand < 0.6) return 'normal';
-  
+
   const index = Math.floor(Math.random() * types.length);
   return types[index] ?? 'normal';
 }
-

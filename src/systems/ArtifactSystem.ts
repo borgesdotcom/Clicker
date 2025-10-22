@@ -1,5 +1,11 @@
 export type ArtifactRarity = 'common' | 'rare' | 'epic' | 'legendary';
-export type ArtifactType = 'damage' | 'speed' | 'critical' | 'points' | 'xp' | 'special';
+export type ArtifactType =
+  | 'damage'
+  | 'speed'
+  | 'critical'
+  | 'points'
+  | 'xp'
+  | 'special';
 
 export interface Artifact {
   id: string;
@@ -182,7 +188,10 @@ export class ArtifactSystem {
     const artifact: Artifact = {
       id: `artifact_${Date.now()}_${Math.random()}`,
       name: template.name,
-      description: template.description.replace('{bonus}', template.baseBonus.toString()),
+      description: template.description.replace(
+        '{bonus}',
+        template.baseBonus.toString(),
+      ),
       rarity,
       type: template.type,
       bonus: template.baseBonus,
@@ -201,7 +210,10 @@ export class ArtifactSystem {
     const artifact = this.artifacts.find((a) => a.id === artifactId);
     if (!artifact) return false;
 
-    if (this.equippedArtifacts.length >= this.maxEquipped && !artifact.equipped) {
+    if (
+      this.equippedArtifacts.length >= this.maxEquipped &&
+      !artifact.equipped
+    ) {
       return false; // Already at max equipped
     }
 
@@ -211,7 +223,10 @@ export class ArtifactSystem {
     return true;
   }
 
-  public upgradeArtifact(artifactId: string, points: number): { success: boolean; cost: number } {
+  public upgradeArtifact(
+    artifactId: string,
+    points: number,
+  ): { success: boolean; cost: number } {
     const artifact = this.artifacts.find((a) => a.id === artifactId);
     if (!artifact || artifact.level >= artifact.maxLevel) {
       return { success: false, cost: 0 };
@@ -224,7 +239,10 @@ export class ArtifactSystem {
 
     artifact.level++;
     artifact.bonus = this.calculateBonus(artifact);
-    artifact.description = artifact.description.replace(/\d+/, artifact.bonus.toString());
+    artifact.description = artifact.description.replace(
+      /\d+/,
+      artifact.bonus.toString(),
+    );
     this.save();
 
     return { success: true, cost };
@@ -312,7 +330,9 @@ export class ArtifactSystem {
     if (equipped.length === 0) return ['No artifacts equipped'];
 
     for (const artifact of equipped) {
-      bonuses.push(`${artifact.icon} ${artifact.name} (Lv.${artifact.level}): ${artifact.description}`);
+      bonuses.push(
+        `${artifact.icon} ${artifact.name} (Lv.${artifact.level}): ${artifact.description}`,
+      );
     }
 
     return bonuses;
@@ -334,4 +354,3 @@ export class ArtifactSystem {
     return RARITY_COLORS[rarity];
   }
 }
-

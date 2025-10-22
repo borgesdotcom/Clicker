@@ -47,7 +47,8 @@ export class UpgradeSystem {
         id: 'laser_focusing',
         name: 'Laser Focusing Crystals',
         description: 'Increase point gain by 15%',
-        flavor: 'These crystals are definitely not from that one forbidden planet...',
+        flavor:
+          'These crystals are definitely not from that one forbidden planet...',
         cost: 1000,
         owned: false,
         requires: (state) => state.pointMultiplierLevel >= 5,
@@ -86,7 +87,8 @@ export class UpgradeSystem {
         id: 'lucky_dice',
         name: 'Lucky Space Dice',
         description: '+5% critical hit chance',
-        flavor: 'Found them in an asteroid. The previous owner won\'t miss them.',
+        flavor:
+          "Found them in an asteroid. The previous owner won't miss them.",
         cost: 3500,
         owned: false,
         requires: (state) => state.critChanceLevel >= 5,
@@ -233,7 +235,7 @@ export class UpgradeSystem {
         id: 'ai_optimizer',
         name: 'AI Optimization Subroutines',
         description: 'Ship fire cooldown reduced by 30%',
-        flavor: 'The AI promises it won\'t become self-aware. Probably.',
+        flavor: "The AI promises it won't become self-aware. Probably.",
         cost: 100000,
         owned: false,
         requires: (state) => state.attackSpeedLevel >= 30,
@@ -378,7 +380,8 @@ export class UpgradeSystem {
         id: 'quantum_entanglement',
         name: 'Quantum Entanglement Core',
         description: 'Critical hits +8%, Damage x1.5',
-        flavor: 'Spooky action at a distance. Einstein hated it. You\'ll love it.',
+        flavor:
+          "Spooky action at a distance. Einstein hated it. You'll love it.",
         cost: 20000000,
         owned: false,
         requires: (state) => state.critChanceLevel >= 20,
@@ -430,7 +433,7 @@ export class UpgradeSystem {
         id: 'dark_matter_engine',
         name: 'Dark Matter Engine',
         description: 'Passive generation x3, Ships +25% speed',
-        flavor: '95% of the universe is dark matter. Now it\'s yours.',
+        flavor: "95% of the universe is dark matter. Now it's yours.",
         cost: 50000000,
         owned: false,
         requires: (state) => state.level >= 65,
@@ -456,7 +459,8 @@ export class UpgradeSystem {
         id: 'infinity_gauntlet',
         name: 'Infinity Gauntlet (Replica)',
         description: 'All stats +40%',
-        flavor: 'Perfectly balanced, as all things should be. Also, not trademarked.',
+        flavor:
+          'Perfectly balanced, as all things should be. Also, not trademarked.',
         cost: 800000,
         owned: false,
         requires: (state) => state.level >= 70,
@@ -495,7 +499,7 @@ export class UpgradeSystem {
         id: 'hyper_reactor',
         name: 'Hyper-Dimensional Reactor',
         description: 'All damage x2, Critical chance +5%',
-        flavor: 'Powers drawn from dimensions we can\'t even see.',
+        flavor: "Powers drawn from dimensions we can't even see.",
         cost: 100000000,
         owned: false,
         requires: (state) => state.level >= 75,
@@ -521,7 +525,7 @@ export class UpgradeSystem {
         id: 'photon_amplifier',
         name: 'Photon Wave Amplifier',
         description: 'Ships fire 75% faster, Damage +30%',
-        flavor: 'Light speed is too slow. We\'re going to ludicrous speed!',
+        flavor: "Light speed is too slow. We're going to ludicrous speed!",
         cost: 150000000,
         owned: false,
         requires: (state) => state.attackSpeedLevel >= 40,
@@ -588,7 +592,7 @@ export class UpgradeSystem {
         id: 'dragon_egg',
         name: 'Dragon Egg',
         description: 'Critical hit chance +10%, Critical damage x2',
-        flavor: 'It\'s either a dragon egg or a really angry space chicken.',
+        flavor: "It's either a dragon egg or a really angry space chicken.",
         cost: 3000000,
         owned: false,
         requires: (state) => state.critChanceLevel >= 30,
@@ -614,7 +618,7 @@ export class UpgradeSystem {
         id: 'answer_to_everything',
         name: 'Answer to Everything',
         description: 'All passive generation x10',
-        flavor: 'It\'s 42. But what was the question again?',
+        flavor: "It's 42. But what was the question again?",
         cost: 5000000,
         owned: false,
         requires: (state) => state.resourceGenLevel >= 50,
@@ -653,7 +657,7 @@ export class UpgradeSystem {
         id: 'meaning_of_life',
         name: 'Meaning of Life',
         description: 'Unlock prestige system & all stats x2',
-        flavor: 'Spoiler: It\'s clicking alien balls all the way down.',
+        flavor: "Spoiler: It's clicking alien balls all the way down.",
         cost: 25000000,
         owned: false,
         requires: (state) => state.level >= 100,
@@ -728,7 +732,7 @@ export class UpgradeSystem {
           state.subUpgrades['missile_launcher'] = true;
         },
       },
-      
+
       // === ULTRA LATE GAME UPGRADES (Level 200-500) ===
       {
         id: 'multiversal_matrix',
@@ -760,7 +764,7 @@ export class UpgradeSystem {
         id: 'omniscient_ai',
         name: 'Omniscient AI Core',
         description: 'All stats +75%, Upgrades 30% cheaper',
-        flavor: 'Knows what you\'re going to buy before you do.',
+        flavor: "Knows what you're going to buy before you do.",
         cost: 1000000000,
         owned: false,
         requires: (state) => state.level >= 250,
@@ -795,7 +799,7 @@ export class UpgradeSystem {
           state.subUpgrades['dimensional_collapse'] = true;
         },
       },
-      
+
       // === TRANSCENDENT UPGRADES (Level 500-750) ===
       {
         id: 'reality_compiler',
@@ -814,7 +818,7 @@ export class UpgradeSystem {
         id: 'akashic_records',
         name: 'Akashic Records Access',
         description: 'XP x10, Retain all knowledge between lives',
-        flavor: 'The universe\'s library card. No late fees.',
+        flavor: "The universe's library card. No late fees.",
         cost: 25000000000,
         owned: false,
         requires: (state) => state.xpBoostLevel >= 75,
@@ -849,13 +853,13 @@ export class UpgradeSystem {
           state.subUpgrades['eternal_engine'] = true;
         },
       },
-      
+
       // === ULTIMATE UPGRADES (Level 750-1000+) ===
       {
         id: 'omega_protocol',
         name: 'Omega Protocol: Final Form',
         description: 'ALL MULTIPLIERS x25',
-        flavor: 'This isn\'t even my final form. Wait, yes it is.',
+        flavor: "This isn't even my final form. Wait, yes it is.",
         cost: 500000000000,
         owned: false,
         requires: (state) => state.level >= 750,
@@ -1502,7 +1506,7 @@ export class UpgradeSystem {
         id: 'forbidden_theorems',
         name: 'Forbidden Theorems',
         description: '-20% all costs, +50% XP',
-        flavor: 'Mathematics that shouldn\'t exist.',
+        flavor: "Mathematics that shouldn't exist.",
         cost: 8000000,
         owned: false,
         requires: (state) => state.cosmicKnowledgeLevel >= 25,
@@ -1513,7 +1517,7 @@ export class UpgradeSystem {
       },
       {
         id: 'schrodinger_upgrade',
-        name: 'Schrödinger\'s Upgrade',
+        name: "Schrödinger's Upgrade",
         description: '-25% all costs, both bought and not bought',
         flavor: 'It exists in a superposition of states.',
         cost: 18000000,
@@ -1567,9 +1571,9 @@ export class UpgradeSystem {
   }
 
   getSubUpgrades(): SubUpgrade[] {
-    return this.subUpgrades.map(upgrade => ({
+    return this.subUpgrades.map((upgrade) => ({
       ...upgrade,
-      owned: upgrade.owned
+      owned: upgrade.owned,
     }));
   }
 
@@ -1581,70 +1585,135 @@ export class UpgradeSystem {
 
   getUpgrades(): UpgradeConfig[] {
     // Ship-related sub-upgrades
-    const shipSubUpgrades = this.subUpgrades.filter(u => 
-      ['death_pact', 'ship_swarm', 'perfect_precision', 'missile_launcher'].includes(u.id)
+    const shipSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'death_pact',
+        'ship_swarm',
+        'perfect_precision',
+        'missile_launcher',
+      ].includes(u.id),
     );
 
     // Attack speed related sub-upgrades
-    const attackSpeedSubUpgrades = this.subUpgrades.filter(u => 
-      ['quantum_targeting', 'warp_core', 'ai_optimizer', 'temporal_acceleration', 'holographic_decoys', 'photon_amplifier'].includes(u.id)
+    const attackSpeedSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'quantum_targeting',
+        'warp_core',
+        'ai_optimizer',
+        'temporal_acceleration',
+        'holographic_decoys',
+        'photon_amplifier',
+      ].includes(u.id),
     );
 
     // Point multiplier related sub-upgrades
-    const pointMultiplierSubUpgrades = this.subUpgrades.filter(u => 
-      ['laser_focusing', 'overclocked_reactors', 'neural_link', 'antimatter_rounds', 
-       'singularity_core', 'cosmic_ascension', 'disco_ball', 'chaos_emeralds',
-       'infinity_gauntlet', 'heart_of_galaxy', 'meaning_of_life', 'golden_goose',
-       'master_clicker', 'rapid_fire', 'click_multiplier', 'super_clicker', 'plasma_matrix',
-       'quantum_entanglement', 'stellar_forge', 'antimatter_cascade', 'hyper_reactor',
-       'photon_amplifier', 'reality_anchor'].includes(u.id)
+    const pointMultiplierSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'laser_focusing',
+        'overclocked_reactors',
+        'neural_link',
+        'antimatter_rounds',
+        'singularity_core',
+        'cosmic_ascension',
+        'disco_ball',
+        'chaos_emeralds',
+        'infinity_gauntlet',
+        'heart_of_galaxy',
+        'meaning_of_life',
+        'golden_goose',
+        'master_clicker',
+        'rapid_fire',
+        'click_multiplier',
+        'super_clicker',
+        'plasma_matrix',
+        'quantum_entanglement',
+        'stellar_forge',
+        'antimatter_cascade',
+        'hyper_reactor',
+        'photon_amplifier',
+        'reality_anchor',
+      ].includes(u.id),
     );
 
     // Critical hit related sub-upgrades
-    const critSubUpgrades = this.subUpgrades.filter(u => 
-      ['lucky_dice', 'rubber_duck', 'lucky_horseshoe', 'dragon_egg', 'quantum_entanglement', 'hyper_reactor', 'reality_anchor'].includes(u.id)
+    const critSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'lucky_dice',
+        'rubber_duck',
+        'lucky_horseshoe',
+        'dragon_egg',
+        'quantum_entanglement',
+        'hyper_reactor',
+        'reality_anchor',
+      ].includes(u.id),
     );
 
     // Resource generation related sub-upgrades
-    const resourceSubUpgrades = this.subUpgrades.filter(u => 
-      ['coffee_machine', 'space_pizza', 'arcade_machine', 'philosophers_stone',
-       'nuclear_reactor', 'answer_to_everything', 'nanobots', 'dark_matter_engine', 'nebula_harvester', 'cosmic_battery'].includes(u.id)
+    const resourceSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'coffee_machine',
+        'space_pizza',
+        'arcade_machine',
+        'philosophers_stone',
+        'nuclear_reactor',
+        'answer_to_everything',
+        'nanobots',
+        'dark_matter_engine',
+        'nebula_harvester',
+        'cosmic_battery',
+      ].includes(u.id),
     );
 
     // XP boost related sub-upgrades
-    const xpSubUpgrades = this.subUpgrades.filter(u => 
-      ['motivational_posters', 'void_channeling', 'time_machine', 'universe_map', 'stellar_forge', 'nebula_harvester'].includes(u.id)
+    const xpSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'motivational_posters',
+        'void_channeling',
+        'time_machine',
+        'universe_map',
+        'stellar_forge',
+        'nebula_harvester',
+      ].includes(u.id),
     );
 
     // General/misc sub-upgrades
-    const miscSubUpgrades = this.subUpgrades.filter(u => 
-      ['energy_recycling', 'cheat_codes', 'alien_cookbook'].includes(u.id)
+    const miscSubUpgrades = this.subUpgrades.filter((u) =>
+      ['energy_recycling', 'cheat_codes', 'alien_cookbook'].includes(u.id),
     );
 
     const shipUpgrade: UpgradeConfig = {
       id: 'ship',
       name: '🚀 Starship Fleet',
-      description: 'Recruit another starship to your armada. More ships = more firepower!',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(10 * Math.pow(1.15, level))),
+      description:
+        'Recruit another starship to your armada. More ships = more firepower!',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(10 * Math.pow(1.15, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(10 * Math.pow(1.15, state.shipsCount)));
+        const cost = this.applyDiscount(
+          Math.ceil(10 * Math.pow(1.15, state.shipsCount)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
         state.shipsCount++;
       },
       getLevel: (state: GameState) => state.shipsCount,
-      getDisplayText: (state: GameState) => `Fleet: ${state.shipsCount.toString()}`,
+      getDisplayText: (state: GameState) =>
+        `Fleet: ${state.shipsCount.toString()}`,
       subUpgrades: shipSubUpgrades,
     };
 
     const attackSpeedUpgrade: UpgradeConfig = {
       id: 'attackSpeed',
       name: '⚡ Attack Speed',
-      description: 'Upgrade targeting computers to fire faster. Speed is everything.',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(50 * Math.pow(1.25, level))),
+      description:
+        'Upgrade targeting computers to fire faster. Speed is everything.',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(50 * Math.pow(1.25, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(50 * Math.pow(1.25, state.attackSpeedLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(50 * Math.pow(1.25, state.attackSpeedLevel)),
+        );
         const cooldown = this.getFireCooldown(state);
         // Don't allow buying if already at minimum cooldown
         return state.points >= cost && cooldown > 50;
@@ -1665,9 +1734,12 @@ export class UpgradeSystem {
       id: 'pointMultiplier',
       name: '💎 Damage Amplifier',
       description: 'Enhance laser power for maximum destruction per hit.',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(100 * Math.pow(1.3, level))),
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(100 * Math.pow(1.3, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(100 * Math.pow(1.3, state.pointMultiplierLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(100 * Math.pow(1.3, state.pointMultiplierLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1682,10 +1754,14 @@ export class UpgradeSystem {
     const critChanceUpgrade: UpgradeConfig = {
       id: 'critChance',
       name: '✨ Critical Strike',
-      description: 'Increase critical hit chance and damage for devastating strikes.',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(150 * Math.pow(1.35, level))),
+      description:
+        'Increase critical hit chance and damage for devastating strikes.',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(150 * Math.pow(1.35, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(150 * Math.pow(1.35, state.critChanceLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(150 * Math.pow(1.35, state.critChanceLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1700,10 +1776,14 @@ export class UpgradeSystem {
     const resourceGenUpgrade: UpgradeConfig = {
       id: 'resourceGen',
       name: '🏭 Passive Income',
-      description: 'Generate points automatically over time. Scales exponentially!',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(200 * Math.pow(1.4, level))),
+      description:
+        'Generate points automatically over time. Scales exponentially!',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(200 * Math.pow(1.4, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(200 * Math.pow(1.4, state.resourceGenLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(200 * Math.pow(1.4, state.resourceGenLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1719,9 +1799,12 @@ export class UpgradeSystem {
       id: 'xpBoost',
       name: '📚 Knowledge Core',
       description: 'Learn faster and level up quicker. Knowledge is power!',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(250 * Math.pow(1.38, level))),
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(250 * Math.pow(1.38, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(250 * Math.pow(1.38, state.xpBoostLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(250 * Math.pow(1.38, state.xpBoostLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1734,18 +1817,32 @@ export class UpgradeSystem {
     };
 
     // v3.0: Weapon Mastery (main ship damage)
-    const weaponMasterySubUpgrades = this.subUpgrades.filter(u =>
-      ['scope_calibration', 'hair_trigger', 'hollow_point', 'explosive_payload', 'particle_accelerator',
-       'singularity_cannon', 'antimatter_warheads', 'quark_disruptor', 'gamma_ray_burst', 'planck_piercer'].includes(u.id)
+    const weaponMasterySubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'scope_calibration',
+        'hair_trigger',
+        'hollow_point',
+        'explosive_payload',
+        'particle_accelerator',
+        'singularity_cannon',
+        'antimatter_warheads',
+        'quark_disruptor',
+        'gamma_ray_burst',
+        'planck_piercer',
+      ].includes(u.id),
     );
 
     const weaponMasteryUpgrade: UpgradeConfig = {
       id: 'weaponMastery',
       name: '🔥 Weapon Mastery',
-      description: 'Master the art of destruction - increase main ship firepower',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(5000 * Math.pow(1.55, level))),
+      description:
+        'Master the art of destruction - increase main ship firepower',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(5000 * Math.pow(1.55, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(5000 * Math.pow(1.55, state.weaponMasteryLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(5000 * Math.pow(1.55, state.weaponMasteryLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1758,18 +1855,32 @@ export class UpgradeSystem {
     };
 
     // v3.0: Fleet Command (auto-fire ship damage)
-    const fleetCommandSubUpgrades = this.subUpgrades.filter(u =>
-      ['drill_sergeant', 'formation_delta', 'emergency_repairs', 'fleet_tactics', 'automated_repairs',
-       'ai_swarm', 'nanite_reconstruction', 'fleet_synchronization', 'quantum_coordination', 'universal_fleet'].includes(u.id)
+    const fleetCommandSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'drill_sergeant',
+        'formation_delta',
+        'emergency_repairs',
+        'fleet_tactics',
+        'automated_repairs',
+        'ai_swarm',
+        'nanite_reconstruction',
+        'fleet_synchronization',
+        'quantum_coordination',
+        'universal_fleet',
+      ].includes(u.id),
     );
 
     const fleetCommandUpgrade: UpgradeConfig = {
       id: 'fleetCommand',
       name: '🛸 Fleet Command',
-      description: 'Command your fleet with precision - boost all ships effectiveness',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(10000 * Math.pow(1.60, level))),
+      description:
+        'Command your fleet with precision - boost all ships effectiveness',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(10000 * Math.pow(1.6, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(10000 * Math.pow(1.60, state.fleetCommandLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(10000 * Math.pow(1.6, state.fleetCommandLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1782,18 +1893,31 @@ export class UpgradeSystem {
     };
 
     // v3.0: Mutation Engine (transformative abilities)
-    const mutationEngineSubUpgrades = this.subUpgrades.filter(u =>
-      ['adaptive_evolution', 'symbiotic_weapons', 'regenerative_hull', 'hive_mind', 'perfect_organism',
-       'eldritch_evolution', 'cosmic_horror', 'transcendent_form', 'living_weapon', 'apex_predator'].includes(u.id)
+    const mutationEngineSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'adaptive_evolution',
+        'symbiotic_weapons',
+        'regenerative_hull',
+        'hive_mind',
+        'perfect_organism',
+        'eldritch_evolution',
+        'cosmic_horror',
+        'transcendent_form',
+        'living_weapon',
+        'apex_predator',
+      ].includes(u.id),
     );
 
     const mutationEngineUpgrade: UpgradeConfig = {
       id: 'mutationEngine',
       name: '🧬 Mutation Engine',
       description: 'Evolve beyond limits - unlock transformative abilities',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(25000 * Math.pow(1.70, level))),
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(25000 * Math.pow(1.7, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(25000 * Math.pow(1.70, state.mutationEngineLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(25000 * Math.pow(1.7, state.mutationEngineLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1806,18 +1930,31 @@ export class UpgradeSystem {
     };
 
     // v3.0: Energy Core (energy and speed)
-    const energyCoreSubUpgrades = this.subUpgrades.filter(u =>
-      ['fusion_reactor', 'zero_point', 'perpetual_motion', 'tesla_coils', 'arc_reactor',
-       'harvested_star', 'vacuum_energy_tap', 'entropy_reversal', 'big_crunch_generator', 'multiversal_tap'].includes(u.id)
+    const energyCoreSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'fusion_reactor',
+        'zero_point',
+        'perpetual_motion',
+        'tesla_coils',
+        'arc_reactor',
+        'harvested_star',
+        'vacuum_energy_tap',
+        'entropy_reversal',
+        'big_crunch_generator',
+        'multiversal_tap',
+      ].includes(u.id),
     );
 
     const energyCoreUpgrade: UpgradeConfig = {
       id: 'energyCore',
       name: '⚡ Energy Core',
       description: 'Harness pure energy - boost all systems',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(7500 * Math.pow(1.50, level))),
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(7500 * Math.pow(1.5, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(7500 * Math.pow(1.50, state.energyCoreLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(7500 * Math.pow(1.5, state.energyCoreLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1830,18 +1967,32 @@ export class UpgradeSystem {
     };
 
     // v3.0: Cosmic Knowledge (cost reduction and XP)
-    const cosmicKnowledgeSubUpgrades = this.subUpgrades.filter(u =>
-      ['ancient_texts', 'akashic_records', 'prophetic_vision', 'universal_translator', 'omniscience_lite',
-       'forbidden_theorems', 'schrodinger_upgrade', 'universal_constants', 'apotheosis', 'omniscience'].includes(u.id)
+    const cosmicKnowledgeSubUpgrades = this.subUpgrades.filter((u) =>
+      [
+        'ancient_texts',
+        'akashic_records',
+        'prophetic_vision',
+        'universal_translator',
+        'omniscience_lite',
+        'forbidden_theorems',
+        'schrodinger_upgrade',
+        'universal_constants',
+        'apotheosis',
+        'omniscience',
+      ].includes(u.id),
     );
 
     const cosmicKnowledgeUpgrade: UpgradeConfig = {
       id: 'cosmicKnowledge',
       name: '🌌 Cosmic Knowledge',
-      description: 'Understand the universe - reduce costs and increase rewards',
-      getCost: (level: number) => this.applyDiscount(Math.ceil(15000 * Math.pow(1.65, level))),
+      description:
+        'Understand the universe - reduce costs and increase rewards',
+      getCost: (level: number) =>
+        this.applyDiscount(Math.ceil(15000 * Math.pow(1.65, level))),
       canBuy: (state: GameState) => {
-        const cost = this.applyDiscount(Math.ceil(15000 * Math.pow(1.65, state.cosmicKnowledgeLevel)));
+        const cost = this.applyDiscount(
+          Math.ceil(15000 * Math.pow(1.65, state.cosmicKnowledgeLevel)),
+        );
         return state.points >= cost;
       },
       buy: (state: GameState) => {
@@ -1883,62 +2034,76 @@ export class UpgradeSystem {
 
   private applyDiscount(cost: number): number {
     let discount = 1.0;
-    
+
     // Get current game state to check upgrade levels
     const state = this.getGameState();
-    
+
     // v3.0: Cosmic Knowledge bonus (-0.5% all costs per level, max 40%)
     if (state && state.cosmicKnowledgeLevel > 0) {
-      const knowledgeDiscount = Math.min(state.cosmicKnowledgeLevel * 0.005, 0.4);
-      discount *= (1 - knowledgeDiscount);
+      const knowledgeDiscount = Math.min(
+        state.cosmicKnowledgeLevel * 0.005,
+        0.4,
+      );
+      discount *= 1 - knowledgeDiscount;
     }
-    
+
     // v3.0: Fleet Command bonus (-1% ship upgrade costs per level, max 50%)
     if (state && state.fleetCommandLevel > 0) {
       const fleetDiscount = Math.min(state.fleetCommandLevel * 0.01, 0.5);
-      discount *= (1 - fleetDiscount);
+      discount *= 1 - fleetDiscount;
     }
 
     // v3.0: COSMIC KNOWLEDGE SUBUPGRADES
-    if (this.subUpgrades.find(u => u.id === 'ancient_texts')?.owned) discount *= 0.97;
-    if (this.subUpgrades.find(u => u.id === 'akashic_records')?.owned) discount *= 0.95;
-    if (this.subUpgrades.find(u => u.id === 'prophetic_vision')?.owned) discount *= 0.93;
-    if (this.subUpgrades.find(u => u.id === 'universal_translator')?.owned) discount *= 0.90;
-    if (this.subUpgrades.find(u => u.id === 'omniscience_lite')?.owned) discount *= 0.85;
-    if (this.subUpgrades.find(u => u.id === 'forbidden_theorems')?.owned) discount *= 0.80;
-    if (this.subUpgrades.find(u => u.id === 'schrodinger_upgrade')?.owned) discount *= 0.75;
-    if (this.subUpgrades.find(u => u.id === 'universal_constants')?.owned) discount *= 0.70;
-    if (this.subUpgrades.find(u => u.id === 'apotheosis')?.owned) discount *= 0.60;
-    if (this.subUpgrades.find(u => u.id === 'omniscience')?.owned) discount *= 0.50;
+    if (this.subUpgrades.find((u) => u.id === 'ancient_texts')?.owned)
+      discount *= 0.97;
+    if (this.subUpgrades.find((u) => u.id === 'akashic_records')?.owned)
+      discount *= 0.95;
+    if (this.subUpgrades.find((u) => u.id === 'prophetic_vision')?.owned)
+      discount *= 0.93;
+    if (this.subUpgrades.find((u) => u.id === 'universal_translator')?.owned)
+      discount *= 0.9;
+    if (this.subUpgrades.find((u) => u.id === 'omniscience_lite')?.owned)
+      discount *= 0.85;
+    if (this.subUpgrades.find((u) => u.id === 'forbidden_theorems')?.owned)
+      discount *= 0.8;
+    if (this.subUpgrades.find((u) => u.id === 'schrodinger_upgrade')?.owned)
+      discount *= 0.75;
+    if (this.subUpgrades.find((u) => u.id === 'universal_constants')?.owned)
+      discount *= 0.7;
+    if (this.subUpgrades.find((u) => u.id === 'apotheosis')?.owned)
+      discount *= 0.6;
+    if (this.subUpgrades.find((u) => u.id === 'omniscience')?.owned)
+      discount *= 0.5;
 
     // v3.0: FLEET COMMAND SUBUPGRADES (ship cost reduction)
-    if (this.subUpgrades.find(u => u.id === 'automated_repairs')?.owned) discount *= 0.90;
-    
+    if (this.subUpgrades.find((u) => u.id === 'automated_repairs')?.owned)
+      discount *= 0.9;
+
     // Energy recycling: 5% discount
-    if (this.subUpgrades.find(u => u.id === 'energy_recycling')?.owned) {
+    if (this.subUpgrades.find((u) => u.id === 'energy_recycling')?.owned) {
       discount *= 0.95;
     }
-    
+
     // Cheat codes: 20% discount
-    if (this.subUpgrades.find(u => u.id === 'cheat_codes')?.owned) {
-      discount *= 0.80;
+    if (this.subUpgrades.find((u) => u.id === 'cheat_codes')?.owned) {
+      discount *= 0.8;
     }
-    
+
     // Omniscient AI: 30% discount
-    if (this.subUpgrades.find(u => u.id === 'omniscient_ai')?.owned) {
-      discount *= 0.70;
+    if (this.subUpgrades.find((u) => u.id === 'omniscient_ai')?.owned) {
+      discount *= 0.7;
     }
-    
+
     return Math.floor(cost * discount);
   }
 
   // Helper to get current game state (will be set by Store)
   private gameStateGetter: (() => GameState) | null = null;
-  
+
   setGameStateGetter(getter: () => GameState): void {
     this.gameStateGetter = getter;
   }
-  
+
   private getGameState(): GameState | null {
     return this.gameStateGetter ? this.gameStateGetter() : null;
   }
@@ -1959,12 +2124,12 @@ export class UpgradeSystem {
 
     // Ship swarm: +20%
     if (state.subUpgrades['ship_swarm']) {
-      multiplier *= 1.20;
+      multiplier *= 1.2;
     }
 
     // Neural link: +10% on clicks
     if (state.subUpgrades['neural_link']) {
-      multiplier *= 1.10;
+      multiplier *= 1.1;
     }
 
     // Antimatter rounds: 2x
@@ -1984,7 +2149,7 @@ export class UpgradeSystem {
 
     // Stellar forge: +20%
     if (state.subUpgrades['stellar_forge']) {
-      multiplier *= 1.20;
+      multiplier *= 1.2;
     }
 
     // Antimatter cascade: x4 (for clicks)
@@ -1999,7 +2164,7 @@ export class UpgradeSystem {
 
     // Photon amplifier: +30%
     if (state.subUpgrades['photon_amplifier']) {
-      multiplier *= 1.30;
+      multiplier *= 1.3;
     }
 
     // Reality anchor: +25%
@@ -2019,12 +2184,12 @@ export class UpgradeSystem {
 
     // Infinity gauntlet: +40%
     if (state.subUpgrades['infinity_gauntlet']) {
-      multiplier *= 1.40;
+      multiplier *= 1.4;
     }
 
     // Golden goose: +50%
     if (state.subUpgrades['golden_goose']) {
-      multiplier *= 1.50;
+      multiplier *= 1.5;
     }
 
     // Heart of galaxy: x3
@@ -2071,27 +2236,27 @@ export class UpgradeSystem {
     if (state.subUpgrades['multiversal_matrix']) {
       multiplier *= 5;
     }
-    
+
     if (state.subUpgrades['omniscient_ai']) {
       multiplier *= 1.75;
     }
-    
+
     if (state.subUpgrades['big_bang_generator']) {
       multiplier *= 10;
     }
-    
+
     if (state.subUpgrades['reality_compiler']) {
       multiplier *= 20;
     }
-    
+
     if (state.subUpgrades['omega_protocol']) {
       multiplier *= 25;
     }
-    
+
     if (state.subUpgrades['infinity_engine']) {
       multiplier *= 100;
     }
-    
+
     if (state.subUpgrades['universe_seed']) {
       multiplier *= 100;
     }
@@ -2107,7 +2272,7 @@ export class UpgradeSystem {
 
   getCritChance(state: GameState): number {
     this.updateSubUpgradesFromState(state);
-    let chance = 2 + (state.critChanceLevel * 0.5); // Base 2% + 0.5% per level
+    let chance = 2 + state.critChanceLevel * 0.5; // Base 2% + 0.5% per level
 
     // Lucky dice: +5%
     if (state.subUpgrades['lucky_dice']) {
@@ -2128,7 +2293,7 @@ export class UpgradeSystem {
     if (state.subUpgrades['hyper_reactor']) {
       chance += 5;
     }
-    
+
     // Multiversal matrix: +15%
     if (state.subUpgrades['multiversal_matrix']) {
       chance += 15;
@@ -2165,7 +2330,7 @@ export class UpgradeSystem {
     if (state.subUpgrades['reality_anchor']) {
       multiplier *= 3;
     }
-    
+
     // Dimensional collapse: x5
     if (state.subUpgrades['dimensional_collapse']) {
       multiplier *= 5;
@@ -2177,7 +2342,8 @@ export class UpgradeSystem {
   getPassiveGen(state: GameState): number {
     this.updateSubUpgradesFromState(state);
     // Exponential scaling with level progression
-    let gen = state.resourceGenLevel * 10 * Math.pow(1.2, state.resourceGenLevel * 0.5);
+    let gen =
+      state.resourceGenLevel * 10 * Math.pow(1.2, state.resourceGenLevel * 0.5);
 
     // v3.0: Energy Core bonus (+10 passive generation per level)
     if (state.energyCoreLevel > 0) {
@@ -2241,27 +2407,27 @@ export class UpgradeSystem {
     if (state.subUpgrades['answer_to_everything']) {
       gen *= 10;
     }
-    
+
     // Entropy reversal: x15
     if (state.subUpgrades['entropy_reversal']) {
       gen *= 15;
     }
-    
+
     // Eternal engine: x50
     if (state.subUpgrades['eternal_engine']) {
       gen *= 50;
     }
-    
+
     // Reality compiler: x20
     if (state.subUpgrades['reality_compiler']) {
       gen *= 20;
     }
-    
+
     // Omega protocol: x25
     if (state.subUpgrades['omega_protocol']) {
       gen *= 25;
     }
-    
+
     // Universe seed: x100
     if (state.subUpgrades['universe_seed']) {
       gen *= 100;
@@ -2277,7 +2443,7 @@ export class UpgradeSystem {
 
   getXPMultiplier(state: GameState): number {
     this.updateSubUpgradesFromState(state);
-    let multiplier = 1.0 + (state.xpBoostLevel * 0.1); // Base +10% per level
+    let multiplier = 1.0 + state.xpBoostLevel * 0.1; // Base +10% per level
 
     // Motivational posters: +25%
     if (state.subUpgrades['motivational_posters']) {
@@ -2296,34 +2462,34 @@ export class UpgradeSystem {
 
     // Nebula harvester: +50%
     if (state.subUpgrades['nebula_harvester']) {
-      multiplier *= 1.50;
+      multiplier *= 1.5;
     }
 
     // Universe map: x3
     if (state.subUpgrades['universe_map']) {
       multiplier *= 3;
     }
-    
+
     // Entropy reversal: +100%
     if (state.subUpgrades['entropy_reversal']) {
       multiplier *= 2;
     }
-    
+
     // Akashic records: x10
     if (state.subUpgrades['akashic_records']) {
       multiplier *= 10;
     }
-    
+
     // Reality compiler: x20
     if (state.subUpgrades['reality_compiler']) {
       multiplier *= 20;
     }
-    
+
     // Omega protocol: x25
     if (state.subUpgrades['omega_protocol']) {
       multiplier *= 25;
     }
-    
+
     // Universe seed: x100
     if (state.subUpgrades['universe_seed']) {
       multiplier *= 100;
@@ -2346,7 +2512,7 @@ export class UpgradeSystem {
 
     // v3.0: Energy Core bonus (+1% attack speed per level = -1% cooldown)
     if (state.energyCoreLevel > 0) {
-      cooldown *= (1 - state.energyCoreLevel * 0.01);
+      cooldown *= 1 - state.energyCoreLevel * 0.01;
     }
 
     // v3.0: ENERGY CORE SUBUPGRADES
@@ -2354,12 +2520,12 @@ export class UpgradeSystem {
     if (state.subUpgrades['zero_point']) cooldown *= 0.92; // +8% speed
     if (state.subUpgrades['perpetual_motion']) cooldown *= 0.88; // +12% speed
     if (state.subUpgrades['tesla_coils']) cooldown *= 0.85; // +15% speed
-    if (state.subUpgrades['arc_reactor']) cooldown *= 0.80; // +20% speed
-    if (state.subUpgrades['harvested_star']) cooldown *= 0.70; // +30% speed
-    if (state.subUpgrades['vacuum_energy_tap']) cooldown *= 0.60; // +40% speed
+    if (state.subUpgrades['arc_reactor']) cooldown *= 0.8; // +20% speed
+    if (state.subUpgrades['harvested_star']) cooldown *= 0.7; // +30% speed
+    if (state.subUpgrades['vacuum_energy_tap']) cooldown *= 0.6; // +40% speed
     if (state.subUpgrades['entropy_reversal']) cooldown *= 0.45; // +55% speed
     if (state.subUpgrades['big_crunch_generator']) cooldown *= 0.25; // +75% speed
-    if (state.subUpgrades['multiversal_tap']) cooldown *= 0.10; // +100% speed (10x faster!)
+    if (state.subUpgrades['multiversal_tap']) cooldown *= 0.1; // +100% speed (10x faster!)
 
     // Death pact: +10% speed = 0.9x cooldown
     if (state.subUpgrades['death_pact']) {
@@ -2413,14 +2579,14 @@ export class UpgradeSystem {
 
     // Infinity gauntlet: +40% speed
     if (state.subUpgrades['infinity_gauntlet']) {
-      cooldown *= 0.60;
+      cooldown *= 0.6;
     }
-    
+
     // Dimensional collapse: +200% speed
     if (state.subUpgrades['dimensional_collapse']) {
       cooldown *= 0.33; // 3x speed = 1/3 cooldown
     }
-    
+
     // Omega protocol: x25 speed
     if (state.subUpgrades['omega_protocol']) {
       cooldown *= 0.04; // 25x speed
@@ -2460,31 +2626,31 @@ export class UpgradeSystem {
   // New method: Get main ship (click) damage only
   getMainShipDamage(state: GameState): number {
     this.updateSubUpgradesFromState(state);
-    
+
     // Base damage: much stronger scaling for late game
     let multiplier = this.basePoints * (1 + 0.5 * state.pointMultiplierLevel);
 
     // v3.0: Weapon Mastery bonus (+25% per level)
     if (state.weaponMasteryLevel > 0) {
-      multiplier *= (1 + state.weaponMasteryLevel * 0.25);
+      multiplier *= 1 + state.weaponMasteryLevel * 0.25;
     }
 
     // v3.0: Mutation Engine bonus (+2% all damage per level)
     if (state.mutationEngineLevel > 0) {
-      multiplier *= (1 + state.mutationEngineLevel * 0.02);
+      multiplier *= 1 + state.mutationEngineLevel * 0.02;
     }
 
     // v3.0: WEAPON MASTERY SUBUPGRADES
-    if (state.subUpgrades['scope_calibration']) multiplier *= 1.10;
+    if (state.subUpgrades['scope_calibration']) multiplier *= 1.1;
     if (state.subUpgrades['hair_trigger']) multiplier *= 1.15;
-    if (state.subUpgrades['hollow_point']) multiplier *= 1.20;
-    if (state.subUpgrades['explosive_payload']) multiplier *= 1.30;
-    if (state.subUpgrades['particle_accelerator']) multiplier *= 1.50;
+    if (state.subUpgrades['hollow_point']) multiplier *= 1.2;
+    if (state.subUpgrades['explosive_payload']) multiplier *= 1.3;
+    if (state.subUpgrades['particle_accelerator']) multiplier *= 1.5;
     if (state.subUpgrades['singularity_cannon']) multiplier *= 1.75;
-    if (state.subUpgrades['antimatter_warheads']) multiplier *= 2.00;
-    if (state.subUpgrades['quark_disruptor']) multiplier *= 2.50;
-    if (state.subUpgrades['gamma_ray_burst']) multiplier *= 3.00;
-    if (state.subUpgrades['planck_piercer']) multiplier *= 4.00;
+    if (state.subUpgrades['antimatter_warheads']) multiplier *= 2.0;
+    if (state.subUpgrades['quark_disruptor']) multiplier *= 2.5;
+    if (state.subUpgrades['gamma_ray_burst']) multiplier *= 3.0;
+    if (state.subUpgrades['planck_piercer']) multiplier *= 4.0;
 
     // v3.0: MUTATION ENGINE SUBUPGRADES
     if (state.subUpgrades['adaptive_evolution']) multiplier *= 1.05;
@@ -2493,10 +2659,10 @@ export class UpgradeSystem {
     if (state.subUpgrades['hive_mind']) multiplier *= 1.18;
     if (state.subUpgrades['perfect_organism']) multiplier *= 1.25;
     if (state.subUpgrades['eldritch_evolution']) multiplier *= 1.35;
-    if (state.subUpgrades['cosmic_horror']) multiplier *= 1.50;
+    if (state.subUpgrades['cosmic_horror']) multiplier *= 1.5;
     if (state.subUpgrades['transcendent_form']) multiplier *= 1.75;
-    if (state.subUpgrades['living_weapon']) multiplier *= 2.00;
-    if (state.subUpgrades['apex_predator']) multiplier *= 2.50;
+    if (state.subUpgrades['living_weapon']) multiplier *= 2.0;
+    if (state.subUpgrades['apex_predator']) multiplier *= 2.5;
 
     // Laser focusing crystals: +15%
     if (state.subUpgrades['laser_focusing']) {
@@ -2510,7 +2676,7 @@ export class UpgradeSystem {
 
     // Neural link: +10% on clicks
     if (state.subUpgrades['neural_link']) {
-      multiplier *= 1.10;
+      multiplier *= 1.1;
     }
 
     // Antimatter rounds: 2x
@@ -2530,7 +2696,7 @@ export class UpgradeSystem {
 
     // Stellar forge: +20%
     if (state.subUpgrades['stellar_forge']) {
-      multiplier *= 1.20;
+      multiplier *= 1.2;
     }
 
     // Antimatter cascade: x4 (for clicks)
@@ -2545,7 +2711,7 @@ export class UpgradeSystem {
 
     // Photon amplifier: +30%
     if (state.subUpgrades['photon_amplifier']) {
-      multiplier *= 1.30;
+      multiplier *= 1.3;
     }
 
     // Reality anchor: +25%
@@ -2565,12 +2731,12 @@ export class UpgradeSystem {
 
     // Infinity gauntlet: +40%
     if (state.subUpgrades['infinity_gauntlet']) {
-      multiplier *= 1.40;
+      multiplier *= 1.4;
     }
 
     // Golden goose: +50%
     if (state.subUpgrades['golden_goose']) {
-      multiplier *= 1.50;
+      multiplier *= 1.5;
     }
 
     // Heart of galaxy: x3
@@ -2610,27 +2776,27 @@ export class UpgradeSystem {
     if (state.subUpgrades['multiversal_matrix']) {
       multiplier *= 5;
     }
-    
+
     if (state.subUpgrades['omniscient_ai']) {
       multiplier *= 1.75;
     }
-    
+
     if (state.subUpgrades['big_bang_generator']) {
       multiplier *= 10;
     }
-    
+
     if (state.subUpgrades['reality_compiler']) {
       multiplier *= 20;
     }
-    
+
     if (state.subUpgrades['omega_protocol']) {
       multiplier *= 25;
     }
-    
+
     if (state.subUpgrades['infinity_engine']) {
       multiplier *= 100;
     }
-    
+
     if (state.subUpgrades['universe_seed']) {
       multiplier *= 100;
     }
@@ -2647,31 +2813,33 @@ export class UpgradeSystem {
   // New method: Get auto-fire ship damage (weaker but scales with ship count)
   getAutoFireDamage(state: GameState): number {
     this.updateSubUpgradesFromState(state);
-    
+
     // Base: 10% of point multiplier level (much weaker)
-    let multiplier = this.basePoints * (0.1 + 0.05 * state.pointMultiplierLevel);
+    let multiplier =
+      this.basePoints * (0.1 + 0.05 * state.pointMultiplierLevel);
 
     // v3.0: Fleet Command bonus (+5% auto-fire damage per level)
     if (state.fleetCommandLevel > 0) {
-      multiplier *= (1 + state.fleetCommandLevel * 0.05);
+      multiplier *= 1 + state.fleetCommandLevel * 0.05;
     }
 
     // v3.0: Mutation Engine bonus (+2% all damage per level)
     if (state.mutationEngineLevel > 0) {
-      multiplier *= (1 + state.mutationEngineLevel * 0.02);
+      multiplier *= 1 + state.mutationEngineLevel * 0.02;
     }
 
     // v3.0: FLEET COMMAND SUBUPGRADES
     if (state.subUpgrades['drill_sergeant']) multiplier *= 1.08;
     if (state.subUpgrades['formation_delta']) multiplier *= 1.12;
     if (state.subUpgrades['emergency_repairs']) multiplier *= 1.15;
-    if (state.subUpgrades['fleet_tactics']) multiplier *= (1 + Math.floor(state.shipsCount / 10) * 0.20);
+    if (state.subUpgrades['fleet_tactics'])
+      multiplier *= 1 + Math.floor(state.shipsCount / 10) * 0.2;
     if (state.subUpgrades['automated_repairs']) multiplier *= 1.25;
     if (state.subUpgrades['ai_swarm']) multiplier *= 1.35;
-    if (state.subUpgrades['nanite_reconstruction']) multiplier *= 1.50;
+    if (state.subUpgrades['nanite_reconstruction']) multiplier *= 1.5;
     if (state.subUpgrades['fleet_synchronization']) multiplier *= 1.75;
-    if (state.subUpgrades['quantum_coordination']) multiplier *= 2.00;
-    if (state.subUpgrades['universal_fleet']) multiplier *= 2.50;
+    if (state.subUpgrades['quantum_coordination']) multiplier *= 2.0;
+    if (state.subUpgrades['universal_fleet']) multiplier *= 2.5;
 
     // v3.0: MUTATION ENGINE SUBUPGRADES (same as main ship)
     if (state.subUpgrades['adaptive_evolution']) multiplier *= 1.05;
@@ -2680,19 +2848,19 @@ export class UpgradeSystem {
     if (state.subUpgrades['hive_mind']) multiplier *= 1.18;
     if (state.subUpgrades['perfect_organism']) multiplier *= 1.25;
     if (state.subUpgrades['eldritch_evolution']) multiplier *= 1.35;
-    if (state.subUpgrades['cosmic_horror']) multiplier *= 1.50;
+    if (state.subUpgrades['cosmic_horror']) multiplier *= 1.5;
     if (state.subUpgrades['transcendent_form']) multiplier *= 1.75;
-    if (state.subUpgrades['living_weapon']) multiplier *= 2.00;
-    if (state.subUpgrades['apex_predator']) multiplier *= 2.50;
+    if (state.subUpgrades['living_weapon']) multiplier *= 2.0;
+    if (state.subUpgrades['apex_predator']) multiplier *= 2.5;
 
     // Ship swarm: +20% (auto-fire specific)
     if (state.subUpgrades['ship_swarm']) {
-      multiplier *= 1.20;
+      multiplier *= 1.2;
     }
 
     // Scale with ship count (diminishing returns)
     const shipScaling = Math.log10(state.shipsCount + 1) * 0.5;
-    multiplier *= (1 + shipScaling);
+    multiplier *= 1 + shipScaling;
 
     // Some general damage upgrades affect auto-fire but at reduced effectiveness
     if (state.subUpgrades['laser_focusing']) {

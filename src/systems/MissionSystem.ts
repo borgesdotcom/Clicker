@@ -1,12 +1,12 @@
 import type { Store } from '../core/Store';
 
-export type MissionType = 
-  | 'clicks' 
-  | 'damage' 
-  | 'kills' 
-  | 'boss_kills' 
-  | 'upgrades' 
-  | 'level' 
+export type MissionType =
+  | 'clicks'
+  | 'damage'
+  | 'kills'
+  | 'boss_kills'
+  | 'upgrades'
+  | 'level'
   | 'ships'
   | 'no_damage'
   | 'combo'
@@ -171,7 +171,7 @@ export class MissionSystem {
       for (let i = 0; i < 5; i++) {
         const template = MISSION_TEMPLATES[i % MISSION_TEMPLATES.length]!;
         const target = template.target(level);
-        
+
         this.missions.push({
           id: `mission_${i}_${Date.now()}`,
           type: template.type,
@@ -196,11 +196,11 @@ export class MissionSystem {
 
     // Generate 3 daily missions
     const shuffled = [...MISSION_TEMPLATES].sort(() => Math.random() - 0.5);
-    
+
     for (let i = 0; i < 3; i++) {
       const template = shuffled[i]!;
       const target = template.target(level);
-      
+
       this.dailyMissions.push({
         id: `daily_${i}_${Date.now()}`,
         type: template.type,
@@ -337,11 +337,10 @@ export class MissionSystem {
 
   public update(): void {
     this.checkDailyReset();
-    
+
     // Update level and ships missions (these check current state)
     const state = this.store.getState();
     this.updateMissions('level', state.level);
     this.updateMissions('ships', state.shipsCount);
   }
 }
-

@@ -9,13 +9,13 @@ export class Button {
     this.element = document.createElement('button');
     this.element.textContent = text;
     this.element.className = 'shop-button';
-    
+
     // Add throttled click handler
     this.element.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleClick();
     });
-    
+
     this.element.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -29,7 +29,7 @@ export class Button {
     const now = Date.now();
     if (now - this.lastClickTime < this.clickDelay) return;
     if (this.element.disabled) return;
-    
+
     this.lastClickTime = now;
     this.clickHandler();
   }
@@ -46,4 +46,3 @@ export class Button {
     this.element.textContent = text;
   }
 }
-

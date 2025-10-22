@@ -99,14 +99,16 @@ export class Save {
       prestigeLevel: clamp(data.prestigeLevel ?? 0, 0, 1000),
       prestigePoints: clamp(data.prestigePoints ?? 0, 0, 1e15),
       prestigeUpgrades: data.prestigeUpgrades ?? {},
-      harmonicState: data.harmonicState ? {
-        ...defaultHarmonicState,
-        ...data.harmonicState,
-        sigils: {
-          ...defaultHarmonicState.sigils,
-          ...(data.harmonicState.sigils ?? {}),
-        },
-      } : defaultHarmonicState,
+      harmonicState: data.harmonicState
+        ? {
+            ...defaultHarmonicState,
+            ...data.harmonicState,
+            sigils: {
+              ...defaultHarmonicState.sigils,
+              ...(data.harmonicState.sigils ?? {}),
+            },
+          }
+        : defaultHarmonicState,
       blockedOnBossLevel: data.blockedOnBossLevel ?? null,
       // v3.0: New upgrades
       weaponMasteryLevel: data.weaponMasteryLevel ?? 0,
@@ -177,4 +179,3 @@ export class Save {
     };
   }
 }
-

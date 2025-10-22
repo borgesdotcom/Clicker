@@ -48,4 +48,3 @@ export class Canvas {
     this.ctx.restore();
   }
 }
-

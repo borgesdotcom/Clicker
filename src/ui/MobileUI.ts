@@ -9,7 +9,7 @@ export class MobileUI {
 
   constructor() {
     this.detectMobile();
-    
+
     // Immediately hide shop on mobile before setup
     if (this.isMobile) {
       const shopPanel = document.getElementById('shop-panel');
@@ -18,7 +18,7 @@ export class MobileUI {
         shopPanel.style.display = 'none';
       }
     }
-    
+
     this.setupMobileUI();
     this.setupResizeHandler();
   }
@@ -46,7 +46,7 @@ export class MobileUI {
       // Mobile menu toggle
       const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
       const mobileMenuClose = document.getElementById('mobile-menu-close');
-      
+
       if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -87,7 +87,12 @@ export class MobileUI {
       // Close menus when clicking outside
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
-        if (this.isMenuOpen && this.mobileMenu && !this.mobileMenu.contains(target) && !target.closest('#mobile-menu-toggle')) {
+        if (
+          this.isMenuOpen &&
+          this.mobileMenu &&
+          !this.mobileMenu.contains(target) &&
+          !target.closest('#mobile-menu-toggle')
+        ) {
           this.closeMobileMenu();
         }
       });
@@ -102,7 +107,7 @@ export class MobileUI {
         }
       }
     }, 100);
-    
+
     // Also set initial state immediately
     if (this.isMobile) {
       const shopPanel = document.getElementById('shop-panel');
@@ -125,7 +130,9 @@ export class MobileUI {
     const artifactsBtn = document.getElementById('artifacts-button');
     const ascensionBtn = document.getElementById('ascension-button');
     const settingsBtn = document.getElementById('settings-button');
-    const hudButtonsContainer = document.getElementById('hud-buttons-container');
+    const hudButtonsContainer = document.getElementById(
+      'hud-buttons-container',
+    );
 
     if (this.isMobile) {
       // Show mobile controls
@@ -194,15 +201,22 @@ export class MobileUI {
     this.mobileMenuContent.innerHTML = '';
 
     // Add buttons to mobile menu in order
-    const buttons = [achievementsBtn, statsBtn, missionsBtn, artifactsBtn, ascensionBtn, settingsBtn];
-    
-    buttons.forEach(btn => {
+    const buttons = [
+      achievementsBtn,
+      statsBtn,
+      missionsBtn,
+      artifactsBtn,
+      ascensionBtn,
+      settingsBtn,
+    ];
+
+    buttons.forEach((btn) => {
       if (btn) {
         const clone = btn.cloneNode(true) as HTMLElement;
         clone.style.display = 'flex';
         clone.style.width = '100%';
         clone.style.marginBottom = '10px';
-        
+
         // Copy event listeners by getting the original button's onclick
         const originalBtn = btn as HTMLButtonElement;
         clone.addEventListener('click', () => {
@@ -291,4 +305,3 @@ export class MobileUI {
     return this.isMobile;
   }
 }
-

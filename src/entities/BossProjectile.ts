@@ -11,7 +11,13 @@ export class BossProjectile {
   private age = 0;
   private rotationAngle = 0;
 
-  constructor(x: number, y: number, targetX: number, targetY: number, speed: number) {
+  constructor(
+    x: number,
+    y: number,
+    targetX: number,
+    targetY: number,
+    speed: number,
+  ) {
     this.x = x;
     this.y = y;
 
@@ -37,38 +43,38 @@ export class BossProjectile {
 
   draw(draw: Draw): void {
     const alpha = Math.max(0, 1 - this.age / this.lifetime);
-    
+
     // Outer glow
     draw.setAlpha(alpha * 0.3);
     draw.setGlow('#ff0000', 20);
     draw.setFill('#ff0000');
     draw.circle(this.x, this.y, this.radius * 1.5, true);
     draw.clearGlow();
-    
+
     // Main projectile body
     draw.setAlpha(alpha);
     draw.setGlow('#ff0000', 10);
     draw.setFill('#ff3300');
     draw.circle(this.x, this.y, this.radius, true);
-    
+
     // Inner core
     draw.setFill('#ffaa00');
     draw.circle(this.x, this.y, this.radius * 0.6, true);
-    
+
     // Bright center
     draw.setFill('#ffffff');
     draw.setAlpha(alpha * 0.8);
     draw.circle(this.x, this.y, this.radius * 0.3, true);
-    
+
     draw.clearGlow();
     draw.resetAlpha();
-    
+
     // Rotating energy lines
     const ctx = draw.getContext();
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rotationAngle);
-    
+
     draw.setAlpha(alpha * 0.6);
     draw.setStroke('#ff6600', 2);
     for (let i = 0; i < 4; i++) {
@@ -98,4 +104,3 @@ export class BossProjectile {
     return dist < this.radius + targetRadius;
   }
 }
-

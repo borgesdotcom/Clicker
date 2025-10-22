@@ -40,17 +40,25 @@ export class AlienBall {
       { fill: '#6666ff', stroke: '#4444cc', hp: 100 },
     ];
     const index = Math.floor(Math.random() * colors.length);
-    return colors[index] ?? colors[0] ?? { fill: '#ff6666', stroke: '#cc4444', hp: 100 };
+    return (
+      colors[index] ??
+      colors[0] ?? { fill: '#ff6666', stroke: '#cc4444', hp: 100 }
+    );
   }
 
-  static createRandom(x: number, y: number, radius: number, level: number): AlienBall {
+  static createRandom(
+    x: number,
+    y: number,
+    radius: number,
+    level: number,
+  ): AlienBall {
     const color = AlienBall.getRandomColor();
     // Use ColorManager for consistent HP scaling across the game
     const hp = ColorManager.getHp(level);
-    
+
     const levelScaledColor = {
       ...color,
-      hp: hp
+      hp: hp,
     };
     return new AlienBall(x, y, radius, levelScaledColor);
   }
@@ -97,7 +105,7 @@ export class AlienBall {
       const progress = 1 - this.breakAnimTime / this.breakAnimDuration;
       const alpha = 1 - progress;
       const scale = 1 + progress * 0.5;
-      
+
       drawer.setAlpha(alpha);
       drawer.setFill(this.color.fill);
       drawer.circle(this.x, this.y, this.radius * scale);
@@ -119,35 +127,32 @@ export class AlienBall {
 
     // Background
     drawer.getContext().fillStyle = 'rgba(0, 0, 0, 0.5)';
-    drawer.getContext().fillRect(
-      this.x - hpBarWidth / 2,
-      hpBarY,
-      hpBarWidth,
-      hpBarHeight,
-    );
+    drawer
+      .getContext()
+      .fillRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
 
     // Health fill - color changes based on health percentage
     let fillColor = '#00ff00'; // Green
-    if (hpPercent < 0.3) fillColor = '#ff0000'; // Red
+    if (hpPercent < 0.3)
+      fillColor = '#ff0000'; // Red
     else if (hpPercent < 0.6) fillColor = '#ffaa00'; // Orange
 
     drawer.getContext().fillStyle = fillColor;
-    drawer.getContext().fillRect(
-      this.x - hpBarWidth / 2,
-      hpBarY,
-      hpBarWidth * hpPercent,
-      hpBarHeight,
-    );
+    drawer
+      .getContext()
+      .fillRect(
+        this.x - hpBarWidth / 2,
+        hpBarY,
+        hpBarWidth * hpPercent,
+        hpBarHeight,
+      );
 
     // Border
     drawer.getContext().strokeStyle = '#ffffff';
     drawer.getContext().lineWidth = 1;
-    drawer.getContext().strokeRect(
-      this.x - hpBarWidth / 2,
-      hpBarY,
-      hpBarWidth,
-      hpBarHeight,
-    );
+    drawer
+      .getContext()
+      .strokeRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
 
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
@@ -159,4 +164,3 @@ export class AlienBall {
     }
   }
 }
-

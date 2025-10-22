@@ -52,7 +52,9 @@ export class AchievementsModal {
   private setupEventListeners(): void {
     const closeBtn = this.modal.querySelector('#achievements-close');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => { this.hide(); });
+      closeBtn.addEventListener('click', () => {
+        this.hide();
+      });
     }
 
     this.modal.addEventListener('click', (e) => {
@@ -62,14 +64,16 @@ export class AchievementsModal {
     });
 
     const filterBtns = this.modal.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {
+    filterBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         const filter = target.dataset.filter;
-        
-        filterBtns.forEach(b => { b.classList.remove('active'); });
+
+        filterBtns.forEach((b) => {
+          b.classList.remove('active');
+        });
         target.classList.add('active');
-        
+
         this.applyFilter(filter || 'all');
       });
     });
@@ -80,7 +84,7 @@ export class AchievementsModal {
     if (!grid) return;
 
     const items = grid.querySelectorAll('.achievement-item');
-    items.forEach(item => {
+    items.forEach((item) => {
       const htmlItem = item as HTMLElement;
       if (filter === 'all' || htmlItem.dataset.category === filter) {
         htmlItem.style.display = '';
@@ -111,18 +115,21 @@ export class AchievementsModal {
 
     const countEl = this.modal.querySelector('#achievements-count');
     const percentEl = this.modal.querySelector('#achievements-percent');
-    const progressBar = this.modal.querySelector('#achievements-progress-bar') as HTMLElement;
+    const progressBar = this.modal.querySelector(
+      '#achievements-progress-bar',
+    ) as HTMLElement;
 
     if (countEl) countEl.textContent = `${count}/${total}`;
     if (percentEl) percentEl.textContent = `${Math.floor(percent)}%`;
     if (progressBar) progressBar.style.width = `${percent}%`;
 
     // Render achievements
-    grid.innerHTML = achievements.map(achievement => {
-      const isLocked = !achievement.unlocked;
-      const isHidden = isLocked && achievement.hidden;
-      
-      return `
+    grid.innerHTML = achievements
+      .map((achievement) => {
+        const isLocked = !achievement.unlocked;
+        const isHidden = isLocked && achievement.hidden;
+
+        return `
         <div class="achievement-item ${isLocked ? 'locked' : 'unlocked'}" data-category="${achievement.category}">
           <div class="achievement-icon-large ${isLocked ? 'grayscale' : ''}">${achievement.icon}</div>
           <div class="achievement-details">
@@ -133,7 +140,8 @@ export class AchievementsModal {
           ${isLocked ? '<div class="achievement-lock">🔒</div>' : '<div class="achievement-checkmark">✓</div>'}
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   private getCategoryLabel(category: string): string {
@@ -147,4 +155,3 @@ export class AchievementsModal {
     return labels[category] || category;
   }
 }
-

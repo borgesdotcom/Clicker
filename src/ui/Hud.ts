@@ -12,7 +12,7 @@ export class Hud {
   private dpsDisplay: HTMLElement | null = null;
   private passiveDisplay: HTMLElement | null = null;
   private critDisplay: HTMLElement | null = null;
-  
+
   private damageHistory: number[] = [];
   private readonly DPS_WINDOW = 5000; // 5 seconds window for DPS calculation
 
@@ -32,10 +32,10 @@ export class Hud {
     const levelBarFillEl = document.getElementById('level-bar-fill');
     if (!levelBarFillEl) throw new Error('Level bar fill element not found');
     this.levelBarFill = levelBarFillEl;
-    
+
     this.createStatsDisplay();
   }
-  
+
   private createStatsDisplay(): void {
     // Create stats container
     const statsContainer = document.createElement('div');
@@ -49,26 +49,26 @@ export class Hud {
       font-size: 14px;
       max-width: 300px;
     `;
-    
+
     // DPS Display
     this.dpsDisplay = document.createElement('div');
     this.dpsDisplay.style.cssText = 'margin-bottom: 5px; color: #ff8888;';
     this.dpsDisplay.textContent = '⚔️ DPS: 0';
-    
+
     // Passive Display
     this.passiveDisplay = document.createElement('div');
     this.passiveDisplay.style.cssText = 'margin-bottom: 5px; color: #88ff88;';
     this.passiveDisplay.textContent = '🏭 Passive: 0/sec';
-    
+
     // Crit Display
     this.critDisplay = document.createElement('div');
     this.critDisplay.style.cssText = 'color: #ffff88;';
     this.critDisplay.textContent = '✨ Crit: 0%';
-    
+
     statsContainer.appendChild(this.dpsDisplay);
     statsContainer.appendChild(this.passiveDisplay);
     statsContainer.appendChild(this.critDisplay);
-    
+
     const hudElement = document.getElementById('hud');
     if (hudElement) {
       hudElement.appendChild(statsContainer);
@@ -78,7 +78,7 @@ export class Hud {
   update(points: number): void {
     this.pointsDisplay.textContent = `💰 Points: ${this.formatNumber(points)}`;
   }
-  
+
   updateStats(dps: number, passive: number, critChance: number): void {
     if (this.dpsDisplay) {
       this.dpsDisplay.textContent = `⚔️ DPS: ${this.formatNumber(dps)}`;
@@ -90,29 +90,34 @@ export class Hud {
       this.critDisplay.textContent = `✨ Crit: ${critChance.toFixed(1)}%`;
     }
   }
-  
+
   recordDamage(amount: number): void {
     const now = Date.now();
     this.damageHistory.push({ damage: amount, time: now } as any);
-    
+
     // Remove old entries outside the DPS window
     this.damageHistory = this.damageHistory.filter(
-      (entry: any) => now - entry.time < this.DPS_WINDOW
+      (entry: any) => now - entry.time < this.DPS_WINDOW,
     );
   }
-  
+
   calculateDPS(): number {
     if (this.damageHistory.length === 0) return 0;
-    
+
     const now = Date.now();
     const windowStart = now - this.DPS_WINDOW;
-    const recentDamage = this.damageHistory.filter((entry: any) => entry.time >= windowStart);
-    
+    const recentDamage = this.damageHistory.filter(
+      (entry: any) => entry.time >= windowStart,
+    );
+
     if (recentDamage.length === 0) return 0;
-    
-    const totalDamage = recentDamage.reduce((sum: number, entry: any) => sum + entry.damage, 0);
+
+    const totalDamage = recentDamage.reduce(
+      (sum: number, entry: any) => sum + entry.damage,
+      0,
+    );
     const timeSpan = (now - (recentDamage[0] as any).time) / 1000; // Convert to seconds
-    
+
     return timeSpan > 0 ? totalDamage / timeSpan : 0;
   }
 
@@ -121,7 +126,7 @@ export class Hud {
     this.expText.textContent = `${Math.floor(experience)} / ${expToNext}`;
     const percent = Math.min(100, (experience / expToNext) * 100);
     this.levelBarFill.style.width = `${percent}%`;
-    
+
     // Add visual feedback for milestone levels
     if (level % 10 === 0 && level > 0) {
       this.levelText.style.color = '#ffd700';
@@ -142,7 +147,11 @@ export class Hud {
     return Math.floor(num).toString();
   }
 
-  showMessage(message: string, color: string = '#ffffff', duration: number = 2000): void {
+  showMessage(
+    message: string,
+    color: string = '#ffffff',
+    duration: number = 2000,
+  ): void {
     // Create message element
     const messageEl = document.createElement('div');
     messageEl.textContent = message;
@@ -162,9 +171,9 @@ export class Hud {
       text-shadow: 0 0 10px ${color};
       animation: pulse 0.5s ease-in-out;
     `;
-    
+
     document.body.appendChild(messageEl);
-    
+
     // Remove after duration
     setTimeout(() => {
       messageEl.style.opacity = '0';
@@ -175,4 +184,3 @@ export class Hud {
     }, duration);
   }
 }
-

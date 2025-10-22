@@ -27,18 +27,26 @@ export class Shop {
     const element = document.getElementById('shop-content');
     if (!element) throw new Error('Shop content element not found');
     this.container = element;
-    
+
     // Prevent shop clicks from bubbling to canvas (use bubble phase, not capture)
     const shopPanel = document.getElementById('shop-panel');
     if (shopPanel) {
-      shopPanel.addEventListener('click', (e) => { e.stopPropagation(); });
-      shopPanel.addEventListener('touchstart', (e) => { e.stopPropagation(); });
-      shopPanel.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+      shopPanel.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      shopPanel.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+      });
+      shopPanel.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+      });
     }
-    
+
     this.setupTabs();
     this.render();
-    this.store.subscribe(() => { this.scheduleRender(); });
+    this.store.subscribe(() => {
+      this.scheduleRender();
+    });
   }
 
   setSoundManager(soundManager: { playPurchase: () => void }): void {
@@ -67,32 +75,32 @@ export class Shop {
   private scheduleRender(): void {
     // Don't schedule renders while processing a purchase
     if (this.isProcessingPurchase) return;
-    
+
     const state = this.store.getState();
     const currentPoints = state.points;
-    
+
     // Check for new discoveries (this might trigger a full re-render)
     const discoveredSomethingNew = this.checkForDiscoveries(state);
-    
+
     // If we discovered something new, do a full render
     if (discoveredSomethingNew) {
       this.render();
       return;
     }
-    
+
     // Check if we're close to affording something (within 10%)
     const nearAffordable = this.isNearAffordable(currentPoints);
-    
+
     // Use faster updates when close to affording something
     const throttle = nearAffordable ? 10 : this.updateThrottle;
-    
+
     // Throttle updates to prevent lag
     const now = Date.now();
     if (now - this.lastUpdateTime < throttle) {
       return;
     }
     this.lastUpdateTime = now;
-    
+
     // Use requestAnimationFrame for immediate smooth update
     if (this.renderTimeout !== null) {
       cancelAnimationFrame(this.renderTimeout);
@@ -119,7 +127,7 @@ export class Shop {
     // Check main upgrades
     for (const upgrade of upgrades) {
       if (upgrade.id === 'misc') continue;
-      
+
       // Skip if already discovered or already purchased
       if (state.discoveredUpgrades[upgrade.id] || upgrade.getLevel(state) > 0) {
         if (upgrade.getLevel(state) > 0) {
@@ -127,7 +135,7 @@ export class Shop {
         }
         continue;
       }
-      
+
       // Check if player has 75% of the cost
       const cost = upgrade.getCost(upgrade.getLevel(state));
       if (state.points >= cost * 0.75) {
@@ -139,7 +147,7 @@ export class Shop {
     // Check subupgrades
     for (const subUpgrade of allSubUpgrades) {
       const subKey = `sub_${subUpgrade.id}`;
-      
+
       // Skip if already owned or already discovered
       if (subUpgrade.owned || state.discoveredUpgrades[subKey]) {
         if (subUpgrade.owned) {
@@ -147,12 +155,12 @@ export class Shop {
         }
         continue;
       }
-      
+
       // Check if base requirements are met
       if (!subUpgrade.requires(state)) {
         continue;
       }
-      
+
       // Check if player has 75% of the cost
       if (state.points >= subUpgrade.cost * 0.75) {
         state.discoveredUpgrades[subKey] = true;
@@ -171,7 +179,7 @@ export class Shop {
   private isNearAffordable(points: number): boolean {
     const state = this.store.getState();
     const upgrades = this.upgradeSystem.getUpgrades();
-    
+
     // Check if we're within 10% of affording any upgrade
     for (const upgrade of upgrades) {
       const cost = upgrade.getCost(upgrade.getLevel(state));
@@ -179,7 +187,7 @@ export class Shop {
         return true;
       }
     }
-    
+
     // Also check sub-upgrades
     const subUpgrades = this.upgradeSystem.getSubUpgrades();
     for (const upgrade of subUpgrades) {
@@ -188,28 +196,28 @@ export class Shop {
         return true;
       }
     }
-    
+
     return false;
   }
 
   private hasAffordabilityChanged(): boolean {
     const state = this.store.getState();
     const upgrades = this.upgradeSystem.getUpgrades();
-    
+
     let changed = false;
-    
+
     // Check main upgrades
     for (const upgrade of upgrades) {
       const key = upgrade.id;
       const canAfford = upgrade.canBuy(state);
       const wasAffordable = this.lastAffordability.get(key);
-      
+
       if (wasAffordable !== canAfford) {
         changed = true;
         this.lastAffordability.set(key, canAfford);
       }
     }
-    
+
     // Always check sub-upgrades (they're important for user experience)
     const subUpgrades = this.upgradeSystem.getSubUpgrades();
     for (const upgrade of subUpgrades) {
@@ -217,19 +225,19 @@ export class Shop {
       const key = `sub_${upgrade.id}`;
       const canAfford = !upgrade.owned && state.points >= upgrade.cost;
       const wasAffordable = this.lastAffordability.get(key);
-      
+
       if (wasAffordable !== canAfford) {
         changed = true;
         this.lastAffordability.set(key, canAfford);
       }
     }
-    
+
     return changed;
   }
 
   private updateButtonStates(): void {
     const state = this.store.getState();
-    
+
     // Use requestAnimationFrame for smoother updates
     requestAnimationFrame(() => {
       // Update main upgrade buttons
@@ -238,12 +246,12 @@ export class Shop {
         const button = this.buttonCache.get(upgrade.id);
         if (button) {
           const canAfford = upgrade.canBuy(state);
-          
+
           // Only update if state changed
           const wasDisabled = button.disabled;
           if (wasDisabled === canAfford) {
             button.disabled = !canAfford;
-            
+
             // Use CSS classes instead of inline styles (faster)
             if (canAfford) {
               button.classList.remove('disabled');
@@ -253,14 +261,16 @@ export class Shop {
           }
         }
       }
-      
+
       // Update sub-upgrade affordability classes
       const subUpgrades = this.upgradeSystem.getSubUpgrades();
       for (const subUpgrade of subUpgrades) {
-        const card = document.querySelector(`[data-upgrade-id="${subUpgrade.id}"]`) as HTMLElement;
+        const card = document.querySelector(
+          `[data-upgrade-id="${subUpgrade.id}"]`,
+        ) as HTMLElement;
         if (card && !subUpgrade.owned) {
           const canAfford = state.points >= subUpgrade.cost;
-          
+
           // Always update to ensure responsiveness
           card.style.opacity = canAfford ? '1' : '0.7';
           card.style.cursor = canAfford ? 'pointer' : 'not-allowed';
@@ -303,13 +313,15 @@ export class Shop {
 
     // Render special upgrades box at the top
     // Filter: must meet requirements AND be discovered (75% of cost OR already owned)
-    const visibleSubUpgrades = allSubUpgrades.filter(sub => {
+    const visibleSubUpgrades = allSubUpgrades.filter((sub) => {
       const subKey = `sub_${sub.id}`;
-      return !sub.owned && 
-             sub.requires(state) && 
-             (state.discoveredUpgrades[subKey] || sub.owned);
+      return (
+        !sub.owned &&
+        sub.requires(state) &&
+        (state.discoveredUpgrades[subKey] || sub.owned)
+      );
     });
-    
+
     if (visibleSubUpgrades.length > 0) {
       const specialBox = document.createElement('div');
       specialBox.className = 'special-upgrades-box';
@@ -333,9 +345,12 @@ export class Shop {
     // Render main upgrades (exclude R&D category and undiscovered upgrades)
     for (const upgrade of upgrades) {
       if (upgrade.id === 'misc') continue;
-      
+
       // Only show if discovered OR already purchased
-      if (!state.discoveredUpgrades[upgrade.id] && upgrade.getLevel(state) === 0) {
+      if (
+        !state.discoveredUpgrades[upgrade.id] &&
+        upgrade.getLevel(state) === 0
+      ) {
         continue;
       }
 
@@ -368,9 +383,11 @@ export class Shop {
       const currentCost = upgrade.getCost(upgrade.getLevel(state));
       cost.textContent = `Cost: ${this.formatNumber(currentCost)}`;
 
-      const button = new Button('BUY', () => { this.buyUpgrade(upgrade); });
+      const button = new Button('BUY', () => {
+        this.buyUpgrade(upgrade);
+      });
       button.setEnabled(upgrade.canBuy(state));
-      
+
       // Cache the button element for quick updates
       const buttonElement = button.getElement();
       this.buttonCache.set(upgrade.id, buttonElement);
@@ -388,7 +405,7 @@ export class Shop {
 
   private renderOwnedTab(state: any): void {
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
-    const ownedUpgrades = allSubUpgrades.filter(sub => sub.owned);
+    const ownedUpgrades = allSubUpgrades.filter((sub) => sub.owned);
 
     if (ownedUpgrades.length === 0) {
       const message = document.createElement('div');
@@ -429,7 +446,9 @@ export class Shop {
 
     const cost = document.createElement('div');
     cost.className = 'sub-upgrade-cost';
-    cost.textContent = subUpgrade.owned ? '✓ OWNED' : this.formatNumber(subUpgrade.cost);
+    cost.textContent = subUpgrade.owned
+      ? '✓ OWNED'
+      : this.formatNumber(subUpgrade.cost);
     card.appendChild(cost);
 
     // Tooltip
@@ -443,7 +462,7 @@ export class Shop {
       const canAfford = state.points >= subUpgrade.cost;
       card.style.opacity = canAfford ? '1' : '0.7';
       card.style.cursor = canAfford ? 'pointer' : 'not-allowed';
-      
+
       card.addEventListener('click', () => {
         const currentState = this.store.getState();
         if (currentState.points >= subUpgrade.cost) {
@@ -458,55 +477,60 @@ export class Shop {
   private getUpgradeEmoji(upgradeId: string): string {
     const emojiMap: Record<string, string> = {
       // Original
-      'auto_fire': '🔥',
-      'death_pact': '💀',
-      'laser_focusing': '💎',
-      'quantum_targeting': '🎯',
-      'energy_recycling': '♻️',
-      'overclocked_reactors': '⚛️',
-      'ship_swarm': '🐝',
-      'neural_link': '🧠',
-      'antimatter_rounds': '💥',
-      'warp_core': '🌀',
-      'ai_optimizer': '🤖',
-      'perfect_precision': '✨',
-      'void_channeling': '🌌',
-      'temporal_acceleration': '⏰',
-      'singularity_core': '🕳️',
-      'cosmic_ascension': '🌟',
+      auto_fire: '🔥',
+      death_pact: '💀',
+      laser_focusing: '💎',
+      quantum_targeting: '🎯',
+      energy_recycling: '♻️',
+      overclocked_reactors: '⚛️',
+      ship_swarm: '🐝',
+      neural_link: '🧠',
+      antimatter_rounds: '💥',
+      warp_core: '🌀',
+      ai_optimizer: '🤖',
+      perfect_precision: '✨',
+      void_channeling: '🌌',
+      temporal_acceleration: '⏰',
+      singularity_core: '🕳️',
+      cosmic_ascension: '🌟',
       // New V1.0 Upgrades
-      'coffee_machine': '☕',
-      'lucky_dice': '🎲',
-      'space_pizza': '🍕',
-      'rubber_duck': '🦆',
-      'motivational_posters': '📋',
-      'disco_ball': '🪩',
-      'lucky_horseshoe': '🍀',
-      'arcade_machine': '🕹️',
-      'chaos_emeralds': '💚',
-      'time_machine': '⏱️',
-      'philosophers_stone': '🗿',
-      'golden_goose': '🦢',
-      'infinity_gauntlet': '💍',
-      'alien_cookbook': '📖',
-      'nuclear_reactor': '☢️',
-      'cheat_codes': '🎮',
-      'dragon_egg': '🥚',
-      'universe_map': '🗺️',
-      'answer_to_everything': '4️⃣2️⃣',
-      'heart_of_galaxy': '❤️',
-      'meaning_of_life': '🔮',
+      coffee_machine: '☕',
+      lucky_dice: '🎲',
+      space_pizza: '🍕',
+      rubber_duck: '🦆',
+      motivational_posters: '📋',
+      disco_ball: '🪩',
+      lucky_horseshoe: '🍀',
+      arcade_machine: '🕹️',
+      chaos_emeralds: '💚',
+      time_machine: '⏱️',
+      philosophers_stone: '🗿',
+      golden_goose: '🦢',
+      infinity_gauntlet: '💍',
+      alien_cookbook: '📖',
+      nuclear_reactor: '☢️',
+      cheat_codes: '🎮',
+      dragon_egg: '🥚',
+      universe_map: '🗺️',
+      answer_to_everything: '4️⃣2️⃣',
+      heart_of_galaxy: '❤️',
+      meaning_of_life: '🔮',
       // Click-focused upgrades
-      'master_clicker': '👆',
-      'rapid_fire': '⚡',
-      'click_multiplier': '✨',
-      'super_clicker': '💪',
-      'missile_launcher': '🚀',
+      master_clicker: '👆',
+      rapid_fire: '⚡',
+      click_multiplier: '✨',
+      super_clicker: '💪',
+      missile_launcher: '🚀',
     };
     return emojiMap[upgradeId] || '⭐';
   }
 
-  private buyUpgrade(upgrade: { canBuy: (state: any) => boolean; getCost: (level: number) => number; getLevel: (state: any) => number; buy: (state: any) => void }): void {
+  private buyUpgrade(upgrade: {
+    canBuy: (state: any) => boolean;
+    getCost: (level: number) => number;
+    getLevel: (state: any) => number;
+    buy: (state: any) => void;
+  }): void {
     // Prevent concurrent purchases
     if (this.isProcessingPurchase) return;
     this.isProcessingPurchase = true;
@@ -523,21 +547,25 @@ export class Shop {
       upgrade.buy(state);
       this.store.incrementUpgrade();
       this.store.setState(state);
-      
+
       // Play purchase sound
       if (this.soundManager) {
         this.soundManager.playPurchase();
       }
-      
+
       // Force immediate UI update
       this.lastAffordability.clear();
       this.render();
     }
-    
+
     this.isProcessingPurchase = false;
   }
 
-  private buySubUpgrade(upgrade: { owned: boolean; cost: number; buy: (state: any) => void }): void {
+  private buySubUpgrade(upgrade: {
+    owned: boolean;
+    cost: number;
+    buy: (state: any) => void;
+  }): void {
     // Prevent concurrent purchases
     if (this.isProcessingPurchase) return;
     if (upgrade.owned) return;
@@ -549,17 +577,17 @@ export class Shop {
       upgrade.buy(state);
       this.store.incrementSubUpgrade();
       this.store.setState(state);
-      
+
       // Play purchase sound
       if (this.soundManager) {
         this.soundManager.playPurchase();
       }
-      
+
       // Force immediate UI update
       this.lastAffordability.clear();
       this.render();
     }
-    
+
     this.isProcessingPurchase = false;
   }
 
@@ -570,4 +598,3 @@ export class Shop {
     return Math.floor(num).toString();
   }
 }
-

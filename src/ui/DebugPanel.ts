@@ -15,7 +15,7 @@ export class DebugPanel {
     onBossTrigger: () => void,
     onReset: () => void,
     onSetSpeed: (speed: number) => void,
-    onToggleGodMode: () => void
+    onToggleGodMode: () => void,
   ) {
     this.store = store;
     this.onBossTrigger = onBossTrigger;
@@ -40,7 +40,7 @@ export class DebugPanel {
     this.panel = document.createElement('div');
     this.panel.id = 'debug-panel';
     this.panel.style.display = 'none';
-    
+
     this.panel.innerHTML = `
       <div class="debug-content">
         <div class="debug-header">
@@ -136,78 +136,116 @@ export class DebugPanel {
     });
 
     // Points controls
-    document.getElementById('debug-add-points-1k')?.addEventListener('click', () => {
-      this.addPoints(1000);
-    });
-    document.getElementById('debug-add-points-100k')?.addEventListener('click', () => {
-      this.addPoints(100000);
-    });
-    document.getElementById('debug-add-points-1m')?.addEventListener('click', () => {
-      this.addPoints(1000000);
-    });
-    document.getElementById('debug-add-points-100m')?.addEventListener('click', () => {
-      this.addPoints(100000000);
-    });
-    document.getElementById('debug-set-points')?.addEventListener('click', () => {
-      const input = document.getElementById('debug-points-input') as HTMLInputElement;
-      const amount = parseFloat(input.value);
-      if (!isNaN(amount)) {
-        this.setPoints(amount);
-      }
-    });
+    document
+      .getElementById('debug-add-points-1k')
+      ?.addEventListener('click', () => {
+        this.addPoints(1000);
+      });
+    document
+      .getElementById('debug-add-points-100k')
+      ?.addEventListener('click', () => {
+        this.addPoints(100000);
+      });
+    document
+      .getElementById('debug-add-points-1m')
+      ?.addEventListener('click', () => {
+        this.addPoints(1000000);
+      });
+    document
+      .getElementById('debug-add-points-100m')
+      ?.addEventListener('click', () => {
+        this.addPoints(100000000);
+      });
+    document
+      .getElementById('debug-set-points')
+      ?.addEventListener('click', () => {
+        const input = document.getElementById(
+          'debug-points-input',
+        ) as HTMLInputElement;
+        const amount = parseFloat(input.value);
+        if (!isNaN(amount)) {
+          this.setPoints(amount);
+        }
+      });
 
     // Level controls
-    document.getElementById('debug-set-level')?.addEventListener('click', () => {
-      const input = document.getElementById('debug-level-input') as HTMLInputElement;
-      const level = parseInt(input.value);
-      if (!isNaN(level) && level >= 1) {
-        this.setLevel(level);
-      }
-    });
-    document.getElementById('debug-add-10-levels')?.addEventListener('click', () => {
-      this.addLevels(10);
-    });
-    document.getElementById('debug-add-100-levels')?.addEventListener('click', () => {
-      this.addLevels(100);
-    });
+    document
+      .getElementById('debug-set-level')
+      ?.addEventListener('click', () => {
+        const input = document.getElementById(
+          'debug-level-input',
+        ) as HTMLInputElement;
+        const level = parseInt(input.value);
+        if (!isNaN(level) && level >= 1) {
+          this.setLevel(level);
+        }
+      });
+    document
+      .getElementById('debug-add-10-levels')
+      ?.addEventListener('click', () => {
+        this.addLevels(10);
+      });
+    document
+      .getElementById('debug-add-100-levels')
+      ?.addEventListener('click', () => {
+        this.addLevels(100);
+      });
     document.getElementById('debug-max-xp')?.addEventListener('click', () => {
       this.maxCurrentXP();
     });
 
     // Ship controls
-    document.getElementById('debug-add-5-ships')?.addEventListener('click', () => {
-      this.addShips(5);
-    });
-    document.getElementById('debug-add-20-ships')?.addEventListener('click', () => {
-      this.addShips(20);
-    });
-    document.getElementById('debug-max-ships')?.addEventListener('click', () => {
-      this.setShips(50);
-    });
+    document
+      .getElementById('debug-add-5-ships')
+      ?.addEventListener('click', () => {
+        this.addShips(5);
+      });
+    document
+      .getElementById('debug-add-20-ships')
+      ?.addEventListener('click', () => {
+        this.addShips(20);
+      });
+    document
+      .getElementById('debug-max-ships')
+      ?.addEventListener('click', () => {
+        this.setShips(50);
+      });
 
     // Upgrade controls
-    document.getElementById('debug-unlock-all-upgrades')?.addEventListener('click', () => {
-      this.unlockAllUpgrades();
-    });
-    document.getElementById('debug-max-all-upgrades')?.addEventListener('click', () => {
-      this.maxAllUpgrades();
-    });
+    document
+      .getElementById('debug-unlock-all-upgrades')
+      ?.addEventListener('click', () => {
+        this.unlockAllUpgrades();
+      });
+    document
+      .getElementById('debug-max-all-upgrades')
+      ?.addEventListener('click', () => {
+        this.maxAllUpgrades();
+      });
 
     // Boss controls
-    document.getElementById('debug-trigger-boss')?.addEventListener('click', () => {
-      this.onBossTrigger();
-    });
-    document.getElementById('debug-kill-boss')?.addEventListener('click', () => {
-      this.killBoss();
-    });
+    document
+      .getElementById('debug-trigger-boss')
+      ?.addEventListener('click', () => {
+        this.onBossTrigger();
+      });
+    document
+      .getElementById('debug-kill-boss')
+      ?.addEventListener('click', () => {
+        this.killBoss();
+      });
 
     // Stats controls
-    document.getElementById('debug-add-1k-clicks')?.addEventListener('click', () => {
-      this.addClicks(1000);
-    });
-    document.getElementById('debug-add-100-bosses')?.addEventListener('click', () => {
-      this.addBossKills(100);
-    });
+    document
+      .getElementById('debug-add-1k-clicks')
+      ?.addEventListener('click', () => {
+        this.addClicks(1000);
+      });
+    document
+      .getElementById('debug-add-100-bosses')
+      ?.addEventListener('click', () => {
+        this.addBossKills(100);
+      });
 
     // Game controls
     document.getElementById('debug-god-mode')?.addEventListener('click', () => {
@@ -215,11 +253,15 @@ export class DebugPanel {
       this.onToggleGodMode();
       const btn = document.getElementById('debug-god-mode');
       if (btn) {
-        btn.textContent = this.godModeActive ? '🛡️ God Mode: ON' : 'Toggle God Mode';
+        btn.textContent = this.godModeActive
+          ? '🛡️ God Mode: ON'
+          : 'Toggle God Mode';
         btn.style.borderColor = this.godModeActive ? '#ffd700' : '#ffaa00';
         btn.style.color = this.godModeActive ? '#ffd700' : '#ffaa00';
       }
-      this.showNotification(this.godModeActive ? 'God Mode Activated!' : 'God Mode Deactivated!');
+      this.showNotification(
+        this.godModeActive ? 'God Mode Activated!' : 'God Mode Deactivated!',
+      );
     });
 
     document.getElementById('debug-speed-2x')?.addEventListener('click', () => {
@@ -232,10 +274,12 @@ export class DebugPanel {
       this.showNotification('Speed: 5x');
     });
 
-    document.getElementById('debug-speed-normal')?.addEventListener('click', () => {
-      this.onSetSpeed(1);
-      this.showNotification('Speed: Normal');
-    });
+    document
+      .getElementById('debug-speed-normal')
+      ?.addEventListener('click', () => {
+        this.onSetSpeed(1);
+        this.showNotification('Speed: Normal');
+      });
 
     document.getElementById('debug-reset')?.addEventListener('click', () => {
       if (confirm('Are you sure you want to reset the game?')) {
@@ -309,17 +353,28 @@ export class DebugPanel {
     // This would need the upgrade system to get all upgrade IDs
     // For now, just unlock some common ones
     const commonUpgrades = [
-      'death_pact', 'laser_focusing', 'coffee_machine', 'quantum_targeting',
-      'lucky_dice', 'energy_recycling', 'overclocked_reactors', 'ship_swarm',
-      'neural_link', 'space_pizza', 'antimatter_rounds', 'warp_core',
-      'master_clicker', 'rapid_fire', 'click_multiplier',
+      'death_pact',
+      'laser_focusing',
+      'coffee_machine',
+      'quantum_targeting',
+      'lucky_dice',
+      'energy_recycling',
+      'overclocked_reactors',
+      'ship_swarm',
+      'neural_link',
+      'space_pizza',
+      'antimatter_rounds',
+      'warp_core',
+      'master_clicker',
+      'rapid_fire',
+      'click_multiplier',
     ];
-    
+
     for (const id of commonUpgrades) {
       state.subUpgrades[id] = true;
       state.stats.totalSubUpgrades++;
     }
-    
+
     this.store.setState(state);
     this.triggerStoreUpdate();
     this.showNotification('Unlocked special upgrades!');
@@ -405,4 +460,3 @@ export class DebugPanel {
     }
   }
 }
-

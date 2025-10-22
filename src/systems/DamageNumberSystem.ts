@@ -21,19 +21,24 @@ export class DamageNumberSystem {
     this.enabled = enabled;
   }
 
-  spawnDamageNumber(x: number, y: number, damage: number, isCrit: boolean = false): void {
+  spawnDamageNumber(
+    x: number,
+    y: number,
+    damage: number,
+    isCrit: boolean = false,
+  ): void {
     // Don't spawn if disabled (performance)
     if (!this.enabled) return;
-    
+
     // Limit number of active damage numbers
     if (this.numbers.length >= this.maxNumbers) {
       // Remove oldest number
       this.numbers.shift();
     }
-    
+
     const text = this.formatDamage(damage);
     const color = isCrit ? '#ffff00' : '#ffffff';
-    
+
     this.numbers.push({
       x: x + (Math.random() - 0.5) * 40,
       y: y + (Math.random() - 0.5) * 20,
@@ -52,34 +57,34 @@ export class DamageNumberSystem {
       num.vy += 50 * dt; // Gravity
       num.life -= dt;
     }
-    
-    this.numbers = this.numbers.filter(n => n.life > 0);
+
+    this.numbers = this.numbers.filter((n) => n.life > 0);
   }
 
   draw(drawer: Draw): void {
     const ctx = drawer.getContext();
-    
+
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
+
     for (const num of this.numbers) {
       const alpha = Math.min(1, num.life / 0.4);
       ctx.globalAlpha = alpha;
-      
+
       const fontSize = num.isCrit ? 18 : 14; // Smaller for better performance
       ctx.font = `bold ${fontSize}px monospace`;
-      
+
       // Simple outline (no stroke for performance)
       ctx.fillStyle = '#000';
       ctx.fillText(num.text, num.x - 1, num.y - 1);
       ctx.fillText(num.text, num.x + 1, num.y + 1);
-      
+
       // Text
       ctx.fillStyle = num.color;
       ctx.fillText(num.text, num.x, num.y);
     }
-    
+
     ctx.restore();
   }
 
@@ -94,4 +99,3 @@ export class DamageNumberSystem {
     return Math.floor(damage).toString();
   }
 }
-

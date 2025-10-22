@@ -78,7 +78,8 @@ export class ArtifactsModal {
       .join('');
 
     if (artifacts.length === 0) {
-      container.innerHTML = '<p class="no-artifacts">No artifacts found. Complete missions and bosses to earn artifacts!</p>';
+      container.innerHTML =
+        '<p class="no-artifacts">No artifacts found. Complete missions and bosses to earn artifacts!</p>';
       return;
     }
 
@@ -90,14 +91,15 @@ export class ArtifactsModal {
     });
 
     container.innerHTML = sortedArtifacts
-      .map(
-        (artifact) => {
-          const color = this.artifactSystem.getRarityColor(artifact.rarity);
-          const upgradeCost = this.artifactSystem.getUpgradeCostForDisplay(artifact.id);
-          const canUpgrade = artifact.level < artifact.maxLevel;
-          const state = this.store.getState();
+      .map((artifact) => {
+        const color = this.artifactSystem.getRarityColor(artifact.rarity);
+        const upgradeCost = this.artifactSystem.getUpgradeCostForDisplay(
+          artifact.id,
+        );
+        const canUpgrade = artifact.level < artifact.maxLevel;
+        const state = this.store.getState();
 
-          return `
+        return `
         <div class="artifact-card ${artifact.equipped ? 'equipped' : ''}" style="border-color: ${color}">
           <div class="artifact-header">
             <div class="artifact-icon">${artifact.icon}</div>
@@ -128,8 +130,7 @@ export class ArtifactsModal {
           </div>
         </div>
       `;
-        },
-      )
+      })
       .join('');
 
     // Add event listeners
@@ -162,4 +163,3 @@ export class ArtifactsModal {
     });
   }
 }
-

@@ -14,8 +14,8 @@ export class UpgradesDisplay {
     this.container.innerHTML = '';
     this.upgradeSystem.updateSubUpgradesFromState(state);
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
-    
-    const ownedUpgrades = allSubUpgrades.filter(upgrade => upgrade.owned);
+
+    const ownedUpgrades = allSubUpgrades.filter((upgrade) => upgrade.owned);
 
     if (ownedUpgrades.length === 0) {
       return; // Container will be hidden by CSS
@@ -24,7 +24,7 @@ export class UpgradesDisplay {
     for (const upgrade of ownedUpgrades) {
       const icon = document.createElement('div');
       icon.className = 'upgrade-icon';
-      
+
       // Add emoji icon
       const emoji = this.getUpgradeEmoji(upgrade.id);
       icon.textContent = emoji;
@@ -41,25 +41,24 @@ export class UpgradesDisplay {
 
   private getUpgradeEmoji(upgradeId: string): string {
     const emojiMap: Record<string, string> = {
-      'auto_fire': '🔥',
-      'death_pact': '💀',
-      'laser_focusing': '💎',
-      'quantum_targeting': '🎯',
-      'energy_recycling': '♻️',
-      'overclocked_reactors': '⚛️',
-      'ship_swarm': '🐝',
-      'neural_link': '🧠',
-      'antimatter_rounds': '💥',
-      'warp_core': '🌀',
-      'ai_optimizer': '🤖',
-      'perfect_precision': '✨',
-      'void_channeling': '🌌',
-      'temporal_acceleration': '⏰',
-      'singularity_core': '🕳️',
-      'cosmic_ascension': '🌟',
+      auto_fire: '🔥',
+      death_pact: '💀',
+      laser_focusing: '💎',
+      quantum_targeting: '🎯',
+      energy_recycling: '♻️',
+      overclocked_reactors: '⚛️',
+      ship_swarm: '🐝',
+      neural_link: '🧠',
+      antimatter_rounds: '💥',
+      warp_core: '🌀',
+      ai_optimizer: '🤖',
+      perfect_precision: '✨',
+      void_channeling: '🌌',
+      temporal_acceleration: '⏰',
+      singularity_core: '🕳️',
+      cosmic_ascension: '🌟',
     };
 
     return emojiMap[upgradeId] || '⭐';
   }
 }
-

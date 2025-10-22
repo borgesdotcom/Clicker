@@ -26,7 +26,7 @@ export class AutoFireSystem {
     for (let i = 0; i < this.shipTimers.length; i++) {
       const timer = this.shipTimers[i];
       if (timer === undefined) continue;
-      
+
       const newTimer = timer + dt;
       this.shipTimers[i] = newTimer;
 
@@ -59,4 +59,3 @@ export class AutoFireSystem {
     });
   }
 }
-

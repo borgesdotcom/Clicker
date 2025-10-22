@@ -45,14 +45,21 @@ export class SettingsModal {
     this.volumeCallback = callback;
   }
 
-  updateGraphicsToggles(graphics: boolean, shipLasers: boolean, ripples: boolean, damageNumbers: boolean): void {
+  updateGraphicsToggles(
+    graphics: boolean,
+    shipLasers: boolean,
+    ripples: boolean,
+    damageNumbers: boolean,
+  ): void {
     if (this.graphicsToggle) {
       this.graphicsToggle.textContent = graphics ? 'ON' : 'OFF';
       this.graphicsToggle.style.backgroundColor = graphics ? '#4CAF50' : '#666';
     }
     if (this.shipLasersToggle) {
       this.shipLasersToggle.textContent = shipLasers ? 'ON' : 'OFF';
-      this.shipLasersToggle.style.backgroundColor = shipLasers ? '#4CAF50' : '#666';
+      this.shipLasersToggle.style.backgroundColor = shipLasers
+        ? '#4CAF50'
+        : '#666';
     }
     if (this.ripplesToggle) {
       this.ripplesToggle.textContent = ripples ? 'ON' : 'OFF';
@@ -60,7 +67,9 @@ export class SettingsModal {
     }
     if (this.damageNumbersToggle) {
       this.damageNumbersToggle.textContent = damageNumbers ? 'ON' : 'OFF';
-      this.damageNumbersToggle.style.backgroundColor = damageNumbers ? '#4CAF50' : '#666';
+      this.damageNumbersToggle.style.backgroundColor = damageNumbers
+        ? '#4CAF50'
+        : '#666';
     }
   }
 
@@ -118,7 +127,9 @@ export class SettingsModal {
         this.soundCallback(newState);
       }
     });
-    soundToggle.style.backgroundColor = this.soundManager.isEnabled() ? '#4CAF50' : '#666';
+    soundToggle.style.backgroundColor = this.soundManager.isEnabled()
+      ? '#4CAF50'
+      : '#666';
 
     soundToggleContainer.appendChild(soundLabel);
     soundToggleContainer.appendChild(soundToggle);
@@ -152,7 +163,9 @@ export class SettingsModal {
     this.volumeSlider.type = 'range';
     this.volumeSlider.min = '0';
     this.volumeSlider.max = '100';
-    this.volumeSlider.value = String(Math.round(this.soundManager.getVolume() * 100));
+    this.volumeSlider.value = String(
+      Math.round(this.soundManager.getVolume() * 100),
+    );
     this.volumeSlider.style.flex = '1';
     this.volumeSlider.style.cursor = 'pointer';
 
@@ -164,7 +177,7 @@ export class SettingsModal {
 
     // Store reference to this for the event listener
     const self = this;
-    this.volumeSlider.addEventListener('input', function() {
+    this.volumeSlider.addEventListener('input', function () {
       const value = parseInt(this.value) / 100;
       self.soundManager.setVolume(value);
       if (self.volumeValue) {
@@ -209,7 +222,7 @@ export class SettingsModal {
     this.graphicsToggle.textContent = 'ON';
     this.graphicsToggle.style.width = '80px';
     this.graphicsToggle.style.backgroundColor = '#4CAF50';
-    
+
     this.graphicsToggle.addEventListener('click', () => {
       if (!this.graphicsToggle) return;
       const newState = this.graphicsToggle.textContent === 'OFF';
@@ -247,12 +260,14 @@ export class SettingsModal {
     this.shipLasersToggle.textContent = 'ON';
     this.shipLasersToggle.style.width = '80px';
     this.shipLasersToggle.style.backgroundColor = '#4CAF50';
-    
+
     this.shipLasersToggle.addEventListener('click', () => {
       if (!this.shipLasersToggle) return;
       const newState = this.shipLasersToggle.textContent === 'OFF';
       this.shipLasersToggle.textContent = newState ? 'ON' : 'OFF';
-      this.shipLasersToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
+      this.shipLasersToggle.style.backgroundColor = newState
+        ? '#4CAF50'
+        : '#666';
       if (this.shipLasersCallback) {
         this.shipLasersCallback(newState);
       }
@@ -263,7 +278,8 @@ export class SettingsModal {
     graphicsSection.appendChild(shipLasersContainer);
 
     const shipLasersHint = document.createElement('div');
-    shipLasersHint.textContent = 'Disable to reduce lag (only your clicks will fire lasers)';
+    shipLasersHint.textContent =
+      'Disable to reduce lag (only your clicks will fire lasers)';
     shipLasersHint.style.fontSize = '12px';
     shipLasersHint.style.color = '#888';
     shipLasersHint.style.marginTop = '5px';
@@ -286,7 +302,7 @@ export class SettingsModal {
     this.ripplesToggle.textContent = 'ON';
     this.ripplesToggle.style.width = '80px';
     this.ripplesToggle.style.backgroundColor = '#4CAF50';
-    
+
     this.ripplesToggle.addEventListener('click', () => {
       if (!this.ripplesToggle) return;
       const newState = this.ripplesToggle.textContent === 'OFF';
@@ -325,12 +341,14 @@ export class SettingsModal {
     this.damageNumbersToggle.textContent = 'ON';
     this.damageNumbersToggle.style.width = '80px';
     this.damageNumbersToggle.style.backgroundColor = '#4CAF50';
-    
+
     this.damageNumbersToggle.addEventListener('click', () => {
       if (!this.damageNumbersToggle) return;
       const newState = this.damageNumbersToggle.textContent === 'OFF';
       this.damageNumbersToggle.textContent = newState ? 'ON' : 'OFF';
-      this.damageNumbersToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
+      this.damageNumbersToggle.style.backgroundColor = newState
+        ? '#4CAF50'
+        : '#666';
       if (this.damageNumbersCallback) {
         this.damageNumbersCallback(newState);
       }
@@ -341,7 +359,8 @@ export class SettingsModal {
     graphicsSection.appendChild(damageNumbersContainer);
 
     const damageNumbersHint = document.createElement('div');
-    damageNumbersHint.textContent = 'Disable to improve performance (damage still applies)';
+    damageNumbersHint.textContent =
+      'Disable to improve performance (damage still applies)';
     damageNumbersHint.style.fontSize = '12px';
     damageNumbersHint.style.color = '#888';
     damageNumbersHint.style.marginTop = '5px';
@@ -389,4 +408,3 @@ export class SettingsModal {
     }
   }
 }
-

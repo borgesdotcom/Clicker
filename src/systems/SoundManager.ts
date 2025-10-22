@@ -5,7 +5,8 @@ export class SoundManager {
 
   constructor() {
     try {
-      this.context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.context = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
     } catch (e) {
       console.warn('Audio not supported');
       this.enabled = false;
@@ -28,7 +29,12 @@ export class SoundManager {
     return this.volume;
   }
 
-  private playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = this.volume): void {
+  private playTone(
+    frequency: number,
+    duration: number,
+    type: OscillatorType = 'sine',
+    volume: number = this.volume,
+  ): void {
     if (!this.enabled || !this.context) return;
 
     const oscillator = this.context.createOscillator();
@@ -41,7 +47,10 @@ export class SoundManager {
     oscillator.type = type;
 
     gainNode.gain.setValueAtTime(volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + duration,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + duration);
@@ -59,11 +68,17 @@ export class SoundManager {
 
     // Quick descending pitch for "bonk" effect
     oscillator.frequency.setValueAtTime(800, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(200, this.context.currentTime + 0.08);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      200,
+      this.context.currentTime + 0.08,
+    );
     oscillator.type = 'square';
 
     gainNode.gain.setValueAtTime(0.25 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.08);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + 0.08,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.08);
@@ -113,11 +128,17 @@ export class SoundManager {
     gainNode.connect(this.context.destination);
 
     oscillator.frequency.setValueAtTime(200, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(100, this.context.currentTime + 0.5);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      100,
+      this.context.currentTime + 0.5,
+    );
     oscillator.type = 'sawtooth';
 
     gainNode.gain.setValueAtTime(0.3 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.5);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + 0.5,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.5);
@@ -138,7 +159,7 @@ export class SoundManager {
     // Satisfying combo "pop" that gets higher with combo level
     if (!this.enabled || !this.context) return;
 
-    const basePitch = 600 + (comboLevel * 30);
+    const basePitch = 600 + comboLevel * 30;
     const pitch = Math.min(basePitch, 1500);
 
     const oscillator = this.context.createOscillator();
@@ -148,11 +169,17 @@ export class SoundManager {
     gainNode.connect(this.context.destination);
 
     oscillator.frequency.setValueAtTime(pitch, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(pitch * 0.5, this.context.currentTime + 0.1);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      pitch * 0.5,
+      this.context.currentTime + 0.1,
+    );
     oscillator.type = 'square';
 
     gainNode.gain.setValueAtTime(0.3 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + 0.1,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.1);
@@ -188,7 +215,10 @@ export class SoundManager {
     oscillator.type = 'sine';
 
     gainNode.gain.setValueAtTime(0.15 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + 0.05,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.05);
@@ -205,11 +235,17 @@ export class SoundManager {
     gainNode.connect(this.context.destination);
 
     oscillator.frequency.setValueAtTime(1500, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(2000, this.context.currentTime + 0.1);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      2000,
+      this.context.currentTime + 0.1,
+    );
     oscillator.type = 'sine';
 
     gainNode.gain.setValueAtTime(0.25 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + 0.1,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.1);
@@ -226,15 +262,19 @@ export class SoundManager {
     gainNode.connect(this.context.destination);
 
     oscillator.frequency.setValueAtTime(200, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(100, this.context.currentTime + 0.15);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      100,
+      this.context.currentTime + 0.15,
+    );
     oscillator.type = 'sawtooth';
 
     gainNode.gain.setValueAtTime(0.2 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.15);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      this.context.currentTime + 0.15,
+    );
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.15);
   }
 }
-
-

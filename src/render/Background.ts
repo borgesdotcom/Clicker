@@ -46,7 +46,7 @@ export class Background {
   private initStars(): void {
     // Create multiple layers of stars for parallax effect
     const starCount = 200;
-    
+
     for (let i = 0; i < starCount; i++) {
       this.stars.push({
         x: Math.random() * this.width,
@@ -86,7 +86,10 @@ export class Background {
   private spawnComet(): void {
     // Random edge spawn
     const side = Math.floor(Math.random() * 4);
-    let x = 0, y = 0, vx = 0, vy = 0;
+    let x = 0,
+      y = 0,
+      vx = 0,
+      vy = 0;
 
     switch (side) {
       case 0: // Top
@@ -178,7 +181,9 @@ export class Background {
   public render(ctx: CanvasRenderingContext2D): void {
     // Draw nebulae (background layer)
     for (const nebula of this.nebulae) {
-      const pulse = Math.sin(this.time * nebula.pulseSpeed + nebula.pulseOffset);
+      const pulse = Math.sin(
+        this.time * nebula.pulseSpeed + nebula.pulseOffset,
+      );
       const radius = nebula.radius + pulse * 20;
       const alpha = nebula.alpha + pulse * 0.05;
 
@@ -191,17 +196,30 @@ export class Background {
         radius,
       );
 
-      gradient.addColorStop(0, nebula.color.replace(/[\d.]+\)$/, `${String(alpha)})`));
-      gradient.addColorStop(0.5, nebula.color.replace(/[\d.]+\)$/, `${String(alpha * 0.5)})`));
+      gradient.addColorStop(
+        0,
+        nebula.color.replace(/[\d.]+\)$/, `${String(alpha)})`),
+      );
+      gradient.addColorStop(
+        0.5,
+        nebula.color.replace(/[\d.]+\)$/, `${String(alpha * 0.5)})`),
+      );
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       ctx.fillStyle = gradient;
-      ctx.fillRect(nebula.x - radius, nebula.y - radius, radius * 2, radius * 2);
+      ctx.fillRect(
+        nebula.x - radius,
+        nebula.y - radius,
+        radius * 2,
+        radius * 2,
+      );
     }
 
     // Draw stars
     for (const star of this.stars) {
-      const twinkle = Math.sin(this.time * star.twinkleSpeed + star.twinkleOffset);
+      const twinkle = Math.sin(
+        this.time * star.twinkleSpeed + star.twinkleOffset,
+      );
       const brightness = star.brightness + twinkle * 0.3;
 
       ctx.fillStyle = `rgba(255, 255, 255, ${String(brightness)})`;
@@ -227,12 +245,7 @@ export class Background {
       const tailY = comet.y - Math.sin(angle) * comet.length;
 
       // Comet tail gradient
-      const gradient = ctx.createLinearGradient(
-        comet.x,
-        comet.y,
-        tailX,
-        tailY,
-      );
+      const gradient = ctx.createLinearGradient(comet.x, comet.y, tailX, tailY);
       gradient.addColorStop(0, 'rgba(200, 230, 255, 0.9)');
       gradient.addColorStop(0.3, 'rgba(100, 150, 255, 0.6)');
       gradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
@@ -259,4 +272,3 @@ export class Background {
     }
   }
 }
-

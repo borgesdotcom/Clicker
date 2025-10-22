@@ -29,7 +29,7 @@ export class Ship {
     this.angle += actualSpeed * dt;
     this.updatePosition();
   }
-  
+
   getRotationSpeed(): number {
     return this.rotationSpeed;
   }
@@ -73,20 +73,27 @@ export class Ship {
     if (this.isMainShip) {
       // Main ship: dynamic color based on upgrades
       // Draw glow
-      const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, size * 1.5);
+      const gradient = ctx.createRadialGradient(
+        this.x,
+        this.y,
+        0,
+        this.x,
+        this.y,
+        size * 1.5,
+      );
       gradient.addColorStop(0, visuals.glowColor);
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 1.5, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Draw ship body
       drawer.setFill(visuals.fillColor);
       drawer.triangle({ x: tipX, y: tipY }, left, right);
       drawer.setStroke(visuals.outlineColor, 2);
       drawer.triangle({ x: tipX, y: tipY }, left, right, false);
-      
+
       // Inner detail
       const smallSize = size * 0.4;
       const innerTipX = this.x + Math.cos(this.angle + Math.PI) * smallSize;
@@ -104,14 +111,21 @@ export class Ship {
     } else {
       // Regular ships: lighter version of upgrade color
       // Draw glow
-      const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, size * 1.2);
+      const gradient = ctx.createRadialGradient(
+        this.x,
+        this.y,
+        0,
+        this.x,
+        this.y,
+        size * 1.2,
+      );
       gradient.addColorStop(0, this.adjustAlpha(visuals.glowColor, 0.2));
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 1.2, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Draw ship body with lighter tint
       drawer.setFill(this.lightenColor(visuals.fillColor, 0.3));
       drawer.triangle({ x: tipX, y: tipY }, left, right);
@@ -120,7 +134,11 @@ export class Ship {
     }
   }
 
-  private getShipVisuals(state?: GameState): { fillColor: string; outlineColor: string; glowColor: string } {
+  private getShipVisuals(state?: GameState): {
+    fillColor: string;
+    outlineColor: string;
+    glowColor: string;
+  } {
     if (!state) {
       return {
         fillColor: '#ffffff',
@@ -131,7 +149,7 @@ export class Ship {
 
     // Match laser color progression
     let fillColor = '#ffffff'; // Default white (matches default laser)
-    
+
     if (state.subUpgrades['cosmic_ascension']) {
       fillColor = '#ff00ff'; // Magenta
     } else if (state.subUpgrades['singularity_core']) {
@@ -161,27 +179,31 @@ export class Ship {
     // Extract RGB values
     const rgb = this.hexToRgb(hex);
     if (!rgb) return hex;
-    
+
     // Lighten by mixing with white
     const r = Math.min(255, Math.floor(rgb.r + (255 - rgb.r) * amount));
     const g = Math.min(255, Math.floor(rgb.g + (255 - rgb.g) * amount));
     const b = Math.min(255, Math.floor(rgb.b + (255 - rgb.b) * amount));
-    
+
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
 
   private hexToRgb(hex: string): { r: number; g: number; b: number } | null {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1] ?? '0', 16),
-      g: parseInt(result[2] ?? '0', 16),
-      b: parseInt(result[3] ?? '0', 16),
-    } : null;
+    return result
+      ? {
+          r: parseInt(result[1] ?? '0', 16),
+          g: parseInt(result[2] ?? '0', 16),
+          b: parseInt(result[3] ?? '0', 16),
+        }
+      : null;
   }
 
   private hexToRgba(hex: string, alpha: number): string {
     const rgb = this.hexToRgb(hex);
-    return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : `rgba(0, 255, 255, ${alpha})`;
+    return rgb
+      ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
+      : `rgba(0, 255, 255, ${alpha})`;
   }
 
   private adjustAlpha(rgba: string, newAlpha: number): string {
@@ -193,4 +215,3 @@ export class Ship {
     return rgba;
   }
 }
-

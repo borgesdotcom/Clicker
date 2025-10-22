@@ -1,4 +1,9 @@
-export type PowerUpType = 'shield' | 'damage' | 'speed' | 'multishot' | 'critical';
+export type PowerUpType =
+  | 'shield'
+  | 'damage'
+  | 'speed'
+  | 'multishot'
+  | 'critical';
 
 export interface PowerUp {
   type: PowerUpType;
@@ -115,7 +120,13 @@ export class PowerUpSystem {
   }
 
   private spawnRandomPowerUp(): void {
-    const types: PowerUpType[] = ['shield', 'damage', 'speed', 'multishot', 'critical'];
+    const types: PowerUpType[] = [
+      'shield',
+      'damage',
+      'speed',
+      'multishot',
+      'critical',
+    ];
     const type = types[Math.floor(Math.random() * types.length)]!;
 
     const margin = 100;
@@ -153,7 +164,7 @@ export class PowerUpSystem {
       );
       gradient.addColorStop(0, `${config.color}80`);
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      
+
       ctx.globalAlpha = alpha;
       ctx.fillStyle = gradient;
       ctx.fillRect(
@@ -183,7 +194,11 @@ export class PowerUpSystem {
     }
   }
 
-  public renderBuffs(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  public renderBuffs(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+  ): void {
     let offsetX = 0;
 
     for (const buff of this.activeBuffs) {
@@ -308,4 +323,3 @@ export class PowerUpSystem {
     return this.activeBuffs;
   }
 }
-

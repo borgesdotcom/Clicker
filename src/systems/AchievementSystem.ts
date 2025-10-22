@@ -862,9 +862,9 @@ export class AchievementSystem {
         icon: '⚖️',
         category: 'mastery',
         unlocked: false,
-        check: (state) => 
-          state.shipsCount >= 10 && 
-          state.attackSpeedLevel >= 10 && 
+        check: (state) =>
+          state.shipsCount >= 10 &&
+          state.attackSpeedLevel >= 10 &&
           state.pointMultiplierLevel >= 10 &&
           state.critChanceLevel >= 10 &&
           state.resourceGenLevel >= 10 &&
@@ -877,9 +877,9 @@ export class AchievementSystem {
         icon: '🎯',
         category: 'mastery',
         unlocked: false,
-        check: (state) => 
-          state.shipsCount >= 25 && 
-          state.attackSpeedLevel >= 25 && 
+        check: (state) =>
+          state.shipsCount >= 25 &&
+          state.attackSpeedLevel >= 25 &&
           state.pointMultiplierLevel >= 25 &&
           state.critChanceLevel >= 25 &&
           state.resourceGenLevel >= 25 &&
@@ -892,9 +892,9 @@ export class AchievementSystem {
         icon: '💥',
         category: 'mastery',
         unlocked: false,
-        check: (state) => 
-          state.shipsCount >= 50 && 
-          state.attackSpeedLevel >= 50 && 
+        check: (state) =>
+          state.shipsCount >= 50 &&
+          state.attackSpeedLevel >= 50 &&
           state.pointMultiplierLevel >= 50 &&
           state.critChanceLevel >= 50 &&
           state.resourceGenLevel >= 50 &&
@@ -1000,7 +1000,8 @@ export class AchievementSystem {
         category: 'secret',
         unlocked: false,
         hidden: true,
-        check: (state) => state.stats.totalClicks === 0 && state.stats.playTime >= 30,
+        check: (state) =>
+          state.stats.totalClicks === 0 && state.stats.playTime >= 30,
       },
       {
         id: 'secret_speed',
@@ -1010,7 +1011,8 @@ export class AchievementSystem {
         category: 'secret',
         unlocked: false,
         hidden: true,
-        check: (state) => state.stats.totalClicks >= 100 && state.stats.playTime <= 60,
+        check: (state) =>
+          state.stats.totalClicks >= 100 && state.stats.playTime <= 60,
       },
       {
         id: 'secret_cosmic',
@@ -1233,7 +1235,7 @@ export class AchievementSystem {
   }
 
   getUnlockedCount(): number {
-    return this.achievements.filter(a => a.unlocked).length;
+    return this.achievements.filter((a) => a.unlocked).length;
   }
 
   getTotalCount(): number {

@@ -9,14 +9,14 @@ export class Store {
 
   constructor(initialState: GameState) {
     this.state = { ...initialState };
-    
+
     // Set up periodic notification for throttled updates
     setInterval(() => {
       if (this.pendingNotify) {
         // Always notify if points changed significantly (>5%)
         const pointDiff = Math.abs(this.state.points - this.lastNotifyPoints);
         const shouldNotify = pointDiff > this.lastNotifyPoints * 0.05;
-        
+
         if (shouldNotify || this.pendingNotify) {
           this.notifyListeners();
           this.lastNotifyPoints = this.state.points;
@@ -89,7 +89,8 @@ export class Store {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach((listener) => { listener(); });
+    this.listeners.forEach((listener) => {
+      listener();
+    });
   }
 }
-

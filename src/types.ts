@@ -142,4 +142,3 @@ export interface Achievement {
   check: (state: GameState) => boolean;
   hidden?: boolean; // Don't show unlock condition until unlocked
 }
-

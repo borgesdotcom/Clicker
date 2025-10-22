@@ -10,7 +10,7 @@ export class Input {
   private setupListeners(): void {
     // Mouse events for desktop
     this.canvas.addEventListener('click', this.handleClick);
-    
+
     // Touch events for mobile - use both touchstart and touchend
     this.canvas.addEventListener('touchstart', this.handleTouch, {
       passive: false,
@@ -71,4 +71,3 @@ export class Input {
     this.canvas.removeEventListener('touchend', this.handleTouchEnd);
   }
 }
-

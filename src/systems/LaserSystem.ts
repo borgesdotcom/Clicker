@@ -12,17 +12,27 @@ export class LaserSystem {
     this.showShipLasers = show;
   }
 
-  spawnLaser(origin: Vec2, target: Vec2, damage: number, upgrades?: { isCrit?: boolean; color?: string; width?: number; isFromShip?: boolean }): void {
+  spawnLaser(
+    origin: Vec2,
+    target: Vec2,
+    damage: number,
+    upgrades?: {
+      isCrit?: boolean;
+      color?: string;
+      width?: number;
+      isFromShip?: boolean;
+    },
+  ): void {
     const isFromShip = upgrades?.isFromShip ?? false;
-    
+
     // Smart laser management based on type
     if (isFromShip) {
       // For ship lasers, remove youngest ship lasers first (furthest from completion)
-      const shipLasers = this.lasers.filter(l => l.isFromShip);
+      const shipLasers = this.lasers.filter((l) => l.isFromShip);
       if (shipLasers.length >= this.maxShipLasers) {
         let youngestIndex = -1;
         let youngestAge = Infinity;
-        
+
         for (let i = 0; i < this.lasers.length; i++) {
           const laser = this.lasers[i];
           if (laser && laser.isFromShip && laser.age < youngestAge) {
@@ -30,19 +40,19 @@ export class LaserSystem {
             youngestIndex = i;
           }
         }
-        
+
         if (youngestIndex !== -1) {
           this.lasers.splice(youngestIndex, 1);
         }
       }
     } else {
       // For player lasers, prioritize removing ship lasers first
-      const shipLasers = this.lasers.filter(l => l.isFromShip);
+      const shipLasers = this.lasers.filter((l) => l.isFromShip);
       if (shipLasers.length > 0 && this.lasers.length >= this.maxLasers) {
         // Remove youngest ship laser (furthest from completion)
         let youngestIndex = -1;
         let youngestAge = Infinity;
-        
+
         for (let i = 0; i < this.lasers.length; i++) {
           const laser = this.lasers[i];
           if (laser && laser.isFromShip && laser.age < youngestAge) {
@@ -50,7 +60,7 @@ export class LaserSystem {
             youngestIndex = i;
           }
         }
-        
+
         if (youngestIndex !== -1) {
           this.lasers.splice(youngestIndex, 1);
         }
@@ -59,7 +69,7 @@ export class LaserSystem {
         // Find youngest player laser (furthest from completion) to remove
         let youngestIndex = -1;
         let youngestAge = Infinity;
-        
+
         for (let i = 0; i < this.lasers.length; i++) {
           const laser = this.lasers[i];
           if (laser && !laser.isFromShip && laser.age < youngestAge) {
@@ -67,13 +77,13 @@ export class LaserSystem {
             youngestIndex = i;
           }
         }
-        
+
         if (youngestIndex !== -1) {
           this.lasers.splice(youngestIndex, 1);
         }
       }
     }
-    
+
     this.lasers.push(new Laser(origin, target, damage, upgrades));
   }
 
@@ -106,13 +116,12 @@ export class LaserSystem {
   }
 
   getLaserStats(): { total: number; shipLasers: number; playerLasers: number } {
-    const shipLasers = this.lasers.filter(l => l.isFromShip).length;
-    const playerLasers = this.lasers.filter(l => !l.isFromShip).length;
+    const shipLasers = this.lasers.filter((l) => l.isFromShip).length;
+    const playerLasers = this.lasers.filter((l) => !l.isFromShip).length;
     return {
       total: this.lasers.length,
       shipLasers,
-      playerLasers
+      playerLasers,
     };
   }
 }
-

@@ -68,7 +68,11 @@ export class AscensionModal {
 
     const ascendBtn = this.modal.querySelector('#ascend-btn');
     ascendBtn?.addEventListener('click', () => {
-      if (confirm('Are you sure you want to ascend? All non-permanent progress will be reset!')) {
+      if (
+        confirm(
+          'Are you sure you want to ascend? All non-permanent progress will be reset!',
+        )
+      ) {
         this.onAscend();
         this.hide();
       }
@@ -84,15 +88,15 @@ export class AscensionModal {
 
   show(): void {
     const state = this.store.getState();
-    
+
     // Update prestige points display
     const currentPP = document.getElementById('prestige-current');
     const gainPP = document.getElementById('prestige-gain');
-    
+
     if (currentPP) {
       currentPP.textContent = state.prestigePoints.toString();
     }
-    
+
     if (gainPP) {
       const willGain = this.ascensionSystem.calculatePrestigePoints(state);
       gainPP.textContent = willGain.toString();
@@ -103,7 +107,9 @@ export class AscensionModal {
 
     // Check if can ascend
     const canAscend = this.ascensionSystem.canAscend(state);
-    const ascendBtn = this.modal.querySelector('#ascend-btn') as HTMLButtonElement;
+    const ascendBtn = this.modal.querySelector(
+      '#ascend-btn',
+    ) as HTMLButtonElement;
     if (ascendBtn) {
       if (canAscend) {
         ascendBtn.disabled = false;
@@ -123,13 +129,13 @@ export class AscensionModal {
 
   private updatePrestigeUpgrades(): void {
     const state = this.store.getState();
-    
+
     // Update current PP display
     const currentPP = document.getElementById('prestige-current');
     if (currentPP) {
       currentPP.textContent = state.prestigePoints.toString();
     }
-    
+
     const grid = this.modal.querySelector('#prestige-upgrades-grid');
     if (!grid) return;
 
@@ -143,7 +149,7 @@ export class AscensionModal {
 
       const card = document.createElement('div');
       card.className = `prestige-upgrade-card ${maxed ? 'maxed' : ''} ${!canAfford && !maxed ? 'locked' : ''}`;
-      
+
       card.innerHTML = `
         <div class="prestige-upgrade-name">${upgrade.name}</div>
         <div class="prestige-upgrade-level">Level: ${currentLevel} / ${upgrade.maxLevel}</div>
@@ -167,4 +173,3 @@ export class AscensionModal {
     }
   }
 }
-

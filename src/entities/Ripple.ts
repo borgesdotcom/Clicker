@@ -35,4 +35,3 @@ export class Ripple {
     drawer.resetAlpha();
   }
 }
-

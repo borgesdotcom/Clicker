@@ -70,7 +70,7 @@ export class Draw {
     y: number,
     color = '#fff',
     font = '16px monospace',
-    align: CanvasTextAlign = 'left'
+    align: CanvasTextAlign = 'left',
   ): void {
     this.ctx.fillStyle = color;
     this.ctx.font = font;
@@ -78,4 +78,3 @@ export class Draw {
     this.ctx.fillText(text, x, y);
   }
 }
-

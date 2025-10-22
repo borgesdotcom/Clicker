@@ -41,7 +41,9 @@ export class MissionsModal {
 
   private setupEventListeners(): void {
     const closeBtn = this.modal.querySelector('.modal-close');
-    closeBtn?.addEventListener('click', () => { this.hide(); });
+    closeBtn?.addEventListener('click', () => {
+      this.hide();
+    });
 
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
@@ -53,7 +55,9 @@ export class MissionsModal {
     const tabs = this.modal.querySelectorAll('.mission-tab');
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
-        tabs.forEach((t) => { t.classList.remove('active'); });
+        tabs.forEach((t) => {
+          t.classList.remove('active');
+        });
         tab.classList.add('active');
         this.renderMissions();
       });
@@ -127,4 +131,3 @@ export class MissionsModal {
     return this.missionSystem.getCompletedCount();
   }
 }
-

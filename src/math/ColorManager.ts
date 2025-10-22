@@ -28,7 +28,10 @@ export class ColorManager {
     const index = Math.min(level - 1, this.colors.length - 1);
     const color = this.colors[index];
     if (!color) {
-      return this.colors[this.colors.length - 1] || this.colors[0] || { fill: '#fff', stroke: '#ccc', hp: 10 };
+      return (
+        this.colors[this.colors.length - 1] ||
+        this.colors[0] || { fill: '#fff', stroke: '#ccc', hp: 10 }
+      );
     }
     return color;
   }
@@ -36,9 +39,9 @@ export class ColorManager {
   static getExpRequired(level: number): number {
     // Smooth exponential XP requirements for levels 1-1000+
     // Uses softcaps to prevent runaway growth at high levels
-    
-    let baseXP = 10 * Math.pow(1.10, level);
-    
+
+    let baseXP = 10 * Math.pow(1.1, level);
+
     // Apply softcaps at specific thresholds
     if (level >= 800) {
       // Severe softcap: reduce by 25%
@@ -48,12 +51,12 @@ export class ColorManager {
       baseXP *= 0.85;
     } else if (level >= 200) {
       // Minor softcap: reduce by 10%
-      baseXP *= 0.90;
+      baseXP *= 0.9;
     }
-    
+
     // Add logarithmic damping for very high levels
     const dampingFactor = Math.max(1, Math.log10(level + 10) / Math.log10(11));
-    
+
     return Math.floor(baseXP / dampingFactor);
   }
 
@@ -62,14 +65,21 @@ export class ColorManager {
     // Early game: every 25 levels
     // Mid game: every 50 levels after 100
     // Late game: every 100 levels after 500
-    
+
     if (level < 1) return false;
-    
+
     // Special milestone bosses
-    if (level === 50 || level === 100 || level === 250 || level === 500 || level === 750 || level === 1000) {
+    if (
+      level === 50 ||
+      level === 100 ||
+      level === 250 ||
+      level === 500 ||
+      level === 750 ||
+      level === 1000
+    ) {
       return true;
     }
-    
+
     // Regular boss intervals
     if (level <= 100) {
       return level % 25 === 0; // Bosses at 25, 50, 75, 100
@@ -83,18 +93,18 @@ export class ColorManager {
   // New method: Get alien HP with proper scaling for level 1-1000
   static getHp(level: number): number {
     const baseHp = 10;
-    
+
     // Tier 1: Levels 1-100 - Moderate growth
     if (level <= 100) {
       return Math.floor(baseHp * Math.pow(1.15, level - 1));
     }
-    
+
     // Tier 2: Levels 101-500 - Stronger growth
     const tier1Hp = baseHp * Math.pow(1.15, 99);
     if (level <= 500) {
       return Math.floor(tier1Hp * Math.pow(1.25, level - 100));
     }
-    
+
     // Tier 3: Levels 501-1000 - Exponential growth
     const tier2Hp = tier1Hp * Math.pow(1.25, 400);
     return Math.floor(tier2Hp * Math.pow(1.35, level - 500));
@@ -103,32 +113,32 @@ export class ColorManager {
   static getBossHp(level: number): number {
     // Boss HP: 20x normal alien HP with additional scaling
     const baseHp = this.getHp(level) * 20;
-    
+
     // Early game bosses (< 30): Just 20x
     if (level < 30) {
       return Math.floor(baseHp);
     }
-    
+
     // Tier 1: Levels 30-99 - Moderate additional scaling
     if (level < 100) {
       return Math.floor(baseHp * Math.pow(1.1, level - 30));
     }
-    
+
     // Tier 2: Levels 100-499 - Stronger additional scaling
     const tier1Bonus = Math.pow(1.1, 70);
     if (level < 500) {
       return Math.floor(baseHp * tier1Bonus * Math.pow(1.15, level - 100));
     }
-    
+
     // Tier 3: Levels 500-1000 - Maximum scaling
     const tier2Bonus = tier1Bonus * Math.pow(1.15, 400);
-    return Math.floor(baseHp * tier2Bonus * Math.pow(1.20, level - 500));
+    return Math.floor(baseHp * tier2Bonus * Math.pow(1.2, level - 500));
   }
 
   // Get boss timer limit (scales with level)
   static getBossTimeLimit(level: number): number {
     const baseTime = 30;
-    
+
     if (level < 50) {
       return baseTime;
     } else if (level < 200) {
@@ -143,4 +153,3 @@ export class ColorManager {
     }
   }
 }
-

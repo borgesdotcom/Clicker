@@ -6,8 +6,7 @@ function init(): void {
   const game = new Game();
   const mobileUI = new MobileUI();
   game.start();
-  
-  // Store reference for debugging
+
   (window as any).game = game;
   (window as any).mobileUI = mobileUI;
 }
@@ -17,4 +16,3 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
-

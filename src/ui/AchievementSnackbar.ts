@@ -65,4 +65,3 @@ export class AchievementSnackbar {
     this.isShowing = false;
   }
 }
-

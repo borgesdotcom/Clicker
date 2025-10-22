@@ -16,7 +16,12 @@ export class Laser {
     public origin: Vec2,
     public target: Vec2,
     damage: number,
-    upgrades?: { isCrit?: boolean; color?: string; width?: number; isFromShip?: boolean }
+    upgrades?: {
+      isCrit?: boolean;
+      color?: string;
+      width?: number;
+      isFromShip?: boolean;
+    },
   ) {
     this.damage = damage;
     if (upgrades) {
@@ -29,7 +34,7 @@ export class Laser {
 
   update(dt: number): void {
     this.age += dt;
-    
+
     // Remove immediately after hitting (no fade-out)
     if (this.hasHit) {
       this.alive = false;
@@ -40,9 +45,9 @@ export class Laser {
     if (this.age >= this.travelTime) {
       return this.target;
     }
-    
+
     const progress = Math.min(1, this.age / this.travelTime);
-    
+
     // Straight line laser beam
     return {
       x: this.origin.x + (this.target.x - this.origin.x) * progress,
@@ -64,26 +69,28 @@ export class Laser {
 
     const current = this.getCurrentPosition();
     const progress = Math.min(1, this.age / this.travelTime);
-    
+
     // Smooth fade-in effect (no epileptic flickering)
     const fadeInAlpha = Math.min(1, progress * 1.5);
 
     const ctx = drawer.getContext();
     ctx.save();
-    
+
     // Draw straight laser beam
     const colorRgba = this.hexToRgba(this.color, fadeInAlpha * 0.6);
     const colorTransparent = this.hexToRgba(this.color, 0);
-    
+
     const gradient = ctx.createLinearGradient(
-      this.origin.x, this.origin.y,
-      current.x, current.y
+      this.origin.x,
+      this.origin.y,
+      current.x,
+      current.y,
     );
-    
+
     gradient.addColorStop(0, colorTransparent);
     gradient.addColorStop(0.5, colorRgba);
     gradient.addColorStop(1, this.hexToRgba(this.color, fadeInAlpha));
-    
+
     ctx.globalAlpha = fadeInAlpha * 0.7;
     ctx.strokeStyle = gradient;
     ctx.lineWidth = this.width;
@@ -92,7 +99,7 @@ export class Laser {
     ctx.moveTo(this.origin.x, this.origin.y);
     ctx.lineTo(current.x, current.y);
     ctx.stroke();
-    
+
     // Glow for crits (thin glow)
     if (this.isCrit) {
       ctx.globalAlpha = fadeInAlpha * 0.3;
@@ -105,7 +112,7 @@ export class Laser {
       ctx.lineTo(current.x, current.y);
       ctx.stroke();
     }
-    
+
     // Draw impact point (only when laser reaches target)
     if (progress >= 0.95) {
       ctx.globalAlpha = fadeInAlpha;
@@ -116,18 +123,20 @@ export class Laser {
       ctx.arc(current.x, current.y, this.isCrit ? 2 : 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
-    
+
     ctx.restore();
   }
 
   private hexToRgba(hex: string, alpha: number): string {
     // Handle both #RGB and #RRGGBB formats
-    let r = 0, g = 0, b = 0;
-    
+    let r = 0,
+      g = 0,
+      b = 0;
+
     if (hex.startsWith('#')) {
       hex = hex.substring(1);
     }
-    
+
     if (hex.length === 3) {
       r = parseInt((hex[0] ?? '0') + (hex[0] ?? '0'), 16);
       g = parseInt((hex[1] ?? '0') + (hex[1] ?? '0'), 16);
@@ -137,8 +146,7 @@ export class Laser {
       g = parseInt(hex.substring(2, 4), 16);
       b = parseInt(hex.substring(4, 6), 16);
     }
-    
+
     return `rgba(${r.toString()}, ${g.toString()}, ${b.toString()}, ${alpha.toString()})`;
   }
 }
-

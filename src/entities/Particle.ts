@@ -41,32 +41,32 @@ export class Particle {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     this.life -= this.decay * dt;
-    
+
     // Apply gravity
     this.vy += 100 * dt;
-    
+
     // Air resistance
     this.vx *= 0.99;
     this.vy *= 0.99;
-    
+
     return this.life <= 0;
   }
 
   draw(drawer: Draw): void {
     const alpha = this.life / this.maxLife;
     drawer.setAlpha(alpha);
-    
+
     if (this.glow) {
       drawer.setGlow(this.color, 10);
     }
-    
+
     drawer.setFill(this.color);
     drawer.circle(this.x, this.y, this.size);
-    
+
     if (this.glow) {
       drawer.clearGlow();
     }
-    
+
     drawer.resetAlpha();
   }
 }
@@ -103,21 +103,23 @@ export class ParticleSystem {
       if (this.particles.length >= this.maxParticles) {
         break;
       }
-      
-      const angle = (Math.random() * spread) - (spread / 2);
+
+      const angle = Math.random() * spread - spread / 2;
       const velocity = speed * (0.5 + Math.random() * 0.5);
-      
-      this.particles.push(new Particle({
-        x,
-        y,
-        vx: Math.cos(angle) * velocity,
-        vy: Math.sin(angle) * velocity,
-        color,
-        size: size * (0.5 + Math.random()),
-        life,
-        decay: 1,
-        glow,
-      }));
+
+      this.particles.push(
+        new Particle({
+          x,
+          y,
+          vx: Math.cos(angle) * velocity,
+          vy: Math.sin(angle) * velocity,
+          color,
+          size: size * (0.5 + Math.random()),
+          life,
+          decay: 1,
+          glow,
+        }),
+      );
     }
   }
 
@@ -151,7 +153,7 @@ export class ParticleSystem {
   }
 
   update(dt: number): void {
-    this.particles = this.particles.filter(p => !p.update(dt));
+    this.particles = this.particles.filter((p) => !p.update(dt));
   }
 
   draw(drawer: Draw): void {
@@ -164,4 +166,3 @@ export class ParticleSystem {
     this.particles = [];
   }
 }
-
