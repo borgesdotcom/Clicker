@@ -782,10 +782,10 @@ export class Game {
   }
 
 
-  private fireSingleShip(shipIndex: number): void {
-    if (shipIndex >= this.ships.length) return;
+  private fireSingleShip(shipIndex: number): boolean {
+    if (shipIndex >= this.ships.length) return false;
     const ship = this.ships[shipIndex];
-    if (!ship) return;
+    if (!ship) return false;
 
     const state = this.store.getState();
     let damage = this.upgradeSystem.getPointsPerHit(state);
@@ -806,7 +806,7 @@ export class Game {
     // Don't fire if there's no valid target
     const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
     if (!targetEntity || targetEntity.currentHp <= 0) {
-      return; // No target to shoot at
+      return false; // No target to shoot at - don't reset timer
     }
     
     const target = { x: targetEntity.x, y: targetEntity.y };
@@ -817,6 +817,8 @@ export class Game {
       ...laserVisuals, 
       isFromShip: true
     });
+    
+    return true; // Shot was fired successfully
   }
 
   // Debug method to check laser statistics
@@ -1275,8 +1277,9 @@ export class Game {
       this.upgradeSystem.getFireCooldown(state),
       (shipIndex) => {
         if (shipIndex > 0) {
-          this.fireSingleShip(shipIndex);
+          return this.fireSingleShip(shipIndex);
         }
+        return false;
       }
     );
 

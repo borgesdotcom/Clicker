@@ -28,7 +28,7 @@ export class AutoFireSystem {
     dt: number,
     autoFireUnlocked: boolean,
     cooldownMs: number,
-    onFire: (shipIndex: number) => void,
+    onFire: (shipIndex: number) => boolean,
   ): void {
     if (!autoFireUnlocked) return;
 
@@ -42,8 +42,13 @@ export class AutoFireSystem {
       this.shipTimers[i] = newTimer;
 
       if (newTimer >= cooldownSec) {
-        this.shipTimers[i] = 0;
-        onFire(i);
+        // Only reset timer if the shot was actually fired
+        const didFire = onFire(i);
+        if (didFire) {
+          this.shipTimers[i] = 0;
+        }
+        // If didn't fire (no target), keep timer at cooldown so it tries again next frame
+        // This prevents all timers from syncing up when targets disappear
       }
     }
   }
