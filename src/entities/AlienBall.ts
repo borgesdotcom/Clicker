@@ -38,7 +38,8 @@ export class AlienBall {
       { fill: '#ff6666', stroke: '#cc4444', hp: 100 },
       { fill: '#6666ff', stroke: '#4444cc', hp: 100 },
     ];
-    return colors[Math.floor(Math.random() * colors.length)]!;
+    const index = Math.floor(Math.random() * colors.length);
+    return colors[index] ?? colors[0] ?? { fill: '#ff6666', stroke: '#cc4444', hp: 100 };
   }
 
   static createRandom(x: number, y: number, radius: number, level: number): AlienBall {
@@ -120,32 +121,41 @@ export class AlienBall {
     drawer.setStroke(this.color.stroke, 2);
     drawer.circle(this.x, this.y, this.radius, false);
 
-    const hpBarWidth = this.radius * 1.5;
+    const hpBarWidth = this.radius * 2;
     const hpBarHeight = 6;
-    const hpBarY = this.y - this.radius - 15;
+    const hpBarY = this.y - this.radius - 18;
     const hpPercent = this.currentHp / this.maxHp;
 
-    drawer.setStroke('#fff', 1);
-    drawer.setFill('#000');
+    // Background
+    drawer.getContext().fillStyle = 'rgba(0, 0, 0, 0.5)';
     drawer.getContext().fillRect(
       this.x - hpBarWidth / 2,
       hpBarY,
       hpBarWidth,
       hpBarHeight,
     );
+
+    // Health fill - color changes based on health percentage
+    let fillColor = '#00ff00'; // Green
+    if (hpPercent < 0.3) fillColor = '#ff0000'; // Red
+    else if (hpPercent < 0.6) fillColor = '#ffaa00'; // Orange
+
+    drawer.getContext().fillStyle = fillColor;
+    drawer.getContext().fillRect(
+      this.x - hpBarWidth / 2,
+      hpBarY,
+      hpBarWidth * hpPercent,
+      hpBarHeight,
+    );
+
+    // Border
+    drawer.getContext().strokeStyle = '#ffffff';
+    drawer.getContext().lineWidth = 1;
     drawer.getContext().strokeRect(
       this.x - hpBarWidth / 2,
       hpBarY,
       hpBarWidth,
       hpBarHeight,
-    );
-
-    drawer.setFill(this.color.fill);
-    drawer.getContext().fillRect(
-      this.x - hpBarWidth / 2 + 1,
-      hpBarY + 1,
-      (hpBarWidth - 2) * hpPercent,
-      hpBarHeight - 2,
     );
 
     if (this.flashTime > 0) {

@@ -3,10 +3,21 @@ export class AutoFireSystem {
 
   setShipCount(count: number): void {
     while (this.shipTimers.length < count) {
-      // Add random initial delay to prevent synchronized firing
-      // Use a reasonable delay that works for most cooldown times
-      const randomDelay = Math.random() * 0.3; // 0-0.3 seconds random delay
-      this.shipTimers.push(randomDelay);
+      // Spread ships evenly across time to prevent synchronized firing
+      const shipIndex = this.shipTimers.length;
+      
+      // Distribute each ship with a unique offset across a 2-second period
+      // Using (shipIndex * phi) mod 1 creates a well-distributed sequence
+      const phi = 1.618033988749895; // Golden ratio for better distribution
+      const normalizedOffset = (shipIndex * phi) % 1;
+      const spreadPeriod = 2.0; // Spread across 2 seconds
+      const baseDelay = normalizedOffset * spreadPeriod;
+      
+      // Add small random jitter to prevent any edge cases
+      const jitter = (Math.random() - 0.5) * 0.1; // ±0.05s variation
+      const delay = Math.max(0, Math.min(spreadPeriod, baseDelay + jitter));
+      
+      this.shipTimers.push(delay);
     }
     while (this.shipTimers.length > count) {
       this.shipTimers.pop();
@@ -24,23 +35,39 @@ export class AutoFireSystem {
     const cooldownSec = cooldownMs / 1000;
 
     for (let i = 0; i < this.shipTimers.length; i++) {
-      this.shipTimers[i]! += dt;
+      const timer = this.shipTimers[i];
+      if (timer === undefined) continue;
+      
+      const newTimer = timer + dt;
+      this.shipTimers[i] = newTimer;
 
-      if (this.shipTimers[i]! >= cooldownSec) {
-        this.shipTimers[i]! = 0;
+      if (newTimer >= cooldownSec) {
+        this.shipTimers[i] = 0;
         onFire(i);
       }
     }
   }
 
   reset(): void {
-    // Reset with random delays to prevent synchronized firing
-    this.shipTimers = this.shipTimers.map(() => Math.random() * 0.5);
+    // Reset with distributed delays to prevent synchronized firing
+    const phi = 1.618033988749895;
+    this.shipTimers = this.shipTimers.map((_, index) => {
+      const normalizedOffset = (index * phi) % 1;
+      const baseDelay = normalizedOffset * 2.0;
+      const jitter = (Math.random() - 0.5) * 0.1;
+      return Math.max(0, Math.min(2.0, baseDelay + jitter));
+    });
   }
 
   staggerExistingShips(): void {
-    // Add random delays to all existing ships to prevent synchronized firing
-    this.shipTimers = this.shipTimers.map(() => Math.random() * 0.5);
+    // Add distributed delays to all existing ships to prevent synchronized firing
+    const phi = 1.618033988749895;
+    this.shipTimers = this.shipTimers.map((_, index) => {
+      const normalizedOffset = (index * phi) % 1;
+      const baseDelay = normalizedOffset * 2.0;
+      const jitter = (Math.random() - 0.5) * 0.1;
+      return Math.max(0, Math.min(2.0, baseDelay + jitter));
+    });
   }
 }
 

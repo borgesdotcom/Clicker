@@ -10,15 +10,15 @@ export class BossBall {
   private breakAnimDuration = 0.6;
   public x: number;
   public y: number;
-  private vx = 0;
-  private vy = 0;
-  private speed = 150;
   private attackTimer = 0;
   private attackCooldown = 2;
   private phase = 1;
-  private rotationAngle = 0;
   private pulseTime = 0;
   private chargeTime = 0;
+  private tentacleAngles: number[] = [];
+  private tentacleLengths: number[] = [];
+  private eyeBlink = 0;
+  private shieldPulse = 0;
 
   constructor(
     x: number,
@@ -30,9 +30,13 @@ export class BossBall {
     this.y = y;
     this.maxHp = hp;
     this.currentHp = this.maxHp;
-    const angle = Math.random() * Math.PI * 2;
-    this.vx = Math.cos(angle) * this.speed;
-    this.vy = Math.sin(angle) * this.speed;
+    
+    // Initialize tentacles
+    const tentacleCount = 8;
+    for (let i = 0; i < tentacleCount; i++) {
+      this.tentacleAngles.push((i / tentacleCount) * Math.PI * 2);
+      this.tentacleLengths.push(this.radius * (1.2 + Math.random() * 0.3));
+    }
   }
 
   isPointInside(point: Vec2): boolean {
@@ -63,7 +67,7 @@ export class BossBall {
     return this.breakAnimTime > 0;
   }
 
-  update(dt: number, canvasWidth: number, canvasHeight: number): void {
+  update(dt: number, _canvasWidth: number, _canvasHeight: number): void {
     if (this.flashTime > 0) {
       this.flashTime = Math.max(0, this.flashTime - dt);
     }
@@ -76,32 +80,34 @@ export class BossBall {
     const hpPercent = this.currentHp / this.maxHp;
     if (hpPercent < 0.33) {
       this.phase = 3;
-      this.speed = 250;
       this.attackCooldown = 0.8;
     } else if (hpPercent < 0.66) {
       this.phase = 2;
-      this.speed = 200;
       this.attackCooldown = 1.2;
     }
 
-    this.x += this.vx * dt;
-    this.y += this.vy * dt;
-
-    if (this.x - this.radius < 0 || this.x + this.radius > canvasWidth) {
-      this.vx *= -1;
-      this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
-    }
-    if (this.y - this.radius < 0 || this.y + this.radius > canvasHeight) {
-      this.vy *= -1;
-      this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
-    }
+    // Boss stays stationary in center - no movement!
 
     // Update attack timer
     this.attackTimer += dt;
     
     // Update visual effects
-    this.rotationAngle += dt * this.phase;
     this.pulseTime += dt * 2;
+    this.shieldPulse += dt * 3;
+    
+    // Tentacle animation - writhe and wave
+    for (let i = 0; i < this.tentacleAngles.length; i++) {
+      const currentAngle = this.tentacleAngles[i];
+      if (currentAngle !== undefined) {
+        this.tentacleAngles[i] = currentAngle + dt * 0.5 * (i % 2 === 0 ? 1 : -1);
+      }
+    }
+    
+    // Eye blink
+    this.eyeBlink = Math.max(0, this.eyeBlink - dt * 5);
+    if (Math.random() < 0.01) {
+      this.eyeBlink = 1;
+    }
     
     // Charge effect before attacking
     if (this.attackTimer >= this.attackCooldown - 0.5) {
@@ -147,92 +153,180 @@ export class BossBall {
     }
 
     const hpPercent = this.currentHp / this.maxHp;
+    const ctx = drawer.getContext();
     
-    // Phase-based color
-    let mainColor = '#ffffff';
-    let accentColor = '#ffaa00';
+    // Phase-based colors - more evil as HP drops
+    let bodyColor = '#2a4a2a';
+    let accentColor = '#00ff00';
+    let eyeColor = '#ff0000';
     if (this.phase === 3) {
-      mainColor = '#ff0000';
-      accentColor = '#ff6600';
+      bodyColor = '#4a0000';
+      accentColor = '#ff0000';
+      eyeColor = '#ffff00';
     } else if (this.phase === 2) {
-      mainColor = '#ffaa00';
-      accentColor = '#ffff00';
+      bodyColor = '#4a2a00';
+      accentColor = '#ff6600';
+      eyeColor = '#ff4400';
     }
 
-    // Pulsing glow effect
-    const pulse = Math.sin(this.pulseTime) * 0.5 + 0.5;
-    const glowIntensity = 10 + pulse * 20 * this.phase;
-    
-    // Draw outer glow rings
-    for (let i = 3; i >= 1; i--) {
-      const ringAlpha = 0.15 / i;
-      drawer.setAlpha(ringAlpha);
-      drawer.setGlow(mainColor, glowIntensity);
-      drawer.setStroke(mainColor, 2);
-      drawer.circle(this.x, this.y, this.radius + i * 15 + pulse * 5, false);
-      drawer.clearGlow();
-      drawer.resetAlpha();
-    }
+    // Energy shield pulse
+    const shieldPulse = Math.sin(this.shieldPulse) * 0.5 + 0.5;
+    drawer.setAlpha(0.2 + shieldPulse * 0.15);
+    drawer.setGlow(accentColor, 20);
+    drawer.setStroke(accentColor, 2);
+    drawer.circle(this.x, this.y, this.radius * 1.4, false);
+    drawer.clearGlow();
+    drawer.resetAlpha();
 
-    // Charge effect
-    if (this.chargeTime > 0) {
-      const chargeAlpha = Math.min(this.chargeTime, 1) * 0.4;
-      drawer.setAlpha(chargeAlpha);
-      drawer.setGlow(accentColor, 20);
+    // Draw writhing tentacles
+    for (let i = 0; i < this.tentacleAngles.length; i++) {
+      const angle = this.tentacleAngles[i];
+      const length = this.tentacleLengths[i];
+      if (angle === undefined || length === undefined) continue;
+      
+      const wave = Math.sin(this.pulseTime + i) * 10;
+      
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(angle);
+      
+      // Tentacle body - thick to thin
+      drawer.setAlpha(0.8);
+      drawer.setStroke(bodyColor, 6);
+      drawer.setGlow(accentColor, 5);
+      
+      // Draw curved tentacle
+      ctx.beginPath();
+      ctx.moveTo(this.radius * 0.8, 0);
+      ctx.quadraticCurveTo(
+        this.radius + length * 0.5,
+        wave,
+        this.radius + length,
+        wave * 1.5
+      );
+      ctx.stroke();
+      
+      // Tentacle tip - glowing
       drawer.setFill(accentColor);
-      drawer.circle(this.x, this.y, this.radius * (1 + this.chargeTime * 0.2));
+      const tipX = this.radius + length;
+      const tipY = wave * 1.5;
+      drawer.circle(tipX, tipY, 3);
+      
       drawer.clearGlow();
       drawer.resetAlpha();
+      ctx.restore();
     }
 
-    // Main body
-    drawer.setGlow(mainColor, glowIntensity);
-    drawer.setFill(mainColor);
+    // Main alien body - organic and scary
+    const pulse = Math.sin(this.pulseTime) * 0.5 + 0.5;
+    
+    // Outer membrane
+    drawer.setGlow(accentColor, 10);
+    drawer.setFill(bodyColor);
+    drawer.setStroke(accentColor, 3);
     drawer.circle(this.x, this.y, this.radius);
+    
+    // Inner organs/core
+    drawer.setAlpha(0.6);
+    drawer.setFill(accentColor);
+    drawer.circle(this.x, this.y, this.radius * (0.5 + pulse * 0.1));
+    drawer.resetAlpha();
     drawer.clearGlow();
 
-    // Rotating energy patterns
-    const ctx = drawer.getContext();
+    // Spikes/ridges around body
     ctx.save();
     ctx.translate(this.x, this.y);
-    ctx.rotate(this.rotationAngle);
-    
-    drawer.setAlpha(0.6);
-    drawer.setStroke(accentColor, 3);
-    for (let i = 0; i < this.phase * 3; i++) {
-      const angle = (i / (this.phase * 3)) * Math.PI * 2;
-      const x1 = Math.cos(angle) * this.radius * 0.5;
-      const y1 = Math.sin(angle) * this.radius * 0.5;
-      const x2 = Math.cos(angle) * this.radius;
-      const y2 = Math.sin(angle) * this.radius;
-      drawer.line(x1, y1, x2, y2);
+    drawer.setFill(bodyColor);
+    drawer.setStroke(accentColor, 2);
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + this.pulseTime * 0.2;
+      const spikeLength = this.radius * 0.2;
+      const x1 = Math.cos(angle) * this.radius;
+      const y1 = Math.sin(angle) * this.radius;
+      const x2 = Math.cos(angle) * (this.radius + spikeLength);
+      const y2 = Math.sin(angle) * (this.radius + spikeLength);
+      
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(
+        Math.cos(angle + 0.1) * this.radius,
+        Math.sin(angle + 0.1) * this.radius
+      );
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
     }
-    drawer.resetAlpha();
     ctx.restore();
 
-    // Eyes - more menacing as phases progress
-    const eyeOffset = this.radius * 0.3;
-    const eyeSize = this.radius * (0.12 + this.phase * 0.03);
-    drawer.setGlow('#ff0000', 5);
-    drawer.setFill('#000000');
-    drawer.circle(this.x - eyeOffset, this.y - eyeOffset * 0.5, eyeSize);
-    drawer.circle(this.x + eyeOffset, this.y - eyeOffset * 0.5, eyeSize);
+    // Multiple eyes - scary and alien
+    const eyePositions = [
+      { x: -0.35, y: -0.25 },
+      { x: 0.35, y: -0.25 },
+      { x: 0, y: -0.45 },
+    ];
     
-    // Eye glow
-    drawer.setFill('#ff0000');
-    drawer.setAlpha(0.8);
-    drawer.circle(this.x - eyeOffset, this.y - eyeOffset * 0.5, eyeSize * 0.5);
-    drawer.circle(this.x + eyeOffset, this.y - eyeOffset * 0.5, eyeSize * 0.5);
-    drawer.resetAlpha();
+    for (const pos of eyePositions) {
+      const eyeX = this.x + pos.x * this.radius;
+      const eyeY = this.y + pos.y * this.radius;
+      const eyeSize = this.radius * 0.15;
+      
+      // Eye socket
+      drawer.setGlow('#000000', 5);
+      drawer.setFill('#000000');
+      drawer.circle(eyeX, eyeY, eyeSize);
+      
+      // Iris
+      const irisSize = this.eyeBlink > 0 ? eyeSize * (1 - this.eyeBlink) * 0.6 : eyeSize * 0.6;
+      drawer.setGlow(eyeColor, 10);
+      drawer.setFill(eyeColor);
+      drawer.circle(eyeX, eyeY, irisSize);
+      
+      // Pupil
+      drawer.setFill('#000000');
+      drawer.circle(eyeX, eyeY, irisSize * 0.4);
+      
+      drawer.clearGlow();
+    }
+
+    // Mouth/maw - opens based on phase
+    const mouthY = this.y + this.radius * 0.4;
+    const mouthWidth = this.radius * 0.6;
+    const mouthOpen = this.phase * 0.15 + pulse * 0.05;
+    
+    ctx.save();
+    ctx.translate(this.x, mouthY);
+    drawer.setGlow(eyeColor, 5);
+    drawer.setFill('#000000');
+    drawer.setStroke(eyeColor, 2);
+    
+    ctx.beginPath();
+    ctx.ellipse(0, 0, mouthWidth, this.radius * mouthOpen, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
     drawer.clearGlow();
+    ctx.restore();
 
-    // HP bar with phase color
-    const hpBarWidth = this.radius * 2;
-    const hpBarHeight = 10;
-    const hpBarY = this.y - this.radius - 30;
+    // Charge attack effect
+    if (this.chargeTime > 0) {
+      const chargeAlpha = Math.min(this.chargeTime, 1) * 0.5;
+      drawer.setAlpha(chargeAlpha);
+      drawer.setGlow(accentColor, 30);
+      drawer.setStroke(accentColor, 4);
+      drawer.circle(this.x, this.y, this.radius * (1 + this.chargeTime * 0.3), false);
+      drawer.circle(this.x, this.y, this.radius * (0.8 + this.chargeTime * 0.2), false);
+      drawer.clearGlow();
+      drawer.resetAlpha();
+    }
 
-    drawer.setGlow(mainColor, 5);
-    drawer.setStroke(mainColor, 2);
+    // HP bar
+    const hpBarWidth = this.radius * 2.5;
+    const hpBarHeight = 12;
+    const hpBarY = this.y - this.radius - 50;
+
+    drawer.setGlow(accentColor, 8);
+    drawer.setStroke(accentColor, 2);
     drawer.setFill('#000');
     drawer.getContext().fillRect(
       this.x - hpBarWidth / 2,
@@ -247,7 +341,7 @@ export class BossBall {
       hpBarHeight,
     );
 
-    drawer.setFill(mainColor);
+    drawer.setFill(accentColor);
     drawer.getContext().fillRect(
       this.x - hpBarWidth / 2 + 2,
       hpBarY + 2,
@@ -259,11 +353,17 @@ export class BossBall {
     // Flash effect on hit
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      drawer.setAlpha(flashAlpha * 0.8);
+      drawer.setAlpha(flashAlpha * 0.6);
       drawer.setGlow('#ffffff', 30);
-      drawer.setStroke('#ffffff', 6);
-      const flashRadius = this.radius * (1 + (1 - flashAlpha) * 0.3);
-      drawer.circle(this.x, this.y, flashRadius, false);
+      drawer.setStroke('#ffffff', 8);
+      drawer.circle(this.x, this.y, this.radius * 1.2, false);
+      
+      // Impact waves
+      for (let i = 0; i < 3; i++) {
+        const waveRadius = this.radius * (1.2 + i * 0.3 + (1 - flashAlpha) * 0.5);
+        drawer.circle(this.x, this.y, waveRadius, false);
+      }
+      
       drawer.clearGlow();
       drawer.resetAlpha();
     }

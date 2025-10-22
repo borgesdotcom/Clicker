@@ -2,7 +2,7 @@ export class Loop {
   private running = false;
   private lastTime = 0;
   private accumulator = 0;
-  private readonly fixedDt = 1 / 60;
+  private readonly fixedDt = 1 / 120; // Increased from 60 to 120 FPS
   private backgroundIntervalId: number | null = null;
   private isVisible = true;
 
@@ -68,7 +68,7 @@ export class Loop {
   private startBackgroundLoop(): void {
     if (this.backgroundIntervalId !== null) return;
     
-    // Run at 20 FPS when hidden (saves CPU but keeps game running)
+    // Run at 120 FPS even when hidden to maintain game speed consistency
     this.backgroundIntervalId = window.setInterval(() => {
       if (!this.running || this.isVisible) return;
       
@@ -83,7 +83,7 @@ export class Loop {
       }
       
       // Don't render when hidden - saves GPU
-    }, 50); // 50ms = 20 FPS
+    }, 1000 / 120); // 8.33ms = 120 FPS
   }
   
   private stopBackgroundLoop(): void {

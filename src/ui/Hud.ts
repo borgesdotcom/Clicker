@@ -141,5 +141,38 @@ export class Hud {
     if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
     return Math.floor(num).toString();
   }
+
+  showMessage(message: string, color: string = '#ffffff', duration: number = 2000): void {
+    // Create message element
+    const messageEl = document.createElement('div');
+    messageEl.textContent = message;
+    messageEl.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: ${color};
+      padding: 20px 40px;
+      border: 3px solid ${color};
+      border-radius: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10000;
+      text-shadow: 0 0 10px ${color};
+      animation: pulse 0.5s ease-in-out;
+    `;
+    
+    document.body.appendChild(messageEl);
+    
+    // Remove after duration
+    setTimeout(() => {
+      messageEl.style.opacity = '0';
+      messageEl.style.transition = 'opacity 0.3s';
+      setTimeout(() => {
+        document.body.removeChild(messageEl);
+      }, 300);
+    }, duration);
+  }
 }
 

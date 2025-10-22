@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Space Clicker</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content="Space-themed idle clicker game - Click aliens, upgrade your fleet, and conquer the galaxy!" />
@@ -14,9 +16,14 @@
         <canvas id="game-canvas"></canvas>
         <div id="hud">
           <div id="points-display">Points: 0</div>
-          <div id="upgrades-display"></div>
+          <button id="mobile-menu-toggle" class="mobile-menu-toggle" style="display: none;">☰</button>
           <button id="achievements-btn" class="hud-button">🏆 Achievements</button>
           <button id="stats-btn" class="hud-button">📊 Statistics</button>
+          <div id="hud-buttons-container"></div>
+        </div>
+        <div id="mobile-menu" class="mobile-menu" style="display: none;">
+          <button id="mobile-menu-close" class="mobile-menu-close">✕</button>
+          <div class="mobile-menu-content"></div>
         </div>
         <div id="level-bar-container">
           <div id="level-info">
@@ -30,16 +37,29 @@
         <div id="boss-dialog" style="display: none;">
           <div class="boss-dialog-content">
             <h2>⚠️ BOSS ENCOUNTER ⚠️</h2>
-            <p class="boss-warning">A massive alien entity approaches!</p>
+            <p class="boss-warning">A massive alien entity blocks your progress!</p>
             <p class="boss-details">This enemy is larger and much more powerful!</p>
-            <p class="boss-ready">Click to unleash your entire fleet - build your combo for maximum damage!</p>
+            <p class="boss-ready">You cannot level up until this boss is defeated!</p>
+            <p class="boss-timer-info" id="boss-dialog-timer">Time Limit: <span>30s</span></p>
             <div class="boss-dialog-buttons">
               <button id="boss-start-btn" class="boss-btn boss-btn-start">ENGAGE!</button>
             </div>
           </div>
         </div>
+        <div id="boss-timer-hud" style="display: none;">
+          <div class="boss-timer-content">
+            <div class="boss-timer-bar-bg">
+              <div class="boss-timer-bar-fill" id="boss-timer-bar"></div>
+            </div>
+            <div class="boss-timer-text" id="boss-timer-text">TIME: 30s</div>
+          </div>
+        </div>
       </div>
+      <button id="mobile-shop-toggle" class="mobile-shop-toggle" style="display: none;">
+        🛒 Shop
+      </button>
       <div id="shop-panel">
+        <button id="mobile-shop-close" class="mobile-shop-close" style="display: none;">✕</button>
         <h2>UPGRADES</h2>
         <div id="shop-tabs">
           <button id="tab-available" class="shop-tab active">Available</button>

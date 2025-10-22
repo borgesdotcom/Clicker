@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlienBall } from './entities/AlienBall';
+import { EnhancedAlienBall, selectEnemyType } from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
 import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
 import { Draw } from './render/Draw';
+import { Background } from './render/Background';
 import { Loop } from './core/Loop';
 import { Input } from './core/Input';
 import { Store } from './core/Store';
@@ -13,18 +17,23 @@ import { UpgradeSystem } from './systems/UpgradeSystem';
 import { AutoFireSystem } from './systems/AutoFireSystem';
 import { AchievementSystem } from './systems/AchievementSystem';
 import { AscensionSystem } from './systems/AscensionSystem';
+import { MissionSystem } from './systems/MissionSystem';
+import { ArtifactSystem } from './systems/ArtifactSystem';
 import { ParticleSystem } from './entities/Particle';
 import { DamageNumberSystem } from './systems/DamageNumberSystem';
 import { ComboSystem } from './systems/ComboSystem';
 import { SoundManager } from './systems/SoundManager';
 import { Hud } from './ui/Hud';
 import { Shop } from './ui/Shop';
-import { UpgradesDisplay } from './ui/UpgradesDisplay';
 import { AchievementSnackbar } from './ui/AchievementSnackbar';
 import { AchievementsModal } from './ui/AchievementsModal';
 import { AscensionModal } from './ui/AscensionModal';
 import { StatsPanel } from './ui/StatsPanel';
 import { SettingsModal } from './ui/SettingsModal';
+import { DebugPanel } from './ui/DebugPanel';
+import { MissionsModal } from './ui/MissionsModal';
+import { ArtifactsModal } from './ui/ArtifactsModal';
+import { VersionSplash } from './ui/VersionSplash';
 import { Layout } from './ui/Layout';
 import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
@@ -34,10 +43,11 @@ import type { UserSettings } from './core/Settings';
 export class Game {
   private canvas: Canvas;
   private draw: Draw;
+  private background: Background;
   private loop: Loop;
   private input: Input;
   private store: Store;
-  private ball: AlienBall | null = null;
+  private ball: AlienBall | EnhancedAlienBall | null = null;
   private bossBall: BossBall | null = null;
   private ships: Ship[] = [];
   private laserSystem: LaserSystem;
@@ -50,13 +60,16 @@ export class Game {
   private autoFireSystem: AutoFireSystem;
   private achievementSystem: AchievementSystem;
   private ascensionSystem: AscensionSystem;
+  private missionSystem: MissionSystem;
+  private artifactSystem: ArtifactSystem;
   private achievementSnackbar: AchievementSnackbar;
   private achievementsModal: AchievementsModal;
   private ascensionModal: AscensionModal;
+  private missionsModal: MissionsModal;
+  private artifactsModal: ArtifactsModal;
   private statsPanel: StatsPanel;
   private settingsModal: SettingsModal;
   private hud: Hud;
-  private upgradesDisplay: UpgradesDisplay;
   private saveTimer = 0;
   private saveInterval = 3;
   private playTimeAccumulator = 0;
@@ -69,6 +82,19 @@ export class Game {
   private transitionDuration = 2;
   private keys: Set<string> = new Set();
   private userSettings: UserSettings = Settings.getDefault();
+  
+  // Boss battle timer system
+  private bossTimeLimit = 0;
+  private bossTimeRemaining = 0;
+  private bossTimerElement: HTMLElement | null = null;
+  
+  // Debug controls
+  private gameSpeed = 1.0;
+  private godMode = false;
+  
+  // Boss retry system
+  private bossRetryButton: HTMLElement | null = null;
+  private blockedOnBossLevel: number | null = null;
   
   // Damage batching for performance
   private damageBatch = 0;
@@ -86,6 +112,7 @@ export class Game {
 
     this.canvas = new Canvas(canvasElement);
     this.draw = new Draw(this.canvas.getContext());
+    this.background = new Background(this.canvas.getWidth(), this.canvas.getHeight());
     this.store = new Store(Save.load());
     
     // Load user settings
@@ -107,12 +134,31 @@ export class Game {
     this.autoFireSystem = new AutoFireSystem();
     this.achievementSystem = new AchievementSystem();
     this.ascensionSystem = new AscensionSystem();
+    this.artifactSystem = new ArtifactSystem();
+    this.missionSystem = new MissionSystem(this.store);
     this.upgradeSystem.setAscensionSystem(this.ascensionSystem);
     this.achievementSnackbar = new AchievementSnackbar();
     this.achievementsModal = new AchievementsModal(this.achievementSystem);
     this.ascensionModal = new AscensionModal(this.ascensionSystem, this.store, () => { this.performAscension(); });
-    this.statsPanel = new StatsPanel();
+    this.missionsModal = new MissionsModal(this.missionSystem, () => { 
+      const state = this.store.getState();
+      this.hud.update(state.points);
+      // Force shop refresh by triggering state update
+      this.store.setState({ ...state });
+    });
+    this.artifactsModal = new ArtifactsModal(this.artifactSystem, this.store);
+    this.statsPanel = new StatsPanel(this.upgradeSystem);
     this.settingsModal = new SettingsModal(this.soundManager);
+    (this as any).debugPanel = new DebugPanel(
+      this.store,
+      () => { this.debugTriggerBoss(); },
+      () => { this.resetGame(); },
+      (speed: number) => { this.setGameSpeed(speed); },
+      () => { this.toggleGodMode(); }
+    );
+    
+    // Show version splash (v2.0.0)
+    new VersionSplash();
     
     // Connect settings modal to callbacks and save on change
     this.settingsModal.setGraphicsCallback((enabled: boolean) => {
@@ -168,7 +214,6 @@ export class Game {
       });
     }
     this.hud = new Hud();
-    this.upgradesDisplay = new UpgradesDisplay(this.upgradeSystem);
     const shop = new Shop(this.store, this.upgradeSystem);
     shop.setSoundManager(this.soundManager);
 
@@ -195,9 +240,13 @@ export class Game {
     this.setupKeyboard();
     this.setupAutoSave();
     this.setupBossDialog();
+    this.setupBossTimer();
+    this.setupBossRetryButton();
     this.setupAchievementsButton();
     this.setupAscensionButton();
     this.setupSettingsButton();
+    this.setupMissionsButton();
+    this.setupArtifactsButton();
     this.setupGraphicsToggle();
     Layout.setupResetButton(() => {
       this.resetGame();
@@ -220,6 +269,140 @@ export class Game {
         this.startBossFight();
       });
     }
+  }
+
+  private setupBossTimer(): void {
+    this.bossTimerElement = document.getElementById('boss-timer-hud');
+  }
+
+  private setupBossRetryButton(): void {
+    // Create boss retry button
+    this.bossRetryButton = document.createElement('button');
+    this.bossRetryButton.id = 'boss-retry-btn';
+    this.bossRetryButton.className = 'hud-button boss-retry-button';
+    this.bossRetryButton.textContent = '⚔️ Retry Boss';
+    this.bossRetryButton.style.display = 'none';
+    this.bossRetryButton.style.pointerEvents = 'auto';
+    
+    this.bossRetryButton.addEventListener('click', () => {
+      this.retryBossFight();
+    });
+    
+    const hudElement = document.getElementById('hud');
+    if (hudElement) {
+      hudElement.appendChild(this.bossRetryButton);
+    }
+  }
+
+  private startBossTimer(): void {
+    const state = this.store.getState();
+    // Time limit scales with level - starts at 60s, increases slightly
+    // But caps at 90s for very high levels
+    this.bossTimeLimit = Math.min(30 + Math.floor(state.level / 20) * 5, 90);
+    this.bossTimeRemaining = this.bossTimeLimit;
+    
+    // Show timer
+    if (this.bossTimerElement) {
+      this.bossTimerElement.style.display = 'block';
+    }
+    
+    // Update dialog timer display
+    const dialogTimer = document.getElementById('boss-dialog-timer');
+    if (dialogTimer) {
+      const span = dialogTimer.querySelector('span');
+      if (span) {
+        span.textContent = `${this.bossTimeLimit.toString()}s`;
+      }
+    }
+  }
+
+  private updateBossTimer(dt: number): void {
+    if (this.mode !== 'boss') return;
+    
+    this.bossTimeRemaining -= dt;
+    
+    // Update timer display
+    const timerText = document.getElementById('boss-timer-text');
+    const timerBar = document.getElementById('boss-timer-bar');
+    
+    if (timerText) {
+      const timeLeft = Math.ceil(Math.max(0, this.bossTimeRemaining));
+      timerText.textContent = `TIME: ${timeLeft.toString()}s`;
+      
+      // Change color as time runs out (adjusted for 30s timer)
+      if (this.bossTimeRemaining <= 5) {
+        timerText.style.color = '#ff0000';
+        timerText.classList.add('critical');
+      } else if (this.bossTimeRemaining <= 10) {
+        timerText.style.color = '#ffaa00';
+      } else {
+        timerText.style.color = '#ffffff';
+      }
+    }
+    
+    if (timerBar) {
+      const percent = Math.max(0, (this.bossTimeRemaining / this.bossTimeLimit) * 100);
+      timerBar.style.width = `${percent.toString()}%`;
+      
+      // Change bar color based on time remaining (adjusted for 30s timer)
+      if (this.bossTimeRemaining <= 5) {
+        timerBar.style.backgroundColor = '#ff0000';
+      } else if (this.bossTimeRemaining <= 10) {
+        timerBar.style.backgroundColor = '#ffaa00';
+      } else {
+        timerBar.style.backgroundColor = '#00ff88';
+      }
+    }
+    
+    // Time's up!
+    if (this.bossTimeRemaining <= 0) {
+      this.handleBossTimeout();
+    }
+  }
+
+  private hideBossTimer(): void {
+    if (this.bossTimerElement) {
+      this.bossTimerElement.style.display = 'none';
+    }
+  }
+
+  private handleBossTimeout(): void {
+    // Boss escapes! Player must retry
+    const state = this.store.getState();
+    
+    this.soundManager.playBossDefeat(); // Play defeat sound
+    
+    // Penalty: Lose 20% of current XP (not too punishing)
+    const xpLoss = Math.floor(state.experience * 0.2);
+    state.experience = Math.max(0, state.experience - xpLoss);
+    
+    // Block progression until boss is defeated
+    this.blockedOnBossLevel = state.level;
+    
+    this.store.setState(state);
+    
+    // Show message
+    this.hud.showMessage('⏱️ TIME\'S UP! The boss escaped! You must defeat it to progress.', '#ff0000', 4000);
+    
+    // Clean up and return to normal mode
+    this.hideBossTimer();
+    this.comboSystem.reset();
+    
+    // Show retry button
+    if (this.bossRetryButton) {
+      this.bossRetryButton.style.display = 'block';
+    }
+    
+    setTimeout(() => {
+      this.startTransitionToNormal();
+    }, 500);
+  }
+
+  private retryBossFight(): void {
+    if (this.bossRetryButton) {
+      this.bossRetryButton.style.display = 'none';
+    }
+    this.showBossDialog();
   }
   
   start(): void {
@@ -276,6 +459,34 @@ export class Game {
         this.settingsModal.show();
       });
       hudElement.appendChild(settingsBtn);
+    }
+  }
+
+  private setupMissionsButton(): void {
+    const hudElement = document.getElementById('hud');
+    if (hudElement) {
+      const missionsBtn = document.createElement('button');
+      missionsBtn.id = 'missions-button';
+      missionsBtn.className = 'hud-button';
+      missionsBtn.textContent = '🎯 Missions';
+      missionsBtn.addEventListener('click', () => {
+        this.missionsModal.show();
+      });
+      hudElement.appendChild(missionsBtn);
+    }
+  }
+
+  private setupArtifactsButton(): void {
+    const hudElement = document.getElementById('hud');
+    if (hudElement) {
+      const artifactsBtn = document.createElement('button');
+      artifactsBtn.id = 'artifacts-button';
+      artifactsBtn.className = 'hud-button';
+      artifactsBtn.textContent = '✨ Artifacts';
+      artifactsBtn.addEventListener('click', () => {
+        this.artifactsModal.show();
+      });
+      hudElement.appendChild(artifactsBtn);
     }
   }
 
@@ -368,7 +579,6 @@ export class Game {
       state.experience,
       ColorManager.getExpRequired(state.level),
     );
-    this.upgradesDisplay.update(state);
   }
 
   private createBall(): void {
@@ -377,7 +587,32 @@ export class Game {
     const radius =
       Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.08;
     const state = this.store.getState();
-    this.ball = AlienBall.createRandom(cx, cy, radius, state.level);
+    
+    // v2.0: Use enhanced enemy types
+    const enemyType = selectEnemyType(state.level);
+    const enhancedBall = new EnhancedAlienBall(cx, cy, radius, state.level, enemyType);
+    
+    // Set up damage callback for visual effects (particles and ripples)
+    enhancedBall.setOnDamageCallback((_damage: number, x: number, y: number, alienRadius: number) => {
+      // Spawn particles (only if high graphics enabled)
+      if (this.userSettings.highGraphics) {
+        this.particleSystem.spawnParticles({
+          x,
+          y,
+          count: Math.min(10, Math.floor(_damage / 100)),
+          color: '#ffffff',
+          speed: 50,
+          life: 0.8,
+        });
+      }
+      
+      // Spawn ripples (only if enabled)
+      if (this.userSettings.showRipples) {
+        this.rippleSystem.spawnRipple({ x, y }, alienRadius * 2);
+      }
+    });
+    
+    this.ball = enhancedBall;
     this.bossBall = null;
   }
 
@@ -388,7 +623,9 @@ export class Game {
     const radius =
       Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.15;
     const state = this.store.getState();
-    const hp = ColorManager.getBossHp(state.level);
+    // Make bosses 3x harder than before to match time limit challenge
+    const baseHp = ColorManager.getBossHp(state.level);
+    const hp = Math.floor(baseHp * 3);
     this.bossBall = new BossBall(cx, cy, radius, hp);
     this.ball = null;
   }
@@ -427,7 +664,6 @@ export class Game {
         state.experience,
         ColorManager.getExpRequired(state.level),
       );
-      this.upgradesDisplay.update(state);
     });
   }
 
@@ -438,27 +674,46 @@ export class Game {
     });
   }
 
-  private handleClick(pos: Vec2): void {
+  private handleClick(_pos: Vec2): void {
     if (this.mode === 'transition') return;
 
-    // Both normal and boss modes work the same way now - just click and shoot!
-    if (this.mode === 'normal' && this.ball?.isPointInside(pos) && this.ball.currentHp > 0) {
+    // Click anywhere to shoot - much better for mobile!
+    if (this.mode === 'normal' && this.ball && this.ball.currentHp > 0) {
       this.store.incrementClick();
       this.soundManager.playClick();
       this.comboSystem.hit();
       this.fireVolley();
-    } else if (this.mode === 'boss' && this.bossBall?.isPointInside(pos) && this.bossBall.currentHp > 0) {
+    } else if (this.mode === 'boss' && this.bossBall && this.bossBall.currentHp > 0) {
       this.store.incrementClick();
       this.soundManager.playClick();
       this.comboSystem.hit();
-      this.fireBossVolley();
+      // Boss mode now uses same firing as normal mode
+      this.fireVolley();
     }
   }
 
   private fireVolley(): void {
     const state = this.store.getState();
-    const damage = this.upgradeSystem.getPointsPerHit(state);
-    const target = { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
+    let damage = this.upgradeSystem.getPointsPerHit(state);
+    
+    // v2.0: Apply artifact bonuses
+    damage *= (1 + this.artifactSystem.getDamageBonus());
+    
+    // Apply boss damage bonus in boss mode
+    if (this.mode === 'boss') {
+      const prestigeBossLevel = state.prestigeUpgrades?.prestige_boss_power ?? 0;
+      const bossDamageBonus = 1 + (prestigeBossLevel * 0.2);
+      damage *= bossDamageBonus;
+      
+      const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1;
+      damage *= voidHeartBonus;
+    }
+    
+    // Target the appropriate enemy
+    const target = this.mode === 'boss'
+      ? { x: this.bossBall?.x ?? 0, y: this.bossBall?.y ?? 0 }
+      : { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
+    
     const laserVisuals = this.getLaserVisuals(state);
 
     // Only fire from the main ship (index 0) when clicking
@@ -477,37 +732,35 @@ export class Game {
         }
       }
     }
-
-    // Spawn visual ripple
-    const rippleRadius = this.ball ? this.ball.radius * 2 : 100;
-    this.rippleSystem.spawnRipple(target, rippleRadius);
-  }
-
-  private fireBossVolley(): void {
-    const state = this.store.getState();
-    let damage = this.upgradeSystem.getPointsPerHit(state);
     
-    // Apply boss damage bonus from prestige
-    const prestigeBossLevel = state.prestigeUpgrades?.prestige_boss_power ?? 0;
-    const bossDamageBonus = 1 + (prestigeBossLevel * 0.2);
-    damage *= bossDamageBonus;
-    
-    // Check for void heart upgrade (extra boss damage)
-    const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1; // +500% = 6x
-    const bossTargetDamage = damage * voidHeartBonus;
-    
-    const target = { x: this.bossBall?.x ?? 0, y: this.bossBall?.y ?? 0 };
-    const laserVisuals = this.getLaserVisuals(state);
+    // v2.0: Track mission progress
+    this.missionSystem.trackClick();
 
-    // Fire from ALL ships at the boss for epic effect!
-    for (const ship of this.ships) {
-      this.laserSystem.spawnLaser(ship.getFrontPosition(), target, bossTargetDamage, laserVisuals);
+    // Spawn visual ripple (only if enabled)
+    if (this.userSettings.showRipples) {
+      const rippleRadius = this.mode === 'boss'
+        ? (this.bossBall ? this.bossBall.radius * 2.5 : 150)
+        : (this.ball ? this.ball.radius * 2 : 100);
+      this.rippleSystem.spawnRipple(target, rippleRadius);
     }
-
-    // Bigger ripple for boss
-    const rippleRadius = this.bossBall ? this.bossBall.radius * 2.5 : 150;
-    this.rippleSystem.spawnRipple(target, rippleRadius);
+    
+    // Spawn particles (only if high graphics enabled)
+    if (this.userSettings.highGraphics && this.ball && Math.random() < 0.4) {
+      const hitColor = '#ffffff';
+      this.particleSystem.spawnParticles({
+        x: this.ball.x + (Math.random() - 0.5) * this.ball.radius,
+        y: this.ball.y + (Math.random() - 0.5) * this.ball.radius,
+        count: 3,
+        color: hitColor,
+        spread: Math.PI * 2,
+        speed: 100,
+        size: 2,
+        life: 0.5,
+        glow: false,
+      });
+    }
   }
+
 
   private fireSingleShip(shipIndex: number): void {
     if (shipIndex >= this.ships.length) return;
@@ -515,8 +768,26 @@ export class Game {
     if (!ship) return;
 
     const state = this.store.getState();
-    const damage = this.upgradeSystem.getPointsPerHit(state);
-    const target = { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
+    let damage = this.upgradeSystem.getPointsPerHit(state);
+    
+    // v2.0: Apply artifact bonuses
+    damage *= (1 + this.artifactSystem.getDamageBonus());
+    
+    // Apply boss damage bonus in boss mode
+    if (this.mode === 'boss') {
+      const prestigeBossLevel = state.prestigeUpgrades?.prestige_boss_power ?? 0;
+      const bossDamageBonus = 1 + (prestigeBossLevel * 0.2);
+      damage *= bossDamageBonus;
+      
+      const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1;
+      damage *= voidHeartBonus;
+    }
+    
+    // Target the appropriate enemy
+    const target = this.mode === 'boss' 
+      ? { x: this.bossBall?.x ?? 0, y: this.bossBall?.y ?? 0 }
+      : { x: this.ball?.x ?? 0, y: this.ball?.y ?? 0 };
+    
     const laserVisuals = this.getLaserVisuals(state);
 
     // Mark laser as from ship so it can be hidden for performance
@@ -615,6 +886,10 @@ export class Game {
     // Record damage for DPS calculation
     this.hud.recordDamage(finalDamage);
     
+    // v2.0: Track damage and combo for missions
+    this.missionSystem.trackDamage(finalDamage);
+    this.missionSystem.trackCombo(this.comboSystem.getCombo());
+    
     // Batch damage instead of applying immediately
     this.damageBatch += finalDamage;
     if (isCrit) {
@@ -670,7 +945,7 @@ export class Game {
           speed: 150,
           size: isCrit ? 4 : 3,
           life: 0.6,
-          glow: false, // No glow for performance
+          glow: false,
         });
       }
       
@@ -694,20 +969,31 @@ export class Game {
     const state = this.store.getState();
     this.store.incrementAlienKill();
     
+    // v2.0: Track kill for missions
+    this.missionSystem.trackKill();
+    
     // Reduced XP gain - more balanced progression
     // Base XP is just 1 per kill, scales with multipliers
-    const baseXP = 1;
-    const bonusXP = this.upgradeSystem.getBonusXP(state) * baseXP;
+    const baseXP = 3;
+    let bonusXP = this.upgradeSystem.getBonusXP(state) * baseXP;
+    
+    // v2.0: Apply artifact XP bonus
+    bonusXP *= (1 + this.artifactSystem.getXPBonus());
+    
     state.experience += bonusXP;
 
-    // Handle multiple level ups if we gained enough XP
+    // BLOCKING MECHANIC: Cannot level up during boss fights OR if blocked on a boss level!
+    // XP is accumulated but level-up is deferred until boss is defeated
     let leveledUp = false;
-    while (state.experience >= ColorManager.getExpRequired(state.level)) {
-      const expRequired = ColorManager.getExpRequired(state.level);
-      state.experience -= expRequired;
-      state.level++;
-      this.store.updateMaxLevel();
-      leveledUp = true;
+    if (this.mode !== 'boss' && this.blockedOnBossLevel === null) {
+      // Handle multiple level ups if we gained enough XP
+      while (state.experience >= ColorManager.getExpRequired(state.level)) {
+        const expRequired = ColorManager.getExpRequired(state.level);
+        state.experience -= expRequired;
+        state.level++;
+        this.store.updateMaxLevel();
+        leveledUp = true;
+      }
     }
 
     if (leveledUp) {
@@ -736,17 +1022,33 @@ export class Game {
     const state = this.store.getState();
     this.store.incrementBossKill();
     
+    // v2.0: Track boss kill for missions
+    this.missionSystem.trackBossKill();
+    
     // Boss rewards scale with level
     const baseReward = state.level * 10000;
     const bonusMultiplier = 1 + (this.comboSystem.getCombo() * 0.01); // Combo gives extra bonus
-    const bossReward = Math.floor(baseReward * bonusMultiplier);
+    let bossReward = Math.floor(baseReward * bonusMultiplier);
+    
+    // v2.0: Apply artifact points bonus
+    bossReward *= (1 + this.artifactSystem.getPointsBonus());
     
     // Grant points
     this.store.addPoints(bossReward);
     
     // Boss XP - reduced from 100 to 50 per level for better balance
-    const bossXP = Math.floor(state.level * 50);
+    let bossXP = Math.floor(state.level * 50);
+    
+    // v2.0: Apply artifact XP bonus
+    bossXP *= (1 + this.artifactSystem.getXPBonus());
+    
     state.experience += bossXP;
+    
+    // v2.0: Chance to get artifact on boss kill (50% chance)
+    if (Math.random() < 0.5) {
+      const artifact = this.artifactSystem.generateArtifact();
+      this.hud.showMessage(`🎁 Artifact Found: ${artifact.icon} ${artifact.name}!`, '#ffa94d', 3000);
+    }
     
     // Handle level ups (should always level up at least once after boss)
     while (state.experience >= ColorManager.getExpRequired(state.level)) {
@@ -760,6 +1062,16 @@ export class Game {
     
     this.soundManager.playBossDefeat();
     this.comboSystem.reset(); // Reset combo after boss fight
+    this.hideBossTimer(); // Hide the timer
+    
+    // Unblock progression
+    this.blockedOnBossLevel = null;
+    if (this.bossRetryButton) {
+      this.bossRetryButton.style.display = 'none';
+    }
+    
+    // Show victory message
+    this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
     
     // Visual celebration
     if (this.userSettings.highGraphics && this.bossBall) {
@@ -796,6 +1108,7 @@ export class Game {
     setTimeout(() => {
       this.createBoss();
       this.mode = 'boss';
+      this.startBossTimer(); // Start the countdown!
     }, this.transitionDuration * 500);
   }
 
@@ -811,7 +1124,13 @@ export class Game {
   }
 
   private update(dt: number): void {
+    // Apply game speed multiplier for debug
+    dt = dt * this.gameSpeed;
+    
     const state = this.store.getState();
+
+    // Update boss timer if in boss mode
+    this.updateBossTimer(dt);
 
     // Track play time
     this.playTimeAccumulator += dt;
@@ -850,8 +1169,12 @@ export class Game {
       }
     }
 
-    this.ball?.update(dt);
+    this.ball?.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
     this.bossBall?.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
+    
+    // Update v2.0 systems
+    this.background.update(dt);
+    this.missionSystem.update();
     
     this.laserSystem.update(dt, (damage, isCrit) => {
       this.handleDamage(damage, isCrit);
@@ -885,28 +1208,24 @@ export class Game {
     }
 
     // Rotate ships around the alien (uses each ship's own fixed rotation speed)
-    if (this.mode === 'normal') {
-      for (const ship of this.ships) {
-        ship.rotate(dt); // Uses ship's fixed rotation speed
-      }
+    // Ships rotate in both normal and boss mode for visual effect
+    for (const ship of this.ships) {
+      ship.rotate(dt); // Uses ship's fixed rotation speed
     }
 
-    // Auto-fire only in normal mode
-    // In boss mode, player manually fires all ships with each click
-    if (this.mode === 'normal') {
-      // Auto-fire for all ships except the main ship (index 0)
-      // Always fire (for damage), but may not render visually
-      this.autoFireSystem.update(
-        dt,
-        true, // Auto-fire always enabled for non-main ships
-        this.upgradeSystem.getFireCooldown(state),
-        (shipIndex) => {
-          if (shipIndex > 0) {
-            this.fireSingleShip(shipIndex);
-          }
+    // Auto-fire in both normal and boss mode
+    // Auto-fire for all ships except the main ship (index 0)
+    // Always fire (for damage), but may not render visually
+    this.autoFireSystem.update(
+      dt,
+      true, // Auto-fire always enabled for non-main ships
+      this.upgradeSystem.getFireCooldown(state),
+      (shipIndex) => {
+        if (shipIndex > 0) {
+          this.fireSingleShip(shipIndex);
         }
-      );
-    }
+      }
+    );
 
     this.saveTimer += dt;
     if (this.saveTimer >= this.saveInterval) {
@@ -948,6 +1267,9 @@ export class Game {
     this.canvas.clear();
     const ctx = this.canvas.getContext();
 
+    // Layer 0: Animated space background (v2.0)
+    this.background.render(ctx);
+
     ctx.save();
 
     if (this.shakeTime > 0) {
@@ -976,8 +1298,9 @@ export class Game {
       this.bossBall?.draw(this.draw);
 
       // Layer 4: Ships (always visible now)
+      const state = this.store.getState();
       for (const ship of this.ships) {
-        ship.draw(this.draw);
+        ship.draw(this.draw, state);
       }
 
       // Layer 5: UI elements on top
@@ -1019,16 +1342,37 @@ export class Game {
     this.mode = 'normal';
     this.createBall();
     this.createShips();
-    this.laserSystem.clear();
-    this.rippleSystem.clear();
-    this.particleSystem.clear();
-    this.damageNumberSystem.clear();
-    this.comboSystem.reset();
-    this.autoFireSystem.reset();
-    this.saveTimer = 0;
+  }
+
+  private debugTriggerBoss(): void {
+    const state = this.store.getState();
+    // Set level to nearest boss level
+    const nearestBoss = Math.ceil(state.level / 5) * 5;
+    state.level = nearestBoss;
+    this.store.setState(state);
+    this.showBossDialog();
+  }
+
+  private setGameSpeed(speed: number): void {
+    this.gameSpeed = speed;
+  }
+
+  private toggleGodMode(): void {
+    this.godMode = !this.godMode;
+  }
+
+  public getGameSpeed(): number {
+    return this.gameSpeed;
+  }
+
+  public isGodMode(): boolean {
+    return this.godMode;
   }
 
   private handleResize(): void {
+    // v2.0: Resize background
+    this.background.resize(this.canvas.getWidth(), this.canvas.getHeight());
+    
     // Reposition ball to center
     if (this.ball) {
       this.ball.x = this.canvas.getCenterX();

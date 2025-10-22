@@ -2,10 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Alien Ball Clicker</title>
-    <script type="module" crossorigin src="./assets/index-pjX7IlIu.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-YrtrMjp5.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Space Clicker</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="description" content="Space-themed idle clicker game - Click aliens, upgrade your fleet, and conquer the galaxy!" />
+    <script type="module" crossorigin src="./assets/index-BEyyYPbr.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DxaRvKnd.css">
   </head>
   <body>
     <div id="app">
@@ -13,15 +17,14 @@
         <canvas id="game-canvas"></canvas>
         <div id="hud">
           <div id="points-display">Points: 0</div>
-          <div id="upgrades-display"></div>
+          <button id="mobile-menu-toggle" class="mobile-menu-toggle" style="display: none;">☰</button>
           <button id="achievements-btn" class="hud-button">🏆 Achievements</button>
           <button id="stats-btn" class="hud-button">📊 Statistics</button>
-          <div id="boss-controls" style="display: none;">
-            <div style="margin-top: 10px; font-size: 14px;">
-              <div>ARROW KEYS / WASD: Move & Rotate</div>
-              <div>SPACE: Shoot</div>
-            </div>
-          </div>
+          <div id="hud-buttons-container"></div>
+        </div>
+        <div id="mobile-menu" class="mobile-menu" style="display: none;">
+          <button id="mobile-menu-close" class="mobile-menu-close">✕</button>
+          <div class="mobile-menu-content"></div>
         </div>
         <div id="level-bar-container">
           <div id="level-info">
@@ -32,26 +35,32 @@
             <div id="level-bar-fill"></div>
           </div>
         </div>
-        <div id="boss-progress-container" style="display: none;">
-          <div class="boss-progress-label">⚔️ BOSS BATTLE - CLICK TO WIN! ⚔️</div>
-          <div id="boss-progress-bg">
-            <div id="boss-progress-fill"></div>
-            <span id="boss-progress-text">0%</span>
-          </div>
-        </div>
         <div id="boss-dialog" style="display: none;">
           <div class="boss-dialog-content">
             <h2>⚠️ BOSS ENCOUNTER ⚠️</h2>
-            <p class="boss-warning">A powerful alien entity approaches!</p>
-            <p class="boss-details">Click rapidly on the boss to fill the progress bar!</p>
-            <p class="boss-ready">Reach 100% before it drains to defeat the boss!</p>
+            <p class="boss-warning">A massive alien entity blocks your progress!</p>
+            <p class="boss-details">This enemy is larger and much more powerful!</p>
+            <p class="boss-ready">You cannot level up until this boss is defeated!</p>
+            <p class="boss-timer-info" id="boss-dialog-timer">Time Limit: <span>30s</span></p>
             <div class="boss-dialog-buttons">
               <button id="boss-start-btn" class="boss-btn boss-btn-start">ENGAGE!</button>
             </div>
           </div>
         </div>
+        <div id="boss-timer-hud" style="display: none;">
+          <div class="boss-timer-content">
+            <div class="boss-timer-bar-bg">
+              <div class="boss-timer-bar-fill" id="boss-timer-bar"></div>
+            </div>
+            <div class="boss-timer-text" id="boss-timer-text">TIME: 30s</div>
+          </div>
+        </div>
       </div>
+      <button id="mobile-shop-toggle" class="mobile-shop-toggle" style="display: none;">
+        🛒 Shop
+      </button>
       <div id="shop-panel">
+        <button id="mobile-shop-close" class="mobile-shop-close" style="display: none;">✕</button>
         <h2>UPGRADES</h2>
         <div id="shop-tabs">
           <button id="tab-available" class="shop-tab active">Available</button>

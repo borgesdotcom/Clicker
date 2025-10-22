@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { GameState } from '../types';
+import type { UpgradeSystem } from '../systems/UpgradeSystem';
 
 export class StatsPanel {
   private modalElement: HTMLElement | null = null;
   private isOpen = false;
+  private upgradeSystem: UpgradeSystem;
 
-  constructor() {
+  constructor(upgradeSystem: UpgradeSystem) {
+    this.upgradeSystem = upgradeSystem;
     this.createModal();
     this.setupButton();
   }
@@ -140,8 +143,8 @@ export class StatsPanel {
         title: '🔬 Technology Stats',
         stats: [
           { label: 'Total Upgrades', value: this.formatNumber(state.stats.totalUpgrades) },
-          { label: 'Special Technologies', value: `${state.stats.totalSubUpgrades} / 33` },
-          { label: 'Technology Progress', value: `${Math.floor((state.stats.totalSubUpgrades / 33) * 100)}%` },
+          { label: 'Special Technologies', value: `${state.stats.totalSubUpgrades} / ${this.upgradeSystem.getSubUpgrades().length}` },
+          { label: 'Technology Progress', value: `${Math.floor((state.stats.totalSubUpgrades / this.upgradeSystem.getSubUpgrades().length) * 100)}%` },
         ],
       },
       {
