@@ -33,10 +33,10 @@ Space Clicker is an engaging incremental clicker game featuring dynamic combat, 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/space-clicker.git
+git clone https://github.com/borgesdotcom/clicker.git
 
 # Navigate to project directory
-cd space-clicker
+cd clicker
 
 # Install dependencies
 npm install
@@ -157,4 +157,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Enjoy the game!** 🚀
 
-If you encounter any issues or have suggestions, please [open an issue](https://github.com/yourusername/space-clicker/issues).
+If you encounter any issues or have suggestions, please [open an issue](https://github.com/borgesdotcom/clicker/issues).
