@@ -350,15 +350,8 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3>🐛 Known Issues</h3>
-        <p>• Bulk buying Cosmic Knowledge may show slightly incorrect costs due to self-referential discount calculation</p>
-        <p>• Performance can degrade with many particles/effects (can be disabled in settings)</p>
-      </div>
-
-      <div class="info-section">
         <h3>⌨️ Keyboard Shortcuts</h3>
-        <p>• <strong>Ctrl + D:</strong> Toggle Debug Panel (cheat mode)</p>
-        <p>• <strong>Click + Hold:</strong> Rapid fire attacks</p>
+        <p>• <strong>Ctrl + F1:</strong> Toggle Debug Panel (cheat mode)</p>
       </div>
     `;
   }
