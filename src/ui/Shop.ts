@@ -22,6 +22,7 @@ export class Shop {
   private lastUpdateTime = 0;
   private updateThrottle = 30; // Update at most every 30ms (much more responsive)
   private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
+  private isDesktopCollapsed = false; // Desktop shop collapsed state
 
   constructor(
     private store: Store,
@@ -47,6 +48,7 @@ export class Shop {
 
     this.setupTabs();
     this.setupBuyQuantityButtons();
+    this.setupDesktopToggle();
     this.render();
     this.store.subscribe(() => {
       this.scheduleRender();
@@ -123,6 +125,44 @@ export class Shop {
     });
 
     shopHeader.appendChild(quantityContainer);
+  }
+
+  private setupDesktopToggle(): void {
+    const toggleButton = document.getElementById('desktop-shop-toggle');
+    const shopPanel = document.getElementById('shop-panel');
+    
+    if (!toggleButton || !shopPanel) return;
+
+    // Load saved state from localStorage
+    const savedState = localStorage.getItem('desktop-shop-collapsed');
+    if (savedState === 'true') {
+      this.isDesktopCollapsed = true;
+      shopPanel.classList.add('desktop-collapsed');
+      // Trigger resize after a short delay to ensure proper canvas sizing
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
+    }
+
+    // Toggle button click handler
+    toggleButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.isDesktopCollapsed = !this.isDesktopCollapsed;
+      
+      if (this.isDesktopCollapsed) {
+        shopPanel.classList.add('desktop-collapsed');
+      } else {
+        shopPanel.classList.remove('desktop-collapsed');
+      }
+
+      // Save state to localStorage
+      localStorage.setItem('desktop-shop-collapsed', String(this.isDesktopCollapsed));
+
+      // Trigger window resize event after transition (300ms) to ensure canvas resizes properly
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 350);
+    });
   }
 
   private scheduleRender(): void {

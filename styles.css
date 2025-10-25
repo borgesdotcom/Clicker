@@ -2741,6 +2741,65 @@ body {
     height: 100% !important;
     max-width: 400px !important;
     display: block !important;
+    transition: width 0.3s ease, min-width 0.3s ease;
+  }
+
+  /* Desktop shop toggle button */
+  .desktop-shop-toggle {
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 100;
+    pointer-events: auto;
+    padding: 0;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .desktop-shop-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+  }
+
+  /* Collapsed state for desktop shop */
+  #shop-panel.desktop-collapsed {
+    width: 50px !important;
+    min-width: 50px !important;
+    overflow: hidden;
+  }
+
+  #shop-panel.desktop-collapsed h2,
+  #shop-panel.desktop-collapsed #shop-tabs,
+  #shop-panel.desktop-collapsed #shop-content,
+  #shop-panel.desktop-collapsed #reset-container,
+  #shop-panel.desktop-collapsed #credits-button {
+    display: none;
+  }
+
+  #shop-panel.desktop-collapsed .desktop-shop-toggle {
+    left: 9px;
+  }
+
+  /* Rotate arrow 180 degrees when collapsed to point right (open) */
+  #shop-panel.desktop-collapsed .desktop-shop-toggle {
+    transform: rotate(180deg) scale(1);
+  }
+
+  #shop-panel.desktop-collapsed .desktop-shop-toggle:hover {
+    transform: rotate(180deg) scale(1.1);
   }
 }
 
