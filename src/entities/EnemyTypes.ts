@@ -531,16 +531,19 @@ export function selectEnemyType(level: number): EnemyType {
   // Unlock enemy types based on level
   if (level < 10) return 'normal';
 
-  const types: EnemyType[] = ['normal'];
+  // Build list of available special enemy types
+  const specialTypes: EnemyType[] = [];
+  if (level >= 10) specialTypes.push('scout');
+  if (level >= 20) specialTypes.push('tank');
+  if (level >= 30) specialTypes.push('healer');
 
-  if (level >= 10) types.push('scout');
-  if (level >= 20) types.push('tank');
-  if (level >= 30) types.push('healer');
-
-  // Weight towards normal enemies
+  // 60% normal, 40% special enemies
   const rand = Math.random();
-  if (rand < 0.6) return 'normal';
+  if (rand < 0.6 || specialTypes.length === 0) {
+    return 'normal';
+  }
 
-  const index = Math.floor(Math.random() * types.length);
-  return types[index] ?? 'normal';
+  // Select random special enemy type
+  const index = Math.floor(Math.random() * specialTypes.length);
+  return specialTypes[index] ?? 'normal';
 }

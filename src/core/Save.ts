@@ -22,7 +22,6 @@ export class Save {
       prestigeLevel: state.prestigeLevel,
       prestigePoints: state.prestigePoints,
       prestigeUpgrades: state.prestigeUpgrades,
-      harmonicState: state.harmonicState,
       blockedOnBossLevel: state.blockedOnBossLevel,
       // v3.0: New upgrades
       weaponMasteryLevel: state.weaponMasteryLevel,
@@ -62,20 +61,6 @@ export class Save {
 
   private static validate(data: SaveData): GameState {
     const defaultStats = Save.getDefaultStats();
-    const defaultHarmonicState = {
-      streak: 0,
-      harmonicCores: 0,
-      tuningForkLevel: 0,
-      metronomePurchased: false,
-      chorusLevel: 0,
-      quantizedRipplesLevel: 0,
-      sigils: {
-        tempo: 0,
-        echo: 0,
-        focus: 0,
-      },
-      echoAccumulator: 0,
-    };
     return {
       points: clamp(data.points ?? 0, 0, 1e15),
       shipsCount: clamp(data.shipsCount ?? 1, 1, 1000),
@@ -99,16 +84,6 @@ export class Save {
       prestigeLevel: clamp(data.prestigeLevel ?? 0, 0, 1000),
       prestigePoints: clamp(data.prestigePoints ?? 0, 0, 1e15),
       prestigeUpgrades: data.prestigeUpgrades ?? {},
-      harmonicState: data.harmonicState
-        ? {
-            ...defaultHarmonicState,
-            ...data.harmonicState,
-            sigils: {
-              ...defaultHarmonicState.sigils,
-              ...(data.harmonicState.sigils ?? {}),
-            },
-          }
-        : defaultHarmonicState,
       blockedOnBossLevel: data.blockedOnBossLevel ?? null,
       // v3.0: New upgrades
       weaponMasteryLevel: data.weaponMasteryLevel ?? 0,
@@ -138,20 +113,6 @@ export class Save {
       prestigeLevel: 0,
       prestigePoints: 0,
       prestigeUpgrades: {},
-      harmonicState: {
-        streak: 0,
-        harmonicCores: 0,
-        tuningForkLevel: 0,
-        metronomePurchased: false,
-        chorusLevel: 0,
-        quantizedRipplesLevel: 0,
-        sigils: {
-          tempo: 0,
-          echo: 0,
-          focus: 0,
-        },
-        echoAccumulator: 0,
-      },
       blockedOnBossLevel: null,
       // v3.0: New upgrades
       weaponMasteryLevel: 0,

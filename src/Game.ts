@@ -36,6 +36,7 @@ import { ArtifactsModal } from './ui/ArtifactsModal';
 import { VersionSplash } from './ui/VersionSplash';
 import { Layout } from './ui/Layout';
 import { CreditsModal } from './ui/CreditsModal';
+import { GameInfoModal } from './ui/GameInfoModal';
 import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
 import type { Vec2, GameMode } from './types';
@@ -71,6 +72,7 @@ export class Game {
   private statsPanel: StatsPanel;
   private settingsModal: SettingsModal;
   private creditsModal: CreditsModal;
+  private gameInfoModal: GameInfoModal;
   private hud: Hud;
   private saveTimer = 0;
   private saveInterval = 3;
@@ -142,7 +144,7 @@ export class Game {
     this.artifactSystem = new ArtifactSystem();
     this.missionSystem = new MissionSystem(this.store);
     this.upgradeSystem.setAscensionSystem(this.ascensionSystem);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    this.upgradeSystem.setArtifactSystem(this.artifactSystem);
     this.comboSystem.setAscensionSystem(this.ascensionSystem);
     this.achievementSnackbar = new AchievementSnackbar();
     this.achievementsModal = new AchievementsModal(this.achievementSystem);
@@ -162,6 +164,7 @@ export class Game {
     this.statsPanel = new StatsPanel(this.upgradeSystem);
     this.settingsModal = new SettingsModal(this.soundManager);
     this.creditsModal = new CreditsModal(this.store);
+    this.gameInfoModal = new GameInfoModal(this.store, this.upgradeSystem, this.ascensionSystem, this.artifactSystem);
     (this as any).debugPanel = new DebugPanel(
       this.store,
       () => {
@@ -267,6 +270,7 @@ export class Game {
     this.setupMissionsButton();
     this.setupArtifactsButton();
     this.setupCreditsButton();
+    this.setupGameInfoButton();
     this.setupGraphicsToggle();
     Layout.setupResetButton(() => {
       this.resetGame();
@@ -539,6 +543,22 @@ export class Game {
     }
   }
 
+  private setupGameInfoButton(): void {
+    // Add Game Info button to HUD for easy access to mechanics
+    const hudElement = document.getElementById('hud-buttons-container');
+    if (hudElement) {
+      const infoBtn = document.createElement('button');
+      infoBtn.id = 'game-info-button';
+      infoBtn.className = 'hud-button';
+      infoBtn.textContent = '📖 Game Info';
+      infoBtn.style.width = '100%';
+      infoBtn.addEventListener('click', () => {
+        this.gameInfoModal.show();
+      });
+      hudElement.appendChild(infoBtn);
+    }
+  }
+
   private performAscension(): void {
     const state = this.store.getState();
 
@@ -548,7 +568,7 @@ export class Game {
     // Update highest level reached before resetting
     const newHighestLevel = Math.max(state.level, state.highestLevelReached ?? 0);
 
-    // Save what we're keeping (ONLY artifacts, achievements, stats, and prestige)
+    // Save what we're keeping (ONLY achievements, stats, and prestige)
     const keepAchievements = { ...state.achievements };
     const keepStats = { ...state.stats };
     const keepPrestigeUpgrades = { ...state.prestigeUpgrades };
@@ -573,28 +593,14 @@ export class Game {
       xpBoostLevel: 0,
       level: startingLevel,
       experience: 0,
-      subUpgrades: {}, // Reset all subupgrades - only artifacts persist!
+      subUpgrades: {}, // Reset all special upgrades on ascension
       achievements: keepAchievements, // Keep achievements
       stats: keepStats, // Keep stats
       prestigeLevel: newPrestigeLevel,
       prestigePoints: newPrestigePoints,
       prestigeUpgrades: keepPrestigeUpgrades, // Keep prestige upgrades
-      harmonicState: {
-        streak: 0,
-        harmonicCores: 0,
-        tuningForkLevel: 0,
-        metronomePurchased: false,
-        chorusLevel: 0,
-        quantizedRipplesLevel: 0,
-        sigils: {
-          tempo: 0,
-          echo: 0,
-          focus: 0,
-        },
-        echoAccumulator: 0,
-      },
       blockedOnBossLevel: null, // Reset boss block on ascension
-      // v3.0: New upgrades (reset on ascension - only artifacts persist)
+      // v3.0: New upgrades (reset on ascension)
       weaponMasteryLevel: 0,
       fleetCommandLevel: 0,
       mutationEngineLevel: 0,
@@ -717,12 +723,12 @@ export class Game {
     // Set up damage callback for visual effects (particles and ripples)
     enhancedBall.setOnDamageCallback(
       (_damage: number, x: number, y: number, alienRadius: number) => {
-        // Spawn particles (only if high graphics enabled)
+        // Spawn particles (only if high graphics enabled, and limit count)
         if (this.userSettings.highGraphics) {
           this.particleSystem.spawnParticles({
             x,
             y,
-            count: Math.min(10, Math.floor(_damage / 100)),
+            count: Math.min(5, Math.floor(_damage / 500)), // Reduced from 10 and 100 for better performance
             color: '#ffffff',
             speed: 50,
             life: 0.8,

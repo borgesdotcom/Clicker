@@ -30,7 +30,6 @@ export class AscensionModal {
           <div class="ascension-description">
             <p>Ascend to a higher plane of existence. You will lose all progress except:</p>
             <ul>
-              <li>✓ Special Upgrades (Owned)</li>
               <li>✓ Achievements</li>
               <li>✓ Statistics</li>
               <li>✓ Prestige Upgrades</li>

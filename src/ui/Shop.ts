@@ -3,9 +3,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Store } from '../core/Store';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
+import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
 import { Button } from './Button';
 import { NumberFormatter } from '../utils/NumberFormatter';
 
@@ -207,7 +207,7 @@ export class Shop {
     });
   }
 
-  private checkForDiscoveries(state: any): boolean {
+  private checkForDiscoveries(state: GameState): boolean {
     // Initialize discoveredUpgrades if not present
     if (!state.discoveredUpgrades) {
       state.discoveredUpgrades = { ship: true };
@@ -391,7 +391,7 @@ export class Shop {
     this.isRendering = false;
   }
 
-  private renderAvailableTab(state: any): void {
+  private renderAvailableTab(state: GameState): void {
     const upgrades = this.upgradeSystem.getUpgrades();
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
 
@@ -441,7 +441,7 @@ export class Shop {
 
       // Only show if discovered OR already purchased
       if (
-        !state.discoveredUpgrades[upgrade.id] &&
+        !state.discoveredUpgrades?.[upgrade.id] &&
         upgrade.getLevel(state) === 0
       ) {
         continue;
@@ -506,7 +506,7 @@ export class Shop {
     }
   }
 
-  private renderOwnedTab(state: any): void {
+  private renderOwnedTab(state: GameState): void {
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
     const ownedUpgrades = allSubUpgrades.filter((sub) => sub.owned);
 
@@ -532,7 +532,7 @@ export class Shop {
     this.container.appendChild(grid);
   }
 
-  private createSubUpgradeCard(subUpgrade: any, state: any): HTMLElement {
+  private createSubUpgradeCard(subUpgrade: SubUpgrade, state: GameState): HTMLElement {
     const card = document.createElement('div');
     card.className = `sub-upgrade ${subUpgrade.owned ? 'owned' : ''}`;
     card.setAttribute('data-upgrade-id', subUpgrade.id);
@@ -628,13 +628,15 @@ export class Shop {
     return emojiMap[upgradeId] || '⭐';
   }
 
-  private calculateBulkCost(upgrade: {
-    getCost: (level: number) => number;
-    getLevel: (state: any) => number;
-  }, state: any): { totalCost: number; quantity: number } {
+  private calculateBulkCost(upgrade: UpgradeConfig, state: GameState): { totalCost: number; quantity: number } {
     const currentLevel = upgrade.getLevel(state);
     let totalCost = 0;
     let quantity = 0;
+
+    // Create a temporary state copy for upgrades that affect their own costs
+    const tempState = { ...state };
+    const upgradeId = upgrade.id;
+    const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
 
     if (this.buyQuantity === 'max') {
       // Calculate max affordable quantity
@@ -648,6 +650,15 @@ export class Shop {
         tempLevel++;
         quantity++;
         
+        // Update temp state for self-affecting upgrades
+        if (affectsSelfCost) {
+          if (upgradeId === 'cosmicKnowledge') {
+            tempState.cosmicKnowledgeLevel = tempLevel;
+          } else if (upgradeId === 'fleetCommand') {
+            tempState.fleetCommandLevel = tempLevel;
+          }
+        }
+        
         // Safety limit to prevent infinite loops
         if (quantity >= 1000) break;
       }
@@ -660,13 +671,24 @@ export class Shop {
       // Calculate cost for specific quantity (only what's affordable)
       const targetQuantity = this.buyQuantity;
       let tempPoints = state.points;
+      let tempLevel = currentLevel;
       
       for (let i = 0; i < targetQuantity; i++) {
-        const cost = upgrade.getCost(currentLevel + i);
+        const cost = upgrade.getCost(tempLevel);
         if (tempPoints >= cost) {
           tempPoints -= cost;
           totalCost += cost;
+          tempLevel++;
           quantity++;
+          
+          // Update temp state for self-affecting upgrades
+          if (affectsSelfCost) {
+            if (upgradeId === 'cosmicKnowledge') {
+              tempState.cosmicKnowledgeLevel = tempLevel;
+            } else if (upgradeId === 'fleetCommand') {
+              tempState.fleetCommandLevel = tempLevel;
+            }
+          }
         } else {
           break; // Can't afford more
         }
@@ -674,8 +696,10 @@ export class Shop {
       
       // If can't afford any, show cost of requested quantity anyway for display
       if (quantity === 0) {
+        let displayLevel = currentLevel;
         for (let i = 0; i < targetQuantity; i++) {
-          totalCost += upgrade.getCost(currentLevel + i);
+          totalCost += upgrade.getCost(displayLevel);
+          displayLevel++;
         }
         quantity = targetQuantity;
       }
@@ -684,12 +708,7 @@ export class Shop {
     return { totalCost, quantity };
   }
 
-  private buyUpgrade(upgrade: {
-    canBuy: (state: any) => boolean;
-    getCost: (level: number) => number;
-    getLevel: (state: any) => number;
-    buy: (state: any) => void;
-  }, quantity: number = 1): void {
+  private buyUpgrade(upgrade: UpgradeConfig, quantity: number = 1): void {
     // Prevent concurrent purchases
     if (this.isProcessingPurchase) return;
     this.isProcessingPurchase = true;
@@ -739,11 +758,7 @@ export class Shop {
     this.isProcessingPurchase = false;
   }
 
-  private buySubUpgrade(upgrade: {
-    owned: boolean;
-    cost: number;
-    buy: (state: any) => void;
-  }): void {
+  private buySubUpgrade(upgrade: SubUpgrade): void {
     // Prevent concurrent purchases
     if (this.isProcessingPurchase) return;
     if (upgrade.owned) return;

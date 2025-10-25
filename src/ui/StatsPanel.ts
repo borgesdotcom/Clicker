@@ -175,16 +175,16 @@ export class StatsPanel {
         title: '🔬 Technology Stats',
         stats: [
           {
-            label: 'Total Upgrades',
+            label: 'Total Upgrades Purchased',
             value: this.formatNumber(state.stats.totalUpgrades),
           },
           {
             label: 'Special Technologies',
-            value: `${state.stats.totalSubUpgrades} / ${this.upgradeSystem.getSubUpgrades().length}`,
+            value: `${this.getOwnedSubUpgradesCount(state)} / ${this.upgradeSystem.getSubUpgrades().length}`,
           },
           {
             label: 'Technology Progress',
-            value: `${Math.floor((state.stats.totalSubUpgrades / this.upgradeSystem.getSubUpgrades().length) * 100)}%`,
+            value: `${Math.floor((this.getOwnedSubUpgradesCount(state) / this.upgradeSystem.getSubUpgrades().length) * 100)}%`,
           },
         ],
       },
@@ -254,5 +254,16 @@ export class StatsPanel {
     } else {
       return `${secs}s`;
     }
+  }
+
+  private getOwnedSubUpgradesCount(state: GameState): number {
+    // Count actual owned sub-upgrades instead of using cumulative counter
+    let count = 0;
+    for (const key in state.subUpgrades) {
+      if (state.subUpgrades[key] === true) {
+        count++;
+      }
+    }
+    return count;
   }
 }

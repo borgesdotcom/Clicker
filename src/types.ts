@@ -20,20 +20,6 @@ export interface SaveData {
   prestigeLevel: number;
   prestigePoints: number;
   prestigeUpgrades?: Record<string, number>;
-  harmonicState?: {
-    streak: number;
-    harmonicCores: number;
-    tuningForkLevel: number;
-    metronomePurchased: boolean;
-    chorusLevel: number;
-    quantizedRipplesLevel: number;
-    sigils: {
-      tempo: number;
-      echo: number;
-      focus: number;
-    };
-    echoAccumulator: number;
-  };
   blockedOnBossLevel?: number | null;
   // v3.0: New upgrade systems
   weaponMasteryLevel?: number;
@@ -77,20 +63,6 @@ export interface GameState {
   prestigeLevel: number;
   prestigePoints: number;
   prestigeUpgrades?: Record<string, number>;
-  harmonicState?: {
-    streak: number;
-    harmonicCores: number;
-    tuningForkLevel: number;
-    metronomePurchased: boolean;
-    chorusLevel: number;
-    quantizedRipplesLevel: number;
-    sigils: {
-      tempo: number;
-      echo: number;
-      focus: number;
-    };
-    echoAccumulator: number;
-  };
   blockedOnBossLevel?: number | null;
   // v3.0: New upgrade systems
   weaponMasteryLevel: number;

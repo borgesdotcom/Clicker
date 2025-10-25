@@ -12,6 +12,14 @@ export class UpgradeSystem {
     getXPMultiplier: (state: GameState) => number;
     getSpeedMultiplier: (state: GameState) => number;
   } | null = null;
+  
+  private artifactSystem: {
+    getDamageBonus: () => number;
+    getSpeedBonus: () => number;
+    getCritBonus: () => number;
+    getPointsBonus: () => number;
+    getXPBonus: () => number;
+  } | null = null;
 
   constructor() {
     this.initializeSubUpgrades();
@@ -26,6 +34,16 @@ export class UpgradeSystem {
     getSpeedMultiplier: (state: GameState) => number;
   }): void {
     this.ascensionSystem = ascensionSystem;
+  }
+
+  setArtifactSystem(artifactSystem: {
+    getDamageBonus: () => number;
+    getSpeedBonus: () => number;
+    getCritBonus: () => number;
+    getPointsBonus: () => number;
+    getXPBonus: () => number;
+  }): void {
+    this.artifactSystem = artifactSystem;
   }
 
   private initializeSubUpgrades(): void {
@@ -2330,12 +2348,24 @@ export class UpgradeSystem {
       chance += this.ascensionSystem.getCritBonus(state);
     }
 
+    // Artifact bonus (additive to percentage)
+    if (this.artifactSystem) {
+      const artifactBonus = this.artifactSystem.getCritBonus();
+      chance += artifactBonus * 100; // Convert from decimal to percentage
+    }
+
     return Math.min(chance, 95); // Cap increased to 95% for late game
   }
 
   getCritMultiplier(state: GameState): number {
     this.updateSubUpgradesFromState(state);
     let multiplier = 2.0; // Base 2x damage
+
+    // Artifact bonus (some artifacts boost crit damage instead of chance)
+    if (this.artifactSystem) {
+      const artifactBonus = this.artifactSystem.getCritBonus();
+      multiplier += artifactBonus * 2; // Crit damage artifacts add to the multiplier
+    }
 
     // Rubber duck: +3x
     if (state.subUpgrades['rubber_duck']) {
@@ -2540,6 +2570,12 @@ export class UpgradeSystem {
     // v3.0: Energy Core bonus (+1% attack speed per level = -1% cooldown)
     if (state.energyCoreLevel > 0) {
       cooldown *= 1 - state.energyCoreLevel * 0.01;
+    }
+
+    // Artifact speed bonus (reduces cooldown)
+    if (this.artifactSystem) {
+      const speedBonus = this.artifactSystem.getSpeedBonus();
+      cooldown *= 1 - speedBonus; // Speed bonus reduces cooldown
     }
 
     // v3.0: ENERGY CORE SUBUPGRADES
@@ -2846,9 +2882,9 @@ export class UpgradeSystem {
   getAutoFireDamage(state: GameState): number {
     this.updateSubUpgradesFromState(state);
 
-    // Base: 10% of point multiplier level (much weaker)
+    // Base: 1 damage + 0.05 per level (starts at 1 for better early game feel)
     let multiplier =
-      this.basePoints * (0.1 + 0.05 * state.pointMultiplierLevel);
+      this.basePoints * (1 + 0.05 * state.pointMultiplierLevel);
 
     // v3.0: Fleet Command bonus (+5% auto-fire damage per level)
     if (state.fleetCommandLevel > 0) {
