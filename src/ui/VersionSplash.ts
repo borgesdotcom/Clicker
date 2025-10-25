@@ -6,7 +6,7 @@ export class VersionSplash {
   }
 
   private checkVersion(): void {
-    const currentVersion = '2.0.0';
+    const currentVersion = '0.0.2';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -36,11 +36,6 @@ export class VersionSplash {
               <div class="feature-icon">👾</div>
               <h3>New Enemy Types</h3>
               <p>Face Fast Scouts, Armored Tanks, and Regenerators with unique abilities!</p>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">💎</div>
-              <h3>Power-Up System</h3>
-              <p>Collect powerful buffs: Shield, Damage Boost, Speed, Multishot, and Critical!</p>
             </div>
             <div class="feature-item">
               <div class="feature-icon">🎯</div>

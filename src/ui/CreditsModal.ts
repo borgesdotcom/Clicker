@@ -51,7 +51,7 @@ export class CreditsModal {
     gameInfoSection.appendChild(gameDesc);
 
     const version = document.createElement('p');
-    version.textContent = 'Version 0.0.1 - Alpha Update';
+    version.textContent = 'Version 0.0.2 - Alpha Update';
     version.style.fontSize = '14px';
     version.style.color = '#888';
     gameInfoSection.appendChild(version);
