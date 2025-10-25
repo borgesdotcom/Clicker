@@ -101,64 +101,111 @@ export class AlienBall {
   }
 
   draw(drawer: Draw): void {
+    const ctx = drawer.getContext();
+
     if (this.breakAnimTime > 0) {
+      // Bubble popping animation!
       const progress = 1 - this.breakAnimTime / this.breakAnimDuration;
       const alpha = 1 - progress;
-      const scale = 1 + progress * 0.5;
+      const scale = 1 + progress * 0.8; // More dramatic pop
 
-      drawer.setAlpha(alpha);
-      drawer.setFill(this.color.fill);
-      drawer.circle(this.x, this.y, this.radius * scale);
-      drawer.setStroke(this.color.stroke, 3);
-      drawer.circle(this.x, this.y, this.radius * scale, false);
+      drawer.setAlpha(alpha * 0.6);
+      
+      // Draw bubble segments flying apart
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const dist = progress * this.radius * 2;
+        const x = this.x + Math.cos(angle) * dist;
+        const y = this.y + Math.sin(angle) * dist;
+        
+        drawer.setFill(this.color.fill);
+        drawer.circle(x, y, this.radius * scale * 0.3);
+      }
+      
       drawer.resetAlpha();
       return;
     }
 
-    drawer.setFill(this.color.fill);
-    drawer.circle(this.x, this.y, this.radius);
-    drawer.setStroke(this.color.stroke, 2);
-    drawer.circle(this.x, this.y, this.radius, false);
+    // Draw bubble wrap bubble!
+    // Main bubble body with gradient - more translucent
+    const gradient = ctx.createRadialGradient(
+      this.x - this.radius * 0.3,
+      this.y - this.radius * 0.3,
+      this.radius * 0.1,
+      this.x,
+      this.y,
+      this.radius
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)'); // Reduced highlight
+    gradient.addColorStop(0.3, this.color.fill + '99'); // More transparent color
+    gradient.addColorStop(1, this.color.stroke + 'cc'); // Slightly transparent edge
 
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Subtle glossy highlight (reduced white)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(
+      this.x - this.radius * 0.35,
+      this.y - this.radius * 0.35,
+      this.radius * 0.35,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Outer ring (bubble wrap cell edge)
+    ctx.strokeStyle = this.color.stroke;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner shadow for depth
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius * 0.9, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Health bar (bubble integrity)
     const hpBarWidth = this.radius * 2;
     const hpBarHeight = 6;
     const hpBarY = this.y - this.radius - 18;
     const hpPercent = this.currentHp / this.maxHp;
 
     // Background
-    drawer.getContext().fillStyle = 'rgba(0, 0, 0, 0.5)';
-    drawer
-      .getContext()
-      .fillRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
 
-    // Health fill - color changes based on health percentage
-    let fillColor = '#00ff00'; // Green
+    // Health fill - color changes based on bubble integrity
+    let fillColor = '#00ff00'; // Fresh bubble
     if (hpPercent < 0.3)
-      fillColor = '#ff0000'; // Red
-    else if (hpPercent < 0.6) fillColor = '#ffaa00'; // Orange
+      fillColor = '#ff0000'; // About to pop!
+    else if (hpPercent < 0.6) fillColor = '#ffaa00'; // Damaged
 
-    drawer.getContext().fillStyle = fillColor;
-    drawer
-      .getContext()
-      .fillRect(
-        this.x - hpBarWidth / 2,
-        hpBarY,
-        hpBarWidth * hpPercent,
-        hpBarHeight,
-      );
+    ctx.fillStyle = fillColor;
+    ctx.fillRect(
+      this.x - hpBarWidth / 2,
+      hpBarY,
+      hpBarWidth * hpPercent,
+      hpBarHeight,
+    );
 
     // Border
-    drawer.getContext().strokeStyle = '#ffffff';
-    drawer.getContext().lineWidth = 1;
-    drawer
-      .getContext()
-      .strokeRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
 
+    // Flash effect when damaged
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      drawer.setAlpha(flashAlpha * 0.5);
-      drawer.setStroke('#fff', 3);
-      const flashRadius = this.radius * (1 + (1 - flashAlpha) * 0.3);
+      drawer.setAlpha(flashAlpha * 0.7);
+      drawer.setStroke('#fff', 4);
+      const flashRadius = this.radius * (1 + (1 - flashAlpha) * 0.2);
       drawer.circle(this.x, this.y, flashRadius, false);
       drawer.resetAlpha();
     }

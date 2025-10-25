@@ -283,39 +283,61 @@ export class EnhancedAlienBall extends AlienBall {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
 
-    // Draw speed trails
+    // Speed trails for fast bubble
     for (let i = 0; i < 3; i++) {
       const alpha = 0.3 - i * 0.1;
-      ctx.fillStyle = `rgba(255, 255, 0, ${String(alpha)})`;
+      const trailGradient = ctx.createRadialGradient(
+        centerX - this.radius * 0.3,
+        centerY - this.radius * 0.3,
+        this.radius * 0.1,
+        centerX,
+        centerY,
+        this.radius * 0.9
+      );
+      trailGradient.addColorStop(0, `rgba(255, 255, 255, ${String(alpha * 0.5)})`);
+      trailGradient.addColorStop(0.3, `rgba(255, 255, 100, ${String(alpha)})`);
+      trailGradient.addColorStop(1, `rgba(255, 255, 100, 0)`);
+      ctx.fillStyle = trailGradient;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, this.radius * 0.8, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, this.radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Draw main body with base color
-    ctx.fillStyle = this.stats.color;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
+    // Main bubble body (smaller, faster bubble)
+    const gradient = ctx.createRadialGradient(
+      centerX - this.radius * 0.3,
+      centerY - this.radius * 0.3,
+      this.radius * 0.1,
+      centerX,
+      centerY,
+      this.radius
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    gradient.addColorStop(0.3, this.stats.color + '99');
+    gradient.addColorStop(1, this.stats.color + 'cc');
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
 
-    // Draw speed lines (using Date.now for animation instead of rotationAngle)
-    ctx.strokeStyle = 'rgba(255, 255, 0, 0.6)';
+    // Glossy highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(
+      centerX - this.radius * 0.35,
+      centerY - this.radius * 0.35,
+      this.radius * 0.35,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Bubble edge
+    ctx.strokeStyle = this.stats.color;
     ctx.lineWidth = 2;
-    const animRotation = Date.now() * 0.001;
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2 + animRotation;
-      const x1 = centerX + Math.cos(angle) * this.radius;
-      const y1 = centerY + Math.sin(angle) * this.radius;
-      const x2 = centerX + Math.cos(angle) * (this.radius + 10);
-      const y2 = centerY + Math.sin(angle) * (this.radius + 10);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   private drawTank(
@@ -326,51 +348,73 @@ export class EnhancedAlienBall extends AlienBall {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
 
-    // Slow rotation for armor plating (heavy movement)
-    const armorRotation = this.animationTime * 0.3; // Slow rotation
-
-    // Pulsing effect for shield (breathing effect)
+    // Tank = thick reinforced bubble!
     const shieldPulse = Math.sin(this.animationTime * 2) * 2;
 
-    // Draw rotating armor plating
-    ctx.strokeStyle = '#ff6666';
-    ctx.lineWidth = 4;
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + armorRotation;
+    // Draw outer shield layers (multiple bubble layers)
+    for (let layer = 0; layer < 3; layer++) {
+      const layerRadius = this.radius + 10 + layer * 5 + shieldPulse;
+      const layerAlpha = 0.15 - layer * 0.03;
+      const layerGradient = ctx.createRadialGradient(
+        centerX - layerRadius * 0.3,
+        centerY - layerRadius * 0.3,
+        layerRadius * 0.1,
+        centerX,
+        centerY,
+        layerRadius
+      );
+      layerGradient.addColorStop(0, `rgba(255, 100, 100, ${String(layerAlpha + 0.2)})`);
+      layerGradient.addColorStop(0.5, `rgba(255, 68, 68, ${String(layerAlpha)})`);
+      layerGradient.addColorStop(1, `rgba(255, 68, 68, 0)`);
+      ctx.fillStyle = layerGradient;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, this.radius + 5, angle - 0.3, angle + 0.3);
-      ctx.stroke();
+      ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Draw main body with subtle breathing effect
+    // Main reinforced bubble body (larger, thicker)
     const bodyScale = 1 + Math.sin(this.animationTime * 1.5) * 0.02;
-    ctx.fillStyle = this.stats.color;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
+    const gradient = ctx.createRadialGradient(
+      centerX - this.radius * 0.3,
+      centerY - this.radius * 0.3,
+      this.radius * 0.1,
+      centerX,
+      centerY,
+      this.radius * bodyScale
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    gradient.addColorStop(0.3, this.stats.color + 'aa');
+    gradient.addColorStop(1, this.stats.color + 'dd');
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(centerX, centerY, this.radius * bodyScale, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
 
-    // Draw pulsing shield indicator
-    const shieldRadius = this.radius + 8 + shieldPulse;
-    const shieldAlpha = 0.3 + Math.sin(this.animationTime * 2) * 0.1;
-    ctx.strokeStyle = `rgba(255, 68, 68, ${String(shieldAlpha)})`;
-    ctx.lineWidth = 2;
+    // Extra thick glossy highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.beginPath();
-    ctx.arc(centerX, centerY, shieldRadius, 0, Math.PI * 2);
+    ctx.arc(
+      centerX - this.radius * 0.35,
+      centerY - this.radius * 0.35,
+      this.radius * 0.4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Thick bubble edge
+    ctx.strokeStyle = this.stats.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, this.radius * bodyScale, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Add inner armor detail that counter-rotates
-    ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i++) {
-      const angle = (i / 3) * Math.PI * 2 - armorRotation; // Counter rotation
-      const innerRadius = this.radius * 0.6;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, innerRadius, angle - 0.4, angle + 0.4);
-      ctx.stroke();
-    }
+    // Inner reinforcement rings
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, this.radius * 0.85, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   private drawHealer(
@@ -381,9 +425,9 @@ export class EnhancedAlienBall extends AlienBall {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
 
-    // Draw healing aura
+    // Healing aura (soothing green bubble glow)
     const pulseSize = Math.sin(Date.now() * 0.003) * 5;
-    const gradient = ctx.createRadialGradient(
+    const auraGradient = ctx.createRadialGradient(
       centerX,
       centerY,
       0,
@@ -391,24 +435,52 @@ export class EnhancedAlienBall extends AlienBall {
       centerY,
       this.radius + 15 + pulseSize,
     );
-    gradient.addColorStop(0, 'rgba(0, 255, 136, 0.2)');
-    gradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
-    ctx.fillStyle = gradient;
+    auraGradient.addColorStop(0, 'rgba(0, 255, 136, 0.3)');
+    auraGradient.addColorStop(0.5, 'rgba(0, 255, 136, 0.15)');
+    auraGradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+    ctx.fillStyle = auraGradient;
     ctx.beginPath();
     ctx.arc(centerX, centerY, this.radius + 15 + pulseSize, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw main body
-    ctx.fillStyle = this.stats.color;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
+    // Main healing bubble body
+    const gradient = ctx.createRadialGradient(
+      centerX - this.radius * 0.3,
+      centerY - this.radius * 0.3,
+      this.radius * 0.1,
+      centerX,
+      centerY,
+      this.radius
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    gradient.addColorStop(0.3, this.stats.color + '99');
+    gradient.addColorStop(1, this.stats.color + 'cc');
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    // Glossy highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(
+      centerX - this.radius * 0.35,
+      centerY - this.radius * 0.35,
+      this.radius * 0.35,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Bubble edge
+    ctx.strokeStyle = this.stats.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw healing cross
-    ctx.strokeStyle = '#00ff88';
+    // Healing cross inside bubble
+    ctx.strokeStyle = 'rgba(0, 255, 136, 0.8)';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(centerX - 10, centerY);
@@ -417,7 +489,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.lineTo(centerX, centerY + 10);
     ctx.stroke();
 
-    // Draw heal particles if healing
+    // Healing particles (tiny bubbles)
     if (
       this.currentHp < this.maxHp &&
       this.healTimer > this.healInterval * 0.5
@@ -428,9 +500,14 @@ export class EnhancedAlienBall extends AlienBall {
         const px = centerX + Math.cos(angle) * distance;
         const py = centerY + Math.sin(angle) * distance;
 
-        ctx.fillStyle = 'rgba(0, 255, 136, 0.8)';
+        // Draw tiny healing bubbles
+        const tinyGradient = ctx.createRadialGradient(px, py, 0, px, py, 3);
+        tinyGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        tinyGradient.addColorStop(0.5, 'rgba(0, 255, 136, 0.8)');
+        tinyGradient.addColorStop(1, 'rgba(0, 255, 136, 0.3)');
+        ctx.fillStyle = tinyGradient;
         ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
         ctx.fill();
       }
     }

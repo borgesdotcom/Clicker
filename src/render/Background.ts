@@ -8,16 +8,6 @@ interface Star {
   twinkleOffset: number;
 }
 
-interface Nebula {
-  x: number;
-  y: number;
-  radius: number;
-  color: string;
-  alpha: number;
-  pulseSpeed: number;
-  pulseOffset: number;
-}
-
 interface Comet {
   x: number;
   y: number;
@@ -29,7 +19,6 @@ interface Comet {
 
 export class Background {
   private stars: Star[] = [];
-  private nebulae: Nebula[] = [];
   private comets: Comet[] = [];
   private time = 0;
   private width: number;
@@ -40,7 +29,6 @@ export class Background {
     this.width = width;
     this.height = height;
     this.initStars();
-    this.initNebulae();
   }
 
   private initStars(): void {
@@ -56,29 +44,6 @@ export class Background {
         brightness: Math.random() * 0.5 + 0.5,
         twinkleSpeed: Math.random() * 2 + 1,
         twinkleOffset: Math.random() * Math.PI * 2,
-      });
-    }
-  }
-
-  private initNebulae(): void {
-    const nebulaColors = [
-      'rgba(138, 43, 226, 0.15)', // Purple
-      'rgba(0, 191, 255, 0.1)', // Deep Sky Blue
-      'rgba(255, 20, 147, 0.12)', // Deep Pink
-      'rgba(0, 255, 127, 0.08)', // Spring Green
-      'rgba(255, 69, 0, 0.1)', // Red-Orange
-    ];
-
-    for (let i = 0; i < 8; i++) {
-      const colorIndex = Math.floor(Math.random() * nebulaColors.length);
-      this.nebulae.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
-        radius: Math.random() * 150 + 100,
-        color: nebulaColors[colorIndex] ?? 'rgba(138, 43, 226, 0.3)',
-        alpha: Math.random() * 0.3 + 0.2,
-        pulseSpeed: Math.random() * 0.5 + 0.3,
-        pulseOffset: Math.random() * Math.PI * 2,
       });
     }
   }
@@ -133,9 +98,7 @@ export class Background {
     this.height = height;
     // Reinitialize background elements
     this.stars = [];
-    this.nebulae = [];
     this.initStars();
-    this.initNebulae();
   }
 
   public update(dt: number): void {
@@ -179,43 +142,7 @@ export class Background {
   }
 
   public render(ctx: CanvasRenderingContext2D): void {
-    // Draw nebulae (background layer)
-    for (const nebula of this.nebulae) {
-      const pulse = Math.sin(
-        this.time * nebula.pulseSpeed + nebula.pulseOffset,
-      );
-      const radius = nebula.radius + pulse * 20;
-      const alpha = nebula.alpha + pulse * 0.05;
-
-      const gradient = ctx.createRadialGradient(
-        nebula.x,
-        nebula.y,
-        0,
-        nebula.x,
-        nebula.y,
-        radius,
-      );
-
-      gradient.addColorStop(
-        0,
-        nebula.color.replace(/[\d.]+\)$/, `${String(alpha)})`),
-      );
-      gradient.addColorStop(
-        0.5,
-        nebula.color.replace(/[\d.]+\)$/, `${String(alpha * 0.5)})`),
-      );
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(
-        nebula.x - radius,
-        nebula.y - radius,
-        radius * 2,
-        radius * 2,
-      );
-    }
-
-    // Draw stars
+    // Draw stars - batch all fills together
     for (const star of this.stars) {
       const twinkle = Math.sin(
         this.time * star.twinkleSpeed + star.twinkleOffset,
@@ -227,8 +154,8 @@ export class Background {
       ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
       ctx.fill();
 
-      // Add glow for larger stars
-      if (star.size > 1.5) {
+      // Add glow for larger stars (reduced frequency)
+      if (star.size > 1.5 && Math.floor(this.time * 30) % 2 === 0) {
         ctx.fillStyle = `rgba(200, 220, 255, ${String(brightness * 0.3)})`;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size * 2, 0, Math.PI * 2);
@@ -244,13 +171,8 @@ export class Background {
       const tailX = comet.x - Math.cos(angle) * comet.length;
       const tailY = comet.y - Math.sin(angle) * comet.length;
 
-      // Comet tail gradient
-      const gradient = ctx.createLinearGradient(comet.x, comet.y, tailX, tailY);
-      gradient.addColorStop(0, 'rgba(200, 230, 255, 0.9)');
-      gradient.addColorStop(0.3, 'rgba(100, 150, 255, 0.6)');
-      gradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
-
-      ctx.strokeStyle = gradient;
+      // Simplified comet tail (no gradient for better performance)
+      ctx.strokeStyle = 'rgba(150, 190, 255, 0.7)';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       ctx.beginPath();
@@ -264,10 +186,10 @@ export class Background {
       ctx.arc(comet.x, comet.y, 2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glow
-      ctx.fillStyle = 'rgba(200, 230, 255, 0.5)';
+      // Simplified glow
+      ctx.fillStyle = 'rgba(200, 230, 255, 0.4)';
       ctx.beginPath();
-      ctx.arc(comet.x, comet.y, 5, 0, Math.PI * 2);
+      ctx.arc(comet.x, comet.y, 4, 0, Math.PI * 2);
       ctx.fill();
     }
   }
