@@ -411,7 +411,7 @@ export class Shop {
       return (
         !sub.owned &&
         sub.requires(state) &&
-        (state.discoveredUpgrades[subKey] || sub.owned)
+        (Boolean(state.discoveredUpgrades?.[subKey]) || sub.owned)
       );
     });
 
