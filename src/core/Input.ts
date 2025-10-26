@@ -23,7 +23,7 @@ export class Input {
   private handleClick = (e: MouseEvent): void => {
     e.preventDefault();
     const pos = this.getCanvasPosition(e.clientX, e.clientY);
-    this.clickHandlers.forEach((handler) => handler(pos));
+    this.clickHandlers.forEach((handler) => { handler(pos); });
   };
 
   private handleTouch = (e: TouchEvent): void => {
@@ -33,7 +33,7 @@ export class Input {
       const touch = e.touches[0];
       if (touch) {
         const pos = this.getCanvasPosition(touch.clientX, touch.clientY);
-        this.clickHandlers.forEach((handler) => handler(pos));
+        this.clickHandlers.forEach((handler) => { handler(pos); });
       }
     }
   };
@@ -46,7 +46,7 @@ export class Input {
       const touch = e.changedTouches[0];
       if (touch) {
         const pos = this.getCanvasPosition(touch.clientX, touch.clientY);
-        this.clickHandlers.forEach((handler) => handler(pos));
+        this.clickHandlers.forEach((handler) => { handler(pos); });
       }
     }
   };

@@ -240,7 +240,10 @@ export class GameInfoModal {
 
       <div class="info-section">
         <h3>👾 Boss Encounters</h3>
-        <p>• Bosses appear every <strong>10 levels</strong> (levels 10, 20, 30, etc.)</p>
+        <p>• Bosses appear at <strong>regular intervals</strong>:</p>
+        <p>&nbsp;&nbsp;→ Every 25 levels (1-100): 25, 50, 75, 100</p>
+        <p>&nbsp;&nbsp;→ Every 50 levels (101-500): 150, 200, 250, etc.</p>
+        <p>&nbsp;&nbsp;→ Every 100 levels (501+): 600, 700, 800, etc.</p>
         <p>• Boss HP scales with level and has a time limit</p>
         <p>• Defeating bosses gives <strong>10x XP</strong> and allows you to continue leveling</p>
         <p>• If you fail, you can retry with better upgrades</p>
@@ -343,7 +346,7 @@ export class GameInfoModal {
       <div class="info-section">
         <h3>💡 Pro Tips</h3>
         <p>• <strong>Combo System:</strong> Keep attacking for damage multipliers!</p>
-        <p>• <strong>Boss Prep:</strong> Upgrade before boss fights (every 10 levels)</p>
+        <p>• <strong>Boss Prep:</strong> Upgrade before boss fights (every 25+ levels)</p>
         <p>• <strong>Bulk Buy:</strong> Use the buy quantity selector (1, 5, 10, MAX)</p>
         <p>• <strong>Idle Strategy:</strong> Max out Energy Reactor for offline gains</p>
         <p>• <strong>Active Strategy:</strong> Focus on click damage and crit chance</p>

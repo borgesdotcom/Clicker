@@ -257,13 +257,18 @@ export class Game {
       },
     );
 
-    this.initGame();
-    this.setupInput();
-    this.setupKeyboard();
-    this.setupAutoSave();
+    // Setup boss-related UI before initGame (which may need to show the retry button)
     this.setupBossDialog();
     this.setupBossTimer();
     this.setupBossRetryButton();
+    
+    // Initialize game state (may show boss retry button if player is blocked)
+    this.initGame();
+    
+    // Setup remaining UI and input
+    this.setupInput();
+    this.setupKeyboard();
+    this.setupAutoSave();
     this.setupAchievementsButton();
     this.setupAscensionButton();
     this.setupSettingsButton();
