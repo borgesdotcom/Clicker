@@ -103,6 +103,7 @@ export class Game {
   // Damage batching for performance
   private damageBatch = 0;
   private critBatch = false;
+  private shipDamageBatch = false; // Track if damage is from auto-fire ships
   private batchTimer = 0;
   private batchInterval = 0.05; // Apply damage every 50ms
 
@@ -725,27 +726,9 @@ export class Game {
       enemyType,
     );
 
-    // Set up damage callback for visual effects (particles and ripples)
-    enhancedBall.setOnDamageCallback(
-      (_damage: number, x: number, y: number, alienRadius: number) => {
-        // Spawn particles (only if high graphics enabled, and limit count)
-        if (this.userSettings.highGraphics) {
-          this.particleSystem.spawnParticles({
-            x,
-            y,
-            count: Math.min(5, Math.floor(_damage / 500)), // Reduced from 10 and 100 for better performance
-            color: '#ffffff',
-            speed: 50,
-            life: 0.8,
-          });
-        }
-
-        // Spawn ripples (only if enabled)
-        if (this.userSettings.showRipples) {
-          this.rippleSystem.spawnRipple({ x, y }, alienRadius * 2);
-        }
-      },
-    );
+    // Visual effects are now handled in applyDamageBatch to differentiate
+    // between main ship and auto-fire ship damage for better performance
+    // No callback needed here anymore
 
     this.ball = enhancedBall;
     this.bossBall = null;
@@ -831,9 +814,33 @@ export class Game {
     }
   }
 
+  private calculateTotalBeamDamage(state: import('./types').GameState): number {
+    // Calculate auto-fire damage for all ships (excluding main ship)
+    // Main ship doesn't use beams - it fires regular projectiles for click feedback
+    let autoFireDamage = this.upgradeSystem.getAutoFireDamage(state);
+    autoFireDamage *= 1 + this.artifactSystem.getDamageBonus() * 0.5;
+
+    if (this.mode === 'boss') {
+      const prestigeBossLevel = state.prestigeUpgrades?.prestige_boss_power ?? 0;
+      const bossDamageBonus = 1 + prestigeBossLevel * 0.2;
+      autoFireDamage *= bossDamageBonus;
+
+      const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1;
+      autoFireDamage *= voidHeartBonus;
+    }
+
+    // Total damage = only auto-fire ships (main ship uses regular projectiles)
+    const totalShips = Math.max(1, this.ships.length);
+    const autoFireShips = totalShips - 1; // Exclude main ship
+    
+    return autoFireDamage * autoFireShips;
+  }
+
   private fireVolley(): void {
     const state = this.store.getState();
-    // Use main ship damage (stronger!)
+    
+    // Main ship always fires regular projectiles (even in beam mode)
+    // This provides click feedback and visual variety
     let damage = this.upgradeSystem.getMainShipDamage(state);
 
     // v2.0: Apply artifact bonuses
@@ -861,6 +868,7 @@ export class Game {
 
     // Only fire from the main ship (index 0) when clicking
     if (this.ships[0]) {
+      // Use regular laser projectiles
       this.laserSystem.spawnLaser(
         this.ships[0].getFrontPosition(),
         target,
@@ -889,34 +897,8 @@ export class Game {
     // v2.0: Track mission progress
     this.missionSystem.trackClick();
 
-    // Spawn visual ripple (only if enabled)
-    if (this.userSettings.showRipples) {
-      const rippleRadius =
-        this.mode === 'boss'
-          ? this.bossBall
-            ? this.bossBall.radius * 2.5
-            : 150
-          : this.ball
-            ? this.ball.radius * 2
-            : 100;
-      this.rippleSystem.spawnRipple(target, rippleRadius);
-    }
-
-    // Spawn particles (only if high graphics enabled)
-    if (this.userSettings.highGraphics && this.ball && Math.random() < 0.4) {
-      const hitColor = '#ffffff';
-      this.particleSystem.spawnParticles({
-        x: this.ball.x + (Math.random() - 0.5) * this.ball.radius,
-        y: this.ball.y + (Math.random() - 0.5) * this.ball.radius,
-        count: 3,
-        color: hitColor,
-        spread: Math.PI * 2,
-        speed: 100,
-        size: 2,
-        life: 0.5,
-        glow: false,
-      });
-    }
+    // Visual effects (ripples, particles) are now handled in applyDamageBatch
+    // to avoid duplicates and properly differentiate main ship vs auto-fire ship damage
   }
 
   private fireSingleShip(shipIndex: number): boolean {
@@ -924,6 +906,20 @@ export class Game {
     const ship = this.ships[shipIndex];
     if (!ship) return false;
 
+    // Check if we're in beam mode
+    const isBeamMode = this.laserSystem.isBeamMode();
+    
+    // In beam mode, do nothing - beams are persistent and handled in update loop
+    if (isBeamMode) {
+      // Don't fire if there's no valid target
+      const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+      if (!targetEntity || targetEntity.currentHp <= 0) {
+        return false;
+      }
+      return true; // Beam exists, shot is "fired"
+    }
+
+    // Regular projectile mode
     const state = this.store.getState();
     // Use auto-fire damage (weaker but scales with ship count)
     let damage = this.upgradeSystem.getAutoFireDamage(state);
@@ -1030,7 +1026,7 @@ export class Game {
     return { isCrit, color, width };
   }
 
-  private handleDamage(damage: number, isCrit: boolean = false): void {
+  private handleDamage(damage: number, isCrit: boolean = false, isFromShip: boolean = false): void {
     let finalDamage = damage;
 
     // Apply critical damage multiplier
@@ -1061,8 +1057,14 @@ export class Game {
 
     // Batch damage instead of applying immediately
     this.damageBatch += finalDamage;
-    if (isCrit) {
+    if (isCrit && !isFromShip) {
+      // Only show crit effects for main ship, not auto-fire ships
       this.critBatch = true;
+    }
+    
+    // Track if this batch includes ship damage to skip visual effects
+    if (isFromShip) {
+      this.shipDamageBatch = true;
     }
   }
 
@@ -1071,18 +1073,42 @@ export class Game {
 
     const finalDamage = this.damageBatch;
     const isCrit = this.critBatch;
+    const isFromShip = this.shipDamageBatch;
 
     if (this.mode === 'normal' && this.ball) {
       const broken = this.ball.takeDamage(finalDamage);
       this.store.addPoints(finalDamage);
 
-      // Spawn one damage number for the batched damage
+      // Always show damage numbers (for both main ship and auto-fire ships)
       this.damageNumberSystem.spawnDamageNumber(
         this.ball.x,
         this.ball.y - this.ball.radius - 20,
         finalDamage,
         isCrit,
       );
+
+      // Only spawn ripples and particles for main ship hits (not auto-fire ships)
+      if (!isFromShip) {
+        // Ripples (only if enabled)
+        if (this.userSettings.showRipples) {
+          this.rippleSystem.spawnRipple(
+            { x: this.ball.x, y: this.ball.y }, 
+            this.ball.radius * 2
+          );
+        }
+
+        // Particles (only if high graphics enabled)
+        if (this.userSettings.highGraphics) {
+          this.particleSystem.spawnParticles({
+            x: this.ball.x,
+            y: this.ball.y,
+            count: Math.min(5, Math.floor(finalDamage / 500)),
+            color: '#ffffff',
+            speed: 50,
+            life: 0.8,
+          });
+        }
+      }
 
       if (broken) {
         this.onBallDestroyed();
@@ -1093,7 +1119,7 @@ export class Game {
       const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
       this.store.addPoints(finalDamage * 2 * bossBonus);
 
-      // Spawn one damage number for the batched damage
+      // Always spawn damage numbers (for both main ship and auto-fire ships)
       const bossPos = this.bossBall.getPosition();
       this.damageNumberSystem.spawnDamageNumber(
         bossPos.x,
@@ -1102,20 +1128,23 @@ export class Game {
         isCrit,
       );
 
-      // Spawn hit particles occasionally (only if high graphics)
-      if (this.userSettings.highGraphics && Math.random() < 0.3) {
-        const hitColor = isCrit ? '#ffff00' : '#ffffff';
-        this.particleSystem.spawnParticles({
-          x: bossPos.x + (Math.random() - 0.5) * this.bossBall.radius,
-          y: bossPos.y + (Math.random() - 0.5) * this.bossBall.radius,
-          count: isCrit ? 10 : 5,
-          color: hitColor,
-          spread: Math.PI,
-          speed: 150,
-          size: isCrit ? 4 : 3,
-          life: 0.6,
-          glow: false,
-        });
+      // Only spawn particles for main ship hits (not auto-fire ships)
+      if (!isFromShip) {
+        // Spawn hit particles occasionally (only if high graphics)
+        if (this.userSettings.highGraphics && Math.random() < 0.3) {
+          const hitColor = isCrit ? '#ffff00' : '#ffffff';
+          this.particleSystem.spawnParticles({
+            x: bossPos.x + (Math.random() - 0.5) * this.bossBall.radius,
+            y: bossPos.y + (Math.random() - 0.5) * this.bossBall.radius,
+            count: isCrit ? 10 : 5,
+            color: hitColor,
+            spread: Math.PI,
+            speed: 150,
+            size: isCrit ? 4 : 3,
+            life: 0.6,
+            glow: false,
+          });
+        }
       }
 
       if (broken) {
@@ -1127,6 +1156,7 @@ export class Game {
     // Reset batch
     this.damageBatch = 0;
     this.critBatch = false;
+    this.shipDamageBatch = false;
   }
 
   private onBallDestroyed(): void {
@@ -1351,9 +1381,40 @@ export class Game {
     this.background.update(dt);
     this.missionSystem.update();
 
-    this.laserSystem.update(dt, (damage, isCrit) => {
-      this.handleDamage(damage, isCrit);
+    // Check if we should use beam mode based on attack speed
+    const cooldown = this.upgradeSystem.getFireCooldown(state);
+    const shouldUseBeam = this.laserSystem.shouldUseBeamMode(cooldown);
+    const wasInBeamMode = this.laserSystem.isBeamMode();
+    
+    this.laserSystem.setBeamMode(shouldUseBeam);
+
+    // When entering beam mode, calculate total damage and set it once
+    if (shouldUseBeam && !wasInBeamMode) {
+      const totalDamage = this.calculateTotalBeamDamage(state);
+      this.laserSystem.setBeamDamage(totalDamage);
+    } else if (!shouldUseBeam && wasInBeamMode) {
+      // Exiting beam mode, clear beams
+      this.laserSystem.clearBeams();
+    } else if (shouldUseBeam) {
+      // Recalculate beam damage periodically in case of upgrades/ship changes
+      // Do this every 0.5 seconds to minimize performance impact
+      if (this.saveTimer > 0.5 && Math.floor(this.saveTimer) !== Math.floor(this.saveTimer - dt)) {
+        const totalDamage = this.calculateTotalBeamDamage(state);
+        this.laserSystem.setBeamDamage(totalDamage);
+      }
+    }
+
+    this.laserSystem.update(dt, (damage, isCrit, isFromShip) => {
+      this.handleDamage(damage, isCrit, isFromShip);
     });
+
+    // Process beam damage if in beam mode (respects attack speed)
+    if (shouldUseBeam) {
+      this.laserSystem.processBeamDamage(cooldown, (damage, isCrit, isFromShip) => {
+        this.handleDamage(damage, isCrit, isFromShip);
+      });
+    }
+
     this.rippleSystem.update(dt);
     this.particleSystem.update(dt);
     this.damageNumberSystem.update(dt);
@@ -1385,6 +1446,39 @@ export class Game {
 
     for (const ship of this.ships) {
       ship.rotate(dt);
+    }
+
+    // Update beam positions for auto-fire ships AFTER ships have rotated (for sync)
+    // Always update beams every frame to prevent lag/sticking
+    if (shouldUseBeam) {
+      const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+      
+      // Always update beam positions, even if no target (clears beams when target is gone)
+      const target = targetEntity && targetEntity.currentHp > 0
+        ? { x: targetEntity.x, y: targetEntity.y }
+        : null;
+      
+      if (target) {
+        // Auto-fire ships: Static beams, no crits (just update positions)
+        // Main ship (index 0) doesn't use beams - it fires regular projectiles for click feedback
+        for (let i = 1; i < this.ships.length; i++) {
+          const ship = this.ships[i];
+          if (ship) {
+            // Update positions every single frame for smooth tracking
+            this.laserSystem.updateShipBeamTarget(
+              i,
+              ship.getFrontPosition(),
+              target
+              // No color/width/crit params = keeps existing constant beam color
+            );
+          }
+        }
+      } else {
+        // No target - clear beams
+        for (let i = 1; i < this.ships.length; i++) {
+          this.laserSystem.clearShipBeam(i);
+        }
+      }
     }
 
     this.autoFireSystem.update(
