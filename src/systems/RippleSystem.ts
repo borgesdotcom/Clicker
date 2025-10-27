@@ -32,6 +32,7 @@ export class RippleSystem {
   }
 
   getCount(): number {
-    return this.ripples.length;
+    const count: number = this.ripples.length;
+    return count;
   }
 }

@@ -6,7 +6,12 @@
 const formatCache = new Map<string, string>();
 const CACHE_SIZE_LIMIT = 1000;
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class NumberFormatter {
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
+
   /**
    * Format large numbers with abbreviations (K, M, B, T, Q)
    * Cached for performance
@@ -14,11 +19,12 @@ export class NumberFormatter {
   static format(num: number): string {
     // Round to avoid floating point issues
     const roundedNum = Math.floor(num);
-    
+
     // Check cache
     const cacheKey = roundedNum.toString();
-    if (formatCache.has(cacheKey)) {
-      return formatCache.get(cacheKey)!;
+    const cached = formatCache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
     }
 
     let result: string;
@@ -63,4 +69,3 @@ export class NumberFormatter {
     formatCache.clear();
   }
 }
-

@@ -16,13 +16,13 @@ export class Laser {
   private travelTime = 0.15;
   public age = 0;
   public hasHit = false;
-  public damage: number;
+  public damage!: number;
   public isCrit = false;
   public color = '#fff';
   public width = 2;
   public isFromShip = false;
-  public origin: Vec2;
-  public target: Vec2;
+  public origin!: Vec2;
+  public target!: Vec2;
 
   constructor(config?: LaserConfig) {
     if (config) {
@@ -138,7 +138,9 @@ export class Laser {
   }
 
   private hexToRgba(hex: string, alpha: number): string {
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
 
     if (hex.startsWith('#')) {
       hex = hex.substring(1);

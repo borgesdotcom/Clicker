@@ -15,16 +15,16 @@ export interface ParticleConfig {
 
 export class Particle {
   public active = true;
-  public x: number;
-  public y: number;
-  private vx: number;
-  private vy: number;
-  private color: string;
-  private size: number;
-  private life: number;
-  private maxLife: number;
-  private decay: number;
-  private glow: boolean;
+  public x!: number;
+  public y!: number;
+  private vx!: number;
+  private vy!: number;
+  private color!: string;
+  private size!: number;
+  public life!: number;
+  private maxLife!: number;
+  private decay!: number;
+  private glow!: boolean;
 
   constructor(config?: ParticleConfig) {
     if (config) {
@@ -188,14 +188,14 @@ export class ParticleSystem {
   update(dt: number): void {
     const particles = this.particlePool.getActive();
     const toRelease: Particle[] = [];
-    
+
     for (const particle of particles) {
       particle.update(dt);
       if (!particle.active) {
         toRelease.push(particle);
       }
     }
-    
+
     for (const particle of toRelease) {
       this.particlePool.release(particle);
     }
@@ -216,6 +216,7 @@ export class ParticleSystem {
   }
 
   getParticleCount(): number {
-    return this.particlePool.getStats().active;
+    const stats = this.particlePool.getStats();
+    return stats.active;
   }
 }

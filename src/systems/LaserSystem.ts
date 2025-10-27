@@ -1,5 +1,4 @@
-import { Laser } from '../entities/Laser';
-import type { LaserConfig } from '../entities/Laser';
+import { Laser, type LaserConfig } from '../entities/Laser';
 import { ObjectPool } from '../utils/ObjectPool';
 import type { Draw } from '../render/Draw';
 import type { Vec2 } from '../types';
@@ -62,12 +61,12 @@ export class LaserSystem {
   }
 
   updateShipBeamTarget(
-    shipIndex: number, 
-    origin: Vec2, 
+    shipIndex: number,
+    origin: Vec2,
     target: Vec2,
     color?: string,
     width?: number,
-    isCrit?: boolean
+    isCrit?: boolean,
   ): void {
     const beam = this.shipBeams.get(shipIndex);
     if (beam) {
@@ -77,22 +76,22 @@ export class LaserSystem {
       if (width !== undefined) beam.width = width;
       if (isCrit !== undefined) beam.isCrit = isCrit;
     } else {
-      this.shipBeams.set(shipIndex, { 
-        origin, 
-        target, 
-        color: color ?? '#fff', 
-        width: width ?? 2, 
-        isCrit: isCrit ?? false 
+      this.shipBeams.set(shipIndex, {
+        origin,
+        target,
+        color: color ?? '#fff',
+        width: width ?? 2,
+        isCrit: isCrit ?? false,
       });
     }
   }
 
   updateMainShipBeamTarget(
-    origin: Vec2, 
+    origin: Vec2,
     target: Vec2,
     color?: string,
     width?: number,
-    isCrit?: boolean
+    isCrit?: boolean,
   ): void {
     if (this.mainShipBeam) {
       this.mainShipBeam.origin = origin;
@@ -101,12 +100,12 @@ export class LaserSystem {
       if (width !== undefined) this.mainShipBeam.width = width;
       if (isCrit !== undefined) this.mainShipBeam.isCrit = isCrit;
     } else {
-      this.mainShipBeam = { 
-        origin, 
-        target, 
-        color: color ?? '#fff', 
-        width: width ?? 2, 
-        isCrit: isCrit ?? false 
+      this.mainShipBeam = {
+        origin,
+        target,
+        color: color ?? '#fff',
+        width: width ?? 2,
+        isCrit: isCrit ?? false,
       };
     }
   }
@@ -192,8 +191,8 @@ export class LaserSystem {
       }
     }
 
-    const laser = this.laserPool.acquire();
-    laser.init({
+    const laser: Laser = this.laserPool.acquire();
+    const config: LaserConfig = {
       origin,
       target,
       damage,
@@ -201,17 +200,22 @@ export class LaserSystem {
       color: upgrades?.color,
       width: upgrades?.width,
       isFromShip,
-    });
+    };
+    (laser.init as (config: LaserConfig) => void)(config);
+    return;
   }
 
-  update(dt: number, onHit?: (damage: number, isCrit: boolean, isFromShip: boolean) => void): void {
+  update(
+    dt: number,
+    onHit?: (damage: number, isCrit: boolean, isFromShip: boolean) => void,
+  ): void {
     if (this.beamMode && onHit) {
       this.beamDamageTimer += dt;
     }
 
     const activeLasers = this.laserPool.getActive();
     const toRelease: Laser[] = [];
-    
+
     for (const laser of activeLasers) {
       laser.update(dt);
       if (onHit && laser.checkHit()) {
@@ -221,7 +225,7 @@ export class LaserSystem {
         toRelease.push(laser);
       }
     }
-    
+
     for (const laser of toRelease) {
       this.laserPool.release(laser);
     }
@@ -234,7 +238,7 @@ export class LaserSystem {
     if (!this.beamMode || this.beamDamagePerTick <= 0) return;
 
     const cooldownSec = cooldownMs / 1000;
-    
+
     if (this.beamDamageTimer >= cooldownSec) {
       onHit(this.beamDamagePerTick, false, true);
       this.beamDamageTimer = 0;
@@ -329,7 +333,9 @@ export class LaserSystem {
   }
 
   private hexToRgba(hex: string, alpha: number): string {
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
 
     if (hex.startsWith('#')) {
       hex = hex.substring(1);

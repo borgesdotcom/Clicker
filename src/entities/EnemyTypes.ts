@@ -292,9 +292,12 @@ export class EnhancedAlienBall extends AlienBall {
         this.radius * 0.1,
         centerX,
         centerY,
-        this.radius * 0.9
+        this.radius * 0.9,
       );
-      trailGradient.addColorStop(0, `rgba(255, 255, 255, ${String(alpha * 0.5)})`);
+      trailGradient.addColorStop(
+        0,
+        `rgba(255, 255, 255, ${String(alpha * 0.5)})`,
+      );
       trailGradient.addColorStop(0.3, `rgba(255, 255, 100, ${String(alpha)})`);
       trailGradient.addColorStop(1, `rgba(255, 255, 100, 0)`);
       ctx.fillStyle = trailGradient;
@@ -310,7 +313,7 @@ export class EnhancedAlienBall extends AlienBall {
       this.radius * 0.1,
       centerX,
       centerY,
-      this.radius
+      this.radius,
     );
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
     gradient.addColorStop(0.3, this.stats.color + '99');
@@ -328,7 +331,7 @@ export class EnhancedAlienBall extends AlienBall {
       centerY - this.radius * 0.35,
       this.radius * 0.35,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
 
@@ -361,10 +364,16 @@ export class EnhancedAlienBall extends AlienBall {
         layerRadius * 0.1,
         centerX,
         centerY,
-        layerRadius
+        layerRadius,
       );
-      layerGradient.addColorStop(0, `rgba(255, 100, 100, ${String(layerAlpha + 0.2)})`);
-      layerGradient.addColorStop(0.5, `rgba(255, 68, 68, ${String(layerAlpha)})`);
+      layerGradient.addColorStop(
+        0,
+        `rgba(255, 100, 100, ${String(layerAlpha + 0.2)})`,
+      );
+      layerGradient.addColorStop(
+        0.5,
+        `rgba(255, 68, 68, ${String(layerAlpha)})`,
+      );
       layerGradient.addColorStop(1, `rgba(255, 68, 68, 0)`);
       ctx.fillStyle = layerGradient;
       ctx.beginPath();
@@ -380,7 +389,7 @@ export class EnhancedAlienBall extends AlienBall {
       this.radius * 0.1,
       centerX,
       centerY,
-      this.radius * bodyScale
+      this.radius * bodyScale,
     );
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
     gradient.addColorStop(0.3, this.stats.color + 'aa');
@@ -398,7 +407,7 @@ export class EnhancedAlienBall extends AlienBall {
       centerY - this.radius * 0.35,
       this.radius * 0.4,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
 
@@ -450,7 +459,7 @@ export class EnhancedAlienBall extends AlienBall {
       this.radius * 0.1,
       centerX,
       centerY,
-      this.radius
+      this.radius,
     );
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
     gradient.addColorStop(0.3, this.stats.color + '99');
@@ -468,7 +477,7 @@ export class EnhancedAlienBall extends AlienBall {
       centerY - this.radius * 0.35,
       this.radius * 0.35,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
 

@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import type { Store } from '../core/Store';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
 import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
@@ -130,7 +127,7 @@ export class Shop {
   private setupDesktopToggle(): void {
     const toggleButton = document.getElementById('desktop-shop-toggle');
     const shopPanel = document.getElementById('shop-panel');
-    
+
     if (!toggleButton || !shopPanel) return;
 
     // Load saved state from localStorage
@@ -148,7 +145,7 @@ export class Shop {
     toggleButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.isDesktopCollapsed = !this.isDesktopCollapsed;
-      
+
       if (this.isDesktopCollapsed) {
         shopPanel.classList.add('desktop-collapsed');
       } else {
@@ -156,7 +153,10 @@ export class Shop {
       }
 
       // Save state to localStorage
-      localStorage.setItem('desktop-shop-collapsed', String(this.isDesktopCollapsed));
+      localStorage.setItem(
+        'desktop-shop-collapsed',
+        String(this.isDesktopCollapsed),
+      );
 
       // Trigger window resize event after transition (300ms) to ensure canvas resizes properly
       setTimeout(() => {
@@ -473,22 +473,29 @@ export class Shop {
 
       const cost = document.createElement('div');
       cost.className = 'upgrade-cost';
-      
+
       // Calculate cost based on buy quantity
       const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
       const actualAffordable = quantity;
-      const requestedQty = this.buyQuantity === 'max' ? quantity : this.buyQuantity;
-      
-      const costText = quantity > 1 
-        ? `Cost: ${this.formatNumber(totalCost)} (x${quantity})`
-        : `Cost: ${this.formatNumber(totalCost)}`;
+      const requestedQty =
+        this.buyQuantity === 'max' ? quantity : this.buyQuantity;
+
+      const costText =
+        quantity > 1
+          ? `Cost: ${this.formatNumber(totalCost)} (x${quantity})`
+          : `Cost: ${this.formatNumber(totalCost)}`;
       cost.textContent = costText;
 
       // Can buy if we can afford at least 1, or the exact quantity requested (not MAX)
-      const canAffordAny = state.points >= totalCost && (this.buyQuantity === 'max' || actualAffordable === requestedQty);
-      const button = new Button(quantity > 1 ? `BUY x${quantity}` : 'BUY', () => {
-        this.buyUpgrade(upgrade, quantity);
-      });
+      const canAffordAny =
+        state.points >= totalCost &&
+        (this.buyQuantity === 'max' || actualAffordable === requestedQty);
+      const button = new Button(
+        quantity > 1 ? `BUY x${quantity}` : 'BUY',
+        () => {
+          this.buyUpgrade(upgrade, quantity);
+        },
+      );
       button.setEnabled(canAffordAny);
 
       // Cache the button element for quick updates
@@ -532,7 +539,10 @@ export class Shop {
     this.container.appendChild(grid);
   }
 
-  private createSubUpgradeCard(subUpgrade: SubUpgrade, state: GameState): HTMLElement {
+  private createSubUpgradeCard(
+    subUpgrade: SubUpgrade,
+    state: GameState,
+  ): HTMLElement {
     const card = document.createElement('div');
     card.className = `sub-upgrade ${subUpgrade.owned ? 'owned' : ''}`;
     card.setAttribute('data-upgrade-id', subUpgrade.id);
@@ -628,7 +638,10 @@ export class Shop {
     return emojiMap[upgradeId] || '⭐';
   }
 
-  private calculateBulkCost(upgrade: UpgradeConfig, state: GameState): { totalCost: number; quantity: number } {
+  private calculateBulkCost(
+    upgrade: UpgradeConfig,
+    state: GameState,
+  ): { totalCost: number; quantity: number } {
     const currentLevel = upgrade.getLevel(state);
     let totalCost = 0;
     let quantity = 0;
@@ -636,20 +649,21 @@ export class Shop {
     // Create a temporary state copy for upgrades that affect their own costs
     const tempState = { ...state };
     const upgradeId = upgrade.id;
-    const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
+    const affectsSelfCost =
+      upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
 
     if (this.buyQuantity === 'max') {
       // Calculate max affordable quantity
       let cost = 0;
       let tempLevel = currentLevel;
       let tempPoints = state.points;
-      
+
       while (tempPoints >= (cost = upgrade.getCost(tempLevel))) {
         tempPoints -= cost;
         totalCost += cost;
         tempLevel++;
         quantity++;
-        
+
         // Update temp state for self-affecting upgrades
         if (affectsSelfCost) {
           if (upgradeId === 'cosmicKnowledge') {
@@ -658,11 +672,11 @@ export class Shop {
             tempState.fleetCommandLevel = tempLevel;
           }
         }
-        
+
         // Safety limit to prevent infinite loops
         if (quantity >= 1000) break;
       }
-      
+
       // If can't afford any, show cost of 1
       if (quantity === 0) {
         return { totalCost: upgrade.getCost(currentLevel), quantity: 1 };
@@ -672,7 +686,7 @@ export class Shop {
       const targetQuantity = this.buyQuantity;
       let tempPoints = state.points;
       let tempLevel = currentLevel;
-      
+
       for (let i = 0; i < targetQuantity; i++) {
         const cost = upgrade.getCost(tempLevel);
         if (tempPoints >= cost) {
@@ -680,7 +694,7 @@ export class Shop {
           totalCost += cost;
           tempLevel++;
           quantity++;
-          
+
           // Update temp state for self-affecting upgrades
           if (affectsSelfCost) {
             if (upgradeId === 'cosmicKnowledge') {
@@ -693,7 +707,7 @@ export class Shop {
           break; // Can't afford more
         }
       }
-      
+
       // If can't afford any, show cost of requested quantity anyway for display
       if (quantity === 0) {
         let displayLevel = currentLevel;
@@ -714,12 +728,12 @@ export class Shop {
     this.isProcessingPurchase = true;
 
     const state = this.store.getState();
-    
+
     // Calculate actual cost for the quantity
     let totalCost = 0;
     let actualQuantity = 0;
     const currentLevel = upgrade.getLevel(state);
-    
+
     for (let i = 0; i < quantity; i++) {
       const cost = upgrade.getCost(currentLevel + i);
       if (state.points >= totalCost + cost) {
@@ -732,7 +746,7 @@ export class Shop {
 
     if (actualQuantity > 0 && state.points >= totalCost) {
       state.points -= totalCost;
-      
+
       // Buy multiple times
       for (let i = 0; i < actualQuantity; i++) {
         upgrade.buy(state);
@@ -742,7 +756,7 @@ export class Shop {
           this.missionSystem.trackUpgrade();
         }
       }
-      
+
       this.store.setState(state);
 
       // Play purchase sound

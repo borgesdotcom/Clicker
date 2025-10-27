@@ -167,18 +167,36 @@ export class Game {
     this.statsPanel = new StatsPanel(this.upgradeSystem);
     this.settingsModal = new SettingsModal(this.soundManager);
     this.creditsModal = new CreditsModal(this.store);
-    this.gameInfoModal = new GameInfoModal(this.store, this.upgradeSystem, this.ascensionSystem, this.artifactSystem);
+    this.gameInfoModal = new GameInfoModal(
+      this.store,
+      this.upgradeSystem,
+      this.ascensionSystem,
+      this.artifactSystem,
+    );
     this.performanceMonitor = new PerformanceMonitor();
-    
+
     // Setup performance monitor entity count providers
     this.performanceMonitor.setEntityCountProviders({
-      getLasers: () => this.laserSystem.getLasers().length,
-      getParticles: () => this.particleSystem.getParticleCount(),
-      getShips: () => this.ships.length,
-      getDamageNumbers: () => this.damageNumberSystem.getCount(),
-      getRipples: () => this.rippleSystem.getCount(),
+      getLasers: (): number => {
+        return this.laserSystem.getLasers().length;
+      },
+      getParticles: (): number => {
+        return this.particleSystem.getParticleCount();
+      },
+      getShips: (): number => {
+        return this.ships.length;
+      },
+      getDamageNumbers: (): number => {
+        return this.damageNumberSystem.getCount();
+      },
+      getRipples: (): number => {
+        type RippleSystemType = typeof this.rippleSystem;
+        const system: RippleSystemType = this.rippleSystem;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+        return (system as any).getCount();
+      },
     });
-    
+
     (this as any).debugPanel = new DebugPanel(
       this.store,
       () => {
@@ -282,10 +300,10 @@ export class Game {
     this.setupBossDialog();
     this.setupBossTimer();
     this.setupBossRetryButton();
-    
+
     // Initialize game state (may show boss retry button if player is blocked)
     this.initGame();
-    
+
     // Setup remaining UI and input
     this.setupInput();
     this.setupKeyboard();
@@ -552,7 +570,7 @@ export class Game {
     // Add Credits button to the shop panel instead of HUD (more space)
     const shopPanel = document.getElementById('shop-panel');
     const resetContainer = document.getElementById('reset-container');
-    
+
     if (shopPanel && resetContainer) {
       const creditsBtn = document.createElement('button');
       creditsBtn.id = 'credits-button';
@@ -564,7 +582,7 @@ export class Game {
       creditsBtn.addEventListener('click', () => {
         this.creditsModal.show();
       });
-      
+
       // Insert before reset button
       shopPanel.insertBefore(creditsBtn, resetContainer);
     }
@@ -573,7 +591,7 @@ export class Game {
   private setupDiscordButton(): void {
     const shopPanel = document.getElementById('shop-panel');
     const resetContainer = document.getElementById('reset-container');
-    
+
     if (shopPanel && resetContainer) {
       const discordBtn = document.createElement('button');
       discordBtn.id = 'discord-button';
@@ -581,12 +599,13 @@ export class Game {
       discordBtn.textContent = '💬 Join Discord';
       discordBtn.style.marginBottom = '10px';
       discordBtn.style.width = '100%';
-      discordBtn.style.background = 'linear-gradient(135deg, #5865F2 0%, #4752C4 100%)';
+      discordBtn.style.background =
+        'linear-gradient(135deg, #5865F2 0%, #4752C4 100%)';
       discordBtn.style.border = '2px solid #5865F2';
       discordBtn.addEventListener('click', () => {
         window.open('https://discord.gg/bfxYsvnw2S', '_blank');
       });
-      
+
       shopPanel.insertBefore(discordBtn, resetContainer);
     }
   }
@@ -613,7 +632,10 @@ export class Game {
     const prestigeGain = this.ascensionSystem.calculatePrestigePoints(state);
 
     // Update highest level reached before resetting
-    const newHighestLevel = Math.max(state.level, state.highestLevelReached ?? 0);
+    const newHighestLevel = Math.max(
+      state.level,
+      state.highestLevelReached ?? 0,
+    );
 
     // Save what we're keeping (ONLY achievements, stats, and prestige)
     const keepAchievements = { ...state.achievements };
@@ -693,8 +715,9 @@ export class Game {
     const state = this.store.getState();
 
     // Check if player is blocked by a boss (lost previously)
-    const isBlockedByBoss = state.blockedOnBossLevel !== undefined && 
-                           state.blockedOnBossLevel !== null;
+    const isBlockedByBoss =
+      state.blockedOnBossLevel !== undefined &&
+      state.blockedOnBossLevel !== null;
 
     // Check if player is currently on a boss level
     const isOnBossLevel = ColorManager.isBossLevel(state.level);
@@ -705,7 +728,7 @@ export class Game {
       this.mode = 'normal';
       this.createBall();
       this.createShips();
-      
+
       // Show retry button
       if (this.bossRetryButton) {
         this.bossRetryButton.style.display = 'block';
@@ -716,26 +739,30 @@ export class Game {
       const expRequired = ColorManager.getExpRequired(state.level);
       const xpLoss = Math.floor(expRequired * 0.5); // 50% XP loss
       state.experience = Math.max(0, state.experience - xpLoss);
-      
+
       // Block progression until boss is defeated
       this.blockedOnBossLevel = state.level;
       state.blockedOnBossLevel = state.level;
-      
+
       // Save the penalized state
       this.store.setState(state);
-      
+
       // Normal mode with aliens
       this.mode = 'normal';
       this.createBall();
       this.createShips();
-      
+
       // Show retry button
       if (this.bossRetryButton) {
         this.bossRetryButton.style.display = 'block';
       }
-      
+
       // Show loss message
-      this.hud.showMessage(`💀 Boss Fight Lost (Refresh)\n-${xpLoss.toString()} XP`, '#ff4444', 3000);
+      this.hud.showMessage(
+        `💀 Boss Fight Lost (Refresh)\n-${xpLoss.toString()} XP`,
+        '#ff4444',
+        3000,
+      );
     } else {
       // Normal initialization
       this.createBall();
@@ -862,7 +889,8 @@ export class Game {
     autoFireDamage *= 1 + this.artifactSystem.getDamageBonus() * 0.5;
 
     if (this.mode === 'boss') {
-      const prestigeBossLevel = state.prestigeUpgrades?.prestige_boss_power ?? 0;
+      const prestigeBossLevel =
+        state.prestigeUpgrades?.prestige_boss_power ?? 0;
       const bossDamageBonus = 1 + prestigeBossLevel * 0.2;
       autoFireDamage *= bossDamageBonus;
 
@@ -873,13 +901,13 @@ export class Game {
     // Total damage = only auto-fire ships (main ship uses regular projectiles)
     const totalShips = Math.max(1, this.ships.length);
     const autoFireShips = totalShips - 1; // Exclude main ship
-    
+
     return autoFireDamage * autoFireShips;
   }
 
   private fireVolley(): void {
     const state = this.store.getState();
-    
+
     // Main ship always fires regular projectiles (even in beam mode)
     // This provides click feedback and visual variety
     let damage = this.upgradeSystem.getMainShipDamage(state);
@@ -949,7 +977,7 @@ export class Game {
 
     // Check if we're in beam mode
     const isBeamMode = this.laserSystem.isBeamMode();
-    
+
     // In beam mode, do nothing - beams are persistent and handled in update loop
     if (isBeamMode) {
       // Don't fire if there's no valid target
@@ -995,16 +1023,6 @@ export class Game {
     });
 
     return true; // Shot was fired successfully
-  }
-
-  // Debug method to check laser statistics
-  private debugLaserStats(): void {
-    const stats = this.laserSystem.getLaserStats();
-    if (stats.total > 200) {
-      console.log(
-        `Lasers: ${stats.total.toString()} total (${stats.playerLasers.toString()} player, ${stats.shipLasers.toString()} ship)`,
-      );
-    }
   }
 
   private getLaserVisuals(state: import('./types').GameState): {
@@ -1067,7 +1085,11 @@ export class Game {
     return { isCrit, color, width };
   }
 
-  private handleDamage(damage: number, isCrit: boolean = false, isFromShip: boolean = false): void {
+  private handleDamage(
+    damage: number,
+    isCrit: boolean = false,
+    isFromShip: boolean = false,
+  ): void {
     let finalDamage = damage;
 
     // Apply critical damage multiplier
@@ -1102,7 +1124,7 @@ export class Game {
       // Only show crit effects for main ship, not auto-fire ships
       this.critBatch = true;
     }
-    
+
     // Track if this batch includes ship damage to skip visual effects
     if (isFromShip) {
       this.shipDamageBatch = true;
@@ -1133,8 +1155,8 @@ export class Game {
         // Ripples (only if enabled)
         if (this.userSettings.showRipples) {
           this.rippleSystem.spawnRipple(
-            { x: this.ball.x, y: this.ball.y }, 
-            this.ball.radius * 2
+            { x: this.ball.x, y: this.ball.y },
+            this.ball.radius * 2,
           );
         }
 
@@ -1229,10 +1251,13 @@ export class Game {
         state.experience -= expRequired;
         state.level++;
         this.store.updateMaxLevel();
-        
+
         // Update highest level reached for ascension tracking
-        state.highestLevelReached = Math.max(state.level, state.highestLevelReached ?? 0);
-        
+        state.highestLevelReached = Math.max(
+          state.level,
+          state.highestLevelReached ?? 0,
+        );
+
         leveledUp = true;
       }
     }
@@ -1299,9 +1324,12 @@ export class Game {
       state.experience -= expRequired;
       state.level++;
       this.store.updateMaxLevel();
-      
+
       // Update highest level reached for ascension tracking
-      state.highestLevelReached = Math.max(state.level, state.highestLevelReached ?? 0);
+      state.highestLevelReached = Math.max(
+        state.level,
+        state.highestLevelReached ?? 0,
+      );
     }
 
     this.store.setState(state);
@@ -1426,7 +1454,7 @@ export class Game {
     const cooldown = this.upgradeSystem.getFireCooldown(state);
     const shouldUseBeam = this.laserSystem.shouldUseBeamMode(cooldown);
     const wasInBeamMode = this.laserSystem.isBeamMode();
-    
+
     this.laserSystem.setBeamMode(shouldUseBeam);
 
     // When entering beam mode, calculate total damage and set it once
@@ -1439,7 +1467,10 @@ export class Game {
     } else if (shouldUseBeam) {
       // Recalculate beam damage periodically in case of upgrades/ship changes
       // Do this every 0.5 seconds to minimize performance impact
-      if (this.saveTimer > 0.5 && Math.floor(this.saveTimer) !== Math.floor(this.saveTimer - dt)) {
+      if (
+        this.saveTimer > 0.5 &&
+        Math.floor(this.saveTimer) !== Math.floor(this.saveTimer - dt)
+      ) {
         const totalDamage = this.calculateTotalBeamDamage(state);
         this.laserSystem.setBeamDamage(totalDamage);
       }
@@ -1451,19 +1482,18 @@ export class Game {
 
     // Process beam damage if in beam mode (respects attack speed)
     if (shouldUseBeam) {
-      this.laserSystem.processBeamDamage(cooldown, (damage, isCrit, isFromShip) => {
-        this.handleDamage(damage, isCrit, isFromShip);
-      });
+      this.laserSystem.processBeamDamage(
+        cooldown,
+        (damage, isCrit, isFromShip) => {
+          this.handleDamage(damage, isCrit, isFromShip);
+        },
+      );
     }
 
     this.rippleSystem.update(dt);
     this.particleSystem.update(dt);
     this.damageNumberSystem.update(dt);
     this.comboSystem.update(dt);
-
-    if (Math.random() < 0.01) {
-      this.debugLaserStats();
-    }
 
     this.batchTimer += dt;
     if (this.batchTimer >= this.batchInterval) {
@@ -1493,12 +1523,13 @@ export class Game {
     // Always update beams every frame to prevent lag/sticking
     if (shouldUseBeam) {
       const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
-      
+
       // Always update beam positions, even if no target (clears beams when target is gone)
-      const target = targetEntity && targetEntity.currentHp > 0
-        ? { x: targetEntity.x, y: targetEntity.y }
-        : null;
-      
+      const target =
+        targetEntity && targetEntity.currentHp > 0
+          ? { x: targetEntity.x, y: targetEntity.y }
+          : null;
+
       if (target) {
         // Auto-fire ships: Static beams, no crits (just update positions)
         // Main ship (index 0) doesn't use beams - it fires regular projectiles for click feedback
@@ -1509,7 +1540,7 @@ export class Game {
             this.laserSystem.updateShipBeamTarget(
               i,
               ship.getFrontPosition(),
-              target
+              target,
               // No color/width/crit params = keeps existing constant beam color
             );
           }

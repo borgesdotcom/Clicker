@@ -1,6 +1,11 @@
 import type { BallColor } from '../types';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ColorManager {
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
+
   private static colors: BallColor[] = [
     { fill: '#fff', stroke: '#ccc', hp: 10 },
     { fill: '#ddd', stroke: '#aaa', hp: 20 },

@@ -2,6 +2,14 @@ import { Game } from './Game';
 import { MobileUI } from './ui/MobileUI';
 import '../styles.css';
 
+// Extend Window interface for debugging properties
+declare global {
+  interface Window {
+    game?: Game;
+    mobileUI?: MobileUI;
+  }
+}
+
 // Prevent context menu (right-click) on the entire document
 document.addEventListener('contextmenu', (e) => {
   e.preventDefault();
@@ -25,8 +33,8 @@ function init(): void {
   const mobileUI = new MobileUI();
   game.start();
 
-  (window as any).game = game;
-  (window as any).mobileUI = mobileUI;
+  window.game = game;
+  window.mobileUI = mobileUI;
 }
 
 if (document.readyState === 'loading') {

@@ -4,21 +4,21 @@ export interface Vec2 {
 }
 
 export interface SaveData {
-  points: number;
-  shipsCount: number;
-  attackSpeedLevel: number;
-  autoFireUnlocked: boolean;
-  pointMultiplierLevel: number;
-  critChanceLevel: number;
-  resourceGenLevel: number;
-  xpBoostLevel: number;
-  level: number;
-  experience: number;
-  subUpgrades: Record<string, boolean>;
-  achievements: Record<string, boolean>;
-  stats: GameStats;
-  prestigeLevel: number;
-  prestigePoints: number;
+  points?: number;
+  shipsCount?: number;
+  attackSpeedLevel?: number;
+  autoFireUnlocked?: boolean;
+  pointMultiplierLevel?: number;
+  critChanceLevel?: number;
+  resourceGenLevel?: number;
+  xpBoostLevel?: number;
+  level?: number;
+  experience?: number;
+  subUpgrades?: Record<string, boolean>;
+  achievements?: Record<string, boolean>;
+  stats?: GameStats;
+  prestigeLevel?: number;
+  prestigePoints?: number;
   prestigeUpgrades?: Record<string, number>;
   blockedOnBossLevel?: number | null;
   // v3.0: New upgrade systems

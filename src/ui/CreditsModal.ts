@@ -44,7 +44,8 @@ export class CreditsModal {
     gameInfoSection.appendChild(gameTitle);
 
     const gameDesc = document.createElement('p');
-    gameDesc.textContent = 'An epic space-themed idle clicker game with upgrades, bosses, artifacts, and endless progression!';
+    gameDesc.textContent =
+      'An epic space-themed idle clicker game with upgrades, bosses, artifacts, and endless progression!';
     gameDesc.style.marginBottom = '15px';
     gameDesc.style.lineHeight = '1.6';
     gameDesc.style.color = '#ccc';
@@ -99,7 +100,8 @@ export class CreditsModal {
     shareSection.appendChild(twitterBtn);
 
     const shareHint = document.createElement('p');
-    shareHint.textContent = 'Share your stats and achievements with your friends!';
+    shareHint.textContent =
+      'Share your stats and achievements with your friends!';
     shareHint.style.fontSize = '12px';
     shareHint.style.color = '#888';
     shareHint.style.textAlign = 'center';
@@ -126,7 +128,8 @@ export class CreditsModal {
     steamBtn.style.padding = '15px';
     steamBtn.style.fontSize = '16px';
     steamBtn.style.marginBottom = '10px';
-    steamBtn.style.background = 'linear-gradient(90deg, #1b2838 0%, #2a475e 100%)';
+    steamBtn.style.background =
+      'linear-gradient(90deg, #1b2838 0%, #2a475e 100%)';
     steamBtn.style.border = 'none';
     steamBtn.style.borderRadius = '8px';
     steamBtn.style.color = '#fff';
@@ -150,25 +153,30 @@ export class CreditsModal {
     steamBtn.appendChild(comingSoonBadge);
 
     steamBtn.addEventListener('mouseenter', () => {
-      steamBtn.style.background = 'linear-gradient(90deg, #2a475e 0%, #1b2838 100%)';
+      steamBtn.style.background =
+        'linear-gradient(90deg, #2a475e 0%, #1b2838 100%)';
       steamBtn.style.transform = 'scale(1.02)';
     });
     steamBtn.addEventListener('mouseleave', () => {
-      steamBtn.style.background = 'linear-gradient(90deg, #1b2838 0%, #2a475e 100%)';
+      steamBtn.style.background =
+        'linear-gradient(90deg, #1b2838 0%, #2a475e 100%)';
       steamBtn.style.transform = 'scale(1)';
     });
 
     steamBtn.addEventListener('click', () => {
       // TODO: Replace with actual Steam store page URL when available
       // For now, show a message
-      alert('🎮 Space Clicker is coming to Steam soon!\n\nStay tuned for the official announcement and wishlist link!');
+      alert(
+        '🎮 Space Clicker is coming to Steam soon!\n\nStay tuned for the official announcement and wishlist link!',
+      );
       // When ready, use: window.open('https://store.steampowered.com/app/YOUR_APP_ID', '_blank');
     });
 
     steamSection.appendChild(steamBtn);
 
     const steamHint = document.createElement('p');
-    steamHint.textContent = 'Be the first to know when Space Clicker launches on Steam!';
+    steamHint.textContent =
+      'Be the first to know when Space Clicker launches on Steam!';
     steamHint.style.fontSize = '12px';
     steamHint.style.color = '#888';
     steamHint.style.textAlign = 'center';
@@ -272,7 +280,7 @@ export class CreditsModal {
 
   private shareOnTwitter(): void {
     const state = this.store.getState();
-    
+
     // Format large numbers for readability
     const formatNumber = (num: number): string => {
       if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
@@ -287,16 +295,22 @@ export class CreditsModal {
       `Level ${state.level.toString()}`,
       `${formatNumber(state.points)} Points`,
       `${state.shipsCount.toString()} Ships`,
-      state.prestigeLevel > 0 ? `Prestige ${state.prestigeLevel.toString()}` : null,
+      state.prestigeLevel > 0
+        ? `Prestige ${state.prestigeLevel.toString()}`
+        : null,
       `${state.stats.aliensKilled.toLocaleString()} Aliens Destroyed`,
-      state.stats.bossesKilled > 0 ? `${state.stats.bossesKilled.toString()} Bosses Defeated` : null,
-    ].filter((item): item is string => item !== null).join(' | ');
+      state.stats.bossesKilled > 0
+        ? `${state.stats.bossesKilled.toString()} Bosses Defeated`
+        : null,
+    ]
+      .filter((item): item is string => item !== null)
+      .join(' | ');
 
     const tweetText = `🚀 I'm playing Space Clicker!\n\n${stats}\n\nJoin me in conquering the galaxy! 🌌`;
-    
+
     const gameUrl = window.location.href.split('?')[0] || window.location.href; // Remove query params
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(gameUrl)}`;
-    
+
     window.open(twitterUrl, '_blank', 'width=550,height=420');
   }
 
@@ -312,4 +326,3 @@ export class CreditsModal {
     }
   }
 }
-

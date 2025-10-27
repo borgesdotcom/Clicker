@@ -141,7 +141,11 @@ export class AscensionSystem {
     let totalPoints = 0;
 
     // Add points for each new level reached
-    for (let level = Math.max(100, previousHighest + 1); level <= state.level; level++) {
+    for (
+      let level = Math.max(100, previousHighest + 1);
+      level <= state.level;
+      level++
+    ) {
       const levelPast100 = level - 100;
       const levelPoints = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
       totalPoints += levelPoints;

@@ -64,7 +64,9 @@ export class VersionSplash {
     document.body.appendChild(this.overlay);
 
     const closeBtn = this.overlay.querySelector('.version-splash-close');
-    closeBtn?.addEventListener('click', () => this.hide());
+    closeBtn?.addEventListener('click', () => {
+      this.hide();
+    });
   }
 
   private hide(): void {

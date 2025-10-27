@@ -22,14 +22,24 @@ export class ObjectPool<T> {
 
   acquire(): T {
     let obj: T;
-    
+
     if (this.available.length > 0) {
-      obj = this.available.pop()!;
+      const popped = this.available.pop();
+      if (popped === undefined) {
+        obj = this.factory();
+      } else {
+        obj = popped;
+      }
     } else if (this.active.length < this.maxSize) {
       obj = this.factory();
     } else {
-      obj = this.active.shift()!;
-      this.reset(obj);
+      const shifted = this.active.shift();
+      if (shifted === undefined) {
+        obj = this.factory();
+      } else {
+        obj = shifted;
+        this.reset(obj);
+      }
     }
 
     this.active.push(obj);
@@ -41,7 +51,7 @@ export class ObjectPool<T> {
     if (index !== -1) {
       this.active.splice(index, 1);
       this.reset(obj);
-      
+
       if (this.available.length < this.maxSize / 2) {
         this.available.push(obj);
       }
@@ -71,4 +81,3 @@ export class ObjectPool<T> {
     };
   }
 }
-

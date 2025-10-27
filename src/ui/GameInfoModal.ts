@@ -103,17 +103,27 @@ export class GameInfoModal {
     const clickDamage = this.upgradeSystem.getPointsPerHit(state);
     const shipDamage = this.upgradeSystem.getAutoFireDamage(state);
     const fireCooldown = this.upgradeSystem.getFireCooldown(state);
-    const attackSpeed = fireCooldown > 0 ? (1000 / fireCooldown) : 0; // Convert ms to shots per second
+    const attackSpeed = fireCooldown > 0 ? 1000 / fireCooldown : 0; // Convert ms to shots per second
     const totalShipDPS = shipDamage * state.shipsCount * attackSpeed;
     const critChance = this.upgradeSystem.getCritChance(state);
     const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
-    
+
     // Artifact bonuses
-    const artifactDamageBonus = this.artifactSystem ? this.artifactSystem.getDamageBonus() : 0;
-    const artifactSpeedBonus = this.artifactSystem ? this.artifactSystem.getSpeedBonus() : 0;
-    const artifactCritBonus = this.artifactSystem ? this.artifactSystem.getCritBonus() : 0;
-    const artifactPointsBonus = this.artifactSystem ? this.artifactSystem.getPointsBonus() : 0;
-    const artifactXPBonus = this.artifactSystem ? this.artifactSystem.getXPBonus() : 0;
+    const artifactDamageBonus = this.artifactSystem
+      ? this.artifactSystem.getDamageBonus()
+      : 0;
+    const artifactSpeedBonus = this.artifactSystem
+      ? this.artifactSystem.getSpeedBonus()
+      : 0;
+    const artifactCritBonus = this.artifactSystem
+      ? this.artifactSystem.getCritBonus()
+      : 0;
+    const artifactPointsBonus = this.artifactSystem
+      ? this.artifactSystem.getPointsBonus()
+      : 0;
+    const artifactXPBonus = this.artifactSystem
+      ? this.artifactSystem.getXPBonus()
+      : 0;
 
     return `
       <div class="info-section">
@@ -164,34 +174,63 @@ export class GameInfoModal {
         <p>• <strong>Critical Hits:</strong> Both click and fleet damage can crit for ${critMultiplier.toFixed(1)}x damage</p>
       </div>
 
-      ${this.artifactSystem && (artifactDamageBonus > 0 || artifactSpeedBonus > 0 || artifactCritBonus > 0 || artifactPointsBonus > 0 || artifactXPBonus > 0) ? `
+      ${
+        this.artifactSystem &&
+        (artifactDamageBonus > 0 ||
+          artifactSpeedBonus > 0 ||
+          artifactCritBonus > 0 ||
+          artifactPointsBonus > 0 ||
+          artifactXPBonus > 0)
+          ? `
       <div class="info-section">
         <h3>✨ Artifact Bonuses</h3>
         <div class="info-grid">
-          ${artifactDamageBonus > 0 ? `<div class="info-item">
+          ${
+            artifactDamageBonus > 0
+              ? `<div class="info-item">
             <span class="info-label">Damage Bonus:</span>
-            <span class="info-value">+${((artifactDamageBonus * 100).toFixed(1))}%</span>
-          </div>` : ''}
-          ${artifactSpeedBonus > 0 ? `<div class="info-item">
+            <span class="info-value">+${(artifactDamageBonus * 100).toFixed(1)}%</span>
+          </div>`
+              : ''
+          }
+          ${
+            artifactSpeedBonus > 0
+              ? `<div class="info-item">
             <span class="info-label">Attack Speed Bonus:</span>
-            <span class="info-value">+${((artifactSpeedBonus * 100).toFixed(1))}%</span>
-          </div>` : ''}
-          ${artifactCritBonus > 0 ? `<div class="info-item">
+            <span class="info-value">+${(artifactSpeedBonus * 100).toFixed(1)}%</span>
+          </div>`
+              : ''
+          }
+          ${
+            artifactCritBonus > 0
+              ? `<div class="info-item">
             <span class="info-label">Critical Bonus:</span>
-            <span class="info-value">+${((artifactCritBonus * 100).toFixed(1))}%</span>
-          </div>` : ''}
-          ${artifactPointsBonus > 0 ? `<div class="info-item">
+            <span class="info-value">+${(artifactCritBonus * 100).toFixed(1)}%</span>
+          </div>`
+              : ''
+          }
+          ${
+            artifactPointsBonus > 0
+              ? `<div class="info-item">
             <span class="info-label">Points Bonus:</span>
-            <span class="info-value">+${((artifactPointsBonus * 100).toFixed(1))}%</span>
-          </div>` : ''}
-          ${artifactXPBonus > 0 ? `<div class="info-item">
+            <span class="info-value">+${(artifactPointsBonus * 100).toFixed(1)}%</span>
+          </div>`
+              : ''
+          }
+          ${
+            artifactXPBonus > 0
+              ? `<div class="info-item">
             <span class="info-label">XP Bonus:</span>
-            <span class="info-value">+${((artifactXPBonus * 100).toFixed(1))}%</span>
-          </div>` : ''}
+            <span class="info-value">+${(artifactXPBonus * 100).toFixed(1)}%</span>
+          </div>`
+              : ''
+          }
         </div>
         <p class="info-note">💡 Artifacts are found from boss kills and can be equipped/upgraded in the Artifacts menu</p>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
     `;
   }
 
@@ -212,7 +251,7 @@ export class GameInfoModal {
           </div>
           <div class="info-item">
             <span class="info-label">XP Progress:</span>
-            <span class="info-value">${Math.floor(currentXP).toString()} / ${xpRequired.toString()} (${(((currentXP / xpRequired) * 100).toFixed(1))}%)</span>
+            <span class="info-value">${Math.floor(currentXP).toString()} / ${xpRequired.toString()} (${((currentXP / xpRequired) * 100).toFixed(1)}%)</span>
           </div>
           <div class="info-item">
             <span class="info-label">XP Multiplier:</span>
@@ -271,7 +310,7 @@ export class GameInfoModal {
   private renderMechanicsTab(state: GameState): string {
     const cosmicDiscount = state.cosmicKnowledgeLevel * 0.5;
     const fleetDiscount = state.fleetCommandLevel * 1.0;
-    
+
     return `
       <div class="info-section">
         <h3>💎 Cost Reduction Systems</h3>
@@ -359,4 +398,3 @@ export class GameInfoModal {
     `;
   }
 }
-

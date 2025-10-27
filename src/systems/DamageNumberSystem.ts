@@ -93,7 +93,8 @@ export class DamageNumberSystem {
   }
 
   getCount(): number {
-    return this.numbers.length;
+    const count: number = this.numbers.length;
+    return count;
   }
 
   private formatDamage(damage: number): string {

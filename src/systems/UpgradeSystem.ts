@@ -12,7 +12,7 @@ export class UpgradeSystem {
     getXPMultiplier: (state: GameState) => number;
     getSpeedMultiplier: (state: GameState) => number;
   } | null = null;
-  
+
   private artifactSystem: {
     getDamageBonus: () => number;
     getSpeedBonus: () => number;
@@ -1767,9 +1767,8 @@ export class UpgradeSystem {
       getLevel: (state: GameState) => state.pointMultiplierLevel,
       getDisplayText: (state: GameState) => {
         const damage = this.getMainShipDamage(state);
-        const formattedDamage = damage >= 1000 
-          ? NumberFormatter.format(damage)
-          : damage.toFixed(1);
+        const formattedDamage =
+          damage >= 1000 ? NumberFormatter.format(damage) : damage.toFixed(1);
         return `Lv.${state.pointMultiplierLevel.toString()} (${formattedDamage}/hit)`;
       },
       subUpgrades: pointMultiplierSubUpgrades,
@@ -1816,9 +1815,10 @@ export class UpgradeSystem {
       getLevel: (state: GameState) => state.resourceGenLevel,
       getDisplayText: (state: GameState) => {
         const passiveGen = this.getPassiveGen(state);
-        const formatted = passiveGen >= 1000
-          ? NumberFormatter.format(passiveGen)
-          : this.formatPassiveGen(passiveGen);
+        const formatted =
+          passiveGen >= 1000
+            ? NumberFormatter.format(passiveGen)
+            : this.formatPassiveGen(passiveGen);
         return `Lv.${state.resourceGenLevel.toString()} (${formatted}/sec)`;
       },
       subUpgrades: resourceSubUpgrades,
@@ -1880,9 +1880,10 @@ export class UpgradeSystem {
       getLevel: (state: GameState) => state.weaponMasteryLevel,
       getDisplayText: (state: GameState) => {
         const bonusPercent = state.weaponMasteryLevel * 10;
-        const formatted = bonusPercent >= 1000
-          ? NumberFormatter.format(bonusPercent)
-          : bonusPercent.toString();
+        const formatted =
+          bonusPercent >= 1000
+            ? NumberFormatter.format(bonusPercent)
+            : bonusPercent.toString();
         return `Lv.${state.weaponMasteryLevel.toString()} (+${formatted}% damage)`;
       },
       subUpgrades: weaponMasterySubUpgrades,
@@ -1923,9 +1924,10 @@ export class UpgradeSystem {
       getLevel: (state: GameState) => state.fleetCommandLevel,
       getDisplayText: (state: GameState) => {
         const bonusPercent = state.fleetCommandLevel * 5;
-        const formatted = bonusPercent >= 1000
-          ? NumberFormatter.format(bonusPercent)
-          : bonusPercent.toString();
+        const formatted =
+          bonusPercent >= 1000
+            ? NumberFormatter.format(bonusPercent)
+            : bonusPercent.toString();
         return `Lv.${state.fleetCommandLevel.toString()} (+${formatted}% fleet dmg)`;
       },
       subUpgrades: fleetCommandSubUpgrades,
@@ -2002,9 +2004,10 @@ export class UpgradeSystem {
       getLevel: (state: GameState) => state.energyCoreLevel,
       getDisplayText: (state: GameState) => {
         const bonusPercent = state.energyCoreLevel;
-        const formatted = bonusPercent >= 1000
-          ? NumberFormatter.format(bonusPercent)
-          : bonusPercent.toString();
+        const formatted =
+          bonusPercent >= 1000
+            ? NumberFormatter.format(bonusPercent)
+            : bonusPercent.toString();
         return `Lv.${state.energyCoreLevel.toString()} (+${formatted}% speed)`;
       },
       subUpgrades: energyCoreSubUpgrades,
@@ -2563,7 +2566,7 @@ export class UpgradeSystem {
     this.updateSubUpgradesFromState(state);
     // Slower scaling: 0.990 instead of 0.985 makes it much harder to reach low cooldowns
     let cooldown = Math.max(
-      Math.floor(10000 * Math.pow(0.990, state.attackSpeedLevel)),
+      Math.floor(10000 * Math.pow(0.99, state.attackSpeedLevel)),
       120,
     );
 
@@ -2695,7 +2698,7 @@ export class UpgradeSystem {
 
     // v3.0: Weapon Mastery bonus (+10% per level, reduced from 25% for balance)
     if (state.weaponMasteryLevel > 0) {
-      multiplier *= 1 + state.weaponMasteryLevel * 0.10;
+      multiplier *= 1 + state.weaponMasteryLevel * 0.1;
     }
 
     // v3.0: Mutation Engine bonus (+1% all damage per level, reduced from 2%)
@@ -2883,8 +2886,7 @@ export class UpgradeSystem {
     this.updateSubUpgradesFromState(state);
 
     // Base: 1 damage + 0.05 per level (starts at 1 for better early game feel)
-    let multiplier =
-      this.basePoints * (1 + 0.05 * state.pointMultiplierLevel);
+    let multiplier = this.basePoints * (1 + 0.05 * state.pointMultiplierLevel);
 
     // v3.0: Fleet Command bonus (+5% auto-fire damage per level)
     if (state.fleetCommandLevel > 0) {

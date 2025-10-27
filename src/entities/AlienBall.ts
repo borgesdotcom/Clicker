@@ -110,18 +110,18 @@ export class AlienBall {
       const scale = 1 + progress * 0.8; // More dramatic pop
 
       drawer.setAlpha(alpha * 0.6);
-      
+
       // Draw bubble segments flying apart
       for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2;
         const dist = progress * this.radius * 2;
         const x = this.x + Math.cos(angle) * dist;
         const y = this.y + Math.sin(angle) * dist;
-        
+
         drawer.setFill(this.color.fill);
         drawer.circle(x, y, this.radius * scale * 0.3);
       }
-      
+
       drawer.resetAlpha();
       return;
     }
@@ -134,7 +134,7 @@ export class AlienBall {
       this.radius * 0.1,
       this.x,
       this.y,
-      this.radius
+      this.radius,
     );
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)'); // Reduced highlight
     gradient.addColorStop(0.3, this.color.fill + '99'); // More transparent color
@@ -153,7 +153,7 @@ export class AlienBall {
       this.y - this.radius * 0.35,
       this.radius * 0.35,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
 

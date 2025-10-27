@@ -175,19 +175,19 @@ export class SettingsModal {
     this.volumeValue.style.textAlign = 'right';
     this.volumeValue.style.fontSize = '14px';
 
-    // Store reference to this for the event listener
-    const self = this;
-    this.volumeSlider.addEventListener('input', function () {
-      const value = parseInt(this.value) / 100;
-      self.soundManager.setVolume(value);
-      if (self.volumeValue) {
-        self.volumeValue.textContent = String(this.value) + '%';
+    // Use arrow function to maintain this context
+    this.volumeSlider.addEventListener('input', () => {
+      const sliderValue = this.volumeSlider?.value ?? '30';
+      const value = parseInt(sliderValue) / 100;
+      this.soundManager.setVolume(value);
+      if (this.volumeValue) {
+        this.volumeValue.textContent = sliderValue + '%';
       }
-      if (self.volumeCallback) {
-        self.volumeCallback(value);
+      if (this.volumeCallback) {
+        this.volumeCallback(value);
       }
       // Play a test sound to hear the volume change
-      self.soundManager.playClick();
+      this.soundManager.playClick();
     });
 
     sliderRow.appendChild(this.volumeSlider);

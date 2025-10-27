@@ -30,7 +30,10 @@ export class Ripple {
 
     const grayValue = Math.floor(255 * 0.7);
     drawer.setAlpha(alpha);
-    drawer.setStroke(`rgb(${grayValue},${grayValue},${grayValue})`, 2);
+    drawer.setStroke(
+      `rgb(${grayValue.toString()},${grayValue.toString()},${grayValue.toString()})`,
+      2,
+    );
     drawer.circle(this.center.x, this.center.y, radius, false);
     drawer.resetAlpha();
   }

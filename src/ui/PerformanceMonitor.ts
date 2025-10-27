@@ -1,20 +1,11 @@
-interface PerformanceMetrics {
-  fps: number;
-  frameTime: number;
-  updateTime: number;
-  renderTime: number;
-  entityCounts: {
-    lasers: number;
-    particles: number;
-    ships: number;
-    damageNumbers: number;
-    ripples: number;
-  };
-  memoryUsage?: {
-    usedJSHeapSize: number;
-    totalJSHeapSize: number;
-    jsHeapSizeLimit: number;
-  };
+interface PerformanceMemory {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+interface PerformanceWithMemory extends Performance {
+  memory?: PerformanceMemory;
 }
 
 export class PerformanceMonitor {
@@ -25,17 +16,17 @@ export class PerformanceMonitor {
   private maxHistoryLength = 60;
   private lastUpdateTime = 0;
   private updateInterval = 100;
-  
+
   private frameCount = 0;
   private lastFpsUpdate = 0;
   private currentFps = 0;
   private currentFrameTime = 0;
   private currentUpdateTime = 0;
   private currentRenderTime = 0;
-  
+
   private chartCanvas: HTMLCanvasElement | null = null;
   private chartCtx: CanvasRenderingContext2D | null = null;
-  
+
   private entityCountProviders: {
     getLasers?: () => number;
     getParticles?: () => number;
@@ -145,17 +136,18 @@ export class PerformanceMonitor {
     `;
 
     document.body.appendChild(this.panel);
-    
-    this.chartCanvas = document.getElementById('perf-chart') as HTMLCanvasElement;
-    if (this.chartCanvas) {
+
+    const chartElement = document.getElementById('perf-chart');
+    if (chartElement instanceof HTMLCanvasElement) {
+      this.chartCanvas = chartElement;
       this.chartCtx = this.chartCanvas.getContext('2d');
     }
-    
+
     document.getElementById('perf-close')?.addEventListener('click', () => {
       this.hide();
     });
 
-    const memory = (performance as any).memory;
+    const memory = (performance as PerformanceWithMemory).memory;
     if (!memory) {
       const memSection = document.getElementById('perf-memory-section');
       if (memSection) {
@@ -200,7 +192,7 @@ export class PerformanceMonitor {
 
     this.fpsHistory.push(this.currentFps);
     this.frameTimeHistory.push(this.currentFrameTime);
-    
+
     if (this.fpsHistory.length > this.maxHistoryLength) {
       this.fpsHistory.shift();
       this.frameTimeHistory.shift();
@@ -216,7 +208,7 @@ export class PerformanceMonitor {
     const fpsElement = document.getElementById('perf-fps');
     if (fpsElement) {
       fpsElement.textContent = this.currentFps.toString();
-      
+
       if (this.currentFps >= 55) {
         fpsElement.style.color = '#00ff88';
       } else if (this.currentFps >= 30) {
@@ -229,7 +221,7 @@ export class PerformanceMonitor {
     const frameTimeElement = document.getElementById('perf-frametime');
     if (frameTimeElement) {
       frameTimeElement.textContent = `${this.currentFrameTime.toFixed(2)}ms`;
-      
+
       if (this.currentFrameTime <= 16.67) {
         frameTimeElement.style.color = '#00ff88';
       } else if (this.currentFrameTime <= 33.33) {
@@ -251,39 +243,50 @@ export class PerformanceMonitor {
     if (this.entityCountProviders.getLasers) {
       const lasersElement = document.getElementById('perf-lasers');
       if (lasersElement) {
-        lasersElement.textContent = this.entityCountProviders.getLasers().toString();
+        lasersElement.textContent = this.entityCountProviders
+          .getLasers()
+          .toString();
       }
     }
 
     if (this.entityCountProviders.getParticles) {
       const particlesElement = document.getElementById('perf-particles');
       if (particlesElement) {
-        particlesElement.textContent = this.entityCountProviders.getParticles().toString();
+        particlesElement.textContent = this.entityCountProviders
+          .getParticles()
+          .toString();
       }
     }
 
     if (this.entityCountProviders.getShips) {
       const shipsElement = document.getElementById('perf-ships');
       if (shipsElement) {
-        shipsElement.textContent = this.entityCountProviders.getShips().toString();
+        shipsElement.textContent = this.entityCountProviders
+          .getShips()
+          .toString();
       }
     }
 
     if (this.entityCountProviders.getDamageNumbers) {
-      const damageNumbersElement = document.getElementById('perf-damagenumbers');
+      const damageNumbersElement =
+        document.getElementById('perf-damagenumbers');
       if (damageNumbersElement) {
-        damageNumbersElement.textContent = this.entityCountProviders.getDamageNumbers().toString();
+        damageNumbersElement.textContent = this.entityCountProviders
+          .getDamageNumbers()
+          .toString();
       }
     }
 
     if (this.entityCountProviders.getRipples) {
       const ripplesElement = document.getElementById('perf-ripples');
       if (ripplesElement) {
-        ripplesElement.textContent = this.entityCountProviders.getRipples().toString();
+        ripplesElement.textContent = this.entityCountProviders
+          .getRipples()
+          .toString();
       }
     }
 
-    const memory = (performance as any).memory;
+    const memory = (performance as PerformanceWithMemory).memory;
     if (memory) {
       const usedElement = document.getElementById('perf-memory-used');
       const totalElement = document.getElementById('perf-memory-total');
@@ -382,7 +385,7 @@ export class PerformanceMonitor {
   }
 
   private formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes}B`;
+    if (bytes < 1024) return `${bytes.toString()}B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   }
@@ -415,4 +418,3 @@ export class PerformanceMonitor {
     return this.isVisible;
   }
 }
-

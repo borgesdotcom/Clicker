@@ -42,7 +42,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'clicks',
     title: 'Click Master',
-    description: (target) => `Click ${target} times`,
+    description: (target) => `Click ${target.toString()} times`,
     target: (level) => Math.max(100, level * 50),
     reward: (level) => ({ points: level * 1000, xp: level * 10 }),
     icon: '🖱️',
@@ -58,7 +58,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'kills',
     title: 'Alien Hunter',
-    description: (target) => `Destroy ${target} aliens`,
+    description: (target) => `Destroy ${target.toString()} aliens`,
     target: (level) => Math.max(10, level * 3),
     reward: (level) => ({ points: level * 800, xp: level * 8 }),
     icon: '👾',
@@ -66,7 +66,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'boss_kills',
     title: 'Boss Slayer',
-    description: (target) => `Defeat ${target} bosses`,
+    description: (target) => `Defeat ${target.toString()} bosses`,
     target: () => 3,
     reward: (level) => ({ points: level * 5000, ships: 2 }),
     icon: '🏆',
@@ -74,7 +74,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'upgrades',
     title: 'Tech Enthusiast',
-    description: (target) => `Purchase ${target} upgrades`,
+    description: (target) => `Purchase ${target.toString()} upgrades`,
     target: (level) => Math.max(5, Math.floor(level / 2)),
     reward: (level) => ({ points: level * 1200 }),
     icon: '🔧',
@@ -82,7 +82,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'level',
     title: 'Level Up',
-    description: (target) => `Reach level ${target}`,
+    description: (target) => `Reach level ${target.toString()}`,
     target: (level) => level + 5,
     reward: (level) => ({ points: level * 2000, xp: level * 20 }),
     icon: '⭐',
@@ -90,7 +90,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'ships',
     title: 'Fleet Commander',
-    description: (target) => `Build a fleet of ${target} ships`,
+    description: (target) => `Build a fleet of ${target.toString()} ships`,
     target: (level) => Math.max(5, Math.floor(level / 3)),
     reward: (level) => ({ points: level * 3000 }),
     icon: '🚀',
@@ -98,7 +98,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
   {
     type: 'combo',
     title: 'Combo Master',
-    description: (target) => `Achieve a ${target}x combo`,
+    description: (target) => `Achieve a ${target.toString()}x combo`,
     target: (level) => Math.max(10, level * 2),
     reward: (level) => ({ points: level * 2500, xp: level * 15 }),
     icon: '🔥',
@@ -130,11 +130,16 @@ export class MissionSystem {
     const saved = localStorage.getItem('missionProgress');
     if (saved) {
       try {
-        const data = JSON.parse(saved);
-        this.missions = data.missions || [];
-        this.dailyMissions = data.dailyMissions || [];
-        this.lastDailyReset = data.lastDailyReset || 0;
-        this.sessionProgress = data.sessionProgress || this.sessionProgress;
+        const data = JSON.parse(saved) as {
+          missions?: Mission[];
+          dailyMissions?: Mission[];
+          lastDailyReset?: number;
+          sessionProgress?: Record<string, number>;
+        };
+        this.missions = data.missions ?? [];
+        this.dailyMissions = data.dailyMissions ?? [];
+        this.lastDailyReset = data.lastDailyReset ?? 0;
+        // Session progress is reset each session, so we don't load it
       } catch (e) {
         console.error('Failed to load mission progress:', e);
       }
@@ -169,11 +174,13 @@ export class MissionSystem {
 
       // Generate 5 regular missions
       for (let i = 0; i < 5; i++) {
-        const template = MISSION_TEMPLATES[i % MISSION_TEMPLATES.length]!;
+        const templateIndex = i % MISSION_TEMPLATES.length;
+        const template = MISSION_TEMPLATES[templateIndex];
+        if (!template) continue;
         const target = template.target(level);
 
         this.missions.push({
-          id: `mission_${i}_${Date.now()}`,
+          id: `mission_${i.toString()}_${Date.now().toString()}`,
           type: template.type,
           title: template.title,
           description: template.description(target),
@@ -198,11 +205,12 @@ export class MissionSystem {
     const shuffled = [...MISSION_TEMPLATES].sort(() => Math.random() - 0.5);
 
     for (let i = 0; i < 3; i++) {
-      const template = shuffled[i]!;
+      const template = shuffled[i];
+      if (!template) continue;
       const target = template.target(level);
 
       this.dailyMissions.push({
-        id: `daily_${i}_${Date.now()}`,
+        id: `daily_${i.toString()}_${Date.now().toString()}`,
         type: template.type,
         title: `[DAILY] ${template.title}`,
         description: template.description(target),

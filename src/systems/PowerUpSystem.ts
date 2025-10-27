@@ -127,7 +127,8 @@ export class PowerUpSystem {
       'multishot',
       'critical',
     ];
-    const type = types[Math.floor(Math.random() * types.length)]!;
+    const randomIndex = Math.floor(Math.random() * types.length);
+    const type = types[randomIndex] ?? 'damage';
 
     const margin = 100;
     const x = Math.random() * (this.canvasWidth - margin * 2) + margin;

@@ -28,7 +28,7 @@ export class ArtifactsModal {
         </div>
         <div class="modal-body">
           <div class="artifacts-info">
-            <p>Equipped: <span id="equipped-count">0</span>/${this.artifactSystem.getMaxEquipped()}</p>
+            <p>Equipped: <span id="equipped-count">0</span>/${this.artifactSystem.getMaxEquipped().toString()}</p>
             <div class="artifact-bonuses" id="artifact-bonuses"></div>
           </div>
           <div class="artifacts-container" id="artifacts-list"></div>
@@ -41,7 +41,9 @@ export class ArtifactsModal {
 
   private setupEventListeners(): void {
     const closeBtn = this.modal.querySelector('.modal-close');
-    closeBtn?.addEventListener('click', () => this.hide());
+    closeBtn?.addEventListener('click', () => {
+      this.hide();
+    });
 
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
@@ -110,7 +112,7 @@ export class ArtifactsModal {
           </div>
           <div class="artifact-details">
             <p class="artifact-description">${artifact.description}</p>
-            <p class="artifact-level">Level: ${artifact.level}/${artifact.maxLevel}</p>
+            <p class="artifact-level">Level: ${artifact.level.toString()}/${artifact.maxLevel.toString()}</p>
           </div>
           <div class="artifact-actions">
             <button class="artifact-equip-btn ${artifact.equipped ? 'equipped' : ''}" data-id="${artifact.id}">

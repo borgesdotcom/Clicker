@@ -17,7 +17,7 @@ export class Hud {
 
   private damageHistory: number[] = [];
   private readonly DPS_WINDOW = 5000; // 5 seconds window for DPS calculation
-  
+
   // Cache last values to avoid unnecessary DOM updates
   private lastPointsText = '';
   private lastStatsText = { dps: '', passive: '', crit: '' };
@@ -143,7 +143,7 @@ export class Hud {
     const levelText = `⭐ Level ${level}`;
     const expText = `${Math.floor(experience)} / ${expToNext}`;
     const percent = Math.min(100, (experience / expToNext) * 100);
-    
+
     // Only update DOM if changed
     if (levelText !== this.lastLevelText.level) {
       this.levelText.textContent = levelText;

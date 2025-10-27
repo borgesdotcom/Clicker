@@ -5,9 +5,17 @@ export class SoundManager {
 
   constructor() {
     try {
-      this.context = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
-    } catch (e) {
+      if (typeof window.AudioContext !== 'undefined') {
+        this.context = new window.AudioContext();
+      } else {
+        const WebkitAudioContext = (
+          window as Window & { webkitAudioContext?: typeof AudioContext }
+        ).webkitAudioContext;
+        if (WebkitAudioContext) {
+          this.context = new WebkitAudioContext();
+        }
+      }
+    } catch {
       console.warn('Audio not supported');
       this.enabled = false;
     }

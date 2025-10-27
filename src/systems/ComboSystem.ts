@@ -1,4 +1,6 @@
 import type { Draw } from '../render/Draw';
+import type { AscensionSystem } from './AscensionSystem';
+import type { GameState } from '../types';
 
 /**
  * ComboSystem.ts - Click combo system with linear damage scaling
@@ -28,13 +30,12 @@ export class ComboSystem {
   private comboTimer = 0;
   private maxCombo = 0;
   private comboAnimationTime = 0;
-  private ascensionSystem: any = null;
+  private ascensionSystem: AscensionSystem | null = null;
 
   /**
    * Set ascension system for combo bonuses
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setAscensionSystem(ascensionSystem: any): void {
+  setAscensionSystem(ascensionSystem: AscensionSystem): void {
     this.ascensionSystem = ascensionSystem;
   }
 
@@ -47,9 +48,7 @@ export class ComboSystem {
 
     // Apply cap if configured
     if (COMBO_MAX_MULTIPLIER !== null) {
-      const maxCombo = Math.floor(
-        COMBO_MAX_MULTIPLIER / BASE_COMBO_MULTIPLIER,
-      );
+      const maxCombo = Math.floor(COMBO_MAX_MULTIPLIER / BASE_COMBO_MULTIPLIER);
       this.combo = Math.min(this.combo, maxCombo);
     }
 
@@ -109,11 +108,11 @@ export class ComboSystem {
    * - 500 hits: 1.500×
    * - 1000 hits: 2.000×
    */
-  getMultiplier(state?: any): number {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const multiplierPerHit = this.ascensionSystem && state
-      ? this.ascensionSystem.getComboBoostMultiplier(state)
-      : BASE_COMBO_MULTIPLIER;
+  getMultiplier(state?: GameState): number {
+    const multiplierPerHit =
+      this.ascensionSystem && state
+        ? this.ascensionSystem.getComboBoostMultiplier(state)
+        : BASE_COMBO_MULTIPLIER;
     return 1 + this.combo * multiplierPerHit;
   }
 
@@ -138,8 +137,12 @@ export class ComboSystem {
    * @param canvasHeight - Canvas height for positioning (optional, for mobile)
    * @param state - Game state for ascension bonuses
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  draw(drawer: Draw, canvasWidth: number, canvasHeight?: number, state?: any): void {
+  draw(
+    drawer: Draw,
+    canvasWidth: number,
+    canvasHeight?: number,
+    state?: GameState,
+  ): void {
     // Only show combo if active
     if (this.combo < 1 || this.comboTimer <= 0) return;
 

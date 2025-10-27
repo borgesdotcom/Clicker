@@ -24,7 +24,7 @@ export class Background {
   private width: number;
   private height: number;
   private cometSpawnTimer = 0;
-  
+
   private starCanvas: HTMLCanvasElement | null = null;
   private starCtx: CanvasRenderingContext2D | null = null;
   private starLayerDirty = true;

@@ -3,7 +3,12 @@ import { clamp } from '../math/rng';
 
 const SAVE_KEY = 'alien-clicker-save';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Save {
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
+
   static save(state: GameState): void {
     const saveData: SaveData = {
       points: state.points,

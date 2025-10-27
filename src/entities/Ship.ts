@@ -202,15 +202,15 @@ export class Ship {
   private hexToRgba(hex: string, alpha: number): string {
     const rgb = this.hexToRgb(hex);
     return rgb
-      ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
-      : `rgba(0, 255, 255, ${alpha})`;
+      ? `rgba(${rgb.r.toString()}, ${rgb.g.toString()}, ${rgb.b.toString()}, ${alpha.toString()})`
+      : `rgba(0, 255, 255, ${alpha.toString()})`;
   }
 
   private adjustAlpha(rgba: string, newAlpha: number): string {
     // Extract the RGB values from rgba string and apply new alpha
     const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
-    if (match) {
-      return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${newAlpha})`;
+    if (match && match[1] && match[2] && match[3]) {
+      return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${newAlpha.toString()})`;
     }
     return rgba;
   }

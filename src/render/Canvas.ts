@@ -10,7 +10,9 @@ export class Canvas {
     this.ctx = context;
     this.dpr = window.devicePixelRatio || 1;
     this.resize();
-    window.addEventListener('resize', () => this.resize());
+    window.addEventListener('resize', () => {
+      this.resize();
+    });
   }
 
   private resize(): void {

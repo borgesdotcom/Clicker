@@ -19,7 +19,11 @@ export class AchievementSnackbar {
     }
 
     this.isShowing = true;
-    const achievement = this.queue.shift()!;
+    const achievement = this.queue.shift();
+    if (!achievement) {
+      this.isShowing = false;
+      return;
+    }
 
     // Create snackbar element
     const snackbar = document.createElement('div');

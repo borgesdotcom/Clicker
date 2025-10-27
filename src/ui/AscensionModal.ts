@@ -57,7 +57,9 @@ export class AscensionModal {
 
   private setupEventListeners(): void {
     const closeBtn = this.modal.querySelector('#ascension-close');
-    closeBtn?.addEventListener('click', () => this.hide());
+    closeBtn?.addEventListener('click', () => {
+      this.hide();
+    });
 
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
@@ -108,14 +110,14 @@ export class AscensionModal {
     const canAscend = this.ascensionSystem.canAscend(state);
     const ascendBtn = this.modal.querySelector(
       '#ascend-btn',
-    ) as HTMLButtonElement;
-    if (ascendBtn) {
+    );
+    if (ascendBtn instanceof HTMLButtonElement) {
       if (canAscend) {
         ascendBtn.disabled = false;
         ascendBtn.textContent = 'ASCEND NOW';
       } else {
         ascendBtn.disabled = true;
-        ascendBtn.textContent = `REACH LEVEL 100 TO ASCEND (Current: ${state.level})`;
+        ascendBtn.textContent = `REACH LEVEL 100 TO ASCEND (Current: ${state.level.toString()})`;
       }
     }
 
@@ -151,11 +153,11 @@ export class AscensionModal {
 
       card.innerHTML = `
         <div class="prestige-upgrade-name">${upgrade.name}</div>
-        <div class="prestige-upgrade-level">Level: ${currentLevel} / ${upgrade.maxLevel}</div>
+        <div class="prestige-upgrade-level">Level: ${currentLevel.toString()} / ${upgrade.maxLevel.toString()}</div>
         <div class="prestige-upgrade-desc">${upgrade.description}</div>
         <div class="prestige-upgrade-effect">${upgrade.effect}</div>
         <div class="prestige-upgrade-cost">
-          ${maxed ? 'MAX' : `Cost: ${upgrade.cost} PP`}
+          ${maxed ? 'MAX' : `Cost: ${upgrade.cost.toString()} PP`}
         </div>
       `;
 

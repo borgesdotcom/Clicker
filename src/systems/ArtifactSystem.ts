@@ -156,8 +156,8 @@ export class ArtifactSystem {
     const saved = localStorage.getItem('artifacts');
     if (saved) {
       try {
-        const data = JSON.parse(saved);
-        this.artifacts = data.artifacts || [];
+        const data = JSON.parse(saved) as { artifacts?: Artifact[] };
+        this.artifacts = data.artifacts ?? [];
         this.equippedArtifacts = this.artifacts.filter((a) => a.equipped);
       } catch (e) {
         console.error('Failed to load artifacts:', e);
@@ -183,10 +183,15 @@ export class ArtifactSystem {
     }
 
     const templates = ARTIFACT_TEMPLATES[rarity];
-    const template = templates[Math.floor(Math.random() * templates.length)]!;
+    const randomIndex = Math.floor(Math.random() * templates.length);
+    const template = templates[randomIndex];
+    if (!template) {
+      // Fallback to first template if somehow undefined
+      throw new Error('No artifact templates found');
+    }
 
     const artifact: Artifact = {
-      id: `artifact_${Date.now()}_${Math.random()}`,
+      id: `artifact_${Date.now().toString()}_${Math.random().toString()}`,
       name: template.name,
       description: template.description.replace(
         '{bonus}',
@@ -331,7 +336,7 @@ export class ArtifactSystem {
 
     for (const artifact of equipped) {
       bonuses.push(
-        `${artifact.icon} ${artifact.name} (Lv.${artifact.level}): ${artifact.description}`,
+        `${artifact.icon} ${artifact.name} (Lv.${artifact.level.toString()}): ${artifact.description}`,
       );
     }
 
