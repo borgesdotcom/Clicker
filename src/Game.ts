@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlienBall } from './entities/AlienBall';
-import { EnhancedAlienBall, selectEnemyType } from './entities/EnemyTypes';
+import {
+  EnhancedAlienBall,
+  ENEMY_TYPES,
+  selectEnemyType,
+} from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
 import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
@@ -1162,13 +1166,22 @@ export class Game {
 
         // Particles (only if high graphics enabled)
         if (this.userSettings.highGraphics) {
+          // Use enemy-specific color if it's an enhanced alien
+          let particleColor = '#ffffff';
+          if (this.ball instanceof EnhancedAlienBall) {
+            // Get the enemy type's color for more visual feedback
+            const stats = ENEMY_TYPES[this.ball.enemyType];
+            particleColor = stats.color;
+          }
+
           this.particleSystem.spawnParticles({
             x: this.ball.x,
             y: this.ball.y,
             count: Math.min(5, Math.floor(finalDamage / 500)),
-            color: '#ffffff',
+            color: particleColor,
             speed: 50,
             life: 0.8,
+            glow: this.ball instanceof EnhancedAlienBall, // Add glow for special aliens
           });
         }
       }
