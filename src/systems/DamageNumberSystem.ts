@@ -92,6 +92,10 @@ export class DamageNumberSystem {
     this.numbers = [];
   }
 
+  getCount(): number {
+    return this.numbers.length;
+  }
+
   private formatDamage(damage: number): string {
     if (damage >= 1e9) return `${(damage / 1e9).toFixed(1)}B`;
     if (damage >= 1e6) return `${(damage / 1e6).toFixed(1)}M`;

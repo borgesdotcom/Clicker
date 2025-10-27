@@ -1,4 +1,5 @@
 import type { Draw } from '../render/Draw';
+import { ObjectPool } from '../utils/ObjectPool';
 
 export interface ParticleConfig {
   x: number;
@@ -13,6 +14,7 @@ export interface ParticleConfig {
 }
 
 export class Particle {
+  public active = true;
   public x: number;
   public y: number;
   private vx: number;
@@ -24,7 +26,25 @@ export class Particle {
   private decay: number;
   private glow: boolean;
 
-  constructor(config: ParticleConfig) {
+  constructor(config?: ParticleConfig) {
+    if (config) {
+      this.init(config);
+    } else {
+      // Default values for pool creation
+      this.x = 0;
+      this.y = 0;
+      this.vx = 0;
+      this.vy = 0;
+      this.color = '#fff';
+      this.size = 1;
+      this.life = 1;
+      this.maxLife = 1;
+      this.decay = 1;
+      this.glow = false;
+    }
+  }
+
+  init(config: ParticleConfig): void {
     this.x = config.x;
     this.y = config.y;
     this.vx = config.vx;
@@ -35,9 +55,10 @@ export class Particle {
     this.maxLife = config.life;
     this.decay = config.decay;
     this.glow = config.glow ?? false;
+    this.active = true;
   }
 
-  update(dt: number): boolean {
+  update(dt: number): void {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     this.life -= this.decay * dt;
@@ -49,7 +70,9 @@ export class Particle {
     this.vx *= 0.99;
     this.vy *= 0.99;
 
-    return this.life <= 0;
+    if (this.life <= 0) {
+      this.active = false;
+    }
   }
 
   draw(drawer: Draw): void {
@@ -72,8 +95,20 @@ export class Particle {
 }
 
 export class ParticleSystem {
-  private particles: Particle[] = [];
-  private maxParticles = 200; // Limit active particles for performance
+  private particlePool: ObjectPool<Particle>;
+  private maxParticles = 200;
+
+  constructor() {
+    this.particlePool = new ObjectPool<Particle>(
+      () => new Particle(),
+      (particle) => {
+        particle.active = false;
+        particle.life = 0;
+      },
+      50,
+      this.maxParticles,
+    );
+  }
 
   spawnParticles(config: {
     x: number;
@@ -99,31 +134,30 @@ export class ParticleSystem {
     } = config;
 
     for (let i = 0; i < count; i++) {
-      // Don't spawn if we're at max particles
-      if (this.particles.length >= this.maxParticles) {
+      const stats = this.particlePool.getStats();
+      if (stats.active >= this.maxParticles) {
         break;
       }
 
       const angle = Math.random() * spread - spread / 2;
       const velocity = speed * (0.5 + Math.random() * 0.5);
 
-      this.particles.push(
-        new Particle({
-          x,
-          y,
-          vx: Math.cos(angle) * velocity,
-          vy: Math.sin(angle) * velocity,
-          color,
-          size: size * (0.5 + Math.random()),
-          life,
-          decay: 1,
-          glow,
-        }),
-      );
+      const particle = this.particlePool.acquire();
+      particle.init({
+        x,
+        y,
+        vx: Math.cos(angle) * velocity,
+        vy: Math.sin(angle) * velocity,
+        color,
+        size: size * (0.5 + Math.random()),
+        life,
+        decay: 1,
+        glow,
+      });
     }
   }
 
-  spawnExplosion(x: number, y: number, color: string = '#ff0000'): void {
+  spawnExplosion(x: number, y: number, color = '#ff0000'): void {
     this.spawnParticles({
       x,
       y,
@@ -137,32 +171,51 @@ export class ParticleSystem {
     });
   }
 
-  spawnTrail(x: number, y: number, color: string = '#ffffff'): void {
-    // Reduced trail particles for performance
+  spawnTrail(x: number, y: number, color = '#ffffff'): void {
     this.spawnParticles({
       x,
       y,
-      count: 2, // Reduced from 3
+      count: 2,
       color,
       spread: Math.PI / 4,
       speed: 30,
       size: 2,
-      life: 0.4, // Shorter life
-      glow: false, // No glow for trails (performance)
+      life: 0.4,
+      glow: false,
     });
   }
 
   update(dt: number): void {
-    this.particles = this.particles.filter((p) => !p.update(dt));
+    const particles = this.particlePool.getActive();
+    const toRelease: Particle[] = [];
+    
+    for (const particle of particles) {
+      particle.update(dt);
+      if (!particle.active) {
+        toRelease.push(particle);
+      }
+    }
+    
+    for (const particle of toRelease) {
+      this.particlePool.release(particle);
+    }
   }
 
   draw(drawer: Draw): void {
-    for (const particle of this.particles) {
-      particle.draw(drawer);
+    const particles = this.particlePool.getActive();
+    for (const particle of particles) {
+      if (particle.active) {
+        particle.draw(drawer);
+      }
     }
   }
 
   clear(): void {
-    this.particles = [];
+    const particles = this.particlePool.getActive();
+    this.particlePool.releaseAll([...particles]);
+  }
+
+  getParticleCount(): number {
+    return this.particlePool.getStats().active;
   }
 }

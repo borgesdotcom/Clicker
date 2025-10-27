@@ -37,6 +37,7 @@ import { VersionSplash } from './ui/VersionSplash';
 import { Layout } from './ui/Layout';
 import { CreditsModal } from './ui/CreditsModal';
 import { GameInfoModal } from './ui/GameInfoModal';
+import { PerformanceMonitor } from './ui/PerformanceMonitor';
 import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
 import type { Vec2, GameMode } from './types';
@@ -73,6 +74,7 @@ export class Game {
   private settingsModal: SettingsModal;
   private creditsModal: CreditsModal;
   private gameInfoModal: GameInfoModal;
+  private performanceMonitor: PerformanceMonitor;
   private hud: Hud;
   private saveTimer = 0;
   private saveInterval = 3;
@@ -166,6 +168,17 @@ export class Game {
     this.settingsModal = new SettingsModal(this.soundManager);
     this.creditsModal = new CreditsModal(this.store);
     this.gameInfoModal = new GameInfoModal(this.store, this.upgradeSystem, this.ascensionSystem, this.artifactSystem);
+    this.performanceMonitor = new PerformanceMonitor();
+    
+    // Setup performance monitor entity count providers
+    this.performanceMonitor.setEntityCountProviders({
+      getLasers: () => this.laserSystem.getLasers().length,
+      getParticles: () => this.particleSystem.getParticleCount(),
+      getShips: () => this.ships.length,
+      getDamageNumbers: () => this.damageNumberSystem.getCount(),
+      getRipples: () => this.rippleSystem.getCount(),
+    });
+    
     (this as any).debugPanel = new DebugPanel(
       this.store,
       () => {
@@ -251,10 +264,17 @@ export class Game {
     this.input = new Input(canvasElement);
     this.loop = new Loop(
       (dt) => {
+        const updateStart = this.performanceMonitor.startFrame();
         this.update(dt);
+        this.performanceMonitor.endUpdate(updateStart);
       },
       () => {
+        const renderStart = performance.now();
         this.render();
+        this.performanceMonitor.endRender(renderStart);
+      },
+      (frameStart: number) => {
+        this.performanceMonitor.endFrame(frameStart);
       },
     );
 
@@ -276,6 +296,7 @@ export class Game {
     this.setupMissionsButton();
     this.setupArtifactsButton();
     this.setupCreditsButton();
+    this.setupDiscordButton();
     this.setupGameInfoButton();
     this.setupGraphicsToggle();
     Layout.setupResetButton(() => {
@@ -549,8 +570,28 @@ export class Game {
     }
   }
 
+  private setupDiscordButton(): void {
+    const shopPanel = document.getElementById('shop-panel');
+    const resetContainer = document.getElementById('reset-container');
+    
+    if (shopPanel && resetContainer) {
+      const discordBtn = document.createElement('button');
+      discordBtn.id = 'discord-button';
+      discordBtn.className = 'shop-button discord-button';
+      discordBtn.textContent = '💬 Join Discord';
+      discordBtn.style.marginBottom = '10px';
+      discordBtn.style.width = '100%';
+      discordBtn.style.background = 'linear-gradient(135deg, #5865F2 0%, #4752C4 100%)';
+      discordBtn.style.border = '2px solid #5865F2';
+      discordBtn.addEventListener('click', () => {
+        window.open('https://discord.gg/bfxYsvnw2S', '_blank');
+      });
+      
+      shopPanel.insertBefore(discordBtn, resetContainer);
+    }
+  }
+
   private setupGameInfoButton(): void {
-    // Add Game Info button to HUD for easy access to mechanics
     const hudElement = document.getElementById('hud-buttons-container');
     if (hudElement) {
       const infoBtn = document.createElement('button');

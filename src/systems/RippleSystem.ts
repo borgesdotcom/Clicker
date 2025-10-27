@@ -30,4 +30,8 @@ export class RippleSystem {
   clear(): void {
     this.ripples = [];
   }
+
+  getCount(): number {
+    return this.ripples.length;
+  }
 }

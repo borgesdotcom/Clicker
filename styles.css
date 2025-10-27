@@ -2928,3 +2928,198 @@ body {
   }
 }
 
+/* Performance Monitor Styles */
+.performance-monitor {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #00ff88;
+  border-radius: 8px;
+  padding: 0;
+  z-index: 10000;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+  min-width: 320px;
+  max-width: 90vw;
+}
+
+.perf-content {
+  padding: 15px;
+}
+
+.perf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #00ff88;
+}
+
+.perf-header h3 {
+  color: #00ff88;
+  font-size: 18px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.perf-close-btn {
+  background: none;
+  border: none;
+  color: #ff4444;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.perf-close-btn:hover {
+  background: rgba(255, 68, 68, 0.2);
+  transform: scale(1.1);
+}
+
+.perf-section {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.perf-section h4 {
+  color: #ffaa00;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.perf-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.perf-metric:last-child {
+  border-bottom: none;
+}
+
+.perf-metric-fps {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 0;
+}
+
+.perf-label {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.perf-value {
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.perf-metric-fps .perf-value {
+  font-size: 20px;
+}
+
+.perf-chart-container {
+  margin: 15px 0;
+  background: #000;
+  border-radius: 4px;
+  padding: 5px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+#perf-chart {
+  display: block;
+  width: 100%;
+  height: 80px;
+}
+
+.perf-entities {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.perf-entity-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+
+.perf-memory {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.perf-info {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.perf-info p {
+  color: #888;
+  font-size: 11px;
+  margin: 0;
+}
+
+.perf-info kbd {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #fff;
+}
+
+/* Discord Button */
+.discord-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+.discord-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
+  border-color: #7289DA !important;
+}
+
+.discord-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .performance-monitor {
+    min-width: 280px;
+    font-size: 12px;
+  }
+
+  .perf-header h3 {
+    font-size: 16px;
+  }
+
+  .perf-metric-fps .perf-value {
+    font-size: 18px;
+  }
+}
+

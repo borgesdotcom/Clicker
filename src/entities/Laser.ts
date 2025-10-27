@@ -1,41 +1,55 @@
 import type { Draw } from '../render/Draw';
 import type { Vec2 } from '../types';
 
+export interface LaserConfig {
+  origin: Vec2;
+  target: Vec2;
+  damage: number;
+  isCrit?: boolean;
+  color?: string;
+  width?: number;
+  isFromShip?: boolean;
+}
+
 export class Laser {
   public alive = true;
-  private travelTime = 0.15; // Fast laser travel
-  public age = 0; // Made public for laser system management
+  private travelTime = 0.15;
+  public age = 0;
   public hasHit = false;
   public damage: number;
   public isCrit = false;
   public color = '#fff';
   public width = 2;
   public isFromShip = false;
+  public origin: Vec2;
+  public target: Vec2;
 
-  constructor(
-    public origin: Vec2,
-    public target: Vec2,
-    damage: number,
-    upgrades?: {
-      isCrit?: boolean;
-      color?: string;
-      width?: number;
-      isFromShip?: boolean;
-    },
-  ) {
-    this.damage = damage;
-    if (upgrades) {
-      this.isCrit = upgrades.isCrit ?? false;
-      this.color = upgrades.color ?? '#fff';
-      this.width = upgrades.width ?? 2;
-      this.isFromShip = upgrades.isFromShip ?? false;
+  constructor(config?: LaserConfig) {
+    if (config) {
+      this.init(config);
+    } else {
+      this.origin = { x: 0, y: 0 };
+      this.target = { x: 0, y: 0 };
+      this.damage = 0;
     }
+  }
+
+  init(config: LaserConfig): void {
+    this.origin = config.origin;
+    this.target = config.target;
+    this.damage = config.damage;
+    this.isCrit = config.isCrit ?? false;
+    this.color = config.color ?? '#fff';
+    this.width = config.width ?? 2;
+    this.isFromShip = config.isFromShip ?? false;
+    this.alive = true;
+    this.age = 0;
+    this.hasHit = false;
   }
 
   update(dt: number): void {
     this.age += dt;
 
-    // Remove immediately after hitting (no fade-out)
     if (this.hasHit) {
       this.alive = false;
     }
@@ -70,13 +84,11 @@ export class Laser {
     const current = this.getCurrentPosition();
     const progress = Math.min(1, this.age / this.travelTime);
 
-    // Smooth fade-in effect (no epileptic flickering)
     const fadeInAlpha = Math.min(1, progress * 1.5);
 
     const ctx = drawer.getContext();
     ctx.save();
 
-    // Draw straight laser beam
     const colorRgba = this.hexToRgba(this.color, fadeInAlpha * 0.6);
     const colorTransparent = this.hexToRgba(this.color, 0);
 
@@ -100,11 +112,10 @@ export class Laser {
     ctx.lineTo(current.x, current.y);
     ctx.stroke();
 
-    // Glow for crits (thin glow)
     if (this.isCrit) {
       ctx.globalAlpha = fadeInAlpha * 0.3;
       ctx.strokeStyle = this.color;
-      ctx.lineWidth = this.width + 1.5; // Thin glow
+      ctx.lineWidth = this.width + 1.5;
       ctx.shadowBlur = 8;
       ctx.shadowColor = this.color;
       ctx.beginPath();
@@ -113,7 +124,6 @@ export class Laser {
       ctx.stroke();
     }
 
-    // Draw impact point (only when laser reaches target)
     if (progress >= 0.95) {
       ctx.globalAlpha = fadeInAlpha;
       ctx.fillStyle = this.color;
@@ -128,10 +138,7 @@ export class Laser {
   }
 
   private hexToRgba(hex: string, alpha: number): string {
-    // Handle both #RGB and #RRGGBB formats
-    let r = 0,
-      g = 0,
-      b = 0;
+    let r = 0, g = 0, b = 0;
 
     if (hex.startsWith('#')) {
       hex = hex.substring(1);

@@ -9,6 +9,7 @@ export class Loop {
   constructor(
     private update: (dt: number) => void,
     private render: () => void,
+    private onFrameEnd?: (frameStart: number) => void,
   ) {
     // Handle visibility changes to keep game running in background
     document.addEventListener('visibilitychange', () => {
@@ -48,6 +49,7 @@ export class Loop {
   private loop = (currentTime: number): void => {
     if (!this.running) return;
 
+    const frameStart = currentTime;
     const deltaTime = Math.min((currentTime - this.lastTime) / 1000, 0.1);
     this.lastTime = currentTime;
     this.accumulator += deltaTime;
@@ -58,6 +60,11 @@ export class Loop {
     }
 
     this.render();
+
+    // Call frame end callback for performance monitoring
+    if (this.onFrameEnd) {
+      this.onFrameEnd(frameStart);
+    }
 
     // Only continue requestAnimationFrame loop if visible
     if (this.isVisible) {
@@ -73,6 +80,7 @@ export class Loop {
       if (!this.running || this.isVisible) return;
 
       const now = performance.now();
+      const frameStart = now;
       const deltaTime = Math.min((now - this.lastTime) / 1000, 0.1);
       this.lastTime = now;
       this.accumulator += deltaTime;
@@ -80,6 +88,11 @@ export class Loop {
       while (this.accumulator >= this.fixedDt) {
         this.update(this.fixedDt);
         this.accumulator -= this.fixedDt;
+      }
+
+      // Call frame end callback for performance monitoring
+      if (this.onFrameEnd) {
+        this.onFrameEnd(frameStart);
       }
 
       // Don't render when hidden - saves GPU
