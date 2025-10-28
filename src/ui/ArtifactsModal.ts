@@ -142,7 +142,6 @@ export class ArtifactsModal {
         const id = btn.getAttribute('data-id');
         if (id) {
           this.artifactSystem.equipArtifact(id);
-
           const state = this.store.getState();
           this.store.setState({ ...state });
           this.render();
