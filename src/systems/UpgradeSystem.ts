@@ -738,20 +738,6 @@ export class UpgradeSystem {
           state.subUpgrades['super_clicker'] = true;
         },
       },
-      {
-        id: 'missile_launcher',
-        name: 'Missile Launcher Array',
-        description: 'Enhanced targeting systems for improved precision',
-        flavor: 'Advanced missile technology for maximum firepower.',
-        cost: 500000,
-        owned: false,
-        requires: (state) => state.shipsCount >= 15,
-        isVisible: (state) => state.shipsCount >= 15,
-        buy: (state) => {
-          state.subUpgrades['missile_launcher'] = true;
-        },
-      },
-
       // === ULTRA LATE GAME UPGRADES (Level 200-500) ===
       {
         id: 'multiversal_matrix',
@@ -1609,7 +1595,6 @@ export class UpgradeSystem {
         'death_pact',
         'ship_swarm',
         'perfect_precision',
-        'missile_launcher',
       ].includes(u.id),
     );
 
@@ -2142,6 +2127,11 @@ export class UpgradeSystem {
     }
 
     return Math.floor(cost * discount);
+  }
+
+  // Public method to get discounted cost for sub-upgrades
+  public getSubUpgradeCost(subUpgrade: SubUpgrade): number {
+    return this.applyDiscount(subUpgrade.cost);
   }
 
   // Helper to get current game state (will be set by Store)

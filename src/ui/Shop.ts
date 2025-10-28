@@ -254,8 +254,9 @@ export class Shop {
         continue;
       }
 
-      // Check if player has 75% of the cost
-      if (state.points >= subUpgrade.cost * 0.75) {
+      // Check if player has 75% of the cost (with discounts applied)
+      const discountedCost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+      if (state.points >= discountedCost * 0.75) {
         state.discoveredUpgrades[subKey] = true;
         discoveredNew = true;
       }
@@ -285,7 +286,8 @@ export class Shop {
     const subUpgrades = this.upgradeSystem.getSubUpgrades();
     for (const upgrade of subUpgrades) {
       if (!upgrade.isVisible(state) || upgrade.owned) continue;
-      if (points >= upgrade.cost * 0.9 && points < upgrade.cost) {
+      const cost = this.upgradeSystem.getSubUpgradeCost(upgrade);
+      if (points >= cost * 0.9 && points < cost) {
         return true;
       }
     }
@@ -316,7 +318,8 @@ export class Shop {
     for (const upgrade of subUpgrades) {
       if (!upgrade.isVisible(state)) continue;
       const key = `sub_${upgrade.id}`;
-      const canAfford = !upgrade.owned && state.points >= upgrade.cost;
+      const cost = this.upgradeSystem.getSubUpgradeCost(upgrade);
+      const canAfford = !upgrade.owned && state.points >= cost;
       const wasAffordable = this.lastAffordability.get(key);
 
       if (wasAffordable !== canAfford) {
@@ -362,7 +365,8 @@ export class Shop {
           `[data-upgrade-id="${subUpgrade.id}"]`,
         ) as HTMLElement;
         if (card && !subUpgrade.owned) {
-          const canAfford = state.points >= subUpgrade.cost;
+          const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+          const canAfford = state.points >= cost;
 
           // Always update to ensure responsiveness
           card.style.opacity = canAfford ? '1' : '0.7';
@@ -559,9 +563,10 @@ export class Shop {
 
     const cost = document.createElement('div');
     cost.className = 'sub-upgrade-cost';
+    const discountedCost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
     cost.textContent = subUpgrade.owned
       ? '✓ OWNED'
-      : this.formatNumber(subUpgrade.cost);
+      : this.formatNumber(discountedCost);
     card.appendChild(cost);
 
     // Tooltip
@@ -572,13 +577,14 @@ export class Shop {
 
     if (!subUpgrade.owned) {
       // Set initial affordability state
-      const canAfford = state.points >= subUpgrade.cost;
+      const canAfford = state.points >= discountedCost;
       card.style.opacity = canAfford ? '1' : '0.7';
       card.style.cursor = canAfford ? 'pointer' : 'not-allowed';
 
       card.addEventListener('click', () => {
         const currentState = this.store.getState();
-        if (currentState.points >= subUpgrade.cost) {
+        const currentCost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+        if (currentState.points >= currentCost) {
           this.buySubUpgrade(subUpgrade);
         }
       });
@@ -633,7 +639,6 @@ export class Shop {
       rapid_fire: '⚡',
       click_multiplier: '✨',
       super_clicker: '💪',
-      missile_launcher: '🚀',
     };
     return emojiMap[upgradeId] || '⭐';
   }
@@ -779,8 +784,9 @@ export class Shop {
     this.isProcessingPurchase = true;
 
     const state = this.store.getState();
-    if (state.points >= upgrade.cost) {
-      state.points -= upgrade.cost;
+    const discountedCost = this.upgradeSystem.getSubUpgradeCost(upgrade);
+    if (state.points >= discountedCost) {
+      state.points -= discountedCost;
       upgrade.buy(state);
       this.store.incrementSubUpgrade();
       // Track for missions

@@ -108,9 +108,7 @@ export class AscensionModal {
 
     // Check if can ascend
     const canAscend = this.ascensionSystem.canAscend(state);
-    const ascendBtn = this.modal.querySelector(
-      '#ascend-btn',
-    );
+    const ascendBtn = this.modal.querySelector('#ascend-btn');
     if (ascendBtn instanceof HTMLButtonElement) {
       if (canAscend) {
         ascendBtn.disabled = false;

@@ -632,6 +632,11 @@ export class Game {
   private performAscension(): void {
     const state = this.store.getState();
 
+    this.damageBatch = 0;
+    this.critBatch = false;
+    this.shipDamageBatch = false;
+    this.batchTimer = 0;
+
     // Calculate prestige points to gain
     const prestigeGain = this.ascensionSystem.calculatePrestigePoints(state);
 
@@ -1252,8 +1257,12 @@ export class Game {
     this.missionSystem.trackKill();
 
     const baseXP = 3;
-    let bonusXP = this.upgradeSystem.getBonusXP(state) * baseXP;
-    bonusXP *= 1 + this.artifactSystem.getXPBonus();
+    const upgradeBonus = this.upgradeSystem.getBonusXP(state);
+    const artifactBonus = this.artifactSystem.getXPBonus();
+
+    let bonusXP = upgradeBonus * baseXP;
+
+    bonusXP *= 1 + artifactBonus;
 
     state.experience += bonusXP;
 
@@ -1318,8 +1327,10 @@ export class Game {
 
     this.store.addPoints(bossReward);
 
+    const artifactXPBonus = this.artifactSystem.getXPBonus();
+
     let bossXP = Math.floor(state.level * 50);
-    bossXP *= 1 + this.artifactSystem.getXPBonus();
+    bossXP *= 1 + artifactXPBonus;
 
     state.experience += bossXP;
 
@@ -1688,6 +1699,18 @@ export class Game {
     Save.clear();
     this.store.setState(Save.load());
     this.mode = 'normal';
+
+    this.blockedOnBossLevel = null;
+    if (this.bossRetryButton) {
+      this.bossRetryButton.style.display = 'none';
+    }
+
+    this.hideBossTimer();
+
+    this.damageBatch = 0;
+    this.critBatch = false;
+    this.shipDamageBatch = false;
+
     this.createBall();
     this.createShips();
   }
