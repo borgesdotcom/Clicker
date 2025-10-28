@@ -281,7 +281,7 @@ export class ArtifactSystem {
   public getDamageBonus(): number {
     let bonus = 0;
     for (const artifact of this.equippedArtifacts) {
-      if (artifact.type === 'damage') {
+      if (artifact.type === 'damage' || artifact.type === 'special') {
         bonus += artifact.bonus;
       }
     }
@@ -291,7 +291,7 @@ export class ArtifactSystem {
   public getSpeedBonus(): number {
     let bonus = 0;
     for (const artifact of this.equippedArtifacts) {
-      if (artifact.type === 'speed') {
+      if (artifact.type === 'speed' || artifact.type === 'special') {
         bonus += artifact.bonus;
       }
     }
@@ -301,7 +301,7 @@ export class ArtifactSystem {
   public getCritBonus(): number {
     let bonus = 0;
     for (const artifact of this.equippedArtifacts) {
-      if (artifact.type === 'critical') {
+      if (artifact.type === 'critical' || artifact.type === 'special') {
         bonus += artifact.bonus;
       }
     }
@@ -311,7 +311,7 @@ export class ArtifactSystem {
   public getPointsBonus(): number {
     let bonus = 0;
     for (const artifact of this.equippedArtifacts) {
-      if (artifact.type === 'points') {
+      if (artifact.type === 'points' || artifact.type === 'special') {
         bonus += artifact.bonus;
       }
     }
@@ -321,7 +321,7 @@ export class ArtifactSystem {
   public getXPBonus(): number {
     let bonus = 0;
     for (const artifact of this.equippedArtifacts) {
-      if (artifact.type === 'xp') {
+      if (artifact.type === 'xp' || artifact.type === 'special') {
         bonus += artifact.bonus;
       }
     }
