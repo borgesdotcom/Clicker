@@ -142,6 +142,9 @@ export class ArtifactsModal {
         const id = btn.getAttribute('data-id');
         if (id) {
           this.artifactSystem.equipArtifact(id);
+          // Trigger store update to notify Shop and other subscribers
+          const state = this.store.getState();
+          this.store.setState({ ...state });
           this.render();
         }
       });
