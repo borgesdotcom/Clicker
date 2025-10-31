@@ -103,29 +103,6 @@ export class AlienBall {
   draw(drawer: Draw): void {
     const ctx = drawer.getContext();
 
-    if (this.breakAnimTime > 0) {
-      // Bubble popping animation!
-      const progress = 1 - this.breakAnimTime / this.breakAnimDuration;
-      const alpha = 1 - progress;
-      const scale = 1 + progress * 0.8; // More dramatic pop
-
-      drawer.setAlpha(alpha * 0.6);
-
-      // Draw bubble segments flying apart
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const dist = progress * this.radius * 2;
-        const x = this.x + Math.cos(angle) * dist;
-        const y = this.y + Math.sin(angle) * dist;
-
-        drawer.setFill(this.color.fill);
-        drawer.circle(x, y, this.radius * scale * 0.3);
-      }
-
-      drawer.resetAlpha();
-      return;
-    }
-
     // Draw bubble wrap bubble!
     // Main bubble body with gradient - more translucent
     const gradient = ctx.createRadialGradient(
@@ -165,7 +142,7 @@ export class AlienBall {
     ctx.stroke();
 
     // Inner shadow for depth
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius * 0.9, 0, Math.PI * 2);

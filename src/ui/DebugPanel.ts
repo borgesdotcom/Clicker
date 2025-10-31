@@ -1,4 +1,5 @@
 import type { Store } from '../core/Store';
+import { ColorManager } from '../math/ColorManager';
 
 export class DebugPanel {
   private panel: HTMLElement | null = null;
@@ -321,15 +322,11 @@ export class DebugPanel {
 
   private maxCurrentXP(): void {
     const state = this.store.getState();
-    const required = this.getExpRequired(state.level);
+    const required = ColorManager.getExpRequired(state.level);
     state.experience = required - 1;
     this.store.setState(state);
     this.triggerStoreUpdate();
     this.showNotification('Maxed current level XP!');
-  }
-
-  private getExpRequired(level: number): number {
-    return Math.floor(100 * Math.pow(1.15, level - 1));
   }
 
   private addShips(count: number): void {

@@ -5,6 +5,7 @@ export class ArtifactsModal {
   private modal: HTMLElement;
   private artifactSystem: ArtifactSystem;
   private store: Store;
+  private onCloseCallback: (() => void) | null = null;
 
   constructor(artifactSystem: ArtifactSystem, store: Store) {
     this.artifactSystem = artifactSystem;
@@ -53,12 +54,27 @@ export class ArtifactsModal {
   }
 
   public show(): void {
+    // Close boss dialog if open to prevent interference
+    const bossDialog = document.getElementById('boss-dialog');
+    if (bossDialog && bossDialog.style.display !== 'none') {
+      bossDialog.style.display = 'none';
+    }
     this.modal.style.display = 'flex';
     this.render();
   }
 
   public hide(): void {
     this.modal.style.display = 'none';
+    // Call callback if set (used for sequencing modals)
+    if (this.onCloseCallback) {
+      const callback = this.onCloseCallback;
+      this.onCloseCallback = null; // Clear callback after use
+      callback();
+    }
+  }
+
+  public setOnCloseCallback(callback: () => void): void {
+    this.onCloseCallback = callback;
   }
 
   private render(): void {

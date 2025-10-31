@@ -7,7 +7,6 @@ export type EnemyType = 'normal' | 'scout' | 'tank' | 'healer';
 export interface EnemyStats {
   type: EnemyType;
   hpMultiplier: number;
-  speedMultiplier: number;
   pointsMultiplier: number;
   color: string;
   glowColor: string;
@@ -61,7 +60,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   normal: {
     type: 'normal',
     hpMultiplier: 1,
-    speedMultiplier: 1,
     pointsMultiplier: 1,
     color: '#ff6666', // Will be randomized
     glowColor: 'rgba(255, 102, 102, 0.5)',
@@ -70,7 +68,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   scout: {
     type: 'scout',
     hpMultiplier: 0.5,
-    speedMultiplier: 2,
     pointsMultiplier: 1.5,
     color: '#ffff66',
     glowColor: 'rgba(255, 255, 102, 0.5)',
@@ -79,7 +76,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   tank: {
     type: 'tank',
     hpMultiplier: 3,
-    speedMultiplier: 0.5,
     pointsMultiplier: 2.5,
     color: '#ff6666',
     glowColor: 'rgba(255, 102, 102, 0.5)',
@@ -88,7 +84,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   healer: {
     type: 'healer',
     hpMultiplier: 0.8,
-    speedMultiplier: 0.8,
     pointsMultiplier: 3,
     color: '#66ff99',
     glowColor: 'rgba(102, 255, 153, 0.5)',
@@ -101,13 +96,7 @@ export class EnhancedAlienBall extends AlienBall {
   private stats: EnemyStats;
   private healTimer = 0;
   private healInterval = 2;
-  private animationTime = 0; // For movement animations
-  private onDamageCallback?: (
-    damage: number,
-    x: number,
-    y: number,
-    radius: number,
-  ) => void;
+  private animationTime = 0; // For visual animations
 
   constructor(
     x: number,
@@ -165,18 +154,7 @@ export class EnhancedAlienBall extends AlienBall {
     return Math.floor(basePoints * this.stats.pointsMultiplier);
   }
 
-  public setOnDamageCallback(
-    callback: (damage: number, x: number, y: number, radius: number) => void,
-  ): void {
-    this.onDamageCallback = callback;
-  }
-
   public override takeDamage(amount: number): boolean {
-    // Trigger visual effects before damage
-    if (this.onDamageCallback) {
-      this.onDamageCallback(amount, this.x, this.y, this.radius);
-    }
-
     // Call parent takeDamage
     return super.takeDamage(amount);
   }
@@ -282,29 +260,6 @@ export class EnhancedAlienBall extends AlienBall {
   ): void {
     // Draw HP bar
     this.drawHealthBar(ctx, centerX, centerY);
-
-    // Speed trails for fast bubble
-    for (let i = 0; i < 3; i++) {
-      const alpha = 0.3 - i * 0.1;
-      const trailGradient = ctx.createRadialGradient(
-        centerX - this.radius * 0.3,
-        centerY - this.radius * 0.3,
-        this.radius * 0.1,
-        centerX,
-        centerY,
-        this.radius * 0.9,
-      );
-      trailGradient.addColorStop(
-        0,
-        `rgba(255, 255, 255, ${String(alpha * 0.5)})`,
-      );
-      trailGradient.addColorStop(0.3, `rgba(255, 255, 100, ${String(alpha)})`);
-      trailGradient.addColorStop(1, `rgba(255, 255, 100, 0)`);
-      ctx.fillStyle = trailGradient;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, this.radius * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-    }
 
     // Main bubble body (smaller, faster bubble)
     const gradient = ctx.createRadialGradient(
@@ -522,18 +477,6 @@ export class EnhancedAlienBall extends AlienBall {
     }
   }
 
-  public getEnemyTypeName(): string {
-    switch (this.enemyType) {
-      case 'scout':
-        return '⚡ Fast Scout';
-      case 'tank':
-        return '🛡️ Armored Tank';
-      case 'healer':
-        return '💚 Regenerator';
-      default:
-        return '👾 Alien';
-    }
-  }
 }
 
 export function selectEnemyType(level: number): EnemyType {

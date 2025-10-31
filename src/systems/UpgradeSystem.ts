@@ -556,7 +556,7 @@ export class UpgradeSystem {
       {
         id: 'reality_anchor',
         name: 'Reality Anchor',
-        description: 'Critical damage x3, All gains +25%',
+        description: 'Critical damage x2, All gains +25%',
         flavor: 'Keep reality in check. Or break it. Your choice.',
         cost: 200000000,
         owned: false,
@@ -610,7 +610,7 @@ export class UpgradeSystem {
       {
         id: 'dragon_egg',
         name: 'Dragon Egg',
-        description: 'Critical hit chance +10%, Critical damage x2',
+        description: 'Critical hit chance +5%, Critical damage +50%',
         flavor: "It's either a dragon egg or a really angry space chicken.",
         cost: 3000000,
         owned: false,
@@ -794,7 +794,7 @@ export class UpgradeSystem {
       {
         id: 'dimensional_collapse',
         name: 'Dimensional Collapse Weapon',
-        description: 'Critical damage x5, Attack speed +200%',
+        description: 'Critical damage x3, Attack speed +100%',
         flavor: 'Collapses dimensions. Please aim responsibly.',
         cost: 5000000000,
         owned: false,
@@ -2316,9 +2316,9 @@ export class UpgradeSystem {
       chance += 5;
     }
 
-    // Dragon egg: +10%
+    // Dragon egg: +5%
     if (state.subUpgrades['dragon_egg']) {
-      chance += 10;
+      chance += 5;
     }
 
     // Quantum entanglement: +8%
@@ -2352,7 +2352,8 @@ export class UpgradeSystem {
 
   getCritMultiplier(state: GameState): number {
     this.updateSubUpgradesFromState(state);
-    let multiplier = 2.0; // Base 2x damage
+    // Base multiplier is always 2.0x (critical hits deal 2x damage)
+    let multiplier = 2.0;
 
     // Artifact bonus (some artifacts boost crit damage instead of chance)
     if (this.artifactSystem) {
@@ -2360,9 +2361,9 @@ export class UpgradeSystem {
       multiplier += artifactBonus * 2; // Crit damage artifacts add to the multiplier
     }
 
-    // Rubber duck: +3x
+    // Rubber duck: +3%
     if (state.subUpgrades['rubber_duck']) {
-      multiplier += 3;
+      multiplier *= 1.03;
     }
 
     // Lucky horseshoe: +50%
@@ -2370,19 +2371,19 @@ export class UpgradeSystem {
       multiplier *= 1.5;
     }
 
-    // Dragon egg: x2
+    // Dragon egg: 50%
     if (state.subUpgrades['dragon_egg']) {
+      multiplier *= 1.5;
+    }
+
+    // Reality anchor: x2
+    if (state.subUpgrades['reality_anchor']) {
       multiplier *= 2;
     }
 
-    // Reality anchor: x3
-    if (state.subUpgrades['reality_anchor']) {
-      multiplier *= 3;
-    }
-
-    // Dimensional collapse: x5
+    // Dimensional collapse: x3
     if (state.subUpgrades['dimensional_collapse']) {
-      multiplier *= 5;
+      multiplier *= 3;
     }
 
     return multiplier;
@@ -2638,9 +2639,9 @@ export class UpgradeSystem {
       cooldown *= 0.6;
     }
 
-    // Dimensional collapse: +200% speed
+    // Dimensional collapse: +100% speed = 2x speed = 0.5x cooldown
     if (state.subUpgrades['dimensional_collapse']) {
-      cooldown *= 0.33; // 3x speed = 1/3 cooldown
+      cooldown *= 0.5; // 2x speed = 1/2 cooldown
     }
 
     // Omega protocol: x25 speed

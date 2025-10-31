@@ -325,15 +325,11 @@ export class Game {
     this.setupCreditsButton();
     this.setupDiscordButton();
     this.setupGameInfoButton();
-    this.setupGraphicsToggle();
     Layout.setupResetButton(() => {
       this.resetGame();
     });
   }
 
-  private setupGraphicsToggle(): void {
-    // Legacy method kept for backwards compatibility
-  }
 
   private setupBossDialog(): void {
     const startBtn = document.getElementById('boss-start-btn');
@@ -1155,9 +1151,15 @@ export class Game {
     const isCrit = this.critBatch;
     const isFromShip = this.shipDamageBatch;
 
-    if (this.mode === 'normal' && this.ball) {
+      if (this.mode === 'normal' && this.ball) {
       const broken = this.ball.takeDamage(finalDamage);
-      this.store.addPoints(finalDamage);
+      
+      // Apply points multiplier for enhanced aliens
+      let pointsEarned = finalDamage;
+      if (this.ball instanceof EnhancedAlienBall) {
+        pointsEarned = this.ball.getPointsReward(finalDamage);
+      }
+      this.store.addPoints(pointsEarned);
 
       // Always show damage numbers (for both main ship and auto-fire ships)
       this.damageNumberSystem.spawnDamageNumber(
@@ -1299,8 +1301,8 @@ export class Game {
       this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
-        this.ball = null;
-        this.showBossDialog();
+          this.ball = null;
+          this.showBossDialog();
       } else {
         // Instant respawn for better late-game flow
         setTimeout(() => {
@@ -1345,13 +1347,19 @@ export class Game {
 
     state.experience += bossXP;
 
+    // Check if artifact was found
+    let artifactFound = false;
     if (Math.random() < 0.5) {
-      const artifact = this.artifactSystem.generateArtifact();
-      this.hud.showMessage(
-        `🎁 Artifact Found: ${artifact.icon} ${artifact.name}!`,
-        '#ffa94d',
-        3000,
-      );
+      this.artifactSystem.generateArtifact();
+      artifactFound = true;
+      
+      // Show artifacts modal first, then victory message when it closes
+      this.artifactsModal.setOnCloseCallback(() => {
+        setTimeout(() => {
+          this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
+        }, 300);
+      });
+      this.artifactsModal.show();
     }
 
     while (state.experience >= ColorManager.getExpRequired(state.level)) {
@@ -1381,7 +1389,10 @@ export class Game {
       this.bossRetryButton.style.display = 'none';
     }
 
-    this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
+    // Only show victory message if artifact modal didn't open
+    if (!artifactFound) {
+      this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
+    }
 
     if (this.userSettings.highGraphics) {
       const centerX = this.canvas.getCenterX();
@@ -1399,6 +1410,9 @@ export class Game {
   }
 
   private showBossDialog(): void {
+    // Close artifacts modal if open to prevent interference
+    this.artifactsModal.hide();
+    
     const dialog = document.getElementById('boss-dialog');
     if (dialog) {
       dialog.style.display = 'flex';

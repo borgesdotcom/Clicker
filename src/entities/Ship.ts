@@ -5,6 +5,7 @@ export class Ship {
   public x = 0;
   public y = 0;
   private rotationSpeed: number; // Fixed rotation speed per ship
+  private enginePulse = Math.random() * Math.PI * 2; // Animation offset for engine glow
 
   constructor(
     public angle: number,
@@ -28,6 +29,11 @@ export class Ship {
     const actualSpeed = speed !== undefined ? speed : this.rotationSpeed;
     this.angle += actualSpeed * dt;
     this.updatePosition();
+    // Animate engine pulse
+    this.enginePulse += dt * 3;
+    if (this.enginePulse > Math.PI * 2) {
+      this.enginePulse -= Math.PI * 2;
+    }
   }
 
   getRotationSpeed(): number {
@@ -66,9 +72,37 @@ export class Ship {
       x: this.x + Math.cos(this.angle + Math.PI * 1.3) * size * 0.6,
       y: this.y + Math.sin(this.angle + Math.PI * 1.3) * size * 0.6,
     };
-
+    
     // Determine ship appearance based on upgrades (similar to laser system)
     const visuals = this.getShipVisuals(state);
+    
+    // Calculate ship shape points - more angular, futuristic design
+    const frontDist = size * 0.9;
+    const backDist = size * 0.3;
+    
+    // Front point (nose)
+    const frontX = this.x + Math.cos(this.angle + Math.PI) * frontDist;
+    const frontY = this.y + Math.sin(this.angle + Math.PI) * frontDist;
+    
+    // Left wing tip
+    const leftWingX = this.x + Math.cos(this.angle + Math.PI * 0.65) * size * 0.75;
+    const leftWingY = this.y + Math.sin(this.angle + Math.PI * 0.65) * size * 0.75;
+    
+    // Right wing tip
+    const rightWingX = this.x + Math.cos(this.angle + Math.PI * 1.35) * size * 0.75;
+    const rightWingY = this.y + Math.sin(this.angle + Math.PI * 1.35) * size * 0.75;
+    
+    // Back left point
+    const backLeftX = this.x + Math.cos(this.angle + Math.PI * 0.8) * backDist;
+    const backLeftY = this.y + Math.sin(this.angle + Math.PI * 0.8) * backDist;
+    
+    // Back right point
+    const backRightX = this.x + Math.cos(this.angle + Math.PI * 1.2) * backDist;
+    const backRightY = this.y + Math.sin(this.angle + Math.PI * 1.2) * backDist;
+    
+    // Center/body point
+    const bodyX = this.x;
+    const bodyY = this.y;
 
     if (this.isMainShip) {
       // Main ship: dynamic color based on upgrades
@@ -79,7 +113,7 @@ export class Ship {
         0,
         this.x,
         this.y,
-        size * 1.5,
+        size * 1.8,
       );
       gradient.addColorStop(0, visuals.glowColor);
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -87,7 +121,7 @@ export class Ship {
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 1.5, 0, Math.PI * 2);
       ctx.fill();
-
+      
       // Draw ship body
       drawer.setFill(visuals.fillColor);
       drawer.triangle({ x: tipX, y: tipY }, left, right);
@@ -109,28 +143,73 @@ export class Ship {
       drawer.setFill('#ffffff');
       drawer.triangle({ x: innerTipX, y: innerTipY }, innerLeft, innerRight);
     } else {
-      // Regular ships: lighter version of upgrade color
-      // Draw glow
-      const gradient = ctx.createRadialGradient(
+      // === ALLY SHIPS - Simpler but still cool ===
+      
+      // Outer glow
+      const allyGlow = ctx.createRadialGradient(
         this.x,
         this.y,
         0,
         this.x,
         this.y,
-        size * 1.2,
+        size * 1.5,
       );
-      gradient.addColorStop(0, this.adjustAlpha(visuals.glowColor, 0.2));
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = gradient;
+      allyGlow.addColorStop(0, this.adjustAlpha(visuals.glowColor, 0.25));
+      allyGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = allyGlow;
       ctx.beginPath();
-      ctx.arc(this.x, this.y, size * 1.2, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, size * 1.5, 0, Math.PI * 2);
       ctx.fill();
-
-      // Draw ship body with lighter tint
-      drawer.setFill(this.lightenColor(visuals.fillColor, 0.3));
-      drawer.triangle({ x: tipX, y: tipY }, left, right);
-      drawer.setStroke(this.lightenColor(visuals.fillColor, 0.5), 1.5);
-      drawer.triangle({ x: tipX, y: tipY }, left, right, false);
+      
+      // Ship body
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(frontX, frontY);
+      ctx.lineTo(leftWingX, leftWingY);
+      ctx.lineTo(backLeftX, backLeftY);
+      ctx.lineTo(bodyX, bodyY);
+      ctx.lineTo(backRightX, backRightY);
+      ctx.lineTo(rightWingX, rightWingY);
+      ctx.closePath();
+      
+      // Fill with lighter tint
+      const lightColor = this.lightenColor(visuals.fillColor, 0.35);
+      ctx.fillStyle = lightColor;
+      ctx.fill();
+      
+      // Outline
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = lightColor;
+      ctx.strokeStyle = this.lightenColor(visuals.fillColor, 0.6);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+      
+      // Engine glow (subtle)
+      const enginePulseValue = Math.sin(this.enginePulse) * 0.2 + 0.6;
+      const engineCenterX = this.x + Math.cos(this.angle) * size * 0.3;
+      const engineCenterY = this.y + Math.sin(this.angle) * size * 0.3;
+      
+      const engineGlow = ctx.createRadialGradient(
+        engineCenterX,
+        engineCenterY,
+        0,
+        engineCenterX,
+        engineCenterY,
+        size * 0.6,
+      );
+      engineGlow.addColorStop(0, this.hexToRgba(lightColor, 0.4 * enginePulseValue));
+      engineGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = engineGlow;
+      ctx.beginPath();
+      ctx.arc(engineCenterX, engineCenterY, size * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Simple core highlight
+      ctx.fillStyle = this.hexToRgba(lightColor, 0.5);
+      ctx.beginPath();
+      ctx.arc(bodyX, bodyY, size * 0.25, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
