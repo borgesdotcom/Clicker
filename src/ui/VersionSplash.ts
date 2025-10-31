@@ -28,33 +28,33 @@ export class VersionSplash {
           <h2>Welcome to the Alpha Test!</h2>
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-icon">🌌</div>
-              <h3>Animated Space Background</h3>
-              <p>Explore the cosmos with beautiful star fields, nebulae, and shooting comets!</p>
+              <div class="feature-icon">⚡</div>
+              <h3>Power-Up System</h3>
+              <p>Collect temporary power-ups from defeated enemies! Boost your damage, speed, crit chance, multishot, and points!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">👾</div>
-              <h3>New Enemy Types</h3>
-              <p>Face Fast Scouts, Armored Tanks, and Regenerators with unique abilities!</p>
+              <div class="feature-icon">📊</div>
+              <h3>Improved HUD</h3>
+              <p>Enhanced heads-up display with real-time power-up buff timers, updated stats, and better visual feedback!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">🎯</div>
-              <h3>Mission System</h3>
-              <p>Complete daily missions and regular quests for amazing rewards!</p>
+              <div class="feature-icon">🛠️</div>
+              <h3>Major Bug Fixes</h3>
+              <p>Fixed shop display updates, power-up stacking, attack speed calculations, and multishot mechanics!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">✨</div>
-              <h3>Artifact System</h3>
-              <p>Discover and upgrade powerful artifacts with permanent bonuses!</p>
+              <div class="feature-icon">⚙️</div>
+              <h3>Performance Optimizations</h3>
+              <p>Improved rendering efficiency, better memory management, and smoother gameplay experience!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">👹</div>
-              <h3>Enhanced Bosses</h3>
-              <p>Experience more challenging boss battles with unique mechanics!</p>
+              <div class="feature-icon">🎮</div>
+              <h3>Debug Panel Updates</h3>
+              <p>Added power-up controls to the admin panel for easier testing and debugging!</p>
             </div>
           </div>
           <div class="version-footer">
-            <p>Thank you for playing! Enjoy the new features and have fun conquering the galaxy!</p>
+            <p>Thank you for playing! Collect power-ups to boost your performance and enjoy the improved experience!</p>
           </div>
         </div>
         <button class="version-splash-close">Start Playing!</button>
