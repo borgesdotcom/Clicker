@@ -6,7 +6,7 @@ export class VersionSplash {
   }
 
   private checkVersion(): void {
-    const currentVersion = '0.0.2';
+    const currentVersion = '0.0.3';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -25,7 +25,7 @@ export class VersionSplash {
           <div class="version-badge">MAJOR UPDATE</div>
         </div>
         <div class="version-splash-body">
-          <h2>Welcome to the Official Release!</h2>
+          <h2>Welcome to the Alpha Test!</h2>
           <div class="feature-grid">
             <div class="feature-item">
               <div class="feature-icon">🌌</div>

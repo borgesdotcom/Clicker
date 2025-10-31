@@ -80,16 +80,16 @@ export class Shop {
   }
 
   private setupBuyQuantityButtons(): void {
-    const shopHeader = document.getElementById('shop-tabs');
-    if (!shopHeader) return;
+    const shopPanel = document.getElementById('shop-panel');
+    const shopTabs = document.getElementById('shop-tabs');
+    if (!shopPanel || !shopTabs) return;
 
-    // Create buy quantity container
+    // Create buy quantity container - place it before tabs
     const quantityContainer = document.createElement('div');
     quantityContainer.className = 'buy-quantity-selector';
 
     const label = document.createElement('span');
-    label.textContent = 'Buy: ';
-    label.style.cssText = 'color: #fff; font-size: 12px; margin-right: 5px;';
+    label.textContent = 'Buy Quantity:';
     quantityContainer.appendChild(label);
 
     const quantities: (1 | 5 | 10 | 'max')[] = [1, 5, 10, 'max'];
@@ -98,8 +98,11 @@ export class Shop {
       btn.textContent = qty === 'max' ? 'MAX' : `x${qty}`;
       btn.className = 'buy-quantity-btn';
       if (this.buyQuantity === qty) {
-        btn.style.background = '#4CAF50';
-        btn.style.borderColor = '#4CAF50';
+        btn.style.background = 'rgba(0, 255, 136, 0.4)';
+        btn.style.borderColor = '#00ff88';
+        btn.style.color = '#00ff88';
+        btn.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
+        btn.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
       }
       btn.addEventListener('click', () => {
         this.buyQuantity = qty;
@@ -108,11 +111,17 @@ export class Shop {
           const button = quantityContainer.children[i + 1] as HTMLElement;
           if (button) {
             if (q === qty) {
-              button.style.background = '#4CAF50';
-              button.style.borderColor = '#4CAF50';
+              button.style.background = 'rgba(0, 255, 136, 0.4)';
+              button.style.borderColor = '#00ff88';
+              button.style.color = '#00ff88';
+              button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
+              button.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
             } else {
-              button.style.background = '#333';
-              button.style.borderColor = '#666';
+              button.style.background = 'rgba(0, 255, 136, 0.1)';
+              button.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+              button.style.color = '#00ff88';
+              button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
+              button.style.boxShadow = 'none';
             }
           }
         });
@@ -121,7 +130,8 @@ export class Shop {
       quantityContainer.appendChild(btn);
     });
 
-    shopHeader.appendChild(quantityContainer);
+    // Insert before shop tabs
+    shopTabs.parentNode?.insertBefore(quantityContainer, shopTabs);
   }
 
   private setupDesktopToggle(): void {
@@ -162,6 +172,21 @@ export class Shop {
       setTimeout(() => {
         window.dispatchEvent(new Event('resize'));
       }, 350);
+    });
+  }
+
+  public forceRefresh(): void {
+    // Force immediate render (for power-up changes) - bypass throttling
+    if (this.renderTimeout !== null) {
+      cancelAnimationFrame(this.renderTimeout);
+      this.renderTimeout = null;
+    }
+    this.lastUpdateTime = 0; // Reset throttle
+    
+    // Use requestAnimationFrame to ensure it happens in the next frame
+    // but bypass all throttling checks
+    requestAnimationFrame(() => {
+      this.render(); // Call render directly, bypassing scheduleRender throttling
     });
   }
 

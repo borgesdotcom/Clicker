@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-import type { MissionSystem } from '../systems/MissionSystem';
+import type { MissionSystem, MissionType } from '../systems/MissionSystem';
+import type { Store } from '../core/Store';
 
 export class MissionsModal {
   private modal: HTMLElement;
   private missionSystem: MissionSystem;
+  private store: Store;
   private onClaim: () => void;
 
-  constructor(missionSystem: MissionSystem, onClaim: () => void) {
+  constructor(missionSystem: MissionSystem, store: Store, onClaim: () => void) {
     this.missionSystem = missionSystem;
+    this.store = store;
     this.onClaim = onClaim;
     this.modal = this.createModal();
     document.body.appendChild(this.modal);
@@ -73,6 +76,52 @@ export class MissionsModal {
     this.modal.style.display = 'none';
   }
 
+  private getRewardForMission(type: MissionType, level: number): { points?: number; ships?: number; xp?: number } {
+    // Replicate the reward calculation logic from MissionSystem
+    switch (type) {
+      case 'clicks':
+        return { 
+          points: Math.floor(level * level * 500), 
+          xp: Math.floor(level * 15) 
+        };
+      case 'damage':
+        return { 
+          points: Math.floor(level * level * 750), 
+          ships: Math.max(1, Math.floor(level / 10)) 
+        };
+      case 'kills':
+        return { 
+          points: Math.floor(level * level * 400), 
+          xp: Math.floor(level * 12) 
+        };
+      case 'boss_kills':
+        return { 
+          points: Math.floor(level * level * 2500), 
+          ships: Math.max(2, Math.floor(level / 5)) 
+        };
+      case 'upgrades':
+        return { 
+          points: Math.floor(level * level * 600) 
+        };
+      case 'level':
+        return { 
+          points: Math.floor(level * level * 1000), 
+          xp: Math.floor(level * 30) 
+        };
+      case 'ships':
+        return { 
+          points: Math.floor(level * level * 1500) 
+        };
+      case 'combo':
+        return { 
+          points: Math.floor(level * level * 1250), 
+          xp: Math.floor(level * 25) 
+        };
+      default:
+        return {};
+    }
+  }
+
   private renderMissions(): void {
     const container = this.modal.querySelector('#missions-list');
     if (!container) return;
@@ -89,9 +138,29 @@ export class MissionsModal {
       return;
     }
 
+    // Get current level to calculate dynamic rewards
+    const state = this.store.getState();
+    const currentLevel = state.level;
+
     container.innerHTML = missions
       .map(
-        (mission) => `
+        (mission) => {
+          // Calculate reward based on current level
+          const calculatedReward = this.getRewardForMission(mission.type, currentLevel);
+          
+          // For daily missions, double the points and XP
+          const isDailyMission = mission.title.startsWith('[DAILY]');
+          const displayedReward = {
+            points: isDailyMission 
+              ? (calculatedReward.points || 0) * 2 
+              : calculatedReward.points || 0,
+            ships: calculatedReward.ships || 0,
+            xp: isDailyMission 
+              ? (calculatedReward.xp || 0) * 2 
+              : calculatedReward.xp || 0,
+          };
+
+          return `
       <div class="mission-card ${mission.completed ? 'completed' : ''} ${mission.claimed ? 'claimed' : ''}">
         <div class="mission-icon">${mission.icon}</div>
         <div class="mission-info">
@@ -103,14 +172,15 @@ export class MissionsModal {
           <p class="mission-progress-text">${mission.progress} / ${mission.target}</p>
         </div>
         <div class="mission-reward">
-          ${mission.reward.points ? `<div class="reward-item">💰 +${mission.reward.points.toLocaleString()}</div>` : ''}
-          ${mission.reward.ships ? `<div class="reward-item">🚀 +${mission.reward.ships}</div>` : ''}
-          ${mission.reward.xp ? `<div class="reward-item">⭐ +${mission.reward.xp} XP</div>` : ''}
+          ${displayedReward.points > 0 ? `<div class="reward-item">$ +${displayedReward.points.toLocaleString()}</div>` : ''}
+          ${displayedReward.ships > 0 ? `<div class="reward-item">🚀 +${displayedReward.ships}</div>` : ''}
+          ${displayedReward.xp > 0 ? `<div class="reward-item">⭐ +${displayedReward.xp} XP</div>` : ''}
           ${mission.completed && !mission.claimed ? `<button class="claim-btn" data-id="${mission.id}">Claim</button>` : ''}
           ${mission.claimed ? '<span class="claimed-badge">✓ Claimed</span>' : ''}
         </div>
       </div>
-    `,
+    `;
+        },
       )
       .join('');
 

@@ -21,6 +21,11 @@ export class UpgradeSystem {
     getXPBonus: () => number;
   } | null = null;
 
+  private powerUpSystem: {
+    getSpeedMultiplier: () => number;
+    getDamageMultiplier: () => number;
+  } | null = null;
+
   constructor() {
     this.initializeSubUpgrades();
   }
@@ -44,6 +49,13 @@ export class UpgradeSystem {
     getXPBonus: () => number;
   }): void {
     this.artifactSystem = artifactSystem;
+  }
+
+  setPowerUpSystem(powerUpSystem: {
+    getSpeedMultiplier: () => number;
+    getDamageMultiplier: () => number;
+  }): void {
+    this.powerUpSystem = powerUpSystem;
   }
 
   private initializeSubUpgrades(): void {
@@ -1034,7 +1046,7 @@ export class UpgradeSystem {
       {
         id: 'planck_piercer',
         name: 'Planck Piercer',
-        description: '+300% main ship damage, ignores 25% defense',
+        description: '+300% main ship damage, +15% critical hit chance',
         flavor: 'Strikes at the fabric of reality itself.',
         cost: 100000000,
         owned: false,
@@ -1727,9 +1739,19 @@ export class UpgradeSystem {
       },
       getLevel: (state: GameState) => state.attackSpeedLevel,
       getDisplayText: (state: GameState) => {
-        const cooldown = this.getFireCooldown(state);
-        const suffix = cooldown <= 50 ? ' [MAX]' : '';
-        return `Lv.${state.attackSpeedLevel.toString()} (${cooldown.toString()}ms${suffix})`;
+        const baseCooldown = this.getFireCooldown(state, false);
+        const effectiveCooldown = this.getFireCooldown(state, true);
+        const suffix = baseCooldown <= 50 ? ' [MAX]' : '';
+        
+        // Show effective cooldown with power-up if different
+        // Check if power-up system exists and speed multiplier is active
+        if (this.powerUpSystem) {
+          const speedMult = this.powerUpSystem.getSpeedMultiplier();
+          if (speedMult > 1 && effectiveCooldown < baseCooldown) {
+            return `Lv.${state.attackSpeedLevel.toString()} (${effectiveCooldown.toString()}ms ⚡${suffix})`;
+          }
+        }
+        return `Lv.${state.attackSpeedLevel.toString()} (${baseCooldown.toString()}ms${suffix})`;
       },
       subUpgrades: attackSpeedSubUpgrades,
     };
@@ -1751,10 +1773,20 @@ export class UpgradeSystem {
       },
       getLevel: (state: GameState) => state.pointMultiplierLevel,
       getDisplayText: (state: GameState) => {
-        const damage = this.getMainShipDamage(state);
-        const formattedDamage =
-          damage >= 1000 ? NumberFormatter.format(damage) : damage.toFixed(1);
-        return `Lv.${state.pointMultiplierLevel.toString()} (${formattedDamage}/hit)`;
+        const baseDamage = this.getMainShipDamage(state);
+        // Apply power-up damage multiplier if active
+        let effectiveDamage = baseDamage;
+        if (this.powerUpSystem) {
+          effectiveDamage *= this.powerUpSystem.getDamageMultiplier();
+        }
+        const formattedBase = effectiveDamage >= 1000 ? NumberFormatter.format(baseDamage) : baseDamage.toFixed(1);
+        const formattedEffective = effectiveDamage >= 1000 ? NumberFormatter.format(effectiveDamage) : effectiveDamage.toFixed(1);
+        
+        // Show effective damage with power-up if different
+        if (effectiveDamage > baseDamage && this.powerUpSystem && this.powerUpSystem.getDamageMultiplier() > 1) {
+          return `Lv.${state.pointMultiplierLevel.toString()} (${formattedEffective}/hit ⚔️)`;
+        }
+        return `Lv.${state.pointMultiplierLevel.toString()} (${formattedBase}/hit)`;
       },
       subUpgrades: pointMultiplierSubUpgrades,
     };
@@ -2336,6 +2368,11 @@ export class UpgradeSystem {
       chance += 15;
     }
 
+    // Planck Piercer: +15% (replaces the useless "ignores defense" mechanic)
+    if (state.subUpgrades['planck_piercer']) {
+      chance += 15;
+    }
+
     // Apply ascension bonuses
     if (this.ascensionSystem) {
       chance += this.ascensionSystem.getCritBonus(state);
@@ -2553,7 +2590,7 @@ export class UpgradeSystem {
     return multiplier;
   }
 
-  getFireCooldown(state: GameState): number {
+  getFireCooldown(state: GameState, includePowerUp: boolean = false): number {
     this.updateSubUpgradesFromState(state);
     // Slower scaling: 0.990 instead of 0.985 makes it much harder to reach low cooldowns
     let cooldown = Math.max(
@@ -2653,6 +2690,12 @@ export class UpgradeSystem {
     if (this.ascensionSystem) {
       const speedMult = this.ascensionSystem.getSpeedMultiplier(state);
       cooldown /= speedMult;
+    }
+
+    // Apply power-up speed multiplier if requested
+    if (includePowerUp && this.powerUpSystem) {
+      const speedMultiplier = this.powerUpSystem.getSpeedMultiplier();
+      cooldown /= speedMultiplier;
     }
 
     return Math.max(Math.floor(cooldown), 50); // Minimum 50ms (20 attacks/sec max)

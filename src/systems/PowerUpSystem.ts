@@ -1,5 +1,5 @@
 export type PowerUpType =
-  | 'shield'
+  | 'points'
   | 'damage'
   | 'speed'
   | 'multishot'
@@ -31,12 +31,12 @@ interface PowerUpConfig {
 }
 
 const POWERUP_CONFIGS: Record<PowerUpType, PowerUpConfig> = {
-  shield: {
-    color: '#00aaff',
-    icon: '🛡️',
-    name: 'Shield',
-    description: 'Invulnerable to boss attacks',
-    duration: 10,
+  points: {
+    color: '#00ff88',
+    icon: '💰',
+    name: 'Points Boost',
+    description: '+100% points earned',
+    duration: 15,
   },
   damage: {
     color: '#ff4444',
@@ -121,7 +121,7 @@ export class PowerUpSystem {
 
   private spawnRandomPowerUp(): void {
     const types: PowerUpType[] = [
-      'shield',
+      'points',
       'damage',
       'speed',
       'multishot',
@@ -151,11 +151,43 @@ export class PowerUpSystem {
       if (!powerUp.active) continue;
 
       const config = POWERUP_CONFIGS[powerUp.type];
-      const pulse = Math.sin(powerUp.pulseTime * 3) * 0.2 + 1;
+      const pulse = Math.sin(powerUp.pulseTime * 4) * 0.15 + 1; // Smoother pulse
+      const rotation = powerUp.pulseTime * 2; // Rotating effect
       const alpha = powerUp.lifetime < 3 ? (powerUp.lifetime % 0.5) / 0.5 : 1; // Blink when expiring
 
-      // Draw glow
-      const gradient = ctx.createRadialGradient(
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      // Outer glow ring (animated rotation)
+      ctx.translate(powerUp.x, powerUp.y);
+      ctx.rotate(rotation);
+      
+      // Large outer glow
+      const outerGlowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, powerUp.radius * pulse * 3);
+      outerGlowGradient.addColorStop(0, `${config.color}60`);
+      outerGlowGradient.addColorStop(0.5, `${config.color}30`);
+      outerGlowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      ctx.fillStyle = outerGlowGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, powerUp.radius * pulse * 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotating outer ring
+      ctx.strokeStyle = config.color;
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = config.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, powerUp.radius * pulse * 1.6, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      // Medium glow
+      const mediumGlow = ctx.createRadialGradient(
         powerUp.x,
         powerUp.y,
         0,
@@ -163,35 +195,66 @@ export class PowerUpSystem {
         powerUp.y,
         powerUp.radius * pulse * 2,
       );
-      gradient.addColorStop(0, `${config.color}80`);
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      mediumGlow.addColorStop(0, `${config.color}CC`);
+      mediumGlow.addColorStop(0.7, `${config.color}66`);
+      mediumGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = gradient;
-      ctx.fillRect(
-        powerUp.x - powerUp.radius * pulse * 2,
-        powerUp.y - powerUp.radius * pulse * 2,
-        powerUp.radius * pulse * 4,
-        powerUp.radius * pulse * 4,
+      ctx.fillStyle = mediumGlow;
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main circle with gradient fill
+      const mainGradient = ctx.createRadialGradient(
+        powerUp.x - powerUp.radius * 0.3,
+        powerUp.y - powerUp.radius * 0.3,
+        0,
+        powerUp.x,
+        powerUp.y,
+        powerUp.radius * pulse,
       );
+      mainGradient.addColorStop(0, '#ffffff');
+      mainGradient.addColorStop(0.3, config.color);
+      mainGradient.addColorStop(1, config.color + 'DD');
 
-      // Draw circle
-      ctx.fillStyle = config.color;
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
+      ctx.fillStyle = mainGradient;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = config.color;
       ctx.beginPath();
       ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse, 0, Math.PI * 2);
       ctx.fill();
+
+      // Bright border
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Draw icon
-      ctx.font = '24px Arial';
+      // Inner highlight circle
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.arc(
+        powerUp.x - powerUp.radius * pulse * 0.3,
+        powerUp.y - powerUp.radius * pulse * 0.3,
+        powerUp.radius * pulse * 0.4,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Draw icon with shadow
+      ctx.font = 'bold 28px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(config.icon, powerUp.x, powerUp.y);
+      ctx.fillText(config.icon, powerUp.x, powerUp.y + 1); // Slight offset for depth
 
-      ctx.globalAlpha = 1;
+      ctx.restore();
     }
   }
 
@@ -298,8 +361,8 @@ export class PowerUpSystem {
     return this.hasBuff('critical') ? 0.5 : 0;
   }
 
-  public hasShield(): boolean {
-    return this.hasBuff('shield');
+  public getPointsMultiplier(): number {
+    return this.hasBuff('points') ? 2 : 1;
   }
 
   public hasMultishot(): boolean {
@@ -308,6 +371,10 @@ export class PowerUpSystem {
 
   public getBuffName(type: PowerUpType): string {
     return POWERUP_CONFIGS[type].name;
+  }
+
+  public getPowerUpColor(type: PowerUpType): string {
+    return POWERUP_CONFIGS[type].color;
   }
 
   public clear(): void {
@@ -322,5 +389,32 @@ export class PowerUpSystem {
 
   public getActiveBuffs(): ActiveBuff[] {
     return this.activeBuffs;
+  }
+
+  public spawnAt(x: number, y: number, type?: PowerUpType): void {
+    const types: PowerUpType[] = [
+      'points',
+      'damage',
+      'speed',
+      'multishot',
+      'critical',
+    ];
+    
+    const margin = 50;
+    const powerUpX = Math.max(margin, Math.min(this.canvasWidth - margin, x));
+    const powerUpY = Math.max(margin, Math.min(this.canvasHeight - margin, y));
+    
+    const powerUpType = type ?? types[Math.floor(Math.random() * types.length)] ?? 'damage';
+    
+    this.powerUps.push({
+      type: powerUpType,
+      x: powerUpX,
+      y: powerUpY,
+      radius: 20,
+      active: true,
+      lifetime: 15,
+      maxLifetime: 15,
+      pulseTime: 0,
+    });
   }
 }

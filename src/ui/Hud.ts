@@ -41,35 +41,184 @@ export class Hud {
     this.levelBarFill = levelBarFillEl;
 
     this.createStatsDisplay();
+    this.createPowerUpBuffsDisplay();
+  }
+
+  private createPowerUpBuffsDisplay(): void {
+    // Create container above XP bar container (not inside it)
+    const gameContainer = document.getElementById('game-container');
+    if (!gameContainer) return;
+
+    const levelBarContainer = document.getElementById('level-bar-container');
+    if (!levelBarContainer) return;
+
+    const buffsContainer = document.createElement('div');
+    buffsContainer.id = 'powerup-buffs-container';
+    
+    // Position it absolutely above the level-bar-container
+    // We'll update the position after the container is inserted to get accurate measurements
+    buffsContainer.style.cssText = `
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: flex-start;
+      position: absolute;
+      z-index: 100;
+      pointer-events: none;
+    `;
+
+    // Insert into game container, right before level-bar-container
+    gameContainer.insertBefore(buffsContainer, levelBarContainer);
+
+    // Update position after DOM insertion to get accurate measurements
+    const updatePosition = () => {
+      const rect = levelBarContainer.getBoundingClientRect();
+      const containerRect = gameContainer.getBoundingClientRect();
+      const bottomOffset = containerRect.bottom - rect.top;
+      
+      buffsContainer.style.bottom = `${bottomOffset + 8}px`;
+      buffsContainer.style.left = '50%';
+      buffsContainer.style.transform = 'translateX(-50%)';
+    };
+    
+    setTimeout(updatePosition, 0);
+    
+    // Update position on window resize
+    window.addEventListener('resize', updatePosition);
+  }
+
+  public updatePowerUpBuffs(activeBuffs: Array<{ type: string; duration: number; maxDuration: number }>): void {
+    const container = document.getElementById('powerup-buffs-container');
+    if (!container) return;
+
+    // Clear existing buffs
+    container.innerHTML = '';
+
+    if (activeBuffs.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+    
+    // Ensure position is correct (in case of resize)
+    const levelBarContainer = document.getElementById('level-bar-container');
+    const gameContainer = document.getElementById('game-container');
+    if (levelBarContainer && gameContainer) {
+      const rect = levelBarContainer.getBoundingClientRect();
+      const containerRect = gameContainer.getBoundingClientRect();
+      const bottomOffset = containerRect.bottom - rect.top;
+      container.style.bottom = `${bottomOffset + 8}px`;
+    }
+
+    const POWERUP_ICONS: Record<string, string> = {
+      points: '💰',
+      damage: '⚔️',
+      speed: '⚡',
+      multishot: '✨',
+      critical: '💥',
+    };
+
+    const POWERUP_COLORS: Record<string, string> = {
+      points: '#00ff88',
+      damage: '#ff4444',
+      speed: '#ffff00',
+      multishot: '#ff00ff',
+      critical: '#ff8800',
+    };
+
+    for (const buff of activeBuffs) {
+      const buffEl = document.createElement('div');
+      const color = POWERUP_COLORS[buff.type] || '#ffffff';
+      const icon = POWERUP_ICONS[buff.type] || '⚡';
+      const timeLeft = Math.ceil(buff.duration);
+
+      buffEl.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.85);
+        border: 2px solid ${color};
+        border-radius: 6px;
+        padding: 6px 10px;
+        min-width: 50px;
+        box-shadow: 0 0 10px ${color}40, inset 0 0 10px ${color}20;
+        font-family: 'Courier New', monospace;
+      `;
+
+      buffEl.innerHTML = `
+        <div style="font-size: 20px; margin-bottom: 2px;">${icon}</div>
+        <div style="font-size: 11px; color: ${color}; font-weight: bold; text-shadow: 0 0 4px ${color};">${timeLeft}s</div>
+        <div style="width: 40px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 4px; overflow: hidden;">
+          <div style="width: ${(buff.duration / buff.maxDuration) * 100}%; height: 100%; background: ${color}; transition: width 0.1s linear; box-shadow: 0 0 4px ${color};"></div>
+        </div>
+      `;
+
+      container.appendChild(buffEl);
+    }
   }
 
   private createStatsDisplay(): void {
-    // Create stats container
+    // Create stats container - Green spaceship style
     const statsContainer = document.createElement('div');
     statsContainer.id = 'stats-display';
     statsContainer.style.cssText = `
       margin-top: 15px;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       padding: 10px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
+      border: 2px solid rgba(0, 255, 136, 0.5);
+      border-radius: 4px;
       font-size: 14px;
       max-width: 300px;
+      font-family: 'Courier New', monospace;
+      box-shadow: 
+        0 0 10px rgba(0, 255, 136, 0.3),
+        inset 0 0 20px rgba(0, 255, 136, 0.1);
+      /* Scanline effect */
+      background-image: linear-gradient(
+        transparent 50%,
+        rgba(0, 255, 136, 0.03) 50%
+      );
+      background-size: 100% 4px;
     `;
 
-    // DPS Display
+    // DPS Display - White label, green value
     this.dpsDisplay = document.createElement('div');
-    this.dpsDisplay.style.cssText = 'margin-bottom: 5px; color: #ff8888;';
+    this.dpsDisplay.style.cssText = `
+      margin-bottom: 5px; 
+      color: #fff; 
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      border-left: 2px solid rgba(0, 255, 136, 0.5);
+      padding-left: 8px;
+    `;
     this.dpsDisplay.textContent = '⚔️ DPS: 0';
 
-    // Passive Display
+    // Passive Display - White label, green value
     this.passiveDisplay = document.createElement('div');
-    this.passiveDisplay.style.cssText = 'margin-bottom: 5px; color: #88ff88;';
+    this.passiveDisplay.style.cssText = `
+      margin-bottom: 5px; 
+      color: #fff; 
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      border-left: 2px solid rgba(0, 255, 136, 0.5);
+      padding-left: 8px;
+    `;
     this.passiveDisplay.textContent = '🏭 Passive: 0/sec';
 
-    // Crit Display
+    // Crit Display - White label, green value
     this.critDisplay = document.createElement('div');
-    this.critDisplay.style.cssText = 'color: #ffff88;';
+    this.critDisplay.style.cssText = `
+      color: #fff; 
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      border-left: 2px solid rgba(0, 255, 136, 0.5);
+      padding-left: 8px;
+    `;
     this.critDisplay.textContent = '✨ Crit: 0%';
 
     statsContainer.appendChild(this.dpsDisplay);
@@ -83,17 +232,23 @@ export class Hud {
   }
 
   update(points: number): void {
-    const newText = `💰 Points: ${NumberFormatter.format(points)}`;
+    const newText = `$ ${NumberFormatter.format(points)}`;
     if (newText !== this.lastPointsText) {
       this.pointsDisplay.textContent = newText;
       this.lastPointsText = newText;
     }
   }
 
-  updateStats(dps: number, passive: number, critChance: number): void {
+  updateStats(dps: number, passive: number, critChance: number, critBonus: number = 0): void {
     const dpsText = `⚔️ DPS: ${NumberFormatter.format(dps)}`;
     const passiveText = `🏭 Passive: ${NumberFormatter.format(passive)}/sec`;
-    const critText = `✨ Crit: ${NumberFormatter.formatDecimal(critChance, 1)}%`;
+    
+    // Show crit chance with power-up bonus if active
+    const totalCritChance = critChance + critBonus;
+    let critText = `✨ Crit: ${NumberFormatter.formatDecimal(totalCritChance, 1)}%`;
+    if (critBonus > 0) {
+      critText += ` (+${NumberFormatter.formatDecimal(critBonus, 1)}%)`;
+    }
 
     if (this.dpsDisplay && dpsText !== this.lastStatsText.dps) {
       this.dpsDisplay.textContent = dpsText;
@@ -106,6 +261,14 @@ export class Hud {
     if (this.critDisplay && critText !== this.lastStatsText.crit) {
       this.critDisplay.textContent = critText;
       this.lastStatsText.crit = critText;
+      // Highlight if power-up is active
+      if (critBonus > 0) {
+        this.critDisplay.style.color = '#ffff00';
+        this.critDisplay.style.textShadow = '0 0 8px #ffff00';
+      } else {
+        this.critDisplay.style.color = '#fff';
+        this.critDisplay.style.textShadow = '0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000';
+      }
     }
   }
 
@@ -140,7 +303,7 @@ export class Hud {
   }
 
   updateLevel(level: number, experience: number, expToNext: number): void {
-    const levelText = `⭐ Level ${level}`;
+    const levelText = `Level ${level}`;
     const expText = `${Math.floor(experience)} / ${expToNext}`;
     const percent = Math.min(100, (experience / expToNext) * 100);
 
@@ -153,21 +316,22 @@ export class Hud {
       this.expText.textContent = expText;
       this.lastLevelText.exp = expText;
     }
-    if (Math.abs(percent - this.lastLevelText.percent) > 0.1) {
+    // Use a larger threshold to prevent flickering (only update if change is significant)
+    if (Math.abs(percent - this.lastLevelText.percent) > 0.5) {
       this.levelBarFill.style.width = `${percent}%`;
       this.lastLevelText.percent = percent;
     }
 
-    // Add visual feedback for milestone levels
+    // Add visual feedback for milestone levels - White text with minimal shadow
     if (level % 10 === 0 && level > 0) {
-      this.levelText.style.color = '#ffd700';
-      this.levelText.style.textShadow = '0 0 10px #ffd700';
+      this.levelText.style.color = '#fff';
+      this.levelText.style.textShadow = '0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000';
     } else if (level % 5 === 0) {
-      this.levelText.style.color = '#ffaa00';
-      this.levelText.style.textShadow = '0 0 8px #ffaa00';
+      this.levelText.style.color = '#fff';
+      this.levelText.style.textShadow = '0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000';
     } else {
       this.levelText.style.color = '#fff';
-      this.levelText.style.textShadow = '0 0 2px rgba(255, 255, 255, 0.8)';
+      this.levelText.style.textShadow = '0 1px 0 #000, 0 -1px 0 #000';
     }
   }
 

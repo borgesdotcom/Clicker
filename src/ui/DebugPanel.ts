@@ -9,6 +9,8 @@ export class DebugPanel {
   private onReset: () => void;
   private onSetSpeed: (speed: number) => void;
   private onToggleGodMode: () => void;
+  private onSpawnPowerUp: ((type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => void) | null = null;
+  private onClearPowerUps: (() => void) | null = null;
   private godModeActive = false;
 
   constructor(
@@ -17,12 +19,16 @@ export class DebugPanel {
     onReset: () => void,
     onSetSpeed: (speed: number) => void,
     onToggleGodMode: () => void,
+    onSpawnPowerUp?: (type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => void,
+    onClearPowerUps?: () => void,
   ) {
     this.store = store;
     this.onBossTrigger = onBossTrigger;
     this.onReset = onReset;
     this.onSetSpeed = onSetSpeed;
     this.onToggleGodMode = onToggleGodMode;
+    this.onSpawnPowerUp = onSpawnPowerUp || null;
+    this.onClearPowerUps = onClearPowerUps || null;
     this.createPanel();
     this.setupKeyboardShortcut();
   }
@@ -104,6 +110,20 @@ export class DebugPanel {
           <div class="debug-controls">
             <button id="debug-add-1k-clicks" class="debug-btn">+1K Clicks</button>
             <button id="debug-add-100-bosses" class="debug-btn">+100 Boss Kills</button>
+          </div>
+        </div>
+
+        <div class="debug-section">
+          <h3>⚡ Power-Ups</h3>
+          <div class="debug-controls">
+            <button id="debug-powerup-damage" class="debug-btn">Damage Boost</button>
+            <button id="debug-powerup-speed" class="debug-btn">Speed Boost</button>
+            <button id="debug-powerup-points" class="debug-btn">Points Boost</button>
+            <button id="debug-powerup-multishot" class="debug-btn">Multishot</button>
+            <button id="debug-powerup-crit" class="debug-btn">Critical Surge</button>
+          </div>
+          <div class="debug-controls">
+            <button id="debug-clear-powerups" class="debug-btn debug-btn-danger">Clear All Power-Ups</button>
           </div>
         </div>
 
@@ -285,6 +305,49 @@ export class DebugPanel {
     document.getElementById('debug-reset')?.addEventListener('click', () => {
       if (confirm('Are you sure you want to reset the game?')) {
         this.onReset();
+      }
+    });
+
+    // Power-up controls
+    document.getElementById('debug-powerup-damage')?.addEventListener('click', () => {
+      if (this.onSpawnPowerUp) {
+        this.onSpawnPowerUp('damage');
+        this.showNotification('Damage Boost activated!');
+      }
+    });
+
+    document.getElementById('debug-powerup-speed')?.addEventListener('click', () => {
+      if (this.onSpawnPowerUp) {
+        this.onSpawnPowerUp('speed');
+        this.showNotification('Speed Boost activated!');
+      }
+    });
+
+    document.getElementById('debug-powerup-points')?.addEventListener('click', () => {
+      if (this.onSpawnPowerUp) {
+        this.onSpawnPowerUp('points');
+        this.showNotification('Points Boost activated!');
+      }
+    });
+
+    document.getElementById('debug-powerup-multishot')?.addEventListener('click', () => {
+      if (this.onSpawnPowerUp) {
+        this.onSpawnPowerUp('multishot');
+        this.showNotification('Multishot activated!');
+      }
+    });
+
+    document.getElementById('debug-powerup-crit')?.addEventListener('click', () => {
+      if (this.onSpawnPowerUp) {
+        this.onSpawnPowerUp('critical');
+        this.showNotification('Critical Surge activated!');
+      }
+    });
+
+    document.getElementById('debug-clear-powerups')?.addEventListener('click', () => {
+      if (this.onClearPowerUps) {
+        this.onClearPowerUps();
+        this.showNotification('All power-ups cleared!');
       }
     });
   }

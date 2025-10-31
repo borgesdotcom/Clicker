@@ -27,6 +27,7 @@ import { ParticleSystem } from './entities/Particle';
 import { DamageNumberSystem } from './systems/DamageNumberSystem';
 import { ComboSystem } from './systems/ComboSystem';
 import { SoundManager } from './systems/SoundManager';
+import { PowerUpSystem } from './systems/PowerUpSystem';
 import { Hud } from './ui/Hud';
 import { Shop } from './ui/Shop';
 import { AchievementSnackbar } from './ui/AchievementSnackbar';
@@ -69,6 +70,7 @@ export class Game {
   private ascensionSystem: AscensionSystem;
   private missionSystem: MissionSystem;
   private artifactSystem: ArtifactSystem;
+  private powerUpSystem: PowerUpSystem;
   private achievementSnackbar: AchievementSnackbar;
   private achievementsModal: AchievementsModal;
   private ascensionModal: AscensionModal;
@@ -80,8 +82,12 @@ export class Game {
   private gameInfoModal: GameInfoModal;
   private performanceMonitor: PerformanceMonitor;
   private hud: Hud;
+  private shop: Shop;
   private saveTimer = 0;
   private saveInterval = 3;
+  private lastPowerUpCount = 0; // Track power-up changes for shop refresh
+  private lastHadSpeedBuff = false; // Track speed buff specifically for shop refresh
+  private lastHadDamageBuff = false; // Track damage buff specifically for shop refresh
   private playTimeAccumulator = 0;
   private passiveGenAccumulator = 0;
   private titleUpdateTimer = 0;
@@ -151,8 +157,13 @@ export class Game {
     this.ascensionSystem = new AscensionSystem();
     this.artifactSystem = new ArtifactSystem();
     this.missionSystem = new MissionSystem(this.store);
+    this.powerUpSystem = new PowerUpSystem(
+      this.canvas.getWidth(),
+      this.canvas.getHeight(),
+    );
     this.upgradeSystem.setAscensionSystem(this.ascensionSystem);
     this.upgradeSystem.setArtifactSystem(this.artifactSystem);
+    this.upgradeSystem.setPowerUpSystem(this.powerUpSystem);
     this.comboSystem.setAscensionSystem(this.ascensionSystem);
     this.achievementSnackbar = new AchievementSnackbar();
     this.achievementsModal = new AchievementsModal(this.achievementSystem);
@@ -163,7 +174,7 @@ export class Game {
         this.performAscension();
       },
     );
-    this.missionsModal = new MissionsModal(this.missionSystem, () => {
+    this.missionsModal = new MissionsModal(this.missionSystem, this.store, () => {
       const state = this.store.getState();
       this.hud.update(state.points);
       this.store.setState({ ...state });
@@ -215,6 +226,13 @@ export class Game {
       },
       () => {
         this.toggleGodMode();
+      },
+      (type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => {
+        this.debugActivatePowerUp(type);
+      },
+      () => {
+        this.powerUpSystem.clear();
+        this.shop.forceRefresh();
       },
     );
 
@@ -278,9 +296,9 @@ export class Game {
       });
     }
     this.hud = new Hud();
-    const shop = new Shop(this.store, this.upgradeSystem);
-    shop.setSoundManager(this.soundManager);
-    shop.setMissionSystem(this.missionSystem);
+    this.shop = new Shop(this.store, this.upgradeSystem);
+    this.shop.setSoundManager(this.soundManager);
+    this.shop.setMissionSystem(this.missionSystem);
 
     this.achievementSystem.setOnUnlock((achievement) => {
       this.achievementSnackbar.show(achievement);
@@ -712,6 +730,7 @@ export class Game {
     this.damageNumberSystem.clear();
     this.comboSystem.reset();
     this.autoFireSystem.reset();
+    this.powerUpSystem.clear();
     this.saveTimer = 0;
   }
 
@@ -873,8 +892,42 @@ export class Game {
     });
   }
 
-  private handleClick(_pos: Vec2): void {
+  private handleClick(pos: Vec2): void {
     if (this.mode === 'transition') return;
+
+    // Check for power-up collection first
+    const collectedPowerUp = this.powerUpSystem.checkCollision(pos.x, pos.y);
+    if (collectedPowerUp) {
+      this.soundManager.playClick();
+      const config = this.powerUpSystem.getBuffName(collectedPowerUp);
+      this.hud.showMessage(`⚡ ${config} Activated!`, '#00ff88', 1500);
+      
+      // Spawn collection particles
+      if (this.userSettings.highGraphics) {
+        const color = this.powerUpSystem.getPowerUpColor(collectedPowerUp);
+        this.particleSystem.spawnParticles({
+          x: pos.x,
+          y: pos.y,
+          count: 15,
+          color: color,
+          spread: Math.PI * 2,
+          speed: 200,
+          size: 4,
+          life: 0.8,
+          glow: true,
+        });
+      }
+      
+      // Refresh shop immediately when power-up is collected (to show updated stats)
+      this.shop.forceRefresh();
+      
+      const activeBuffs = this.powerUpSystem.getActiveBuffs();
+      this.lastPowerUpCount = activeBuffs.length;
+      this.lastHadSpeedBuff = activeBuffs.some(b => b.type === 'speed');
+      this.lastHadDamageBuff = activeBuffs.some(b => b.type === 'damage');
+      
+      return; // Don't fire when collecting power-up
+    }
 
     // Click anywhere to shoot - much better for mobile!
     if (this.mode === 'normal' && this.ball && this.ball.currentHp > 0) {
@@ -928,6 +981,9 @@ export class Game {
     // v2.0: Apply artifact bonuses
     damage *= 1 + this.artifactSystem.getDamageBonus();
 
+    // Apply power-up damage multiplier
+    damage *= this.powerUpSystem.getDamageMultiplier();
+
     // Apply boss damage bonus in boss mode
     if (this.mode === 'boss') {
       const prestigeBossLevel =
@@ -950,28 +1006,37 @@ export class Game {
 
     // Only fire from the main ship (index 0) when clicking
     if (this.ships[0]) {
-      // Use regular laser projectiles
-      this.laserSystem.spawnLaser(
-        this.ships[0].getFrontPosition(),
-        target,
-        damage,
-        laserVisuals,
-      );
-
-      // Rapid fire upgrade: fire additional lasers from 2 random ships
-      if (state.subUpgrades['rapid_fire'] && this.ships.length > 1) {
-        const otherShips = this.ships.slice(1);
-        const count = Math.min(2, otherShips.length);
-        for (let i = 0; i < count; i++) {
-          const ship = otherShips[i];
-          if (ship) {
-            this.laserSystem.spawnLaser(
-              ship.getFrontPosition(),
-              target,
-              damage,
-              laserVisuals,
-            );
-          }
+      // Calculate base shot count
+      let shotCount = 1; // Main ship always fires 1
+      
+      // Rapid fire upgrade: adds 2 additional shots
+      if (state.subUpgrades['rapid_fire']) {
+        shotCount += 2;
+      }
+      
+      // Multishot power-up: doubles all shots (stacks with rapid_fire)
+      if (this.powerUpSystem.hasMultishot()) {
+        shotCount *= 2;
+      }
+      
+      // Fire the calculated number of shots
+      const shipsToUse: Ship[] = [this.ships[0]]; // Start with main ship
+      if (this.ships.length > 1) {
+        // Add other ships to the pool
+        shipsToUse.push(...this.ships.slice(1));
+      }
+      
+      // Fire shots, cycling through available ships
+      for (let i = 0; i < shotCount; i++) {
+        const shipIndex = i % shipsToUse.length;
+        const ship = shipsToUse[shipIndex];
+        if (ship) {
+          this.laserSystem.spawnLaser(
+            ship.getFrontPosition(),
+            target,
+            damage,
+            laserVisuals,
+          );
         }
       }
     }
@@ -1008,6 +1073,9 @@ export class Game {
 
     // v2.0: Apply artifact bonuses (at reduced rate for auto-fire)
     damage *= 1 + this.artifactSystem.getDamageBonus() * 0.5;
+
+    // Apply power-up damage multiplier
+    damage *= this.powerUpSystem.getDamageMultiplier();
 
     // Apply boss damage bonus in boss mode
     if (this.mode === 'boss') {
@@ -1048,7 +1116,8 @@ export class Game {
     let isCrit = false;
 
     // Check for critical hit
-    const critChance = this.upgradeSystem.getCritChance(state);
+    let critChance = this.upgradeSystem.getCritChance(state);
+    critChance += this.powerUpSystem.getCritChanceBonus() * 100; // Add power-up crit bonus
     if (Math.random() * 100 < critChance) {
       isCrit = true;
       color = '#ffff00'; // Yellow for crit
@@ -1159,6 +1228,8 @@ export class Game {
       if (this.ball instanceof EnhancedAlienBall) {
         pointsEarned = this.ball.getPointsReward(finalDamage);
       }
+      // Apply power-up points multiplier
+      pointsEarned *= this.powerUpSystem.getPointsMultiplier();
       this.store.addPoints(pointsEarned);
 
       // Always show damage numbers (for both main ship and auto-fire ships)
@@ -1202,13 +1273,21 @@ export class Game {
       }
 
       if (broken) {
+        // Chance to spawn power-up (3% chance - more rare)
+        if (Math.random() < 0.03) {
+          const powerUpX = this.ball.x + (Math.random() - 0.5) * 100;
+          const powerUpY = this.ball.y + (Math.random() - 0.5) * 100;
+          this.spawnPowerUp(powerUpX, powerUpY);
+        }
         this.onBallDestroyed();
       }
     } else if (this.mode === 'boss' && this.bossBall) {
       const broken = this.bossBall.takeDamage(finalDamage);
       const state = this.store.getState();
       const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
-      this.store.addPoints(finalDamage * 2 * bossBonus);
+      // Apply power-up points multiplier
+      const pointsMultiplier = this.powerUpSystem.getPointsMultiplier();
+      this.store.addPoints(finalDamage * 2 * bossBonus * pointsMultiplier);
 
       // Always spawn damage numbers (for both main ship and auto-fire ships)
       const bossPos = this.bossBall.getPosition();
@@ -1337,6 +1416,8 @@ export class Game {
     let bossReward = Math.floor(baseReward * bonusMultiplier);
 
     bossReward *= 1 + this.artifactSystem.getPointsBonus();
+    // Apply power-up points multiplier
+    bossReward *= this.powerUpSystem.getPointsMultiplier();
 
     this.store.addPoints(bossReward);
 
@@ -1479,7 +1560,31 @@ export class Game {
       const dps = this.hud.calculateDPS();
       const passiveGen = this.upgradeSystem.getPassiveGen(state);
       const critChance = this.upgradeSystem.getCritChance(state);
-      this.hud.updateStats(dps, passiveGen, critChance);
+      const critBonus = this.powerUpSystem.getCritChanceBonus() * 100; // Convert to percentage
+      this.hud.updateStats(dps, passiveGen, critChance, critBonus);
+      
+      // Update power-up buffs display
+      const activeBuffs = this.powerUpSystem.getActiveBuffs();
+      this.hud.updatePowerUpBuffs(activeBuffs);
+      
+      // Refresh shop if power-up buffs changed (to update shop display with ⚡ and ⚔️ icons)
+      const currentPowerUpCount = activeBuffs.length;
+      const hasSpeedBuff = activeBuffs.some(b => b.type === 'speed');
+      const hasDamageBuff = activeBuffs.some(b => b.type === 'damage');
+      
+      // Check if any power-up state changed (count, speed, or damage)
+      const powerUpStateChanged = 
+        currentPowerUpCount !== this.lastPowerUpCount ||
+        hasSpeedBuff !== this.lastHadSpeedBuff ||
+        hasDamageBuff !== this.lastHadDamageBuff;
+      
+      if (powerUpStateChanged) {
+        this.lastPowerUpCount = currentPowerUpCount;
+        this.lastHadSpeedBuff = hasSpeedBuff;
+        this.lastHadDamageBuff = hasDamageBuff;
+        // Force immediate shop refresh to show/hide power-up indicators
+        this.shop.forceRefresh();
+      }
     } catch {
       // Ignore errors in HUD update
     }
@@ -1500,7 +1605,10 @@ export class Game {
     this.missionSystem.update();
 
     // Check if we should use beam mode based on attack speed
-    const cooldown = this.upgradeSystem.getFireCooldown(state);
+    // Apply power-up speed multiplier (divide cooldown by multiplier = faster firing)
+    let cooldown = this.upgradeSystem.getFireCooldown(state);
+    const speedMultiplier = this.powerUpSystem.getSpeedMultiplier();
+    cooldown /= speedMultiplier;
     const shouldUseBeam = this.laserSystem.shouldUseBeamMode(cooldown);
     const wasInBeamMode = this.laserSystem.isBeamMode();
 
@@ -1543,6 +1651,7 @@ export class Game {
     this.particleSystem.update(dt);
     this.damageNumberSystem.update(dt);
     this.comboSystem.update(dt);
+    this.powerUpSystem.update(dt);
 
     this.batchTimer += dt;
     if (this.batchTimer >= this.batchInterval) {
@@ -1631,6 +1740,27 @@ export class Game {
     }
   }
 
+  private spawnPowerUp(x: number, y: number): void {
+    this.powerUpSystem.spawnAt(x, y);
+  }
+
+  private debugActivatePowerUp(type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical'): void {
+    // Directly activate the buff by using the PowerUpSystem's internal activateBuff method
+    // We'll use the canvas class methods to get dimensions
+    const centerX = this.canvas.getWidth() / 2;
+    const centerY = this.canvas.getHeight() / 2;
+    
+    // Spawn at center and immediately activate
+    this.powerUpSystem.spawnAt(centerX, centerY, type);
+    const collected = this.powerUpSystem.checkCollision(centerX, centerY);
+    if (collected) {
+      this.shop.forceRefresh();
+      this.lastPowerUpCount = this.powerUpSystem.getActiveBuffs().length;
+      this.lastHadSpeedBuff = this.powerUpSystem.getActiveBuffs().some(b => b.type === 'speed');
+      this.lastHadDamageBuff = this.powerUpSystem.getActiveBuffs().some(b => b.type === 'damage');
+    }
+  }
+
   private updatePageTitle(points: number): void {
     let formattedPoints: string;
     if (points >= 1e12) {
@@ -1697,6 +1827,9 @@ export class Game {
           this.store.getState(),
         );
       }
+
+      // Render power-ups
+      this.powerUpSystem.render(ctx);
     }
 
     ctx.restore();
@@ -1736,6 +1869,8 @@ export class Game {
     this.critBatch = false;
     this.shipDamageBatch = false;
 
+    this.powerUpSystem.clear();
+
     this.createBall();
     this.createShips();
   }
@@ -1767,6 +1902,7 @@ export class Game {
 
   private handleResize(): void {
     this.background.resize(this.canvas.getWidth(), this.canvas.getHeight());
+    this.powerUpSystem.resize(this.canvas.getWidth(), this.canvas.getHeight());
 
     if (this.ball) {
       this.ball.x = this.canvas.getCenterX();
