@@ -38,14 +38,14 @@ export class CreditsModal {
     gameInfoSection.style.borderRadius = '8px';
 
     const gameTitle = document.createElement('h3');
-    gameTitle.textContent = '🚀 Space Clicker';
+    gameTitle.textContent = '💥 BOBBLE';
     gameTitle.style.marginBottom = '10px';
     gameTitle.style.color = '#00ff88';
     gameInfoSection.appendChild(gameTitle);
 
     const gameDesc = document.createElement('p');
     gameDesc.textContent =
-      'An epic space-themed idle clicker game with upgrades, bosses, artifacts, and endless progression!';
+      'Pop bubblewrap aliens in the ultimate fake invasion! These bubblewrap creatures are "threatening" your profit margins - pop them all!';
     gameDesc.style.marginBottom = '15px';
     gameDesc.style.lineHeight = '1.6';
     gameDesc.style.color = '#ccc';
@@ -167,7 +167,7 @@ export class CreditsModal {
       // TODO: Replace with actual Steam store page URL when available
       // For now, show a message
       alert(
-        '🎮 Space Clicker is coming to Steam soon!\n\nStay tuned for the official announcement and wishlist link!',
+        '🎮 BOBBLE is coming to Steam soon!\n\nStay tuned for the official announcement and wishlist link!',
       );
       // When ready, use: window.open('https://store.steampowered.com/app/YOUR_APP_ID', '_blank');
     });
@@ -176,7 +176,7 @@ export class CreditsModal {
 
     const steamHint = document.createElement('p');
     steamHint.textContent =
-      'Be the first to know when Space Clicker launches on Steam!';
+      'Be the first to know when BOBBLE launches on Steam!';
     steamHint.style.fontSize = '12px';
     steamHint.style.color = '#888';
     steamHint.style.textAlign = 'center';
@@ -306,7 +306,7 @@ export class CreditsModal {
       .filter((item): item is string => item !== null)
       .join(' | ');
 
-    const tweetText = `🚀 I'm playing Space Clicker!\n\n${stats}\n\nJoin me in conquering the galaxy! 🌌`;
+    const tweetText = `💥 I'm playing BOBBLE!\n\n${stats}\n\nJoin me in popping bubblewrap aliens for profit! 🛸`;
 
     const gameUrl = window.location.href.split('?')[0] || window.location.href; // Remove query params
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(gameUrl)}`;

@@ -10,11 +10,13 @@ export class SettingsModal {
   private ripplesCallback: ((enabled: boolean) => void) | null = null;
   private damageNumbersCallback: ((enabled: boolean) => void) | null = null;
   private soundCallback: ((enabled: boolean) => void) | null = null;
+  private soundtrackCallback: ((enabled: boolean) => void) | null = null;
   private volumeCallback: ((volume: number) => void) | null = null;
   private graphicsToggle: HTMLButtonElement | null = null;
   private shipLasersToggle: HTMLButtonElement | null = null;
   private ripplesToggle: HTMLButtonElement | null = null;
   private damageNumbersToggle: HTMLButtonElement | null = null;
+  private soundtrackToggle: HTMLButtonElement | null = null;
 
   constructor(soundManager: SoundManager) {
     this.soundManager = soundManager;
@@ -39,6 +41,10 @@ export class SettingsModal {
 
   setSoundCallback(callback: (enabled: boolean) => void): void {
     this.soundCallback = callback;
+  }
+
+  setSoundtrackCallback(callback: (enabled: boolean) => void): void {
+    this.soundtrackCallback = callback;
   }
 
   setVolumeCallback(callback: (volume: number) => void): void {
@@ -142,6 +148,49 @@ export class SettingsModal {
     soundHint.style.marginTop = '5px';
     soundHint.style.marginBottom = '15px';
     soundSection.appendChild(soundHint);
+
+    // Soundtrack toggle
+    const soundtrackToggleContainer = document.createElement('div');
+    soundtrackToggleContainer.style.marginBottom = '15px';
+    soundtrackToggleContainer.style.display = 'flex';
+    soundtrackToggleContainer.style.alignItems = 'center';
+    soundtrackToggleContainer.style.justifyContent = 'space-between';
+
+    const soundtrackLabel = document.createElement('label');
+    soundtrackLabel.textContent = 'Background Music:';
+    soundtrackLabel.style.fontSize = '16px';
+
+    this.soundtrackToggle = document.createElement('button');
+    this.soundtrackToggle.className = 'modal-button';
+    this.soundtrackToggle.textContent = this.soundManager.isSoundtrackEnabled()
+      ? 'ON'
+      : 'OFF';
+    this.soundtrackToggle.style.width = '80px';
+    this.soundtrackToggle.addEventListener('click', () => {
+      if (!this.soundtrackToggle) return;
+      const newState = !this.soundManager.isSoundtrackEnabled();
+      this.soundManager.setSoundtrackEnabled(newState);
+      this.soundtrackToggle.textContent = newState ? 'ON' : 'OFF';
+      this.soundtrackToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
+      if (this.soundtrackCallback) {
+        this.soundtrackCallback(newState);
+      }
+    });
+    this.soundtrackToggle.style.backgroundColor = this.soundManager.isSoundtrackEnabled()
+      ? '#4CAF50'
+      : '#666';
+
+    soundtrackToggleContainer.appendChild(soundtrackLabel);
+    soundtrackToggleContainer.appendChild(this.soundtrackToggle);
+    soundSection.appendChild(soundtrackToggleContainer);
+
+    const soundtrackHint = document.createElement('div');
+    soundtrackHint.textContent = 'Enable or disable background music';
+    soundtrackHint.style.fontSize = '12px';
+    soundtrackHint.style.color = '#888';
+    soundtrackHint.style.marginTop = '5px';
+    soundtrackHint.style.marginBottom = '15px';
+    soundSection.appendChild(soundtrackHint);
 
     // Volume slider
     const volumeContainer = document.createElement('div');
@@ -397,6 +446,14 @@ export class SettingsModal {
         const currentVolume = Math.round(this.soundManager.getVolume() * 100);
         this.volumeSlider.value = String(currentVolume);
         this.volumeValue.textContent = String(currentVolume) + '%';
+      }
+      // Update soundtrack toggle when opening
+      if (this.soundtrackToggle) {
+        const soundtrackEnabled = this.soundManager.isSoundtrackEnabled();
+        this.soundtrackToggle.textContent = soundtrackEnabled ? 'ON' : 'OFF';
+        this.soundtrackToggle.style.backgroundColor = soundtrackEnabled
+          ? '#4CAF50'
+          : '#666';
       }
       this.modal.style.display = 'flex';
     }

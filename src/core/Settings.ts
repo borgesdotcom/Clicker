@@ -1,5 +1,6 @@
 export interface UserSettings {
   soundEnabled: boolean;
+  soundtrackEnabled: boolean;
   volume: number;
   highGraphics: boolean;
   showShipLasers: boolean;
@@ -33,6 +34,7 @@ export class Settings {
         const data = JSON.parse(saved) as PartialUserSettings;
         return {
           soundEnabled: data.soundEnabled ?? true,
+          soundtrackEnabled: data.soundtrackEnabled ?? true,
           volume: data.volume ?? 0.3,
           highGraphics: data.highGraphics ?? true,
           showShipLasers: data.showShipLasers ?? true,
@@ -49,6 +51,7 @@ export class Settings {
   static getDefault(): UserSettings {
     return {
       soundEnabled: true,
+      soundtrackEnabled: true,
       volume: 0.3,
       highGraphics: true,
       showShipLasers: true,

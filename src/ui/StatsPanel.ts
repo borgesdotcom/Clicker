@@ -257,10 +257,14 @@ export class StatsPanel {
   }
 
   private getOwnedSubUpgradesCount(state: GameState): number {
-    // Count actual owned sub-upgrades instead of using cumulative counter
+    // Count only owned sub-upgrades that actually exist in the system
+    // This prevents counting legacy/removed upgrades from old save data
+    const validSubUpgradeIds = new Set(
+      this.upgradeSystem.getSubUpgrades().map((u) => u.id),
+    );
     let count = 0;
     for (const key in state.subUpgrades) {
-      if (state.subUpgrades[key] === true) {
+      if (state.subUpgrades[key] === true && validSubUpgradeIds.has(key)) {
         count++;
       }
     }

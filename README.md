@@ -1,4 +1,4 @@
-# Space Clicker
+# BOBBLE
 
 > A modern incremental clicker game built with TypeScript and HTML5 Canvas
 
@@ -8,7 +8,7 @@
 
 ## 🎮 About
 
-Space Clicker is an engaging incremental clicker game featuring dynamic combat, strategic upgrades, and epic boss battles. Command a fleet of starships to destroy colorful alien targets, level up your arsenal, and unlock powerful abilities as you progress through an ever-challenging universe.
+BOBBLE is an engaging incremental clicker game featuring bubblewrap aliens and a fake invasion plot! These bubblewrap creatures are "threatening" your profit margins - pop them all! Command a fleet of starships to boop colorful bubblewrap alien targets, level up your arsenal, and unlock powerful abilities as you progress through this profit-driven "defense" operation.
 
 ## ✨ Features
 

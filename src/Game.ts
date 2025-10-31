@@ -144,6 +144,7 @@ export class Game {
     this.comboSystem = new ComboSystem();
     this.soundManager = new SoundManager();
     this.soundManager.setEnabled(this.userSettings.soundEnabled);
+    this.soundManager.setSoundtrackEnabled(this.userSettings.soundtrackEnabled);
     this.soundManager.setVolume(this.userSettings.volume);
     this.autoFireSystem = new AutoFireSystem();
     this.achievementSystem = new AchievementSystem();
@@ -249,6 +250,10 @@ export class Game {
     });
     this.settingsModal.setSoundCallback((enabled: boolean) => {
       this.userSettings.soundEnabled = enabled;
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setSoundtrackCallback((enabled: boolean) => {
+      this.userSettings.soundtrackEnabled = enabled;
       Settings.save(this.userSettings);
     });
     this.settingsModal.setVolumeCallback((volume: number) => {
@@ -488,6 +493,9 @@ export class Game {
     // Initialize page title
     const state = this.store.getState();
     this.updatePageTitle(state.points);
+
+    // Start background soundtrack
+    this.soundManager.startSoundtrack();
 
     this.loop.start();
   }
@@ -1252,6 +1260,9 @@ export class Game {
 
     this.ball = null;
 
+    // Play pop sound when alien dies
+    this.soundManager.playPop();
+
     const state = this.store.getState();
     this.store.incrementAlienKill();
     this.missionSystem.trackKill();
@@ -1620,7 +1631,7 @@ export class Game {
       formattedPoints = Math.floor(points).toString();
     }
 
-    document.title = `${formattedPoints} points - Space Clicker`;
+    document.title = `${formattedPoints} points - BOBBLE`;
   }
 
   private render(): void {

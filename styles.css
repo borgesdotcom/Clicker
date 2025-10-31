@@ -2785,7 +2785,8 @@ body {
   #shop-panel.desktop-collapsed #shop-tabs,
   #shop-panel.desktop-collapsed #shop-content,
   #shop-panel.desktop-collapsed #reset-container,
-  #shop-panel.desktop-collapsed #credits-button {
+  #shop-panel.desktop-collapsed #credits-button,
+  #shop-panel.desktop-collapsed #discord-button {
     display: none;
   }
 

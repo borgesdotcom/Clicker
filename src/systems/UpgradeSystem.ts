@@ -53,7 +53,7 @@ export class UpgradeSystem {
         id: 'death_pact',
         name: 'Death Pact Agreement',
         description: 'Ships gain +10% attack speed',
-        flavor: 'In space, no one can hear you sign contracts.',
+        flavor: 'Signed contract guarantees "hostile" alien supply chain. Very convenient.',
         cost: 500,
         owned: false,
         requires: (state) => state.shipsCount >= 3,
@@ -67,7 +67,7 @@ export class UpgradeSystem {
         name: 'Laser Focusing Crystals',
         description: 'Increase point gain by 15%',
         flavor:
-          'These crystals are definitely not from that one forbidden planet...',
+          'These crystals make the aliens make a very satisfying *pop* sound when destroyed.',
         cost: 1000,
         owned: false,
         requires: (state) => state.pointMultiplierLevel >= 5,
@@ -80,7 +80,7 @@ export class UpgradeSystem {
         id: 'coffee_machine',
         name: 'Crew Coffee Machine',
         description: 'Passive point generation +50/sec',
-        flavor: 'Caffeine-fueled destruction. Now with extra espresso shots.',
+        flavor: 'Crew stays awake for 24/7 defense operations. The aliens are coming. Definitely coming.',
         cost: 2000,
         owned: false,
         requires: (state) => state.level >= 5,
@@ -93,7 +93,7 @@ export class UpgradeSystem {
         id: 'quantum_targeting',
         name: 'Quantum Targeting Array',
         description: 'Ships fire 20% faster',
-        flavor: 'Aims at where the target was, is, and will be simultaneously.',
+        flavor: 'Precise targeting ensures maximum... elimination efficiency. The paperwork checks out.',
         cost: 2500,
         owned: false,
         requires: (state) => state.attackSpeedLevel >= 10,
@@ -107,7 +107,7 @@ export class UpgradeSystem {
         name: 'Lucky Space Dice',
         description: '+5% critical hit chance',
         flavor:
-          "Found them in an asteroid. The previous owner won't miss them.",
+          "Rolled a 7! These dice ensure maximum alien destruction rates. The invasion pays... wait.",
         cost: 3500,
         owned: false,
         requires: (state) => state.critChanceLevel >= 5,
@@ -122,7 +122,7 @@ export class UpgradeSystem {
         id: 'energy_recycling',
         name: 'Energy Recycling System',
         description: 'All upgrades are 5% cheaper',
-        flavor: 'Reduce, reuse, recycle... plasma.',
+        flavor: 'Recycle alien material for maximum efficiency. Very environmentally conscious defense operation.',
         cost: 5000,
         owned: false,
         requires: (state) => state.shipsCount >= 10,
@@ -135,7 +135,7 @@ export class UpgradeSystem {
         id: 'overclocked_reactors',
         name: 'Overclocked Reactors',
         description: 'Gain 25% more points per hit',
-        flavor: 'Safety protocols are just suggestions anyway.',
+        flavor: 'Overclock reactors beyond safety limits. Defense emergencies require... creative solutions.',
         cost: 10000,
         owned: false,
         requires: (state) => state.level >= 10,
@@ -148,7 +148,7 @@ export class UpgradeSystem {
         id: 'ship_swarm',
         name: 'Swarm Intelligence Protocol',
         description: 'Ships coordinate attacks for +20% damage',
-        flavor: 'The hivemind accepts all. Resistance is futile.',
+        flavor: 'Fleet coordinates synchronized attacks. The aliens never stand a chance. Especially these ones.',
         cost: 15000,
         owned: false,
         requires: (state) => state.shipsCount >= 15,
@@ -161,7 +161,7 @@ export class UpgradeSystem {
         id: 'neural_link',
         name: 'Neural Link Interface',
         description: 'Clicking grants 10% bonus points',
-        flavor: 'Think faster, click harder.',
+        flavor: 'Neural link directly to your trigger finger. Click faster, eliminate faster. Very efficient.',
         cost: 25000,
         owned: false,
         requires: (state) => state.level >= 20,
@@ -174,7 +174,7 @@ export class UpgradeSystem {
         id: 'space_pizza',
         name: 'Intergalactic Pizza Delivery',
         description: 'Passive generation +200/sec',
-        flavor: 'Guaranteed delivery in 30 light-years or less!',
+        flavor: 'Keep crews fed during extended defense operations. Happy workers eliminate aliens better.',
         cost: 30000,
         owned: false,
         requires: (state) => state.resourceGenLevel >= 10,
@@ -200,7 +200,7 @@ export class UpgradeSystem {
         id: 'antimatter_rounds',
         name: 'Antimatter Ammunition',
         description: 'Double all point gains',
-        flavor: 'What could possibly go wrong with weaponized antimatter?',
+        flavor: 'Antimatter makes the aliens pop twice as satisfyingly. Very therapeutic for stress relief.',
         cost: 50000,
         owned: false,
         requires: (state) => state.pointMultiplierLevel >= 20,
@@ -241,7 +241,7 @@ export class UpgradeSystem {
         id: 'disco_ball',
         name: 'Hypnotic Disco Ball',
         description: 'Aliens confused, +15% all stats',
-        flavor: 'Saturday Night Fever, but in space. And deadly.',
+        flavor: 'The aliens can\'t resist the disco beat. They line up perfectly for... elimination.',
         cost: 85000,
         owned: false,
         requires: (state) => state.level >= 30,
@@ -306,7 +306,7 @@ export class UpgradeSystem {
         id: 'void_channeling',
         name: 'Void Energy Channeling',
         description: 'Destroying aliens grants bonus XP',
-        flavor: 'The void stares back, and it likes what it sees.',
+        flavor: 'The void stares back. It approves of your... efficient defense operations.',
         cost: 200000,
         owned: false,
         requires: (state) => state.level >= 40,
@@ -413,7 +413,7 @@ export class UpgradeSystem {
         id: 'philosophers_stone',
         name: "Philosopher's Stone",
         description: 'Passive generation x5',
-        flavor: 'Turns lead into gold. And boredom into profit.',
+        flavor: 'Turns lead into gold. And boredom into... productivity. Very efficient.',
         cost: 600000,
         owned: false,
         requires: (state) => state.resourceGenLevel >= 30,
@@ -505,7 +505,7 @@ export class UpgradeSystem {
         id: 'alien_cookbook',
         name: 'Alien Recipe Book',
         description: 'Boss kill rewards +100%',
-        flavor: '"To Serve Aliens" - It\'s a cookbook!',
+        flavor: '"To Serve Aliens" - A cookbook! Wait, what? These are definitely hostile aliens, right?',
         cost: 900000,
         owned: false,
         requires: (state) => state.stats.bossesKilled >= 25,
@@ -676,7 +676,7 @@ export class UpgradeSystem {
         id: 'meaning_of_life',
         name: 'Meaning of Life',
         description: 'Unlock prestige system & all stats x2',
-        flavor: "Spoiler: It's clicking alien balls all the way down.",
+        flavor: "Spoiler: It's clicking aliens all the way down. The meaning of life? Clicking. Definitely.",
         cost: 25000000,
         owned: false,
         requires: (state) => state.level >= 100,
@@ -690,7 +690,7 @@ export class UpgradeSystem {
         id: 'master_clicker',
         name: 'Master Clicker',
         description: 'Clicking gives +100% more points',
-        flavor: 'Click, click, boom!',
+        flavor: 'Click, click, eliminate! Master the art of alien destruction. Very satisfying.',
         cost: 50000,
         owned: false,
         requires: (state) => state.stats.totalClicks >= 1000,
@@ -1402,7 +1402,7 @@ export class UpgradeSystem {
         },
       },
       {
-        id: 'entropy_reversal',
+        id: 'entropy_reversal_engine',
         name: 'Entropy Reversal Engine',
         description: '+55% attack speed, time flows backward',
         flavor: 'Heat death? Not on your watch.',
@@ -1411,7 +1411,7 @@ export class UpgradeSystem {
         requires: (state) => state.energyCoreLevel >= 50,
         isVisible: (state) => state.energyCoreLevel >= 50,
         buy: (state) => {
-          state.subUpgrades['entropy_reversal'] = true;
+          state.subUpgrades['entropy_reversal_engine'] = true;
         },
       },
       {
@@ -1456,7 +1456,7 @@ export class UpgradeSystem {
         },
       },
       {
-        id: 'akashic_records',
+        id: 'akashic_records_library',
         name: 'Akashic Records',
         description: '-5% all costs, +15% XP',
         flavor: 'Access the universal library.',
@@ -1465,7 +1465,7 @@ export class UpgradeSystem {
         requires: (state) => state.cosmicKnowledgeLevel >= 3,
         isVisible: (state) => state.cosmicKnowledgeLevel >= 3,
         buy: (state) => {
-          state.subUpgrades['akashic_records'] = true;
+          state.subUpgrades['akashic_records_library'] = true;
         },
       },
       {
@@ -1763,7 +1763,7 @@ export class UpgradeSystem {
       id: 'critChance',
       name: '✨ Critical Strike',
       description:
-        'Increase critical hit chance and damage for devastating strikes.',
+        'Master the perfect critical hit. Maximum destruction efficiency. Very satisfying.',
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(150 * Math.pow(1.35, level))),
       canBuy: (state: GameState) => {
@@ -1785,7 +1785,7 @@ export class UpgradeSystem {
       id: 'resourceGen',
       name: '🏭 Passive Income',
       description:
-        'Generate points automatically over time. Scales exponentially!',
+        'Automated alien elimination stations. They work while you sleep. Very efficient defense system.',
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(200 * Math.pow(1.4, level))),
       canBuy: (state: GameState) => {
@@ -1812,7 +1812,7 @@ export class UpgradeSystem {
     const xpBoostUpgrade: UpgradeConfig = {
       id: 'xpBoost',
       name: '📚 Knowledge Core',
-      description: 'Learn faster and level up quicker. Knowledge is power!',
+      description: 'Learn advanced alien elimination techniques. Knowledge is power. Especially when eliminating.',
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(250 * Math.pow(1.38, level))),
       canBuy: (state: GameState) => {
@@ -1965,7 +1965,7 @@ export class UpgradeSystem {
         'arc_reactor',
         'harvested_star',
         'vacuum_energy_tap',
-        'entropy_reversal',
+        'entropy_reversal_engine',
         'big_crunch_generator',
         'multiversal_tap',
       ].includes(u.id),
@@ -2002,7 +2002,7 @@ export class UpgradeSystem {
     const cosmicKnowledgeSubUpgrades = this.subUpgrades.filter((u) =>
       [
         'ancient_texts',
-        'akashic_records',
+        'akashic_records_library',
         'prophetic_vision',
         'universal_translator',
         'omniscience_lite',
@@ -2088,7 +2088,7 @@ export class UpgradeSystem {
     // v3.0: COSMIC KNOWLEDGE SUBUPGRADES
     if (this.subUpgrades.find((u) => u.id === 'ancient_texts')?.owned)
       discount *= 0.97;
-    if (this.subUpgrades.find((u) => u.id === 'akashic_records')?.owned)
+    if (this.subUpgrades.find((u) => u.id === 'akashic_records_library')?.owned)
       discount *= 0.95;
     if (this.subUpgrades.find((u) => u.id === 'prophetic_vision')?.owned)
       discount *= 0.93;
@@ -2579,7 +2579,7 @@ export class UpgradeSystem {
     if (state.subUpgrades['arc_reactor']) cooldown *= 0.8; // +20% speed
     if (state.subUpgrades['harvested_star']) cooldown *= 0.7; // +30% speed
     if (state.subUpgrades['vacuum_energy_tap']) cooldown *= 0.6; // +40% speed
-    if (state.subUpgrades['entropy_reversal']) cooldown *= 0.45; // +55% speed
+    if (state.subUpgrades['entropy_reversal_engine']) cooldown *= 0.45; // +55% speed
     if (state.subUpgrades['big_crunch_generator']) cooldown *= 0.25; // +75% speed
     if (state.subUpgrades['multiversal_tap']) cooldown *= 0.1; // +100% speed (10x faster!)
 

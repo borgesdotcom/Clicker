@@ -1,7 +1,17 @@
+// Import sound files
+import laserSound from '../sound/laser.mp3';
+import popSound from '../sound/pop.mp3';
+import soundtrackSound from '../sound/soundtrack.mp3';
+
 export class SoundManager {
   private enabled = true;
+  private soundtrackEnabled = true;
   private context: AudioContext | null = null;
   private volume = 0.3;
+  private laserAudio: HTMLAudioElement | null = null;
+  private popAudio: HTMLAudioElement | null = null;
+  private soundtrackAudio: HTMLAudioElement | null = null;
+  private readonly soundtrackVolumeRatio = 0.40; // Soundtrack is 40% of main volume
 
   constructor() {
     try {
@@ -15,6 +25,27 @@ export class SoundManager {
           this.context = new WebkitAudioContext();
         }
       }
+
+      // Load sound files
+      if (typeof laserSound === 'string') {
+        this.laserAudio = new Audio(laserSound);
+        this.laserAudio.preload = 'auto';
+        this.laserAudio.volume = this.volume * 0.70;
+      }
+
+      if (typeof popSound === 'string') {
+        this.popAudio = new Audio(popSound);
+        this.popAudio.preload = 'auto';
+        this.popAudio.volume = this.volume * 1.4;
+      }
+
+      // Load soundtrack for background music
+      if (typeof soundtrackSound === 'string') {
+        this.soundtrackAudio = new Audio(soundtrackSound);
+        this.soundtrackAudio.preload = 'auto';
+        this.soundtrackAudio.loop = true;
+        this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+      }
     } catch {
       console.warn('Audio not supported');
       this.enabled = false;
@@ -23,14 +54,55 @@ export class SoundManager {
 
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
+    // Pause/resume soundtrack based on enabled state and soundtrack setting
+    if (this.soundtrackAudio) {
+      if (enabled && this.soundtrackEnabled) {
+        // Try to start soundtrack (will work if user has interacted)
+        this.attemptSoundtrackStart();
+      } else {
+        // Pause if sound disabled or soundtrack disabled
+        this.soundtrackAudio.pause();
+      }
+    }
   }
 
   isEnabled(): boolean {
     return this.enabled;
   }
 
+  setSoundtrackEnabled(enabled: boolean): void {
+    this.soundtrackEnabled = enabled;
+    if (this.soundtrackAudio) {
+      if (enabled && this.enabled) {
+        // Ensure volume is set correctly before starting
+        this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+        // Try to start soundtrack if enabled
+        this.attemptSoundtrackStart();
+      } else {
+        // Stop soundtrack if disabled
+        this.soundtrackAudio.pause();
+      }
+    }
+  }
+
+  isSoundtrackEnabled(): boolean {
+    return this.soundtrackEnabled;
+  }
+
   setVolume(volume: number): void {
     this.volume = Math.max(0, Math.min(1, volume));
+    // Update audio file volumes
+    if (this.laserAudio) {
+      this.laserAudio.volume = volume * 0.70;
+    }
+    if (this.popAudio) {
+      // Pop sound uses 140% of main volume
+      this.popAudio.volume = volume * 1.4;
+    }
+    // Soundtrack uses a percentage of main volume based on ratio
+    if (this.soundtrackAudio) {
+      this.soundtrackAudio.volume = volume * this.soundtrackVolumeRatio;
+    }
   }
 
   getVolume(): number {
@@ -65,31 +137,41 @@ export class SoundManager {
   }
 
   playClick(): void {
-    // Cookie clicker style "bonk" sound
-    if (!this.enabled || !this.context) return;
+    // Play laser sound when player shoots
+    if (!this.enabled || !this.laserAudio) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
+    // Try to start soundtrack on first user interaction (browser autoplay policy)
+    this.attemptSoundtrackStart();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
+    // Resume AudioContext if suspended (required for some browsers)
+    if (this.context && this.context.state === 'suspended') {
+      this.context.resume().catch((error: unknown) => {
+        console.debug('AudioContext resume error:', error);
+      });
+    }
 
-    // Quick descending pitch for "bonk" effect
-    oscillator.frequency.setValueAtTime(800, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(
-      200,
-      this.context.currentTime + 0.08,
-    );
-    oscillator.type = 'square';
+    // Clone the audio to allow overlapping sounds (rapid fire)
+    const audio = this.laserAudio.cloneNode() as HTMLAudioElement;
+    // Laser sound uses 5% of main volume
+    audio.volume = this.volume * 0.05;
+    audio.play().catch((error: unknown) => {
+      // Ignore playback errors (e.g., user interaction required)
+      console.debug('Laser sound playback error:', error);
+    });
+  }
 
-    gainNode.gain.setValueAtTime(0.25 * this.volume, this.context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.01,
-      this.context.currentTime + 0.08,
-    );
+  playPop(): void {
+    // Play pop sound when alien dies
+    if (!this.enabled || !this.popAudio) return;
 
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 0.08);
+    // Clone the audio to allow overlapping sounds (multiple pops)
+    const audio = this.popAudio.cloneNode() as HTMLAudioElement;
+    // Pop sound uses 140% of main volume
+    audio.volume = this.volume * 1.4;
+    audio.play().catch((error: unknown) => {
+      // Ignore playback errors (e.g., user interaction required)
+      console.debug('Pop sound playback error:', error);
+    });
   }
 
   // Crit sounds removed to prevent endgame spam
@@ -284,5 +366,46 @@ export class SoundManager {
 
     oscillator.start(this.context.currentTime);
     oscillator.stop(this.context.currentTime + 0.15);
+  }
+
+  startSoundtrack(): void {
+    // Start the background soundtrack
+    // Note: May not work until user interaction due to browser autoplay policies
+    this.attemptSoundtrackStart();
+  }
+
+  private attemptSoundtrackStart(): void {
+    // Try to start soundtrack (will only succeed after user interaction due to autoplay policy)
+    if (
+      !this.enabled ||
+      !this.soundtrackEnabled ||
+      !this.soundtrackAudio ||
+      !this.soundtrackAudio.paused
+    ) {
+      return;
+    }
+
+    // Resume AudioContext if suspended (required for some browsers)
+    if (this.context && this.context.state === 'suspended') {
+      this.context.resume().catch((error: unknown) => {
+        console.debug('AudioContext resume error:', error);
+      });
+    }
+
+    // Ensure volume is set correctly before playing (soundtrackAudio already checked above)
+    this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+
+    this.soundtrackAudio.play().catch((error: unknown) => {
+      // Ignore playback errors - will retry on next user interaction
+      console.debug('Soundtrack playback error (will retry):', error);
+    });
+  }
+
+  stopSoundtrack(): void {
+    // Stop the background soundtrack
+    if (this.soundtrackAudio) {
+      this.soundtrackAudio.pause();
+      this.soundtrackAudio.currentTime = 0;
+    }
   }
 }
