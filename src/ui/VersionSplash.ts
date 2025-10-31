@@ -48,6 +48,11 @@ export class VersionSplash {
               <p>Improved rendering efficiency, better memory management, and smoother gameplay experience!</p>
             </div>
             <div class="feature-item">
+              <div class="feature-icon">🎵</div>
+              <h3>Soundtrack Added</h3>
+              <p>Enjoy immersive background music while playing! Toggle it on/off in the settings menu.</p>
+            </div>
+            <div class="feature-item">
               <div class="feature-icon">🎮</div>
               <h3>Debug Panel Updates</h3>
               <p>Added power-up controls to the admin panel for easier testing and debugging!</p>
