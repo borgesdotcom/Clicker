@@ -3,9 +3,6 @@ import type { Vec2 } from '../types';
 export class Input {
   private clickHandlers: ((pos: Vec2) => void)[] = [];
   private touchStartPos: Vec2 | null = null;
-  private touchStartTime = 0;
-  private readonly MAX_TOUCH_MOVE = 30; // pixels - increased for mobile tolerance
-  private readonly MAX_TOUCH_TIME = 500; // milliseconds - increased for mobile
 
   constructor(private canvas: HTMLCanvasElement) {
     this.setupListeners();
@@ -39,12 +36,11 @@ export class Input {
   private handleTouchStart = (e: TouchEvent): void => {
     e.preventDefault();
     e.stopPropagation();
-    // Store touch start position and time for tap detection
+    // Store touch start position for accurate targeting
     if (e.touches.length > 0) {
       const touch = e.touches[0];
       if (touch) {
         this.touchStartPos = this.getCanvasPosition(touch.clientX, touch.clientY);
-        this.touchStartTime = Date.now();
       }
     }
   };
@@ -90,7 +86,6 @@ export class Input {
 
   private resetTouchState(): void {
     this.touchStartPos = null;
-    this.touchStartTime = 0;
   }
 
   private getCanvasPosition(clientX: number, clientY: number): Vec2 {
