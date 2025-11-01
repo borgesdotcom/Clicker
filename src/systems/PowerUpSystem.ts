@@ -320,7 +320,9 @@ export class PowerUpSystem {
       const dy = powerUp.y - y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance < powerUp.radius + 30) {
+      // Larger collision radius for mobile-friendly clicking (80px buffer)
+      // The visual radius is ~35px, so this gives a generous 80px touch target
+      if (distance < powerUp.radius + 80) {
         // Collect power-up
         powerUp.active = false;
         this.activateBuff(powerUp.type);

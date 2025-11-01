@@ -1274,8 +1274,8 @@ export class Game {
       }
 
       if (broken) {
-        // Chance to spawn power-up (3% chance - more rare)
-        if (Math.random() < 0.03) {
+        // Chance to spawn power-up (1% chance - much more rare)
+        if (Math.random() < 0.01) {
           const powerUpX = this.ball.x + (Math.random() - 0.5) * 100;
           const powerUpY = this.ball.y + (Math.random() - 0.5) * 100;
           this.spawnPowerUp(powerUpX, powerUpY);
