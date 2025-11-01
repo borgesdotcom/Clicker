@@ -358,6 +358,7 @@ export class Hud {
       z-index: 10000;
       text-shadow: 0 0 10px ${color};
       animation: pulse 0.5s ease-in-out;
+      pointer-events: none;
     `;
 
     document.body.appendChild(messageEl);

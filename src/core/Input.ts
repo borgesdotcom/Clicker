@@ -4,8 +4,8 @@ export class Input {
   private clickHandlers: ((pos: Vec2) => void)[] = [];
   private touchStartPos: Vec2 | null = null;
   private touchStartTime = 0;
-  private readonly MAX_TOUCH_MOVE = 10; // pixels
-  private readonly MAX_TOUCH_TIME = 300; // milliseconds
+  private readonly MAX_TOUCH_MOVE = 30; // pixels - increased for mobile tolerance
+  private readonly MAX_TOUCH_TIME = 500; // milliseconds - increased for mobile
 
   constructor(private canvas: HTMLCanvasElement) {
     this.setupListeners();
@@ -53,8 +53,7 @@ export class Input {
     e.preventDefault();
     e.stopPropagation();
     
-    // Only process if we have a valid touch start
-    if (!this.touchStartPos || e.changedTouches.length === 0) {
+    if (e.changedTouches.length === 0) {
       this.resetTouchState();
       return;
     }
@@ -65,22 +64,21 @@ export class Input {
       return;
     }
 
-    // Get current touch position
-    const touchEndPos = this.getCanvasPosition(touch.clientX, touch.clientY);
-    const touchDuration = Date.now() - this.touchStartTime;
-
-    // Calculate movement distance
-    const dx = touchEndPos.x - this.touchStartPos.x;
-    const dy = touchEndPos.y - this.touchStartPos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Only trigger if it's a tap (small movement, short duration)
-    if (distance <= this.MAX_TOUCH_MOVE && touchDuration <= this.MAX_TOUCH_TIME) {
-      // Use the end position for more accurate power-up clicking
-      this.clickHandlers.forEach((handler) => {
-        handler(touchEndPos);
-      });
+    // Get touch position - use start position if available, otherwise end position
+    let touchPos: Vec2;
+    if (this.touchStartPos) {
+      // Use start position - this is where the user intended to tap
+      touchPos = this.touchStartPos;
+    } else {
+      // Fallback to end position
+      touchPos = this.getCanvasPosition(touch.clientX, touch.clientY);
     }
+
+    // Always trigger click handlers - power-up system will check if click is valid
+    // This ensures power-ups can be clicked even with slight movement
+    this.clickHandlers.forEach((handler) => {
+      handler(touchPos);
+    });
 
     this.resetTouchState();
   };
@@ -97,8 +95,13 @@ export class Input {
 
   private getCanvasPosition(clientX: number, clientY: number): Vec2 {
     const rect = this.canvas.getBoundingClientRect();
-    const scaleX = this.canvas.width / rect.width;
-    const scaleY = this.canvas.height / rect.height;
+    // The canvas uses device pixel ratio, but game coordinates are in logical pixels
+    // So we need to use logical dimensions (not physical canvas.width/height)
+    const dpr = window.devicePixelRatio || 1;
+    const logicalWidth = this.canvas.width / dpr;
+    const logicalHeight = this.canvas.height / dpr;
+    const scaleX = logicalWidth / rect.width;
+    const scaleY = logicalHeight / rect.height;
     return {
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY,

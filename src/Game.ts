@@ -896,7 +896,8 @@ export class Game {
   private handleClick(pos: Vec2): void {
     if (this.mode === 'transition') return;
 
-    // Check for power-up collection first
+    // ALWAYS check for power-up collection first with highest priority
+    // This ensures power-ups can be clicked even if other elements are in the way
     const collectedPowerUp = this.powerUpSystem.checkCollision(pos.x, pos.y);
     if (collectedPowerUp) {
       this.soundManager.playClick();
@@ -927,7 +928,7 @@ export class Game {
       this.lastHadSpeedBuff = activeBuffs.some(b => b.type === 'speed');
       this.lastHadDamageBuff = activeBuffs.some(b => b.type === 'damage');
       
-      return; // Don't fire when collecting power-up
+      return; // Don't fire when collecting power-up - power-ups have highest priority
     }
 
     // Click anywhere to shoot - much better for mobile!
@@ -1274,7 +1275,7 @@ export class Game {
       }
 
       if (broken) {
-        // Chance to spawn power-up (1% chance - much more rare)
+        // Chance to spawn power-up (1% chance - very rare, like Cookie Clicker golden cookies)
         if (Math.random() < 0.01) {
           const powerUpX = this.ball.x + (Math.random() - 0.5) * 100;
           const powerUpY = this.ball.y + (Math.random() - 0.5) * 100;

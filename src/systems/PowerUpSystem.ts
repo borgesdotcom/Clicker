@@ -72,7 +72,7 @@ export class PowerUpSystem {
   private powerUps: PowerUp[] = [];
   private activeBuffs: ActiveBuff[] = [];
   private spawnTimer = 0;
-  private spawnInterval = 30; // Spawn every 30 seconds
+  private spawnInterval = 180; // Spawn every 180 seconds (3 minutes) - very rare like Cookie Clicker
   private canvasWidth: number;
   private canvasHeight: number;
 
@@ -87,9 +87,10 @@ export class PowerUpSystem {
   }
 
   public update(dt: number): void {
-    // Update spawn timer
+    // Update spawn timer - power-ups spawn very rarely (like Cookie Clicker golden cookies)
     this.spawnTimer += dt;
-    if (this.spawnTimer >= this.spawnInterval && this.powerUps.length < 3) {
+    if (this.spawnTimer >= this.spawnInterval && this.powerUps.length < 2) {
+      // Only allow max 2 power-ups on screen at once to keep them special
       this.spawnRandomPowerUp();
       this.spawnTimer = 0;
     }
@@ -313,6 +314,11 @@ export class PowerUpSystem {
   }
 
   public checkCollision(x: number, y: number): PowerUpType | null {
+    // Check all power-ups and find the closest one
+    let closestPowerUp: PowerUp | null = null;
+    let closestDistance = Infinity;
+    const MOBILE_TOUCH_RADIUS = 120; // Very generous touch radius for mobile
+    
     for (const powerUp of this.powerUps) {
       if (!powerUp.active) continue;
 
@@ -320,14 +326,19 @@ export class PowerUpSystem {
       const dy = powerUp.y - y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Larger collision radius for mobile-friendly clicking (80px buffer)
-      // The visual radius is ~35px, so this gives a generous 80px touch target
-      if (distance < powerUp.radius + 80) {
-        // Collect power-up
-        powerUp.active = false;
-        this.activateBuff(powerUp.type);
-        return powerUp.type;
+      // Much larger collision radius for mobile-friendly clicking
+      // The visual radius is ~35px, so 120px gives a huge touch target
+      if (distance < powerUp.radius + MOBILE_TOUCH_RADIUS && distance < closestDistance) {
+        closestPowerUp = powerUp;
+        closestDistance = distance;
       }
+    }
+
+    // Collect the closest power-up if any was found
+    if (closestPowerUp) {
+      closestPowerUp.active = false;
+      this.activateBuff(closestPowerUp.type);
+      return closestPowerUp.type;
     }
 
     return null;
