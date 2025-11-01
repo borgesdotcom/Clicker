@@ -36,7 +36,7 @@ export class SoundManager {
       if (typeof popSound === 'string') {
         this.popAudio = new Audio(popSound);
         this.popAudio.preload = 'auto';
-        this.popAudio.volume = this.volume * 1.4;
+        this.popAudio.volume = Math.max(0, Math.min(1, this.volume * 1.4));
       }
 
       // Load soundtrack for background music
@@ -91,17 +91,17 @@ export class SoundManager {
 
   setVolume(volume: number): void {
     this.volume = Math.max(0, Math.min(1, volume));
-    // Update audio file volumes
+    // Update audio file volumes (clamp to [0, 1] to prevent IndexSizeError)
     if (this.laserAudio) {
-      this.laserAudio.volume = volume * 0.70;
+      this.laserAudio.volume = Math.max(0, Math.min(1, this.volume * 0.70));
     }
     if (this.popAudio) {
       // Pop sound uses 140% of main volume
-      this.popAudio.volume = volume * 1.4;
+      this.popAudio.volume = Math.max(0, Math.min(1, this.volume * 1.4));
     }
     // Soundtrack uses a percentage of main volume based on ratio
     if (this.soundtrackAudio) {
-      this.soundtrackAudio.volume = volume * this.soundtrackVolumeRatio;
+      this.soundtrackAudio.volume = Math.max(0, Math.min(1, this.volume * this.soundtrackVolumeRatio));
     }
   }
 
@@ -166,8 +166,8 @@ export class SoundManager {
 
     // Clone the audio to allow overlapping sounds (multiple pops)
     const audio = this.popAudio.cloneNode() as HTMLAudioElement;
-    // Pop sound uses 140% of main volume
-    audio.volume = this.volume * 1.4;
+    // Pop sound uses 140% of main volume (clamped to [0, 1])
+    audio.volume = Math.max(0, Math.min(1, this.volume * 1.4));
     audio.play().catch((error: unknown) => {
       // Ignore playback errors (e.g., user interaction required)
       console.debug('Pop sound playback error:', error);
