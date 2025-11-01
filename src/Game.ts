@@ -623,6 +623,7 @@ export class Game {
       discordBtn.id = 'discord-button';
       discordBtn.className = 'shop-button discord-button';
       discordBtn.textContent = '💬 Join Discord';
+      discordBtn.style.color = '#ffffff';
       discordBtn.style.marginBottom = '10px';
       discordBtn.style.width = '100%';
       discordBtn.style.background =
