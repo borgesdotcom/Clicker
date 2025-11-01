@@ -1712,10 +1712,15 @@ export class Game {
       }
     }
 
+    // Calculate cooldown with power-up speed multiplier for auto-fire ships
+    let shipCooldown = this.upgradeSystem.getFireCooldown(state);
+    const shipSpeedMultiplier = this.powerUpSystem.getSpeedMultiplier();
+    shipCooldown /= shipSpeedMultiplier;
+    
     this.autoFireSystem.update(
       dt,
       true, // Auto-fire always enabled for non-main ships
-      this.upgradeSystem.getFireCooldown(state),
+      shipCooldown,
       (shipIndex) => {
         if (shipIndex > 0) {
           return this.fireSingleShip(shipIndex);
