@@ -944,6 +944,9 @@ export class Game {
     // Get starting level from prestige upgrades
     const startingLevel = this.ascensionSystem.getStartingLevel(state);
 
+    // Reset totalSubUpgrades in stats (special upgrades are reset)
+    keepStats.totalSubUpgrades = 0;
+
     // Create a completely fresh state (NOT from save file)
     const freshState: import('./types').GameState = {
       points: 0,
@@ -958,7 +961,7 @@ export class Game {
       experience: 0,
       subUpgrades: {}, // Reset all special upgrades on ascension
       achievements: keepAchievements, // Keep achievements
-      stats: keepStats, // Keep stats
+      stats: keepStats, // Keep stats (with totalSubUpgrades reset)
       prestigeLevel: newPrestigeLevel,
       prestigePoints: newPrestigePoints,
       prestigeUpgrades: keepPrestigeUpgrades, // Keep prestige upgrades
@@ -982,6 +985,9 @@ export class Game {
 
     this.store.setState(freshState);
     Save.save(this.store.getState());
+
+    // Reset shop UI
+    this.shop.reset();
 
     // Reinitialize game
     this.mode = 'normal';
@@ -2362,7 +2368,10 @@ export class Game {
 
   private resetGame(): void {
     Save.clear();
-    this.store.setState(Save.load());
+    const newState = Save.load();
+    // Reset totalSubUpgrades in stats
+    newState.stats.totalSubUpgrades = 0;
+    this.store.setState(newState);
     this.mode = 'normal';
 
     this.blockedOnBossLevel = null;
@@ -2380,6 +2389,9 @@ export class Game {
     this.damageBatch.isBeam = false;
 
     this.powerUpSystem.clear();
+
+    // Reset shop UI
+    this.shop.reset();
 
     this.createBall();
     this.createShips();

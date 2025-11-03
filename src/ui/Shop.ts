@@ -317,6 +317,49 @@ export class Shop {
     });
   }
 
+  public reset(): void {
+    // Reset shop UI state
+    this.currentTab = 'available';
+    this.buyQuantity = 1;
+    this.lastAffordability.clear();
+    this.buttonCache.clear();
+    
+    // Reset tab UI
+    const availableTab = document.getElementById('tab-available');
+    const ownedTab = document.getElementById('tab-owned');
+    if (availableTab) {
+      availableTab.classList.add('active');
+    }
+    if (ownedTab) {
+      ownedTab.classList.remove('active');
+    }
+    
+    // Reset buy quantity buttons
+    const quantityContainer = document.querySelector('.buy-quantity-selector');
+    if (quantityContainer) {
+      const buttons = quantityContainer.querySelectorAll('.buy-quantity-btn');
+      buttons.forEach((btn, index) => {
+        const button = btn as HTMLElement;
+        if (index === 0) { // First button is x1
+          button.style.background = 'rgba(0, 255, 136, 0.4)';
+          button.style.borderColor = '#00ff88';
+          button.style.color = '#00ff88';
+          button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
+          button.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+        } else {
+          button.style.background = 'rgba(0, 255, 136, 0.1)';
+          button.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+          button.style.color = '#00ff88';
+          button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
+          button.style.boxShadow = 'none';
+        }
+      });
+    }
+    
+    // Force a refresh to show the reset state
+    this.forceRefresh();
+  }
+
   private scheduleRender(): void {
     // Don't schedule renders while processing a purchase
     if (this.isProcessingPurchase) return;
