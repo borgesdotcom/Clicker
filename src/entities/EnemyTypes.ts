@@ -184,10 +184,13 @@ export class EnhancedAlienBall extends AlienBall {
   public override draw(drawer: Draw): void {
     const ctx = drawer.getContext();
     
+    // Disable deformation on mobile for performance
+    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+    
     // Calculate deformation effect - different for beams vs lasers (same as parent)
     let deformationAmount = 0;
     
-    if ((this as any).deformationTime > 0) {
+    if (!isMobile && (this as any).deformationTime > 0) {
       if ((this as any).isBeamDeformation) {
         // For beams: continuous pulsing sine wave for sustained effect
         // Pulse at ~4Hz (4 cycles per second) for smooth, noticeable pulsing
