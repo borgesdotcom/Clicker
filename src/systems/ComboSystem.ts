@@ -31,6 +31,8 @@ export class ComboSystem {
   private maxCombo = 0;
   private comboAnimationTime = 0;
   private ascensionSystem: AscensionSystem | null = null;
+  private isPaused = false;
+  private pausedTimerValue = 0;
 
   /**
    * Set ascension system for combo bonuses
@@ -73,6 +75,11 @@ export class ComboSystem {
    * @param dt - Delta time in seconds
    */
   update(dt: number): void {
+    // Don't update timer if paused
+    if (this.isPaused) {
+      return;
+    }
+
     if (this.comboTimer > 0) {
       this.comboTimer -= dt;
       if (this.comboTimer <= 0) {
@@ -82,6 +89,28 @@ export class ComboSystem {
 
     if (this.comboAnimationTime > 0) {
       this.comboAnimationTime -= dt;
+    }
+  }
+
+  /**
+   * Pause the combo timer (e.g., during boss transitions)
+   * Saves the current timer value so it can be resumed later
+   */
+  pause(): void {
+    if (this.combo > 0 && this.comboTimer > 0) {
+      this.isPaused = true;
+      this.pausedTimerValue = this.comboTimer;
+    }
+  }
+
+  /**
+   * Resume the combo timer from where it was paused
+   */
+  resume(): void {
+    if (this.isPaused) {
+      this.isPaused = false;
+      this.comboTimer = this.pausedTimerValue;
+      this.pausedTimerValue = 0;
     }
   }
 

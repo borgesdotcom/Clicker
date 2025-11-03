@@ -603,7 +603,8 @@ export class Game {
 
     // Clean up boss battle state first
     this.hideBossTimer();
-    this.comboSystem.reset();
+    // Pause combo to preserve it during transition back to normal
+    this.comboSystem.pause();
 
     // Show epic timeout modal
     const timeoutModal = document.getElementById('boss-timeout-modal');
@@ -1843,7 +1844,8 @@ export class Game {
     this.store.setState(state);
 
     this.soundManager.playBossDefeat();
-    this.comboSystem.reset();
+    // Pause combo to preserve it during transition back to normal
+    this.comboSystem.pause();
     this.hideBossTimer();
 
     this.blockedOnBossLevel = null;
@@ -1899,7 +1901,8 @@ export class Game {
     this.mode = 'transition';
     this.transitionTime = 0;
     this.ball = null;
-    this.comboSystem.reset();
+    // Pause combo instead of resetting it - will resume after boss fight
+    this.comboSystem.pause();
     
     // Hide timeout modal if visible
     const timeoutModal = document.getElementById('boss-timeout-modal');
@@ -1915,6 +1918,8 @@ export class Game {
         this.createBoss();
         this.mode = 'boss';
         this.startBossTimer();
+        // Resume combo when boss fight actually starts (not during transition)
+        this.comboSystem.resume();
       }
     }, this.transitionDuration * 500);
   }
@@ -1932,6 +1937,8 @@ export class Game {
       if (this.mode === 'transition') {
         this.mode = 'normal';
         this.createBall();
+        // Resume combo when returning to normal gameplay
+        this.comboSystem.resume();
       }
     }, this.transitionDuration * 500);
   }

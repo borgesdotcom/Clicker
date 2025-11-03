@@ -678,29 +678,71 @@ export class Shop {
       const cost = document.createElement('div');
       cost.className = 'upgrade-cost';
 
-      // Calculate cost based on buy quantity
-      const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
-      const actualAffordable = quantity;
-      const requestedQty =
-        this.buyQuantity === 'max' ? quantity : this.buyQuantity;
+      // Calculate cost for the exact requested quantity
+      const requestedQty = this.buyQuantity === 'max' ? 0 : this.buyQuantity;
+      
+      let displayCost = 0;
+      let displayQuantity = 1;
+      let canAffordExact = false;
+      
+      if (this.buyQuantity === 'max') {
+        // For MAX: calculate affordable quantity and cost
+        const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
+        displayCost = totalCost;
+        displayQuantity = quantity;
+        canAffordExact = state.points >= totalCost && quantity > 0;
+      } else {
+        // For specific quantity: calculate cost for EXACT requested quantity
+        const currentLevel = upgrade.getLevel(state);
+        let tempLevel = currentLevel;
+        const upgradeId = upgrade.id;
+        const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
+        
+        // Create temporary state for self-affecting upgrades
+        const tempState = { ...state };
+        
+        for (let i = 0; i < requestedQty; i++) {
+          const cost = upgrade.getCost(tempLevel);
+          displayCost += cost;
+          tempLevel++;
+          
+          // Update temp state for self-affecting upgrades
+          if (affectsSelfCost) {
+            if (upgradeId === 'cosmicKnowledge') {
+              tempState.cosmicKnowledgeLevel = tempLevel;
+            } else if (upgradeId === 'fleetCommand') {
+              tempState.fleetCommandLevel = tempLevel;
+            }
+          }
+        }
+        
+        displayQuantity = requestedQty;
+        canAffordExact = state.points >= displayCost;
+      }
 
+      // Show cost with requested quantity (matching button text)
       const costText =
-        quantity > 1
-          ? `${t('common.cost')}: ${this.formatNumber(totalCost)} (x${quantity})`
-          : `${t('common.cost')}: ${this.formatNumber(totalCost)}`;
+        displayQuantity > 1
+          ? `${t('common.cost')}: ${this.formatNumber(displayCost)} (x${displayQuantity})`
+          : `${t('common.cost')}: ${this.formatNumber(displayCost)}`;
       cost.textContent = costText;
 
-      // Can buy if we can afford at least 1, or the exact quantity requested (not MAX)
-      const canAffordAny =
-        state.points >= totalCost &&
-        (this.buyQuantity === 'max' || actualAffordable === requestedQty);
+      // Show requested quantity in button text
+      const buttonText = this.buyQuantity === 'max' 
+        ? (displayQuantity > 1 ? `${t('common.buy')} x${displayQuantity}` : t('common.buy'))
+        : (displayQuantity > 1 ? `${t('common.buy')} x${displayQuantity}` : t('common.buy'));
+      
       const button = new Button(
-        quantity > 1 ? `${t('common.buy')} x${quantity}` : t('common.buy'),
+        buttonText,
         () => {
-          this.buyUpgrade(upgrade, quantity);
+          // Buy exactly the requested quantity (or max affordable for MAX mode)
+          const qtyToBuy = this.buyQuantity === 'max' 
+            ? displayQuantity 
+            : displayQuantity;
+          this.buyUpgrade(upgrade, qtyToBuy);
         },
       );
-      button.setEnabled(canAffordAny);
+      button.setEnabled(canAffordExact);
 
       // Cache the button element for quick updates
       const buttonElement = button.getElement();
@@ -936,23 +978,51 @@ export class Shop {
     this.isProcessingPurchase = true;
 
     const state = this.store.getState();
+    const isMaxMode = this.buyQuantity === 'max';
 
     // Calculate actual cost for the quantity
     let totalCost = 0;
     let actualQuantity = 0;
     const currentLevel = upgrade.getLevel(state);
+    const upgradeId = upgrade.id;
+    const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
+    
+    // Create temporary state for self-affecting upgrades
+    const tempState = { ...state };
+    let tempLevel = currentLevel;
 
     for (let i = 0; i < quantity; i++) {
-      const cost = upgrade.getCost(currentLevel + i);
+      const cost = upgrade.getCost(tempLevel);
       if (state.points >= totalCost + cost) {
         totalCost += cost;
         actualQuantity++;
+        tempLevel++;
+        
+        // Update temp state for self-affecting upgrades
+        if (affectsSelfCost) {
+          if (upgradeId === 'cosmicKnowledge') {
+            tempState.cosmicKnowledgeLevel = tempLevel;
+          } else if (upgradeId === 'fleetCommand') {
+            tempState.fleetCommandLevel = tempLevel;
+          }
+        }
       } else {
+        // For non-MAX mode: must buy exact quantity, so stop if can't afford
+        if (!isMaxMode) {
+          break;
+        }
+        // For MAX mode: stop if can't afford more
         break;
       }
     }
 
-    if (actualQuantity > 0 && state.points >= totalCost) {
+    // For non-MAX mode: only buy if we can afford the exact quantity
+    // For MAX mode: buy as many as affordable
+    const canBuy = isMaxMode 
+      ? (actualQuantity > 0 && state.points >= totalCost)
+      : (actualQuantity === quantity && state.points >= totalCost);
+
+    if (canBuy) {
       state.points -= totalCost;
 
       // Buy multiple times
