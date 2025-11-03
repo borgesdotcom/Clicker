@@ -157,7 +157,7 @@ export class ParticleSystem {
     }
   }
 
-  spawnExplosion(x: number, y: number, color = '#ff0000'): void {
+  spawnExplosion(x: number, y: number, color = '#ff0000', glow: boolean = true): void {
     this.spawnParticles({
       x,
       y,
@@ -167,7 +167,7 @@ export class ParticleSystem {
       speed: 200,
       size: 4,
       life: 0.8,
-      glow: true,
+      glow,
     });
   }
 

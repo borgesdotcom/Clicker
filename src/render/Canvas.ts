@@ -90,10 +90,10 @@ export class Canvas {
     return this.getHeight() / 2;
   }
 
-  clear(): void {
+  clear(color: string = '#000'): void {
     // Use GPU-friendly clear method
     // Direct fillRect is faster than save/restore for GPU
-    this.ctx.fillStyle = '#000';
+    this.ctx.fillStyle = color;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 

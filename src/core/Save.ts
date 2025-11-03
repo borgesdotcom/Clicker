@@ -41,6 +41,8 @@ export class Save {
       autoBuyEnabled: state.autoBuyEnabled ?? false,
       // Offline progress tracking
       lastPlayTime: Date.now(),
+      // Visual customization
+      selectedThemes: state.selectedThemes,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -152,6 +154,8 @@ export class Save {
         highestLevelReached: validatedState.highestLevelReached,
         // Auto-buy toggle
         autoBuyEnabled: validatedState.autoBuyEnabled ?? false,
+        // Visual customization
+        selectedThemes: validatedState.selectedThemes,
         // Preserve lastPlayTime from imported data if it exists, otherwise use current time
         lastPlayTime: data.lastPlayTime ?? Date.now(),
       };
@@ -224,6 +228,7 @@ export class Save {
       // Initialize highestLevelReached to current level if undefined (for new players)
       highestLevelReached: data.highestLevelReached ?? (data.level && data.level >= 100 ? data.level : undefined),
       autoBuyEnabled: data.autoBuyEnabled ?? false,
+      selectedThemes: data.selectedThemes,
     };
   }
 
@@ -255,6 +260,7 @@ export class Save {
       discoveredUpgrades: { ship: true }, // Ship is always visible
       highestLevelReached: undefined,
       autoBuyEnabled: false,
+      selectedThemes: undefined,
     };
   }
 

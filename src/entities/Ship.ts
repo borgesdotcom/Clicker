@@ -63,8 +63,9 @@ export class Ship {
     const ctx = drawer.getContext();
     const size = this.isMainShip ? 13 : 8;
     
-    // Determine ship appearance based on upgrades
-    const visuals = this.getShipVisuals(state);
+    // Determine ship appearance - check for custom visuals first, then upgrades
+    const customVisuals = (this as any).customVisuals;
+    const visuals = customVisuals ?? this.getShipVisuals(state);
     
     // Engine pulse animation
     const enginePulse = Math.sin(this.enginePulse) * 0.25 + 0.75;

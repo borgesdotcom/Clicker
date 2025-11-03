@@ -176,8 +176,9 @@ export class MobileUI {
     const missionsBtn = document.getElementById('missions-button');
     const artifactsBtn = document.getElementById('artifacts-button');
     const ascensionBtn = document.getElementById('ascension-button');
-    const settingsBtn = document.getElementById('settings-button');
+    const customizationBtn = document.getElementById('customization-button');
     const gameInfoBtn = document.getElementById('game-info-button');
+    const settingsBtn = document.getElementById('settings-button');
     const bossRetryBtn = document.getElementById('boss-retry-btn');
 
     // Clear mobile menu content
@@ -190,6 +191,7 @@ export class MobileUI {
       missionsBtn,
       artifactsBtn,
       ascensionBtn,
+      customizationBtn,
       gameInfoBtn,
       settingsBtn,
       bossRetryBtn,

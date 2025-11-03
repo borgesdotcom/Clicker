@@ -1,0 +1,535 @@
+import type { GameState, ThemeCategory } from '../types';
+
+export interface Theme {
+  id: string;
+  name: string;
+  description: string;
+  category: ThemeCategory;
+  icon: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent?: string;
+    glow?: string;
+  };
+  unlockCondition: {
+    type: 'level' | 'prestige' | 'achievement' | 'bossesKilled' | 'always';
+    value?: number | string;
+  };
+  particleStyle?: 'classic' | 'glow' | 'sparkle' | 'trail';
+}
+
+export class VisualCustomizationSystem {
+  private themes: Theme[] = [];
+  private unlockedThemes: Set<string> = new Set(['default_ship', 'default_laser', 'default_particle', 'default_background']);
+  private selectedThemes: Record<ThemeCategory, string> = {
+    ship: 'default_ship',
+    laser: 'default_laser',
+    particle: 'default_particle',
+    background: 'default_background',
+  };
+
+  constructor() {
+    this.initializeThemes();
+  }
+
+  private initializeThemes(): void {
+    // === SHIP THEMES ===
+    this.themes.push({
+      id: 'default_ship',
+      name: 'Classic Fleet',
+      description: 'The standard white ships. Clean and reliable.',
+      category: 'ship',
+      icon: '🛸',
+      colors: {
+        primary: '#ffffff',
+        secondary: '#cccccc',
+        glow: 'rgba(255, 255, 255, 0.3)',
+      },
+      unlockCondition: { type: 'always' },
+    });
+
+    this.themes.push({
+      id: 'neon_ship',
+      name: 'Neon Fleet',
+      description: 'Vibrant cyan ships with neon glow. Unlocked at level 25.',
+      category: 'ship',
+      icon: '💫',
+      colors: {
+        primary: '#00ffff',
+        secondary: '#00aaff',
+        accent: '#00ff88',
+        glow: 'rgba(0, 255, 255, 0.5)',
+      },
+      unlockCondition: { type: 'level', value: 25 },
+    });
+
+    this.themes.push({
+      id: 'fire_ship',
+      name: 'Inferno Fleet',
+      description: 'Burning red and orange ships. Defeat 10 bosses to unlock.',
+      category: 'ship',
+      icon: '🔥',
+      colors: {
+        primary: '#ff4400',
+        secondary: '#ff8800',
+        accent: '#ffaa00',
+        glow: 'rgba(255, 68, 0, 0.6)',
+      },
+      unlockCondition: { type: 'bossesKilled', value: 10 },
+    });
+
+    this.themes.push({
+      id: 'cosmic_ship',
+      name: 'Cosmic Fleet',
+      description: 'Mysterious purple ships with cosmic energy. Prestige level 3 required.',
+      category: 'ship',
+      icon: '🌌',
+      colors: {
+        primary: '#8800ff',
+        secondary: '#aa44ff',
+        accent: '#ff00ff',
+        glow: 'rgba(136, 0, 255, 0.5)',
+      },
+      unlockCondition: { type: 'prestige', value: 3 },
+    });
+
+    this.themes.push({
+      id: 'hologram_ship',
+      name: 'Hologram Fleet',
+      description: 'Ghostly blue ships with holographic effects. Reach level 100.',
+      category: 'ship',
+      icon: '👻',
+      colors: {
+        primary: '#88ffff',
+        secondary: '#aaffff',
+        accent: '#ffffff',
+        glow: 'rgba(136, 255, 255, 0.4)',
+      },
+      unlockCondition: { type: 'level', value: 100 },
+    });
+
+    // === LASER THEMES ===
+    this.themes.push({
+      id: 'default_laser',
+      name: 'Standard Beams',
+      description: 'Clean white lasers. Always available.',
+      category: 'laser',
+      icon: '⚡',
+      colors: {
+        primary: '#ffffff',
+        secondary: '#ffffff',
+      },
+      unlockCondition: { type: 'always' },
+    });
+
+    this.themes.push({
+      id: 'rainbow_laser',
+      name: 'Rainbow Beam',
+      description: 'Colorful rainbow lasers. Unlocked at level 50.',
+      category: 'laser',
+      icon: '🌈',
+      colors: {
+        primary: '#ff0088',
+        secondary: '#8800ff',
+        accent: '#00ff88',
+      },
+      unlockCondition: { type: 'level', value: 50 },
+    });
+
+    this.themes.push({
+      id: 'plasma_laser',
+      name: 'Plasma Stream',
+      description: 'Hot plasma energy beams. Defeat 25 bosses.',
+      category: 'laser',
+      icon: '⚛️',
+      colors: {
+        primary: '#ff0044',
+        secondary: '#ff8800',
+        glow: '#ffaa00',
+      },
+      unlockCondition: { type: 'bossesKilled', value: 25 },
+    });
+
+    this.themes.push({
+      id: 'void_laser',
+      name: 'Void Beam',
+      description: 'Dark energy from the void. Prestige level 5.',
+      category: 'laser',
+      icon: '🕳️',
+      colors: {
+        primary: '#4400aa',
+        secondary: '#8800ff',
+        accent: '#ff00ff',
+      },
+      unlockCondition: { type: 'prestige', value: 5 },
+    });
+
+    // === PARTICLE THEMES ===
+    this.themes.push({
+      id: 'default_particle',
+      name: 'Classic Particles',
+      description: 'Standard white particles. Always available.',
+      category: 'particle',
+      icon: '✨',
+      colors: {
+        primary: '#ffffff',
+        secondary: '#cccccc',
+      },
+      particleStyle: 'classic',
+      unlockCondition: { type: 'always' },
+    });
+
+    this.themes.push({
+      id: 'sparkle_particle',
+      name: 'Sparkle Effect',
+      description: 'Golden sparkles on hits. Unlocked at level 30.',
+      category: 'particle',
+      icon: '💎',
+      colors: {
+        primary: '#ffdd00',
+        secondary: '#ffaa00',
+        accent: '#ffffff',
+      },
+      particleStyle: 'sparkle',
+      unlockCondition: { type: 'level', value: 30 },
+    });
+
+    this.themes.push({
+      id: 'glow_particle',
+      name: 'Glowing Particles',
+      description: 'Luminous particles with glow effects. Defeat 15 bosses.',
+      category: 'particle',
+      icon: '🌟',
+      colors: {
+        primary: '#00ffff',
+        secondary: '#0088ff',
+        glow: '#00ff88',
+      },
+      particleStyle: 'glow',
+      unlockCondition: { type: 'bossesKilled', value: 15 },
+    });
+
+    this.themes.push({
+      id: 'trail_particle',
+      name: 'Trail Effect',
+      description: 'Long-lasting particle trails. Prestige level 2.',
+      category: 'particle',
+      icon: '🌠',
+      colors: {
+        primary: '#ff00ff',
+        secondary: '#8800ff',
+      },
+      particleStyle: 'trail',
+      unlockCondition: { type: 'prestige', value: 2 },
+    });
+
+    // === BACKGROUND THEMES ===
+    this.themes.push({
+      id: 'default_background',
+      name: 'Classic Space',
+      description: 'The original starfield background. Always available.',
+      category: 'background',
+      icon: '🌌',
+      colors: {
+        primary: '#000000',
+        secondary: '#ffffff', // White stars (not #001122 which is too dark)
+      },
+      unlockCondition: { type: 'always' },
+    });
+
+    this.themes.push({
+      id: 'nebula_background',
+      name: 'Nebula Sky',
+      description: 'Colorful nebula clouds and vibrant stars. Reach level 75.',
+      category: 'background',
+      icon: '🌠',
+      colors: {
+        primary: '#0a0018',
+        secondary: '#440088', // Purple stars for nebula
+      },
+      unlockCondition: { type: 'level', value: 75 },
+    });
+
+    this.themes.push({
+      id: 'void_background',
+      name: 'Void Realm',
+      description: 'Dark void with subtle stars. Defeat 50 bosses.',
+      category: 'background',
+      icon: '🌑',
+      colors: {
+        primary: '#000000',
+        secondary: '#333366', // Subtle purple-blue stars that are visible on black
+      },
+      unlockCondition: { type: 'bossesKilled', value: 50 },
+    });
+  }
+
+  /**
+   * Check unlock conditions and update unlocked themes
+   */
+  updateUnlocks(state: GameState): void {
+    for (const theme of this.themes) {
+      if (this.unlockedThemes.has(theme.id)) continue;
+
+      let unlocked = false;
+      const condition = theme.unlockCondition;
+
+      switch (condition.type) {
+        case 'always':
+          unlocked = true;
+          break;
+      case 'level':
+        unlocked = state.level >= (typeof condition.value === 'number' ? condition.value : 0);
+        break;
+      case 'prestige':
+        unlocked = state.prestigeLevel >= (typeof condition.value === 'number' ? condition.value : 0);
+        break;
+      case 'bossesKilled':
+        unlocked = state.stats.bossesKilled >= (typeof condition.value === 'number' ? condition.value : 0);
+        break;
+        case 'achievement':
+          unlocked = state.achievements[condition.value as string] ?? false;
+          break;
+      }
+
+      if (unlocked) {
+        this.unlockedThemes.add(theme.id);
+      }
+    }
+  }
+
+  /**
+   * Get all themes for a category
+   */
+  getThemesForCategory(category: ThemeCategory): Theme[] {
+    return this.themes.filter((t) => t.category === category);
+  }
+
+  /**
+   * Get unlocked themes for a category
+   */
+  getUnlockedThemesForCategory(category: ThemeCategory): Theme[] {
+    return this.getThemesForCategory(category).filter((t) => this.isUnlocked(t.id));
+  }
+
+  /**
+   * Check if a theme is unlocked
+   */
+  isUnlocked(themeId: string): boolean {
+    return this.unlockedThemes.has(themeId);
+  }
+
+  /**
+   * Get unlock progress for a theme
+   */
+  getUnlockProgress(theme: Theme, state: GameState): { progress: number; max: number; description: string } {
+    const condition = theme.unlockCondition;
+
+    switch (condition.type) {
+      case 'always':
+        return { progress: 1, max: 1, description: 'Unlocked' };
+      case 'level':
+        return {
+          progress: state.level,
+          max: typeof condition.value === 'number' ? condition.value : 1,
+          description: `Reach level ${typeof condition.value === 'number' ? condition.value.toString() : '1'}`,
+        };
+      case 'prestige':
+        return {
+          progress: state.prestigeLevel,
+          max: typeof condition.value === 'number' ? condition.value : 1,
+          description: `Reach prestige ${typeof condition.value === 'number' ? condition.value.toString() : '1'}`,
+        };
+      case 'bossesKilled':
+        return {
+          progress: state.stats.bossesKilled,
+          max: typeof condition.value === 'number' ? condition.value : 1,
+          description: `Defeat ${typeof condition.value === 'number' ? condition.value.toString() : '1'} bosses`,
+        };
+      case 'achievement':
+        return {
+          progress: state.achievements[condition.value as string] ? 1 : 0,
+          max: 1,
+          description: `Unlock achievement: ${condition.value}`,
+        };
+      default:
+        return { progress: 0, max: 1, description: 'Unknown' };
+    }
+  }
+
+  /**
+   * Select a theme for a category
+   */
+  selectTheme(category: ThemeCategory, themeId: string): boolean {
+    const theme = this.themes.find((t) => t.id === themeId && t.category === category);
+    if (!theme || !this.isUnlocked(themeId)) {
+      return false;
+    }
+
+    this.selectedThemes[category] = themeId;
+    return true;
+  }
+
+  /**
+   * Get currently selected theme for a category
+   */
+  getSelectedTheme(category: ThemeCategory): Theme | null {
+    const themeId = this.selectedThemes[category];
+    return this.themes.find((t) => t.id === themeId) ?? null;
+  }
+
+  /**
+   * Get ship color based on selected theme
+   */
+  getShipColors(state: GameState): { fillColor: string; outlineColor: string; glowColor: string } {
+    const theme = this.getSelectedTheme('ship');
+    if (!theme) {
+      // Fallback to upgrade-based colors
+      return {
+        fillColor: '#ffffff',
+        outlineColor: '#cccccc',
+        glowColor: 'rgba(255, 255, 255, 0.3)',
+      };
+    }
+
+    // Use theme colors, but can still be overridden by upgrades
+    let fillColor = theme.colors.primary;
+    const glowColor = theme.colors.glow ?? `rgba(${this.hexToRgb(theme.colors.primary).join(', ')}, 0.4)`;
+
+    // If upgrades are active, prefer them over theme (user choice)
+    if (state.subUpgrades['cosmic_ascension']) {
+      fillColor = '#ff00ff';
+    } else if (state.subUpgrades['singularity_core']) {
+      fillColor = '#8800ff';
+    } else if (state.subUpgrades['heart_of_galaxy']) {
+      fillColor = '#ff0044';
+    } else {
+      // Use theme color
+      fillColor = theme.colors.primary;
+    }
+
+    return {
+      fillColor,
+      outlineColor: theme.colors.secondary,
+      glowColor,
+    };
+  }
+
+  /**
+   * Get laser color based on selected theme
+   */
+  getLaserColor(state: GameState, isCrit: boolean): string {
+    if (isCrit) {
+      return '#ffff00'; // Always yellow for crits
+    }
+
+    const theme = this.getSelectedTheme('laser');
+    if (!theme) {
+      // Fallback to upgrade-based colors
+      return this.getDefaultLaserColor(state);
+    }
+
+    // Use theme color, but upgrades can override
+    if (state.subUpgrades['cosmic_ascension']) {
+      return '#ff00ff';
+    } else if (state.subUpgrades['singularity_core']) {
+      return '#8800ff';
+    } else if (state.subUpgrades['heart_of_galaxy']) {
+      return '#ff0044';
+    }
+
+    // Use theme color
+    return theme.colors.primary;
+  }
+
+  /**
+   * Get default laser color based on upgrades
+   */
+  private getDefaultLaserColor(state: GameState): string {
+    if (state.subUpgrades['cosmic_ascension']) return '#ff00ff';
+    if (state.subUpgrades['singularity_core']) return '#8800ff';
+    if (state.subUpgrades['heart_of_galaxy']) return '#ff0044';
+    if (state.subUpgrades['antimatter_rounds']) return '#ff0088';
+    if (state.subUpgrades['chaos_emeralds']) return '#00ff88';
+    if (state.subUpgrades['overclocked_reactors']) return '#ff6600';
+    if (state.subUpgrades['laser_focusing']) return '#00ffff';
+    if (state.pointMultiplierLevel >= 10) return '#88ff88';
+    return '#ffffff';
+  }
+
+  /**
+   * Get particle style and colors
+   */
+  getParticleStyle(): { style: string; colors: { primary: string; secondary?: string } } {
+    const theme = this.getSelectedTheme('particle');
+    if (!theme) {
+      return {
+        style: 'classic',
+        colors: { primary: '#ffffff', secondary: '#cccccc' },
+      };
+    }
+
+    return {
+      style: theme.particleStyle ?? 'classic',
+      colors: {
+        primary: theme.colors.primary,
+        secondary: theme.colors.secondary,
+      },
+    };
+  }
+
+  /**
+   * Get background colors
+   */
+  getBackgroundColors(): { primary: string; secondary: string } {
+    const theme = this.getSelectedTheme('background');
+    if (!theme) {
+      return {
+        primary: '#000000',
+        secondary: '#ffffff', // White stars for default
+      };
+    }
+
+    return {
+      primary: theme.colors.primary,
+      secondary: theme.colors.secondary ?? '#ffffff',
+    };
+  }
+
+  /**
+   * Save customization state
+   */
+  saveState(): Record<ThemeCategory, string> {
+    return { ...this.selectedThemes };
+  }
+
+  /**
+   * Load customization state
+   */
+  loadState(state: Record<ThemeCategory, string> | undefined): void {
+    if (!state) return;
+
+    // Validate and load each category
+    for (const category of ['ship', 'laser', 'particle', 'background'] as ThemeCategory[]) {
+      const themeId = state[category];
+      if (themeId && this.isUnlocked(themeId)) {
+        this.selectedThemes[category] = themeId;
+      }
+    }
+  }
+
+  /**
+   * Get all unlocked theme IDs
+   */
+  getUnlockedThemeIds(): string[] {
+    return Array.from(this.unlockedThemes);
+  }
+
+  private hexToRgb(hex: string): number[] {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? [parseInt(result[1] ?? '0', 16), parseInt(result[2] ?? '0', 16), parseInt(result[3] ?? '0', 16)]
+      : [255, 255, 255];
+  }
+}

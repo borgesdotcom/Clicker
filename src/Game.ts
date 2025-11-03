@@ -3,7 +3,6 @@
 import { AlienBall } from './entities/AlienBall';
 import {
   EnhancedAlienBall,
-  ENEMY_TYPES,
   selectEnemyType,
 } from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
@@ -47,7 +46,9 @@ import { PerformanceMonitor } from './ui/PerformanceMonitor';
 import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
-import type { Vec2, GameMode } from './types';
+import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
+import { CustomizationModal } from './ui/CustomizationModal';
+import type { Vec2, GameMode, ThemeCategory } from './types';
 import type { UserSettings } from './core/Settings';
 
 export class Game {
@@ -86,6 +87,8 @@ export class Game {
   private notificationSystem: NotificationSystem;
   private hud: Hud;
   private shop: Shop;
+  private customizationSystem: VisualCustomizationSystem;
+  private customizationModal: CustomizationModal;
   private saveTimer = 0;
   private saveInterval = 3;
   private autoBuyTimer = 0;
@@ -264,6 +267,44 @@ export class Game {
       );
     });
 
+    // Initialize visual customization system
+    this.customizationSystem = new VisualCustomizationSystem();
+    
+    // Load saved themes
+    const initialState = this.store.getState();
+    if (initialState.selectedThemes) {
+      this.customizationSystem.loadState(initialState.selectedThemes as Record<ThemeCategory, string>);
+    }
+    this.customizationSystem.updateUnlocks(initialState);
+    
+    // Set initial background theme (before first render)
+    const bgColors = this.customizationSystem.getBackgroundColors();
+    const initialBgTheme = this.customizationSystem.getSelectedTheme('background');
+    const initialThemeId: string = initialBgTheme?.id ?? 'default_background';
+    this.background.setThemeColors(bgColors, initialThemeId);
+    
+    // Initialize customization modal
+    this.customizationModal = new CustomizationModal(this.customizationSystem);
+    this.customizationModal.updateState(initialState);
+    this.customizationModal.setOnThemeChange((category, themeId) => {
+      // Save theme selection
+      const currentState = this.store.getState();
+      if (!currentState.selectedThemes) {
+        currentState.selectedThemes = {};
+      }
+      currentState.selectedThemes[category] = themeId;
+      this.store.setState(currentState);
+      Save.save(currentState);
+      
+      // Update background immediately if background theme changed
+      if (category === 'background') {
+        const newBgColors = this.customizationSystem.getBackgroundColors();
+        const newBgTheme = this.customizationSystem.getSelectedTheme('background');
+        const newThemeId: string = newBgTheme?.id ?? 'default_background';
+        this.background.setThemeColors(newBgColors, newThemeId);
+      }
+    });
+
     (this as any).debugPanel = new DebugPanel(
       this.store,
       () => {
@@ -413,6 +454,7 @@ export class Game {
     this.setupCreditsButton();
     this.setupDiscordButton();
     this.setupGameInfoButton();
+    this.setupCustomizationButton();
     Layout.setupResetButton(() => {
       this.resetGame();
     });
@@ -862,6 +904,26 @@ export class Game {
     }
   }
 
+  private setupCustomizationButton(): void {
+    const buttonsContainer = document.getElementById('hud-buttons-container');
+    if (buttonsContainer) {
+      const customizeBtn = document.createElement('button');
+      customizeBtn.id = 'customization-button';
+      customizeBtn.className = 'hud-button';
+      customizeBtn.setAttribute('data-icon', '🎨');
+      customizeBtn.setAttribute('data-text', 'Customize');
+      customizeBtn.setAttribute('aria-label', 'Open Visual Customization');
+      customizeBtn.setAttribute('aria-keyshortcuts', 'C');
+      customizeBtn.innerHTML = '<span class="hud-button-icon">🎨</span><span class="hud-button-text">Customize</span>';
+      customizeBtn.addEventListener('click', () => {
+        const state = this.store.getState();
+        this.customizationModal.updateState(state);
+        this.customizationModal.show();
+      });
+      buttonsContainer.appendChild(customizeBtn);
+    }
+  }
+
   private performAscension(): void {
     const state = this.store.getState();
 
@@ -1198,17 +1260,21 @@ export class Game {
       
       // Spawn collection particles
       if (this.userSettings.highGraphics) {
-        const color = this.powerUpSystem.getPowerUpColor(collectedPowerUp);
+        // Apply particle theme if available
+        const particleTheme = this.customizationSystem.getParticleStyle();
+        const particleColor = particleTheme.colors.primary;
+        const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle';
+        
         this.particleSystem.spawnParticles({
           x: pos.x,
           y: pos.y,
           count: 15,
-          color: color,
+          color: particleColor,
           spread: Math.PI * 2,
           speed: 200,
           size: 4,
           life: 0.8,
-          glow: true,
+          glow: useGlow,
         });
       }
       
@@ -1405,6 +1471,20 @@ export class Game {
     color: string;
     width: number;
   } {
+    // Check customization system first for theme color
+    const themeColor = this.customizationSystem.getLaserColor(state, false);
+    
+    // Use theme color if no upgrade override
+    if (themeColor && !state.subUpgrades['cosmic_ascension'] && 
+        !state.subUpgrades['singularity_core'] && 
+        !state.subUpgrades['heart_of_galaxy']) {
+      // Check for crit after getting base color
+      const critChance = this.upgradeSystem.getCritChance(state) + this.powerUpSystem.getCritChanceBonus() * 100;
+      if (Math.random() * 100 < critChance) {
+        return { isCrit: true, color: '#ffff00', width: 2 };
+      }
+      return { isCrit: false, color: themeColor, width: 1.5 };
+    }
     let color = '#fff';
     let width = 1.5; // Thin lasers
     let isCrit = false;
@@ -1570,22 +1650,21 @@ export class Game {
 
         // Particles (only if high graphics enabled)
         if (this.userSettings.highGraphics) {
-          // Use enemy-specific color if it's an enhanced alien
-          let particleColor = '#ffffff';
-          if (this.ball instanceof EnhancedAlienBall) {
-            // Get the enemy type's color for more visual feedback
-            const stats = ENEMY_TYPES[this.ball.enemyType];
-            particleColor = stats.color;
-          }
-
+          // Apply particle theme
+          const particleTheme = this.customizationSystem.getParticleStyle();
+          const themeParticleColor = particleTheme.style === 'sparkle' 
+            ? particleTheme.colors.secondary ?? particleTheme.colors.primary
+            : particleTheme.colors.primary;
+          const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle' || this.ball instanceof EnhancedAlienBall;
+          
           this.particleSystem.spawnParticles({
             x: this.ball.x,
             y: this.ball.y,
             count: Math.min(5, Math.floor(finalDamage / 500)),
-            color: particleColor,
+            color: themeParticleColor,
             speed: 50,
             life: 0.8,
-            glow: this.ball instanceof EnhancedAlienBall, // Add glow for special aliens
+            glow: useGlow,
           });
         }
       }
@@ -1620,17 +1699,23 @@ export class Game {
       if (!isFromShip) {
         // Spawn hit particles occasionally (only if high graphics)
         if (this.userSettings.highGraphics && Math.random() < 0.3) {
-          const hitColor = isCrit ? '#ffff00' : '#ffffff';
+          // Apply particle theme
+          const particleTheme = this.customizationSystem.getParticleStyle();
+          const themeParticleColor = isCrit && particleTheme.style === 'sparkle'
+            ? particleTheme.colors.secondary ?? particleTheme.colors.primary
+            : particleTheme.colors.primary;
+          const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle';
+          
           this.particleSystem.spawnParticles({
             x: bossPos.x + (Math.random() - 0.5) * this.bossBall.radius,
             y: bossPos.y + (Math.random() - 0.5) * this.bossBall.radius,
             count: isCrit ? 10 : 5,
-            color: hitColor,
+            color: themeParticleColor,
             spread: Math.PI,
             speed: 150,
             size: isCrit ? 4 : 3,
             life: 0.6,
-            glow: false,
+            glow: useGlow,
           });
         }
       }
@@ -1793,9 +1878,15 @@ export class Game {
     if (this.userSettings.highGraphics) {
       const centerX = this.canvas.getCenterX();
       const centerY = this.canvas.getCenterY();
-      this.particleSystem.spawnExplosion(centerX, centerY, '#ffaa00');
+      // Apply particle theme for explosions
+      const particleTheme = this.customizationSystem.getParticleStyle();
+      const explosionColor1 = particleTheme.colors.primary;
+      const explosionColor2 = particleTheme.colors.secondary ?? particleTheme.colors.primary;
+      const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle';
+      
+      this.particleSystem.spawnExplosion(centerX, centerY, explosionColor1, useGlow);
       setTimeout(() => {
-        this.particleSystem.spawnExplosion(centerX, centerY, '#ff0000');
+        this.particleSystem.spawnExplosion(centerX, centerY, explosionColor2, useGlow);
       }, 200);
     }
 
@@ -1958,6 +2049,8 @@ export class Game {
     // Throttle achievement checks (expensive operation)
     if (this.frameCount % this.ACHIEVEMENT_CHECK_INTERVAL === 0) {
       this.achievementSystem.checkAchievements(state);
+      // Update theme unlocks periodically
+      this.customizationSystem.updateUnlocks(state);
     }
 
     if (this.mode === 'transition') {
@@ -2053,7 +2146,13 @@ export class Game {
       if (phase === 3) trailColor = '#ff0000';
       else if (phase === 2) trailColor = '#ffaa00';
 
-      this.particleSystem.spawnTrail(bossPos.x, bossPos.y, trailColor);
+      // Apply particle theme for trails
+      const particleTheme = this.customizationSystem.getParticleStyle();
+      const trailThemeColor = particleTheme.style === 'trail' 
+        ? particleTheme.colors.primary
+        : trailColor;
+      
+      this.particleSystem.spawnTrail(bossPos.x, bossPos.y, trailThemeColor);
     }
 
     for (const ship of this.ships) {
@@ -2172,7 +2271,12 @@ export class Game {
   }
 
   private render(): void {
-    this.canvas.clear();
+    // Apply background theme (only update if changed)
+    const bgColors = this.customizationSystem.getBackgroundColors();
+    const currentBgTheme = this.customizationSystem.getSelectedTheme('background');
+    const themeId: string = currentBgTheme?.id ?? 'default_background';
+    this.background.setThemeColors(bgColors, themeId);
+    this.canvas.clear(bgColors.primary);
     const ctx = this.canvas.getContext();
 
     // Early exit if nothing to render (shouldn't happen, but safety check)
@@ -2237,6 +2341,10 @@ export class Game {
     // Render ships (batch by entity type)
     const state = this.store.getState();
     for (const ship of this.ships) {
+      // Apply customization
+      const visuals = this.customizationSystem.getShipColors(state);
+      // Store visuals for ship to use
+      (ship as any).customVisuals = visuals;
       ship.draw(this.draw, state);
     }
 

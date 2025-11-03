@@ -4,6 +4,7 @@ export class Loop {
   private accumulator = 0;
   private readonly fixedDt = 1 / 120; // Increased from 60 to 120 FPS
   private isVisible = true;
+  private animationFrameId: number | null = null;
 
   constructor(
     private update: (dt: number) => void,
@@ -27,9 +28,17 @@ export class Loop {
           }
           this.lastTime = now;
           this.accumulator = 0;
-          this.loop(this.lastTime);
+          // Only start loop if not already running (prevent accumulation)
+          if (this.animationFrameId === null) {
+            this.animationFrameId = requestAnimationFrame(this.loop);
+          }
         } else {
-          // Tab became hidden - pause updates completely to avoid backlog
+          // Tab became hidden - cancel pending animation frame to prevent accumulation
+          if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+          }
+          // Pause updates completely to avoid backlog
           this.accumulator = 0;
         }
       }
@@ -41,16 +50,24 @@ export class Loop {
     this.running = true;
     this.lastTime = performance.now();
 
-    if (this.isVisible) {
-      this.loop(this.lastTime);
+    if (this.isVisible && this.animationFrameId === null) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
     }
   }
 
   stop(): void {
     this.running = false;
+    // Cancel any pending animation frame
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 
   private loop = (currentTime: number): void => {
+    // Clear the frame ID since this frame is now executing
+    this.animationFrameId = null;
+
     if (!this.running) return;
 
     const frameStart = currentTime;
@@ -80,8 +97,9 @@ export class Loop {
     }
 
     // Only continue requestAnimationFrame loop if visible (paused when hidden)
-    if (this.isVisible) {
-      requestAnimationFrame(this.loop);
+    // Only schedule if not already scheduled (prevent accumulation)
+    if (this.isVisible && this.animationFrameId === null) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
     }
   };
 }

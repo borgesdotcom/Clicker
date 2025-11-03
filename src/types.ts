@@ -34,6 +34,8 @@ export interface SaveData {
   autoBuyEnabled?: boolean;
   // Offline progress tracking
   lastPlayTime?: number;
+  // Visual customization
+  selectedThemes?: Record<string, string>; // ThemeCategory -> themeId
 }
 
 export interface GameStats {
@@ -80,6 +82,8 @@ export interface GameState {
   highestLevelReached?: number;
   // Auto-buy toggle
   autoBuyEnabled?: boolean;
+  // Visual customization
+  selectedThemes?: Record<string, string>; // ThemeCategory -> themeId
 }
 
 export interface UpgradeConfig {
@@ -95,6 +99,7 @@ export interface UpgradeConfig {
 }
 
 export type GameMode = 'normal' | 'boss' | 'transition';
+export type ThemeCategory = 'ship' | 'laser' | 'particle' | 'background';
 
 export interface BallColor {
   fill: string;
