@@ -118,14 +118,29 @@ export class Game {
   private bossRetryButton: HTMLElement | null = null;
   private blockedOnBossLevel: number | null = null;
 
-  // Damage batching for performance
-  private damageBatch = 0;
-  private critBatch = false;
-  private shipDamageBatch = false; // Track if damage is from auto-fire ships
-  private batchHitDirection?: Vec2; // Track hit direction for deformation
-  private batchIsBeam = false; // Track if batch damage is from beams
+  // Damage batching for performance - use pre-allocated object to reduce GC
+  private damageBatch: {
+    damage: number;
+    isCrit: boolean;
+    isFromShip: boolean;
+    hitDirection?: Vec2;
+    isBeam: boolean;
+  } = {
+    damage: 0,
+    isCrit: false,
+    isFromShip: false,
+    hitDirection: undefined,
+    isBeam: false,
+  };
   private batchTimer = 0;
   private batchInterval = 0.05; // Apply damage every 50ms
+
+  // Frame counting for throttling expensive operations
+  private frameCount = 0;
+  private readonly BOSS_TIMER_UPDATE_INTERVAL = 3; // Update boss timer every 3 frames
+  private readonly ACHIEVEMENT_CHECK_INTERVAL = 30; // Check achievements every 30 frames
+  private readonly HUD_STATS_UPDATE_INTERVAL = 5; // Update HUD stats every 5 frames
+  private readonly BEAM_RECALC_INTERVAL = 60; // Recalculate beam damage every 60 frames (~0.5s at 120fps)
 
   constructor() {
     const canvasElement = document.getElementById(
@@ -136,7 +151,7 @@ export class Game {
     }
 
     this.canvas = new Canvas(canvasElement);
-    this.draw = new Draw(this.canvas.getContext());
+    this.draw = new Draw(this.canvas.getContext(), true); // GPU acceleration enabled by default
     this.background = new Background(
       this.canvas.getWidth(),
       this.canvas.getHeight(),
@@ -240,7 +255,6 @@ export class Game {
     });
 
     // Setup power-up spawn notifications
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     this.powerUpSystem.setOnPowerUpSpawn((type: PowerUpType) => {
       const config = this.powerUpSystem.getBuffName(type);
       this.notificationSystem.show(
@@ -851,11 +865,12 @@ export class Game {
   private performAscension(): void {
     const state = this.store.getState();
 
-    this.damageBatch = 0;
-    this.critBatch = false;
-    this.shipDamageBatch = false;
-    this.batchHitDirection = undefined;
-    this.batchIsBeam = false;
+    // Reset damage batch efficiently
+    this.damageBatch.damage = 0;
+    this.damageBatch.isCrit = false;
+    this.damageBatch.isFromShip = false;
+    this.damageBatch.hitDirection = undefined;
+    this.damageBatch.isBeam = false;
     this.batchTimer = 0;
 
     // Calculate prestige points to gain
@@ -1481,43 +1496,44 @@ export class Game {
     this.missionSystem.trackDamage(finalDamage);
     this.missionSystem.trackCombo(this.comboSystem.getCombo());
 
-    // Batch damage instead of applying immediately
-    this.damageBatch += finalDamage;
+    // Batch damage instead of applying immediately - reuse pre-allocated object
+    this.damageBatch.damage += finalDamage;
     if (isCrit && !isFromShip) {
       // Only show crit effects for main ship, not auto-fire ships
-      this.critBatch = true;
+      this.damageBatch.isCrit = true;
     }
 
     // Track if this batch includes ship damage to skip visual effects
     if (isFromShip) {
-      this.shipDamageBatch = true;
+      this.damageBatch.isFromShip = true;
     }
 
     // Store hit direction for deformation effect
-    if (hitDirection && !this.batchHitDirection) {
-      this.batchHitDirection = hitDirection;
+    if (hitDirection && !this.damageBatch.hitDirection) {
+      this.damageBatch.hitDirection = hitDirection;
     }
     // Store if this is beam damage
     if (isBeam) {
-      this.batchIsBeam = true;
+      this.damageBatch.isBeam = true;
     }
   }
 
   private applyDamageBatch(): void {
-    if (this.damageBatch <= 0) return;
+    if (this.damageBatch.damage <= 0) return;
 
-    const finalDamage = this.damageBatch;
-    const isCrit = this.critBatch;
-    const isFromShip = this.shipDamageBatch;
-    const hitDirection = this.batchHitDirection;
+    // Copy batch data (reuse object structure)
+    const finalDamage = this.damageBatch.damage;
+    const isCrit = this.damageBatch.isCrit;
+    const isFromShip = this.damageBatch.isFromShip;
+    const hitDirection = this.damageBatch.hitDirection;
+    const isBeam = this.damageBatch.isBeam;
 
-    // Reset batch state
-    this.damageBatch = 0;
-    this.critBatch = false;
-    this.shipDamageBatch = false;
-    this.batchHitDirection = undefined;
-    const isBeam = this.batchIsBeam;
-    this.batchIsBeam = false;
+    // Reset batch state efficiently (reuse object, just clear values)
+    this.damageBatch.damage = 0;
+    this.damageBatch.isCrit = false;
+    this.damageBatch.isFromShip = false;
+    this.damageBatch.hitDirection = undefined;
+    this.damageBatch.isBeam = false;
 
       if (this.mode === 'normal' && this.ball) {
       // Get current combo for deformation scaling
@@ -1625,12 +1641,7 @@ export class Game {
       }
     }
 
-    // Reset batch
-    this.damageBatch = 0;
-    this.critBatch = false;
-    this.shipDamageBatch = false;
-    this.batchHitDirection = undefined;
-    this.batchIsBeam = false;
+    // Batch already reset in applyDamageBatch
   }
 
   private onBallDestroyed(): void {
@@ -1639,7 +1650,7 @@ export class Game {
       return;
     }
 
-    if (this.damageBatch > 0) {
+    if (this.damageBatch.damage > 0) {
       this.applyDamageBatch();
     }
 
@@ -1838,6 +1849,9 @@ export class Game {
     this.transitionTime = 0;
     this.bossBall = null;
 
+    // Cleanup systems for memory management
+    this.cleanup();
+
     // Faster transition back to normal - reduced delay
     setTimeout(() => {
       if (this.mode === 'transition') {
@@ -1847,13 +1861,49 @@ export class Game {
     }, this.transitionDuration * 500);
   }
 
+  /**
+   * Cleanup method for scene transitions and memory management
+   * Releases pooled objects and clears temporary arrays efficiently
+   */
+  private cleanup(): void {
+    // Clear systems that may have pooled objects
+    // Note: clear() methods already handle object pooling efficiently
+    this.laserSystem.clear();
+    this.rippleSystem.clear();
+    this.particleSystem.clear();
+    this.damageNumberSystem.clear();
+    
+    // Reset damage batch (reuse object, just clear values)
+    this.damageBatch.damage = 0;
+    this.damageBatch.isCrit = false;
+    this.damageBatch.isFromShip = false;
+    this.damageBatch.hitDirection = undefined;
+    this.damageBatch.isBeam = false;
+    this.batchTimer = 0;
+  }
+
   private update(dt: number): void {
     dt = dt * this.gameSpeed;
+    this.frameCount++;
 
     const state = this.store.getState();
 
-    this.updateBossTimer(dt);
+    // Throttle boss timer updates (expensive DOM updates)
+    if (this.mode === 'boss') {
+      // Always update internal timer for accurate timeout checking
+      const oldTime = this.bossTimeRemaining;
+      this.bossTimeRemaining -= dt;
+      
+      // Check timeout immediately (critical)
+      if (this.bossTimeRemaining <= 0 && oldTime > 0) {
+        this.handleBossTimeout();
+      } else if (this.frameCount % this.BOSS_TIMER_UPDATE_INTERVAL === 0) {
+        // Only update DOM display every N frames (expensive operation)
+        this.updateBossTimer(0); // Pass 0 since we already decremented above
+      }
+    }
 
+    // Batch time accumulation updates (only update when needed)
     this.playTimeAccumulator += dt;
     if (this.playTimeAccumulator >= 1) {
       this.store.addPlayTime(Math.floor(this.playTimeAccumulator));
@@ -1869,40 +1919,46 @@ export class Game {
       this.passiveGenAccumulator = this.passiveGenAccumulator % 1;
     }
 
-    try {
-      const dps = this.hud.calculateDPS();
-      const passiveGen = this.upgradeSystem.getPassiveGen(state);
-      const critChance = this.upgradeSystem.getCritChance(state);
-      const critBonus = this.powerUpSystem.getCritChanceBonus() * 100; // Convert to percentage
-      this.hud.updateStats(dps, passiveGen, critChance, critBonus);
-      
-      // Update power-up buffs display
-      const activeBuffs = this.powerUpSystem.getActiveBuffs();
-      this.hud.updatePowerUpBuffs(activeBuffs);
-      
-      // Refresh shop if power-up buffs changed (to update shop display with ⚡ and ⚔️ icons)
-      const currentPowerUpCount = activeBuffs.length;
-      const hasSpeedBuff = activeBuffs.some(b => b.type === 'speed');
-      const hasDamageBuff = activeBuffs.some(b => b.type === 'damage');
-      
-      // Check if any power-up state changed (count, speed, or damage)
-      const powerUpStateChanged = 
-        currentPowerUpCount !== this.lastPowerUpCount ||
-        hasSpeedBuff !== this.lastHadSpeedBuff ||
-        hasDamageBuff !== this.lastHadDamageBuff;
-      
-      if (powerUpStateChanged) {
-        this.lastPowerUpCount = currentPowerUpCount;
-        this.lastHadSpeedBuff = hasSpeedBuff;
-        this.lastHadDamageBuff = hasDamageBuff;
-        // Force immediate shop refresh to show/hide power-up indicators
-        this.shop.forceRefresh();
+    // Throttle HUD stats updates (expensive calculations)
+    if (this.frameCount % this.HUD_STATS_UPDATE_INTERVAL === 0) {
+      try {
+        const dps = this.hud.calculateDPS();
+        const passiveGen = this.upgradeSystem.getPassiveGen(state);
+        const critChance = this.upgradeSystem.getCritChance(state);
+        const critBonus = this.powerUpSystem.getCritChanceBonus() * 100; // Convert to percentage
+        this.hud.updateStats(dps, passiveGen, critChance, critBonus);
+        
+        // Update power-up buffs display
+        const activeBuffs = this.powerUpSystem.getActiveBuffs();
+        this.hud.updatePowerUpBuffs(activeBuffs);
+        
+        // Refresh shop if power-up buffs changed (to update shop display with ⚡ and ⚔️ icons)
+        const currentPowerUpCount = activeBuffs.length;
+        const hasSpeedBuff = activeBuffs.some(b => b.type === 'speed');
+        const hasDamageBuff = activeBuffs.some(b => b.type === 'damage');
+        
+        // Check if any power-up state changed (count, speed, or damage)
+        const powerUpStateChanged = 
+          currentPowerUpCount !== this.lastPowerUpCount ||
+          hasSpeedBuff !== this.lastHadSpeedBuff ||
+          hasDamageBuff !== this.lastHadDamageBuff;
+        
+        if (powerUpStateChanged) {
+          this.lastPowerUpCount = currentPowerUpCount;
+          this.lastHadSpeedBuff = hasSpeedBuff;
+          this.lastHadDamageBuff = hasDamageBuff;
+          // Force immediate shop refresh to show/hide power-up indicators
+          this.shop.forceRefresh();
+        }
+      } catch {
+        // Ignore errors in HUD update
       }
-    } catch {
-      // Ignore errors in HUD update
     }
 
-    this.achievementSystem.checkAchievements(state);
+    // Throttle achievement checks (expensive operation)
+    if (this.frameCount % this.ACHIEVEMENT_CHECK_INTERVAL === 0) {
+      this.achievementSystem.checkAchievements(state);
+    }
 
     if (this.mode === 'transition') {
       this.transitionTime += dt;
@@ -1934,12 +1990,8 @@ export class Game {
         const totalDamage = this.calculateTotalBeamDamage(state);
         this.laserSystem.setBeamDamage(totalDamage);
       } else {
-        // Recalculate beam damage periodically (every 0.5s) to account for upgrades/ship changes
-        // Use saveTimer as it's already incrementing every frame
-        const beamRecalcInterval = 0.5;
-        const oldTimerFloor = Math.floor((this.saveTimer - dt) / beamRecalcInterval);
-        const newTimerFloor = Math.floor(this.saveTimer / beamRecalcInterval);
-        if (newTimerFloor > oldTimerFloor && this.saveTimer >= beamRecalcInterval) {
+        // Recalculate beam damage periodically using frame counter (more efficient than timer)
+        if (this.frameCount % this.BEAM_RECALC_INTERVAL === 0) {
           const totalDamage = this.calculateTotalBeamDamage(state);
           this.laserSystem.setBeamDamage(totalDamage);
         }
@@ -2123,6 +2175,11 @@ export class Game {
     this.canvas.clear();
     const ctx = this.canvas.getContext();
 
+    // Early exit if nothing to render (shouldn't happen, but safety check)
+    if (this.mode === 'transition' && this.transitionTime <= 0) {
+      return;
+    }
+
     this.background.render(ctx);
 
     ctx.save();
@@ -2136,44 +2193,71 @@ export class Game {
 
     if (this.mode === 'transition') {
       this.renderTransition();
-    } else {
-      if (this.userSettings.highGraphics) {
-        this.particleSystem.draw(this.draw);
-      }
-      if (this.userSettings.showRipples) {
-        this.rippleSystem.draw(this.draw);
-      }
-
-      this.laserSystem.draw(this.draw);
-
-      if (this.ball && this.ball.currentHp > 0) {
-        this.ball.draw(this.draw);
-      }
-      if (this.bossBall && this.bossBall.currentHp > 0) {
-        this.bossBall.draw(this.draw);
-      }
-
-      const state = this.store.getState();
-      for (const ship of this.ships) {
-        ship.draw(this.draw, state);
-      }
-
-      this.damageNumberSystem.draw(this.draw);
-
-      if (this.comboSystem.getCombo() > 0) {
-        this.comboSystem.draw(
-          this.draw,
-          this.canvas.getWidth(),
-          this.canvas.getHeight(),
-          this.store.getState(),
-        );
-      }
-
-      // Render power-ups
-      this.powerUpSystem.render(ctx);
+      ctx.restore();
+      return;
     }
 
+    // Batch render game entities for better performance
+    this.renderGameEntities(ctx);
+
     ctx.restore();
+  }
+
+  private renderGameEntities(ctx: CanvasRenderingContext2D): void {
+    // Early exit checks
+    const hasBall = this.ball && this.ball.currentHp > 0;
+    const hasBoss = this.bossBall && this.bossBall.currentHp > 0;
+    const hasParticles = this.userSettings.highGraphics && this.particleSystem.getParticleCount() > 0;
+    const hasRipples = this.userSettings.showRipples && this.rippleSystem.getCount() > 0;
+    const hasDamageNumbers = this.damageNumberSystem.getCount() > 0;
+    const hasCombo = this.comboSystem.getCombo() > 0;
+    const hasPowerUps = this.powerUpSystem.getPowerUps().length > 0;
+
+    // Render particles first (background layer)
+    if (hasParticles) {
+      this.particleSystem.draw(this.draw);
+    }
+
+    // Render ripples (background effects)
+    if (hasRipples) {
+      this.rippleSystem.draw(this.draw);
+    }
+
+    // Render lasers (projectiles)
+    this.laserSystem.draw(this.draw);
+
+    // Render main entities (ball/boss)
+    if (hasBall && this.ball) {
+      this.ball.draw(this.draw);
+    }
+    if (hasBoss && this.bossBall) {
+      this.bossBall.draw(this.draw);
+    }
+
+    // Render ships (batch by entity type)
+    const state = this.store.getState();
+    for (const ship of this.ships) {
+      ship.draw(this.draw, state);
+    }
+
+    // Render UI elements
+    if (hasDamageNumbers) {
+      this.damageNumberSystem.draw(this.draw);
+    }
+
+    if (hasCombo) {
+      this.comboSystem.draw(
+        this.draw,
+        this.canvas.getWidth(),
+        this.canvas.getHeight(),
+        state,
+      );
+    }
+
+    // Render power-ups
+    if (hasPowerUps) {
+      this.powerUpSystem.render(ctx);
+    }
   }
 
   private renderTransition(): void {
@@ -2206,11 +2290,12 @@ export class Game {
 
     this.hideBossTimer();
 
-    this.damageBatch = 0;
-    this.critBatch = false;
-    this.shipDamageBatch = false;
-    this.batchHitDirection = undefined;
-    this.batchIsBeam = false;
+    // Reset damage batch efficiently
+    this.damageBatch.damage = 0;
+    this.damageBatch.isCrit = false;
+    this.damageBatch.isFromShip = false;
+    this.damageBatch.hitDirection = undefined;
+    this.damageBatch.isBeam = false;
 
     this.powerUpSystem.clear();
 

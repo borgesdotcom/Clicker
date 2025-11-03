@@ -56,6 +56,10 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+  /* GPU acceleration hints - helps browser optimize rendering */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 #hud {

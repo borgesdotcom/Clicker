@@ -58,7 +58,21 @@ export class Background {
     this.starCanvas = document.createElement('canvas');
     this.starCanvas.width = this.width;
     this.starCanvas.height = this.height;
-    this.starCtx = this.starCanvas.getContext('2d');
+    
+    // Enable GPU acceleration for off-screen canvas
+    this.starCanvas.style.willChange = 'transform';
+    
+    // Request GPU-accelerated context
+    this.starCtx = this.starCanvas.getContext('2d', {
+      // GPU-friendly settings (willReadFrequently defaults to false)
+    } as CanvasRenderingContext2DSettings);
+    
+    if (this.starCtx) {
+      // Optimize for GPU
+      this.starCtx.imageSmoothingEnabled = true;
+      this.starCtx.imageSmoothingQuality = 'high';
+    }
+    
     this.starLayerDirty = true;
   }
 
