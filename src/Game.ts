@@ -358,6 +358,24 @@ export class Game {
       (frameStart: number) => {
         this.performanceMonitor.endFrame(frameStart);
       },
+      (elapsedSeconds: number) => {
+        // Grant offline progress while tab was hidden
+        const state = this.store.getState();
+        // Add playtime
+        this.store.addPlayTime(Math.floor(elapsedSeconds));
+        // Passive generation per second
+        const passiveGenPerSec = this.upgradeSystem.getPassiveGen(state);
+        if (passiveGenPerSec > 0 && elapsedSeconds > 0) {
+          const pointsToAdd = Math.floor(passiveGenPerSec * elapsedSeconds);
+          if (pointsToAdd > 0) {
+            this.store.addPoints(pointsToAdd);
+          }
+        }
+        // Advance autosave timer safely to trigger on next tick
+        this.saveTimer = Math.min(this.saveTimer + elapsedSeconds, this.saveInterval);
+        // Advance auto-buy timer similarly
+        this.autoBuyTimer = Math.min(this.autoBuyTimer + elapsedSeconds, this.autoBuyInterval);
+      },
     );
 
     // Setup boss-related UI before initGame (which may need to show the retry button)

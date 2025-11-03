@@ -3,27 +3,34 @@ export class Loop {
   private lastTime = 0;
   private accumulator = 0;
   private readonly fixedDt = 1 / 120; // Increased from 60 to 120 FPS
-  private backgroundIntervalId: number | null = null;
   private isVisible = true;
 
   constructor(
     private update: (dt: number) => void,
     private render: () => void,
     private onFrameEnd?: (frameStart: number) => void,
+    private onBackgroundProgress?: (elapsedSeconds: number) => void,
   ) {
-    // Handle visibility changes to keep game running in background
+    // Handle visibility changes to pause simulation when hidden
     document.addEventListener('visibilitychange', () => {
       this.isVisible = !document.hidden;
 
       if (this.running) {
         if (this.isVisible) {
-          // Tab became visible - switch back to requestAnimationFrame
-          this.stopBackgroundLoop();
-          this.lastTime = performance.now();
+          // Tab became visible - grant offline progress and resume
+          const now = performance.now();
+          const elapsed = Math.max(0, (now - this.lastTime) / 1000);
+          // Cap offline catch-up to avoid huge jumps on very long absences
+          const cappedElapsed = Math.min(elapsed, 60);
+          if (this.onBackgroundProgress && cappedElapsed > 0) {
+            this.onBackgroundProgress(cappedElapsed);
+          }
+          this.lastTime = now;
+          this.accumulator = 0;
           this.loop(this.lastTime);
         } else {
-          // Tab became hidden - use interval to keep running
-          this.startBackgroundLoop();
+          // Tab became hidden - pause updates completely to avoid backlog
+          this.accumulator = 0;
         }
       }
     });
@@ -36,14 +43,11 @@ export class Loop {
 
     if (this.isVisible) {
       this.loop(this.lastTime);
-    } else {
-      this.startBackgroundLoop();
     }
   }
 
   stop(): void {
     this.running = false;
-    this.stopBackgroundLoop();
   }
 
   private loop = (currentTime: number): void => {
@@ -54,9 +58,18 @@ export class Loop {
     this.lastTime = currentTime;
     this.accumulator += deltaTime;
 
-    while (this.accumulator >= this.fixedDt) {
+    // Prevent spiral-of-death: limit fixed steps per frame
+    let steps = 0;
+    const maxSteps = 5;
+    while (this.accumulator >= this.fixedDt && steps < maxSteps) {
       this.update(this.fixedDt);
       this.accumulator -= this.fixedDt;
+      steps++;
+    }
+
+    // If we exceeded max steps, drop the remainder to keep the game responsive
+    if (steps === maxSteps) {
+      this.accumulator = 0;
     }
 
     this.render();
@@ -66,43 +79,9 @@ export class Loop {
       this.onFrameEnd(frameStart);
     }
 
-    // Only continue requestAnimationFrame loop if visible
+    // Only continue requestAnimationFrame loop if visible (paused when hidden)
     if (this.isVisible) {
       requestAnimationFrame(this.loop);
     }
   };
-
-  private startBackgroundLoop(): void {
-    if (this.backgroundIntervalId !== null) return;
-
-    // Run at 120 FPS even when hidden to maintain game speed consistency
-    this.backgroundIntervalId = window.setInterval(() => {
-      if (!this.running || this.isVisible) return;
-
-      const now = performance.now();
-      const frameStart = now;
-      const deltaTime = Math.min((now - this.lastTime) / 1000, 0.1);
-      this.lastTime = now;
-      this.accumulator += deltaTime;
-
-      while (this.accumulator >= this.fixedDt) {
-        this.update(this.fixedDt);
-        this.accumulator -= this.fixedDt;
-      }
-
-      // Call frame end callback for performance monitoring
-      if (this.onFrameEnd) {
-        this.onFrameEnd(frameStart);
-      }
-
-      // Don't render when hidden - saves GPU
-    }, 1000 / 120); // 8.33ms = 120 FPS
-  }
-
-  private stopBackgroundLoop(): void {
-    if (this.backgroundIntervalId !== null) {
-      clearInterval(this.backgroundIntervalId);
-      this.backgroundIntervalId = null;
-    }
-  }
 }
