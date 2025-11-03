@@ -90,15 +90,23 @@ export class Hud {
     window.addEventListener('resize', updatePosition);
   }
 
+  private lastBuffKeys: string[] = [];
+
   public updatePowerUpBuffs(activeBuffs: Array<{ type: string; duration: number; maxDuration: number }>): void {
     const container = document.getElementById('powerup-buffs-container');
     if (!container) return;
 
-    // Clear existing buffs
-    container.innerHTML = '';
+    // Generate keys for current buffs to detect changes
+    const currentBuffKeys = activeBuffs.map(b => `${b.type}-${b.maxDuration}`).sort();
+
+    // Check if buffs changed (new buffs added/removed)
+    const buffsChanged = 
+      currentBuffKeys.length !== this.lastBuffKeys.length ||
+      currentBuffKeys.some((key, i) => key !== this.lastBuffKeys[i]);
 
     if (activeBuffs.length === 0) {
       container.style.display = 'none';
+      this.lastBuffKeys = [];
       return;
     }
 
@@ -130,34 +138,94 @@ export class Hud {
       critical: '#ff8800',
     };
 
-    for (const buff of activeBuffs) {
-      const buffEl = document.createElement('div');
-      const color = POWERUP_COLORS[buff.type] || '#ffffff';
-      const icon = POWERUP_ICONS[buff.type] || '⚡';
-      const timeLeft = Math.ceil(buff.duration);
+    const POWERUP_NAMES: Record<string, string> = {
+      points: 'Points',
+      damage: 'Damage',
+      speed: 'Speed',
+      multishot: 'Multi',
+      critical: 'Crit',
+    };
 
-      buffEl.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.85);
-        border: 2px solid ${color};
-        border-radius: 6px;
-        padding: 6px 10px;
-        min-width: 50px;
-        box-shadow: 0 0 10px ${color}40, inset 0 0 10px ${color}20;
-        font-family: 'Courier New', monospace;
-      `;
+    // If buffs changed, recreate elements
+    if (buffsChanged) {
+      container.innerHTML = '';
+      this.lastBuffKeys = currentBuffKeys;
 
-      buffEl.innerHTML = `
-        <div style="font-size: 20px; margin-bottom: 2px;">${icon}</div>
-        <div style="font-size: 11px; color: ${color}; font-weight: bold; text-shadow: 0 0 4px ${color};">${timeLeft}s</div>
-        <div style="width: 40px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 4px; overflow: hidden;">
-          <div style="width: ${(buff.duration / buff.maxDuration) * 100}%; height: 100%; background: ${color}; transition: width 0.1s linear; box-shadow: 0 0 4px ${color};"></div>
-        </div>
-      `;
+      for (const buff of activeBuffs) {
+        const color = POWERUP_COLORS[buff.type] || '#ffffff';
+        const icon = POWERUP_ICONS[buff.type] || '⚡';
+        const name = POWERUP_NAMES[buff.type] || 'Buff';
+        const timeLeft = Math.ceil(buff.duration);
+        const percent = (buff.duration / buff.maxDuration) * 100;
+        const isLow = buff.duration <= 3;
 
-      container.appendChild(buffEl);
+        const buffEl = document.createElement('div');
+        buffEl.className = 'powerup-buff-card powerup-buff-new';
+        buffEl.setAttribute('data-type', buff.type);
+        buffEl.setAttribute('data-percent', percent.toString());
+        
+        // Ensure card is visible
+        buffEl.style.opacity = '1';
+        buffEl.style.visibility = 'visible';
+        
+        if (isLow) {
+          buffEl.classList.add('powerup-buff-low');
+        }
+
+        // Remove animation class after animation completes
+        setTimeout(() => {
+          buffEl.classList.remove('powerup-buff-new');
+        }, 400);
+
+        buffEl.innerHTML = `
+          <div class="powerup-buff-glow" style="background: radial-gradient(circle, ${color}40 0%, transparent 70%);"></div>
+          <div class="powerup-buff-content">
+            <div class="powerup-buff-icon" style="color: ${color}; filter: drop-shadow(0 0 8px ${color});">${icon}</div>
+            <div class="powerup-buff-name" style="color: ${color}; text-shadow: 0 0 6px ${color};">${name}</div>
+            <div class="powerup-buff-timer" style="color: ${color}; text-shadow: 0 0 8px ${color};">
+              <span class="powerup-buff-time-value">${timeLeft}</span>
+              <span class="powerup-buff-time-unit">s</span>
+            </div>
+            <div class="powerup-buff-bar-container">
+              <div class="powerup-buff-bar-bg"></div>
+              <div class="powerup-buff-bar-fill" style="background: linear-gradient(90deg, ${color}, ${color}CC, ${color}); width: ${percent}%; box-shadow: 0 0 8px ${color}, inset 0 0 4px ${color}80;"></div>
+              <div class="powerup-buff-bar-shimmer"></div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(buffEl);
+      }
+    } else {
+      // Just update existing elements (update timer and progress bar)
+      const buffCards = container.querySelectorAll('.powerup-buff-card');
+      activeBuffs.forEach((buff, index) => {
+        const buffEl = buffCards[index] as HTMLElement;
+        if (!buffEl) return;
+
+        const timeLeft = Math.ceil(buff.duration);
+        const percent = (buff.duration / buff.maxDuration) * 100;
+        const isLow = buff.duration <= 3;
+
+        // Update timer
+        const timeValue = buffEl.querySelector('.powerup-buff-time-value');
+        if (timeValue) {
+          timeValue.textContent = timeLeft.toString();
+        }
+
+        // Update progress bar
+        const barFill = buffEl.querySelector('.powerup-buff-bar-fill') as HTMLElement;
+        if (barFill) {
+          barFill.style.width = `${percent}%`;
+        }
+
+        // Update low state class
+        if (isLow) {
+          buffEl.classList.add('powerup-buff-low');
+        } else {
+          buffEl.classList.remove('powerup-buff-low');
+        }
+      });
     }
   }
 

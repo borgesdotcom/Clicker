@@ -173,9 +173,29 @@ export class PowerUpSystem {
       const pulse = Math.sin(powerUp.pulseTime * 4) * 0.15 + 1; // Smoother pulse
       const rotation = powerUp.pulseTime * 2; // Rotating effect
       const alpha = powerUp.lifetime < 3 ? (powerUp.lifetime % 0.5) / 0.5 : 1; // Blink when expiring
+      const sparklePhase = powerUp.pulseTime * 3; // For sparkle animation
 
       ctx.save();
       ctx.globalAlpha = alpha;
+
+      // Massive outer aura glow (farthest layer)
+      const massiveGlow = ctx.createRadialGradient(
+        powerUp.x,
+        powerUp.y,
+        0,
+        powerUp.x,
+        powerUp.y,
+        powerUp.radius * pulse * 4,
+      );
+      massiveGlow.addColorStop(0, `${config.color}40`);
+      massiveGlow.addColorStop(0.3, `${config.color}20`);
+      massiveGlow.addColorStop(0.6, `${config.color}10`);
+      massiveGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      ctx.fillStyle = massiveGlow;
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse * 4, 0, Math.PI * 2);
+      ctx.fill();
 
       // Outer glow ring (animated rotation)
       ctx.translate(powerUp.x, powerUp.y);
@@ -183,8 +203,9 @@ export class PowerUpSystem {
       
       // Large outer glow
       const outerGlowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, powerUp.radius * pulse * 3);
-      outerGlowGradient.addColorStop(0, `${config.color}60`);
-      outerGlowGradient.addColorStop(0.5, `${config.color}30`);
+      outerGlowGradient.addColorStop(0, `${config.color}80`);
+      outerGlowGradient.addColorStop(0.4, `${config.color}40`);
+      outerGlowGradient.addColorStop(0.7, `${config.color}20`);
       outerGlowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       
       ctx.fillStyle = outerGlowGradient;
@@ -192,13 +213,24 @@ export class PowerUpSystem {
       ctx.arc(0, 0, powerUp.radius * pulse * 3, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rotating outer ring
+      // Rotating outer ring with segments for sparkle effect
       ctx.strokeStyle = config.color;
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 15;
+      ctx.lineWidth = 4;
+      ctx.shadowBlur = 20;
       ctx.shadowColor = config.color;
       ctx.beginPath();
-      ctx.arc(0, 0, powerUp.radius * pulse * 1.6, 0, Math.PI * 2);
+      ctx.arc(0, 0, powerUp.radius * pulse * 1.8, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Additional rotating ring (counter-rotation)
+      ctx.rotate(-rotation * 1.5);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#ffffff';
+      ctx.globalAlpha = alpha * 0.6;
+      ctx.beginPath();
+      ctx.arc(0, 0, powerUp.radius * pulse * 1.5, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.restore();
@@ -212,66 +244,99 @@ export class PowerUpSystem {
         0,
         powerUp.x,
         powerUp.y,
-        powerUp.radius * pulse * 2,
+        powerUp.radius * pulse * 2.2,
       );
-      mediumGlow.addColorStop(0, `${config.color}CC`);
-      mediumGlow.addColorStop(0.7, `${config.color}66`);
+      mediumGlow.addColorStop(0, `${config.color}EE`);
+      mediumGlow.addColorStop(0.5, `${config.color}AA`);
+      mediumGlow.addColorStop(0.8, `${config.color}66`);
       mediumGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
+      
       ctx.fillStyle = mediumGlow;
       ctx.beginPath();
-      ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse * 2, 0, Math.PI * 2);
+      ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse * 2.2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Main circle with gradient fill
+      // Main circle with enhanced gradient fill
       const mainGradient = ctx.createRadialGradient(
-        powerUp.x - powerUp.radius * 0.3,
-        powerUp.y - powerUp.radius * 0.3,
+        powerUp.x - powerUp.radius * 0.4,
+        powerUp.y - powerUp.radius * 0.4,
         0,
         powerUp.x,
         powerUp.y,
         powerUp.radius * pulse,
       );
       mainGradient.addColorStop(0, '#ffffff');
-      mainGradient.addColorStop(0.3, config.color);
-      mainGradient.addColorStop(1, config.color + 'DD');
+      mainGradient.addColorStop(0.2, '#ffffff88');
+      mainGradient.addColorStop(0.4, config.color);
+      mainGradient.addColorStop(0.7, config.color + 'DD');
+      mainGradient.addColorStop(1, config.color + 'AA');
 
       ctx.fillStyle = mainGradient;
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 25;
       ctx.shadowColor = config.color;
       ctx.beginPath();
       ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bright border
+      // Bright glowing border with multiple layers
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 10;
+      ctx.lineWidth = 4;
+      ctx.shadowBlur = 15;
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
       ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Inner highlight circle
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      // Inner highlight circle (enhanced)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
       ctx.beginPath();
       ctx.arc(
-        powerUp.x - powerUp.radius * pulse * 0.3,
-        powerUp.y - powerUp.radius * pulse * 0.3,
-        powerUp.radius * pulse * 0.4,
+        powerUp.x - powerUp.radius * pulse * 0.35,
+        powerUp.y - powerUp.radius * pulse * 0.35,
+        powerUp.radius * pulse * 0.45,
         0,
         Math.PI * 2,
       );
       ctx.fill();
 
-      // Draw icon with shadow
-      ctx.font = 'bold 28px Arial';
+      // Sparkle particles orbiting around (8 sparkles)
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ffffff';
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + sparklePhase;
+        const sparkleRadius = powerUp.radius * pulse * 1.4;
+        const sparkleX = powerUp.x + Math.cos(angle) * sparkleRadius;
+        const sparkleY = powerUp.y + Math.sin(angle) * sparkleRadius;
+        const sparkleAlpha = (Math.sin(sparklePhase * 2 + i) + 1) * 0.5;
+        
+        ctx.globalAlpha = alpha * sparkleAlpha * 0.8;
+        ctx.beginPath();
+        ctx.moveTo(sparkleX - 3, sparkleY);
+        ctx.lineTo(sparkleX + 3, sparkleY);
+        ctx.moveTo(sparkleX, sparkleY - 3);
+        ctx.lineTo(sparkleX, sparkleY + 3);
+        ctx.stroke();
+      }
+
+      // Draw icon with enhanced shadow and glow
+      ctx.globalAlpha = alpha;
+      ctx.font = 'bold 30px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = config.color;
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(config.icon, powerUp.x, powerUp.y + 1); // Slight offset for depth
+      ctx.fillText(config.icon, powerUp.x, powerUp.y + 1);
+
+      // Icon inner glow
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.fillText(config.icon, powerUp.x, powerUp.y + 1);
 
       ctx.restore();
     }
@@ -406,6 +471,10 @@ export class PowerUpSystem {
 
   public getPowerUpColor(type: PowerUpType): string {
     return POWERUP_CONFIGS[type].color;
+  }
+
+  public getPowerUpIcon(type: PowerUpType): string {
+    return POWERUP_CONFIGS[type].icon;
   }
 
   public clear(): void {

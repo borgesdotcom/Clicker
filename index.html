@@ -36,15 +36,53 @@
           </div>
         </div>
         <div id="boss-dialog" style="display: none;">
+          <div class="boss-dialog-backdrop"></div>
           <div class="boss-dialog-content">
-            <h2>⚠️ BOSS ENCOUNTER ⚠️</h2>
-            <p class="boss-warning">A massive alien entity blocks your progress!</p>
-            <p class="boss-details">This enemy is larger and much more powerful!</p>
-            <p class="boss-ready">You cannot level up until this boss is defeated!</p>
-            <p class="boss-timer-info" id="boss-dialog-timer">Time Limit: <span>30s</span></p>
-            <div class="boss-dialog-buttons">
-          <button id="boss-start-btn" class="boss-btn boss-btn-start" aria-label="Start Boss Fight">ENGAGE!</button>
+            <div class="boss-dialog-header">
+              <div class="boss-icon">👾</div>
+              <h2 class="boss-title">BOSS ENCOUNTER</h2>
+              <div class="boss-subtitle">Alien Threat Detected</div>
             </div>
+            <div class="boss-dialog-body">
+              <p class="boss-warning">
+                <span class="warning-icon">⚠️</span>
+                A massive alien entity blocks your progress!
+              </p>
+              <div class="boss-stats">
+                <div class="boss-stat-item">
+                  <span class="stat-label">Threat Level</span>
+                  <span class="stat-value danger">EXTREME</span>
+                </div>
+                <div class="boss-stat-item">
+                  <span class="stat-label">Size</span>
+                  <span class="stat-value">3x Normal</span>
+                </div>
+                <div class="boss-stat-item">
+                  <span class="stat-label">Time Limit</span>
+                  <span class="stat-value timer-value" id="boss-dialog-timer"><span>30</span>s</span>
+                </div>
+              </div>
+              <p class="boss-ready">
+                <span class="ready-icon">⚔️</span>
+                You cannot level up until this boss is defeated!
+              </p>
+            </div>
+            <div class="boss-dialog-buttons">
+              <button id="boss-start-btn" class="boss-btn boss-btn-start" aria-label="Start Boss Fight">
+                <span class="btn-text">ENGAGE BOSS</span>
+                <span class="btn-glow"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="boss-timeout-modal" style="display: none;">
+          <div class="boss-timeout-backdrop"></div>
+          <div class="boss-timeout-content">
+            <div class="timeout-icon">⏱️</div>
+            <h2 class="timeout-title">TIME'S UP!</h2>
+            <p class="timeout-message">The boss escaped!</p>
+            <p class="timeout-submessage">You must defeat it to progress.</p>
+            <button id="boss-timeout-close" class="boss-btn boss-btn-close">UNDERSTOOD</button>
           </div>
         </div>
         <div id="boss-timer-hud" style="display: none;">

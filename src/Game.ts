@@ -108,6 +108,7 @@ export class Game {
   private bossTimeLimit = 0;
   private bossTimeRemaining = 0;
   private bossTimerElement: HTMLElement | null = null;
+  private bossTimeoutHandled = false;
 
   // Debug controls
   private gameSpeed = 1.0;
@@ -454,6 +455,7 @@ export class Game {
     // Use ColorManager for dynamic boss timer scaling
     this.bossTimeLimit = ColorManager.getBossTimeLimit(state.level);
     this.bossTimeRemaining = this.bossTimeLimit;
+    this.bossTimeoutHandled = false; // Reset timeout flag
 
     // Show timer
     if (this.bossTimerElement) {
@@ -465,55 +467,64 @@ export class Game {
     if (dialogTimer) {
       const span = dialogTimer.querySelector('span');
       if (span) {
-        span.textContent = `${this.bossTimeLimit.toString()}s`;
+        span.textContent = this.bossTimeLimit.toString();
       }
     }
   }
 
   private updateBossTimer(dt: number): void {
     if (this.mode !== 'boss') return;
+    
+    // Don't update if timeout already handled
+    if (this.bossTimeoutHandled) return;
+
+    // Check timeout BEFORE updating to catch exactly at 0
+    if (this.bossTimeRemaining <= 0) {
+      this.handleBossTimeout();
+      return;
+    }
 
     this.bossTimeRemaining -= dt;
+
+    // Check again after decrementing (in case dt was large enough to go past 0)
+    if (this.bossTimeRemaining <= 0) {
+      this.bossTimeRemaining = 0; // Clamp to 0
+      this.handleBossTimeout();
+      return;
+    }
 
     // Update timer display
     const timerText = document.getElementById('boss-timer-text');
     const timerBar = document.getElementById('boss-timer-bar');
 
-    if (timerText) {
+    if (timerText && timerBar) {
       const timeLeft = Math.ceil(Math.max(0, this.bossTimeRemaining));
-      timerText.textContent = `TIME: ${timeLeft.toString()}s`;
+      const seconds = timeLeft.toString().padStart(2, '0');
 
-      // Change color as time runs out (adjusted for 30s timer)
+      // Update text and classes
       if (this.bossTimeRemaining <= 5) {
-        timerText.style.color = '#ff0000';
-        timerText.classList.add('critical');
+        timerText.textContent = `TIME: ${seconds}s`;
+        timerText.className = 'boss-timer-text critical';
       } else if (this.bossTimeRemaining <= 10) {
-        timerText.style.color = '#ffaa00';
+        timerText.textContent = `TIME: ${seconds}s`;
+        timerText.className = 'boss-timer-text warning';
       } else {
-        timerText.style.color = '#ffffff';
+        timerText.textContent = `TIME: ${seconds}s`;
+        timerText.className = 'boss-timer-text';
       }
-    }
 
-    if (timerBar) {
-      const percent = Math.max(
-        0,
-        (this.bossTimeRemaining / this.bossTimeLimit) * 100,
-      );
-      timerBar.style.width = `${percent.toString()}%`;
+      // Update bar width with smooth transition
+      const percent = Math.max(0, (this.bossTimeRemaining / this.bossTimeLimit) * 100);
+      timerBar.style.width = `${String(percent)}%`;
 
-      // Change bar color based on time remaining (adjusted for 30s timer)
+      // Update bar classes for visual state
       if (this.bossTimeRemaining <= 5) {
-        timerBar.style.backgroundColor = '#ff0000';
+        timerBar.className = 'boss-timer-bar-fill critical';
       } else if (this.bossTimeRemaining <= 10) {
-        timerBar.style.backgroundColor = '#ffaa00';
+        timerBar.className = 'boss-timer-bar-fill warning';
       } else {
-        timerBar.style.backgroundColor = '#00ff88';
+        timerBar.className = 'boss-timer-bar-fill';
       }
-    }
-
-    // Time's up!
-    if (this.bossTimeRemaining <= 0) {
-      this.handleBossTimeout();
     }
   }
 
@@ -524,6 +535,14 @@ export class Game {
   }
 
   private handleBossTimeout(): void {
+    // Prevent duplicate calls - check at start
+    if (this.bossTimeoutHandled) {
+      return;
+    }
+    
+    // Set flag immediately to prevent race conditions
+    this.bossTimeoutHandled = true;
+
     // Boss escapes! Player must retry
     const state = this.store.getState();
 
@@ -539,25 +558,59 @@ export class Game {
 
     this.store.setState(state);
 
-    // Show message
-    this.hud.showMessage(
-      "⏱️ TIME'S UP! The boss escaped! You must defeat it to progress.",
-      '#ff0000',
-      4000,
-    );
-
-    // Clean up and return to normal mode
+    // Clean up boss battle state first
     this.hideBossTimer();
     this.comboSystem.reset();
 
-    // Show retry button
-    if (this.bossRetryButton) {
-      this.bossRetryButton.style.display = 'flex';
-    }
+    // Show epic timeout modal
+    const timeoutModal = document.getElementById('boss-timeout-modal');
+    if (timeoutModal) {
+      // Ensure modal is hidden first
+      timeoutModal.style.display = 'none';
+      
+      // Remove any existing event listeners by cloning the button
+      const closeBtn = document.getElementById('boss-timeout-close');
+      if (closeBtn && closeBtn.parentNode) {
+        const newCloseBtn = closeBtn.cloneNode(true) as HTMLElement;
+        newCloseBtn.id = 'boss-timeout-close'; // Restore ID after cloning
+        
+        // Setup close button handler BEFORE replacing
+        newCloseBtn.addEventListener('click', () => {
+          timeoutModal.style.display = 'none';
+          
+          // Show retry button
+          if (this.bossRetryButton) {
+            this.bossRetryButton.style.display = 'flex';
+          }
 
-    setTimeout(() => {
-      this.startTransitionToNormal();
-    }, 500);
+          setTimeout(() => {
+            this.startTransitionToNormal();
+          }, 500);
+        });
+        
+        // Replace the button
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+      }
+      
+      // Show modal after setting up handler
+      timeoutModal.style.display = 'flex';
+    } else {
+      // Fallback to message if modal doesn't exist
+      this.hud.showMessage(
+        "⏱️ TIME'S UP! The boss escaped! You must defeat it to progress.",
+        '#ff0000',
+        4000,
+      );
+
+      // Show retry button
+      if (this.bossRetryButton) {
+        this.bossRetryButton.style.display = 'flex';
+      }
+
+      setTimeout(() => {
+        this.startTransitionToNormal();
+      }, 500);
+    }
   }
 
   private retryBossFight(): void {
@@ -1110,7 +1163,23 @@ export class Game {
     if (collectedPowerUp) {
       this.soundManager.playClick();
       const config = this.powerUpSystem.getBuffName(collectedPowerUp);
-      this.hud.showMessage(`⚡ ${config} Activated!`, '#00ff88', 1500);
+      // Get icon directly using a simple map to avoid type issues
+      const iconMap: Record<string, string> = {
+        points: '💰',
+        damage: '⚔️',
+        speed: '⚡',
+        multishot: '✨',
+        critical: '💥',
+      };
+      const powerUpIcon = iconMap[collectedPowerUp] ?? '⚡';
+      
+      // Show notification using the notification system (same as missions and powerup spawns)
+      const notificationMessage: string = powerUpIcon + ' ' + config + ' Activated!';
+      this.notificationSystem.show(
+        notificationMessage,
+        'success',
+        3000,
+      );
       
       // Spawn collection particles
       if (this.userSettings.highGraphics) {
@@ -1745,6 +1814,15 @@ export class Game {
     this.transitionTime = 0;
     this.ball = null;
     this.comboSystem.reset();
+    
+    // Hide timeout modal if visible
+    const timeoutModal = document.getElementById('boss-timeout-modal');
+    if (timeoutModal) {
+      timeoutModal.style.display = 'none';
+    }
+    
+    // Reset timeout flag
+    this.bossTimeoutHandled = false;
 
     setTimeout(() => {
       if (this.mode === 'transition') {

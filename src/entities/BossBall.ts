@@ -7,7 +7,7 @@ export class BossBall {
   public currentHp: number;
   public maxHp: number;
   private breakAnimTime = 0;
-  private breakAnimDuration = 0.6;
+  private breakAnimDuration = 1.2; // Longer for epic death
   public x: number;
   public y: number;
   private attackTimer = 0;
@@ -17,8 +17,13 @@ export class BossBall {
   private chargeTime = 0;
   private tentacleAngles: number[] = [];
   private tentacleLengths: number[] = [];
+  private tentacleWaves: number[] = [];
   private eyeBlink = 0;
   private shieldPulse = 0;
+  private entranceTime = 0;
+  private phaseTransitionTime = 0;
+  private innerOrgansRotation = 0;
+  private particleEmitTimer = 0;
 
   constructor(
     x: number,
@@ -30,12 +35,14 @@ export class BossBall {
     this.y = y;
     this.maxHp = hp;
     this.currentHp = this.maxHp;
+    this.entranceTime = 1; // Start with entrance animation
 
-    // Initialize tentacles
+    // Initialize tentacles - more organized
     const tentacleCount = 8;
     for (let i = 0; i < tentacleCount; i++) {
       this.tentacleAngles.push((i / tentacleCount) * Math.PI * 2);
-      this.tentacleLengths.push(this.radius * (1.2 + Math.random() * 0.3));
+      this.tentacleLengths.push(this.radius * (1.3 + Math.random() * 0.2));
+      this.tentacleWaves.push(Math.random() * Math.PI * 2);
     }
   }
 
@@ -47,7 +54,22 @@ export class BossBall {
 
   takeDamage(amount: number): boolean {
     const wasAlive = this.currentHp > 0;
+    const oldPhase = this.phase;
     this.currentHp = Math.max(0, this.currentHp - amount);
+    
+    // Check for phase transition
+    const hpPercent = this.currentHp / this.maxHp;
+    if (hpPercent < 0.33) {
+      this.phase = 3;
+    } else if (hpPercent < 0.66) {
+      this.phase = 2;
+    }
+    
+    // Trigger phase transition animation
+    if (oldPhase !== this.phase) {
+      this.phaseTransitionTime = 1;
+    }
+    
     // Only flash on significant damage (>2% of max HP) or if not already flashing
     if (this.flashTime <= 0 || amount > this.maxHp * 0.02) {
       this.triggerFlash();
@@ -76,6 +98,16 @@ export class BossBall {
       return;
     }
 
+    // Entrance animation
+    if (this.entranceTime > 0) {
+      this.entranceTime = Math.max(0, this.entranceTime - dt * 2);
+    }
+
+    // Phase transition animation
+    if (this.phaseTransitionTime > 0) {
+      this.phaseTransitionTime = Math.max(0, this.phaseTransitionTime - dt * 3);
+    }
+
     // Update phase based on HP
     const hpPercent = this.currentHp / this.maxHp;
     if (hpPercent < 0.33) {
@@ -86,27 +118,32 @@ export class BossBall {
       this.attackCooldown = 1.2;
     }
 
-    // Boss stays stationary in center - no movement!
-
     // Update attack timer
     this.attackTimer += dt;
 
-    // Update visual effects
-    this.pulseTime += dt * 2;
-    this.shieldPulse += dt * 3;
+    // Update visual effects - phase affects speed
+    const phaseSpeedMultiplier = 1 + (this.phase - 1) * 0.3;
+    this.pulseTime += dt * 2 * phaseSpeedMultiplier;
+    this.shieldPulse += dt * 3 * phaseSpeedMultiplier;
+    this.innerOrgansRotation += dt * 0.5 * phaseSpeedMultiplier;
+    this.particleEmitTimer += dt;
 
-    // Tentacle animation - writhe and wave
+    // Tentacle animation - more organic and fluid
     for (let i = 0; i < this.tentacleAngles.length; i++) {
       const currentAngle = this.tentacleAngles[i];
-      if (currentAngle !== undefined) {
-        this.tentacleAngles[i] =
-          currentAngle + dt * 0.5 * (i % 2 === 0 ? 1 : -1);
+      const wave = this.tentacleWaves[i];
+      if (currentAngle !== undefined && wave !== undefined) {
+        // Rotate tentacles
+        this.tentacleAngles[i] = currentAngle + dt * 0.4 * (i % 2 === 0 ? 1 : -1) * phaseSpeedMultiplier;
+        // Update wave offset
+        this.tentacleWaves[i] = wave + dt * 2 * phaseSpeedMultiplier;
       }
     }
 
-    // Eye blink
+    // Eye blink - more frequent when damaged
     this.eyeBlink = Math.max(0, this.eyeBlink - dt * 5);
-    if (Math.random() < 0.01) {
+    const blinkChance = this.phase === 3 ? 0.02 : 0.01;
+    if (Math.random() < blinkChance) {
       this.eyeBlink = 1;
     }
 
@@ -137,239 +174,459 @@ export class BossBall {
   }
 
   draw(drawer: Draw): void {
+    const ctx = drawer.getContext();
+    const hpPercent = this.currentHp / this.maxHp;
+
+    // Epic death animation
     if (this.breakAnimTime > 0) {
       const progress = 1 - this.breakAnimTime / this.breakAnimDuration;
       const alpha = 1 - progress;
-      const scale = 1 + progress * 0.8;
+      const scale = 1 + progress * 1.2;
+      const rotation = progress * Math.PI * 4;
 
-      drawer.setAlpha(alpha);
-      drawer.setGlow('#ff0000', 30);
-      drawer.setFill('#ff0000');
-      drawer.circle(this.x, this.y, this.radius * scale);
-      drawer.setStroke('#ff0000', 4);
-      drawer.circle(this.x, this.y, this.radius * scale, false);
-      drawer.clearGlow();
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(rotation);
+      ctx.scale(scale, scale);
+
+      // Explosion layers
+      for (let layer = 0; layer < 3; layer++) {
+        const layerProgress = Math.min(1, progress * 1.5 - layer * 0.3);
+        if (layerProgress <= 0) continue;
+        
+        const layerAlpha = alpha * (1 - layer * 0.3) * layerProgress;
+        const layerRadius = this.radius * (0.8 + layer * 0.3);
+        const colors = ['#ff0000', '#ff6600', '#ffff00'];
+        
+        drawer.setAlpha(layerAlpha);
+        drawer.setGlow(colors[layer] ?? '#ff0000', 30 + layer * 10);
+        drawer.setFill(colors[layer] ?? '#ff0000');
+        drawer.circle(0, 0, layerRadius);
+        drawer.clearGlow();
+      }
+
       drawer.resetAlpha();
+      ctx.restore();
       return;
     }
 
-    const hpPercent = this.currentHp / this.maxHp;
-    const ctx = drawer.getContext();
+    // Entrance animation scale
+    const entranceScale = this.entranceTime > 0 ? 1 - this.entranceTime * 0.3 : 1;
+    const currentRadius = this.radius * entranceScale;
 
-    // Phase-based colors - more evil as HP drops
-    let bodyColor = '#2a4a2a';
-    let accentColor = '#00ff00';
-    let eyeColor = '#ff0000';
+    // Phase-based colors - Lordakia-inspired gel but more menacing
+    let bodyColor = '#1a3a5a';
+    let accentColor = '#00d4ff';
+    let eyeColor = '#ff0066';
+    let innerCoreColor = '#004488';
+    
     if (this.phase === 3) {
-      bodyColor = '#4a0000';
-      accentColor = '#ff0000';
+      bodyColor = '#5a0000';
+      accentColor = '#ff0044';
       eyeColor = '#ffff00';
+      innerCoreColor = '#880000';
     } else if (this.phase === 2) {
-      bodyColor = '#4a2a00';
-      accentColor = '#ff6600';
+      bodyColor = '#3a2a00';
+      accentColor = '#ff8800';
       eyeColor = '#ff4400';
+      innerCoreColor = '#664400';
     }
 
-    // Energy shield pulse
-    const shieldPulse = Math.sin(this.shieldPulse) * 0.5 + 0.5;
-    drawer.setAlpha(0.2 + shieldPulse * 0.15);
-    drawer.setGlow(accentColor, 20);
-    drawer.setStroke(accentColor, 2);
-    drawer.circle(this.x, this.y, this.radius * 1.4, false);
-    drawer.clearGlow();
-    drawer.resetAlpha();
+    // Phase transition flash
+    const phaseFlash = this.phaseTransitionTime > 0 ? Math.sin(this.phaseTransitionTime * Math.PI * 10) * 0.5 + 0.5 : 0;
 
-    // Draw writhing tentacles
+    // Extract RGB values for gradients
+    const parseColor = (hex: string) => {
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      return { r, g, b };
+    };
+
+    const bodyRgb = parseColor(bodyColor);
+    const accentRgb = parseColor(accentColor);
+
+    // Outer energy shield - multi-layered pulsing aura
+    const shieldPulse = Math.sin(this.shieldPulse) * 0.5 + 0.5;
+    const shieldLayers = 3;
+    for (let layer = 0; layer < shieldLayers; layer++) {
+      const layerRadius = currentRadius * (1.35 + layer * 0.15);
+      const layerAlpha = (0.15 - layer * 0.04) + shieldPulse * (0.1 - layer * 0.02);
+      const layerGlow = ctx.createRadialGradient(
+        this.x,
+        this.y,
+        0,
+        this.x,
+        this.y,
+        layerRadius,
+      );
+      layerGlow.addColorStop(0, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha)})`);
+      layerGlow.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha * 0.5)})`);
+      layerGlow.addColorStop(1, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`);
+      
+      ctx.fillStyle = layerGlow;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, layerRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw writhing tentacles - Lordakia-style gel tentacles
+    ctx.save();
     for (let i = 0; i < this.tentacleAngles.length; i++) {
       const angle = this.tentacleAngles[i];
       const length = this.tentacleLengths[i];
-      if (angle === undefined || length === undefined) continue;
+      const wave = this.tentacleWaves[i];
+      if (angle === undefined || length === undefined || wave === undefined) continue;
 
-      const wave = Math.sin(this.pulseTime + i) * 10;
+      const waveAmount = Math.sin(wave) * 12;
+      const waveAmount2 = Math.sin(wave * 1.5) * 8;
 
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(angle);
 
-      // Tentacle body - thick to thin
-      drawer.setAlpha(0.8);
-      drawer.setStroke(bodyColor, 6);
-      drawer.setGlow(accentColor, 5);
-
-      // Draw curved tentacle
+      // Tentacle path with smooth curves
+      const segments = 8;
       ctx.beginPath();
-      ctx.moveTo(this.radius * 0.8, 0);
-      ctx.quadraticCurveTo(
-        this.radius + length * 0.5,
-        wave,
-        this.radius + length,
-        wave * 1.5,
+      ctx.moveTo(currentRadius * 0.85, 0);
+      
+      for (let seg = 1; seg <= segments; seg++) {
+        const t = seg / segments;
+        const segWave = Math.sin(wave + t * Math.PI * 2) * waveAmount * (1 - t * 0.5);
+        const segWave2 = Math.sin(wave * 1.5 + t * Math.PI * 3) * waveAmount2 * (1 - t * 0.7);
+        const x = currentRadius * 0.85 + (currentRadius * 0.15 + length * t);
+        const y = segWave + segWave2;
+        ctx.lineTo(x, y);
+      }
+
+      // Tentacle gradient - gel-like
+      const tentacleGradient = ctx.createLinearGradient(
+        currentRadius * 0.85,
+        0,
+        currentRadius * 0.85 + length,
+        waveAmount,
       );
+      const tentacleWidth = currentRadius * 0.12 * (1 - 0.5 * (Math.sin(wave) * 0.5 + 0.5));
+      
+      tentacleGradient.addColorStop(0, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.8)`);
+      tentacleGradient.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.7)`);
+      tentacleGradient.addColorStop(1, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`);
+
+      ctx.strokeStyle = tentacleGradient;
+      ctx.lineWidth = tentacleWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.6)`;
       ctx.stroke();
 
-      // Tentacle tip - glowing
-      drawer.setFill(accentColor);
-      const tipX = this.radius + length;
-      const tipY = wave * 1.5;
-      drawer.circle(tipX, tipY, 3);
-
-      drawer.clearGlow();
-      drawer.resetAlpha();
-      ctx.restore();
-    }
-
-    // Main alien body - organic and scary
-    const pulse = Math.sin(this.pulseTime) * 0.5 + 0.5;
-
-    // Outer membrane
-    drawer.setGlow(accentColor, 10);
-    drawer.setFill(bodyColor);
-    drawer.setStroke(accentColor, 3);
-    drawer.circle(this.x, this.y, this.radius);
-
-    // Inner organs/core
-    drawer.setAlpha(0.6);
-    drawer.setFill(accentColor);
-    drawer.circle(this.x, this.y, this.radius * (0.5 + pulse * 0.1));
-    drawer.resetAlpha();
-    drawer.clearGlow();
-
-    // Spikes/ridges around body
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    drawer.setFill(bodyColor);
-    drawer.setStroke(accentColor, 2);
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2 + this.pulseTime * 0.2;
-      const spikeLength = this.radius * 0.2;
-      const x1 = Math.cos(angle) * this.radius;
-      const y1 = Math.sin(angle) * this.radius;
-      const x2 = Math.cos(angle) * (this.radius + spikeLength);
-      const y2 = Math.sin(angle) * (this.radius + spikeLength);
-
+      // Tentacle tip glow
+      const tipX = currentRadius * 0.85 + length;
+      const tipY = Math.sin(wave) * waveAmount + Math.sin(wave * 1.5) * waveAmount2;
+      const tipGlow = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, tentacleWidth * 1.5);
+      tipGlow.addColorStop(0, `rgba(${String(accentRgb.r + 60)}, ${String(accentRgb.g + 60)}, ${String(accentRgb.b + 60)}, 0.9)`);
+      tipGlow.addColorStop(0.5, `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, 0.6)`);
+      tipGlow.addColorStop(1, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`);
+      
+      ctx.fillStyle = tipGlow;
       ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.lineTo(
-        Math.cos(angle + 0.1) * this.radius,
-        Math.sin(angle + 0.1) * this.radius,
-      );
-      ctx.closePath();
+      ctx.arc(tipX, tipY, tentacleWidth * 1.2, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
     }
     ctx.restore();
 
-    // Multiple eyes - scary and alien
+    // Main gel-like body - Lordakia inspired but more menacing
+    const pulse = Math.sin(this.pulseTime) * 0.05 + 0.95;
+    const bodyRadius = currentRadius * pulse;
+
+    // Outer gel shell - translucent with depth
+    const outerGradient = ctx.createRadialGradient(
+      this.x - bodyRadius * 0.25,
+      this.y - bodyRadius * 0.25,
+      bodyRadius * 0.05,
+      this.x,
+      this.y,
+      bodyRadius,
+    );
+    outerGradient.addColorStop(0, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.5)`);
+    outerGradient.addColorStop(0.3, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.7)`);
+    outerGradient.addColorStop(0.6, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.75)`);
+    outerGradient.addColorStop(0.85, `rgba(${String(bodyRgb.r - 20)}, ${String(bodyRgb.g - 20)}, ${String(bodyRgb.b - 20)}, 0.8)`);
+    outerGradient.addColorStop(1, `rgba(${String(bodyRgb.r - 30)}, ${String(bodyRgb.g - 30)}, ${String(bodyRgb.b - 30)}, 0.7)`);
+
+    ctx.fillStyle = outerGradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, bodyRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner core - visible through gel (pulsing)
+    const corePulse = Math.sin(this.pulseTime * 1.5) * 0.1 + 0.9;
+    const coreRadius = bodyRadius * 0.4 * corePulse;
+    const innerRgb = parseColor(innerCoreColor);
+    
+    const innerGradient = ctx.createRadialGradient(
+      this.x - coreRadius * 0.3,
+      this.y - coreRadius * 0.3,
+      coreRadius * 0.1,
+      this.x,
+      this.y,
+      coreRadius,
+    );
+    innerGradient.addColorStop(0, `rgba(255, 255, 255, 0.8)`);
+    innerGradient.addColorStop(0.3, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`);
+    innerGradient.addColorStop(0.6, `rgba(${String(innerRgb.r)}, ${String(innerRgb.g)}, ${String(innerRgb.b)}, 0.5)`);
+    innerGradient.addColorStop(1, `rgba(${String(innerRgb.r)}, ${String(innerRgb.b)}, ${String(innerRgb.b)}, 0.3)`);
+
+    ctx.fillStyle = innerGradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rotating organic structures inside - visible through gel
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.innerOrgansRotation);
+    
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const orgRadius = bodyRadius * (0.5 + Math.sin(this.pulseTime * 2 + i) * 0.1);
+      const orgX = Math.cos(angle) * orgRadius;
+      const orgY = Math.sin(angle) * orgRadius;
+      const orgSize = bodyRadius * (0.1 + Math.sin(this.pulseTime * 3 + i) * 0.03);
+      const orgAlpha = 0.3 + Math.sin(this.pulseTime * 2.5 + i) * 0.2;
+      
+      const orgGradient = ctx.createRadialGradient(orgX, orgY, 0, orgX, orgY, orgSize);
+      orgGradient.addColorStop(0, `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, ${String(orgAlpha)})`);
+      orgGradient.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(orgAlpha * 0.6)})`);
+      orgGradient.addColorStop(1, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`);
+      
+      ctx.fillStyle = orgGradient;
+      ctx.beginPath();
+      ctx.arc(orgX, orgY, orgSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Defensive spikes/armor plates - phase affects intensity
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.pulseTime * 0.3);
+    
+    const spikeCount = 12;
+    const spikeIntensity = 0.15 + (this.phase - 1) * 0.1;
+    
+    for (let i = 0; i < spikeCount; i++) {
+      const angle = (i / spikeCount) * Math.PI * 2;
+      const spikeLength = bodyRadius * spikeIntensity;
+      const spikePulse = Math.sin(this.pulseTime * 2 + i) * 0.3 + 0.7;
+      
+      const x1 = Math.cos(angle) * bodyRadius;
+      const y1 = Math.sin(angle) * bodyRadius;
+      const x2 = Math.cos(angle) * (bodyRadius + spikeLength * spikePulse);
+      const y2 = Math.sin(angle) * (bodyRadius + spikeLength * spikePulse);
+      const x3 = Math.cos(angle + 0.15) * bodyRadius;
+      const y3 = Math.sin(angle + 0.15) * bodyRadius;
+
+      // Spike gradient
+      const spikeGradient = ctx.createLinearGradient(x1, y1, x2, y2);
+      spikeGradient.addColorStop(0, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.9)`);
+      spikeGradient.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.8)`);
+      spikeGradient.addColorStop(1, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.9)`);
+
+      ctx.fillStyle = spikeGradient;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Spike glow
+      ctx.strokeStyle = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.6)`;
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.5)`;
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Multiple glowing eyes - menacing and tracking
     const eyePositions = [
       { x: -0.35, y: -0.25 },
       { x: 0.35, y: -0.25 },
       { x: 0, y: -0.45 },
     ];
 
+    const eyeRgb = parseColor(eyeColor);
+    
     for (const pos of eyePositions) {
-      const eyeX = this.x + pos.x * this.radius;
-      const eyeY = this.y + pos.y * this.radius;
-      const eyeSize = this.radius * 0.15;
+      const eyeX = this.x + pos.x * bodyRadius;
+      const eyeY = this.y + pos.y * bodyRadius;
+      const eyeSize = bodyRadius * 0.16;
+      const eyePulse = Math.sin(this.pulseTime * 3) * 0.1 + 0.9;
+
+      // Eye socket glow
+      const socketGlow = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, eyeSize * 1.5);
+      socketGlow.addColorStop(0, `rgba(0, 0, 0, 0.8)`);
+      socketGlow.addColorStop(0.5, `rgba(0, 0, 0, 0.6)`);
+      socketGlow.addColorStop(1, `rgba(0, 0, 0, 0)`);
+      ctx.fillStyle = socketGlow;
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, eyeSize * 1.5, 0, Math.PI * 2);
+      ctx.fill();
 
       // Eye socket
-      drawer.setGlow('#000000', 5);
-      drawer.setFill('#000000');
-      drawer.circle(eyeX, eyeY, eyeSize);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, eyeSize, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Iris
-      const irisSize =
-        this.eyeBlink > 0 ? eyeSize * (1 - this.eyeBlink) * 0.6 : eyeSize * 0.6;
-      drawer.setGlow(eyeColor, 10);
-      drawer.setFill(eyeColor);
-      drawer.circle(eyeX, eyeY, irisSize);
+      // Iris with glow
+      const irisSize = this.eyeBlink > 0 ? eyeSize * (1 - this.eyeBlink) * 0.65 : eyeSize * 0.65 * eyePulse;
+      const irisGlow = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, irisSize * 2);
+      irisGlow.addColorStop(0, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.9)`);
+      irisGlow.addColorStop(0.3, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.7)`);
+      irisGlow.addColorStop(1, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`);
+      
+      ctx.fillStyle = irisGlow;
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, irisSize * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.95)`;
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, irisSize, 0, Math.PI * 2);
+      ctx.fill();
 
       // Pupil
-      drawer.setFill('#000000');
-      drawer.circle(eyeX, eyeY, irisSize * 0.4);
-
-      drawer.clearGlow();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, irisSize * 0.4, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Mouth/maw - opens based on phase
-    const mouthY = this.y + this.radius * 0.4;
-    const mouthWidth = this.radius * 0.6;
-    const mouthOpen = this.phase * 0.15 + pulse * 0.05;
+    // Menacing maw/mouth - opens more in later phases
+    const mouthY = this.y + bodyRadius * 0.4;
+    const mouthWidth = bodyRadius * 0.65;
+    const mouthOpen = (this.phase * 0.2 + Math.sin(this.pulseTime) * 0.05) * pulse;
+    const mouthHeight = bodyRadius * mouthOpen;
 
     ctx.save();
     ctx.translate(this.x, mouthY);
-    drawer.setGlow(eyeColor, 5);
-    drawer.setFill('#000000');
-    drawer.setStroke(eyeColor, 2);
-
+    
+    // Mouth glow
+    const mouthGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(mouthWidth, mouthHeight));
+    mouthGlow.addColorStop(0, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`);
+    mouthGlow.addColorStop(0.5, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.3)`);
+    mouthGlow.addColorStop(1, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`);
+    
+    ctx.fillStyle = mouthGlow;
     ctx.beginPath();
-    ctx.ellipse(0, 0, mouthWidth, this.radius * mouthOpen, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, mouthWidth * 1.2, mouthHeight * 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mouth opening
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+    ctx.strokeStyle = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.8)`;
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`;
+    
+    ctx.beginPath();
+    ctx.ellipse(0, 0, mouthWidth, mouthHeight, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-
-    drawer.clearGlow();
+    
+    ctx.shadowBlur = 0;
     ctx.restore();
 
-    // Charge attack effect
-    if (this.chargeTime > 0) {
-      const chargeAlpha = Math.min(this.chargeTime, 1) * 0.5;
-      drawer.setAlpha(chargeAlpha);
-      drawer.setGlow(accentColor, 30);
-      drawer.setStroke(accentColor, 4);
-      drawer.circle(
-        this.x,
-        this.y,
-        this.radius * (1 + this.chargeTime * 0.3),
-        false,
-      );
-      drawer.circle(
-        this.x,
-        this.y,
-        this.radius * (0.8 + this.chargeTime * 0.2),
-        false,
-      );
+    // Phase transition flash effect
+    if (phaseFlash > 0) {
+      drawer.setAlpha(phaseFlash * 0.4);
+      drawer.setGlow(accentColor, 40);
+      drawer.setStroke(accentColor, 6);
+      drawer.circle(this.x, this.y, bodyRadius * 1.3, false);
       drawer.clearGlow();
       drawer.resetAlpha();
     }
 
-    // HP bar
-    const hpBarWidth = this.radius * 2.5;
-    const hpBarHeight = 12;
-    const hpBarY = this.y - this.radius - 50;
+    // Charge attack effect - more intense
+    if (this.chargeTime > 0) {
+      const chargeAlpha = Math.min(this.chargeTime, 1) * 0.6;
+      const chargePulse = Math.sin(this.chargeTime * Math.PI * 10) * 0.2 + 0.8;
+      
+      drawer.setAlpha(chargeAlpha);
+      drawer.setGlow(accentColor, 40);
+      drawer.setStroke(accentColor, 5);
+      
+      for (let ring = 0; ring < 3; ring++) {
+        const ringRadius = bodyRadius * (1.1 + ring * 0.2 + this.chargeTime * 0.3 * chargePulse);
+        drawer.circle(this.x, this.y, ringRadius, false);
+      }
+      
+      drawer.clearGlow();
+      drawer.resetAlpha();
+    }
 
-    drawer.setGlow(accentColor, 8);
-    drawer.setStroke(accentColor, 2);
-    drawer.setFill('#000');
-    drawer
-      .getContext()
-      .fillRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
-    drawer
-      .getContext()
-      .strokeRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
+    // Enhanced HP bar with phase indicator
+    const hpBarWidth = bodyRadius * 2.8;
+    const hpBarHeight = 14;
+    const hpBarY = this.y - bodyRadius - 55;
 
-    drawer.setFill(accentColor);
-    drawer
-      .getContext()
-      .fillRect(
+    // HP bar background with glow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.6)`;
+    ctx.fillRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
+    ctx.strokeRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
+
+    // HP fill with gradient
+    const hpFillWidth = (hpBarWidth - 4) * hpPercent;
+    if (hpFillWidth > 0) {
+      const hpGradient = ctx.createLinearGradient(
         this.x - hpBarWidth / 2 + 2,
         hpBarY + 2,
-        (hpBarWidth - 4) * hpPercent,
-        hpBarHeight - 4,
+        this.x - hpBarWidth / 2 + 2 + hpFillWidth,
+        hpBarY + 2,
       );
-    drawer.clearGlow();
+      hpGradient.addColorStop(0, accentColor);
+      hpGradient.addColorStop(0.5, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 1)`);
+      hpGradient.addColorStop(1, accentColor);
+      
+      ctx.fillStyle = hpGradient;
+      ctx.fillRect(this.x - hpBarWidth / 2 + 2, hpBarY + 2, hpFillWidth, hpBarHeight - 4);
+    }
 
-    // Flash effect on hit
+    // Phase indicator text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`PHASE ${String(this.phase)}`, this.x, hpBarY - 8);
+
+    ctx.shadowBlur = 0;
+
+    // Flash effect on hit - enhanced
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      drawer.setAlpha(flashAlpha * 0.6);
-      drawer.setGlow('#ffffff', 30);
-      drawer.setStroke('#ffffff', 8);
-      drawer.circle(this.x, this.y, this.radius * 1.2, false);
+      const flashPulse = Math.sin(flashAlpha * Math.PI * 20) * 0.3 + 0.7;
+      
+      drawer.setAlpha(flashAlpha * 0.7 * flashPulse);
+      drawer.setGlow('#ffffff', 40);
+      drawer.setStroke('#ffffff', 10);
+      drawer.circle(this.x, this.y, bodyRadius * 1.25, false);
 
-      // Impact waves
-      for (let i = 0; i < 3; i++) {
-        const waveRadius =
-          this.radius * (1.2 + i * 0.3 + (1 - flashAlpha) * 0.5);
+      // Impact shockwaves
+      for (let i = 0; i < 4; i++) {
+        const waveRadius = bodyRadius * (1.25 + i * 0.25 + (1 - flashAlpha) * 0.6);
+        const waveAlpha = flashAlpha * (0.5 - i * 0.1);
+        drawer.setAlpha(waveAlpha);
         drawer.circle(this.x, this.y, waveRadius, false);
       }
 
