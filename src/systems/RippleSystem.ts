@@ -4,9 +4,26 @@ import type { Vec2 } from '../types';
 
 export class RippleSystem {
   private ripples: Ripple[] = [];
-  private maxRipples = 10; // Limit active ripples for performance
+  private readonly isMobile: boolean;
+  private readonly maxRipples: number; // Limit active ripples for performance
+  private lastSpawnTime = 0;
+  private readonly spawnCooldown = 0.05; // Minimum 50ms between ripples (20 per second max)
+
+  constructor() {
+    // Detect mobile device
+    this.isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+    // Reduce max ripples on mobile for better performance
+    this.maxRipples = this.isMobile ? 3 : 10;
+  }
 
   spawnRipple(center: Vec2, maxRadius: number): void {
+    // Throttle ripple spawning to prevent lag from rapid clicks
+    const now = performance.now() / 1000; // Convert to seconds
+    if (now - this.lastSpawnTime < this.spawnCooldown) {
+      return; // Skip this ripple if spawning too fast
+    }
+    this.lastSpawnTime = now;
+
     // Limit number of active ripples
     // Use pop() instead of shift() for O(1) performance (removes newest instead of oldest)
     // The update() method filters dead items anyway, so order doesn't matter much
