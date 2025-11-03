@@ -21,7 +21,7 @@ BOBBLE is an engaging incremental clicker game featuring bubblewrap aliens and a
 - **Extensive Upgrade Tree** - 100+ upgrades across multiple categories
 - **Mobile Support** - Full touch controls for mobile devices
 - **Save System** - Automatic cloud-free saves to localStorage
-- **Visual Effects** - Particles, ripples, damage numbers, and combo tracking
+- **Visual Effects** - Particles, damage numbers, and combo tracking
 
 ## 🚀 Getting Started
 
@@ -112,7 +112,6 @@ Edit `src/systems/UpgradeSystem.ts` to adjust:
 
 Modify `src/Game.ts` and entity files for:
 - Laser travel times and fade durations
-- Ripple effects and lifespans
 - Particle counts and behaviors
 - Animation timings
 

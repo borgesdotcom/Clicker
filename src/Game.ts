@@ -15,7 +15,6 @@ import { Input } from './core/Input';
 import { Store } from './core/Store';
 import { Save } from './core/Save';
 import { LaserSystem } from './systems/LaserSystem';
-import { RippleSystem } from './systems/RippleSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
 import { AutoFireSystem } from './systems/AutoFireSystem';
 import { AchievementSystem } from './systems/AchievementSystem';
@@ -62,7 +61,6 @@ export class Game {
   private bossBall: BossBall | null = null;
   private ships: Ship[] = [];
   private laserSystem: LaserSystem;
-  private rippleSystem: RippleSystem;
   private particleSystem: ParticleSystem;
   private damageNumberSystem: DamageNumberSystem;
   private comboSystem: ComboSystem;
@@ -170,7 +168,6 @@ export class Game {
     });
     this.upgradeSystem = new UpgradeSystem();
     this.laserSystem = new LaserSystem();
-    this.rippleSystem = new RippleSystem();
     this.particleSystem = new ParticleSystem();
     this.damageNumberSystem = new DamageNumberSystem();
     this.comboSystem = new ComboSystem();
@@ -230,9 +227,6 @@ export class Game {
       },
       getDamageNumbers: (): number => {
         return this.damageNumberSystem.getCount();
-      },
-      getRipples: (): number => {
-        return this.rippleSystem.getCount();
       },
     });
 
@@ -343,13 +337,6 @@ export class Game {
       this.laserSystem.setShowShipLasers(enabled);
       Settings.save(this.userSettings);
     });
-    this.settingsModal.setRipplesCallback((enabled: boolean) => {
-      this.userSettings.showRipples = enabled;
-      if (!enabled) {
-        this.rippleSystem.clear();
-      }
-      Settings.save(this.userSettings);
-    });
     this.settingsModal.setDamageNumbersCallback((enabled: boolean) => {
       this.userSettings.showDamageNumbers = enabled;
       this.damageNumberSystem.setEnabled(enabled);
@@ -377,7 +364,6 @@ export class Game {
     this.settingsModal.updateGraphicsToggles(
       this.userSettings.highGraphics,
       this.userSettings.showShipLasers,
-      this.userSettings.showRipples,
       this.userSettings.showDamageNumbers,
     );
     // Setup stats panel button
@@ -1001,7 +987,6 @@ export class Game {
     this.createBall();
     this.createShips();
     this.laserSystem.clear();
-    this.rippleSystem.clear();
     this.particleSystem.clear();
     this.damageNumberSystem.clear();
     this.comboSystem.reset();
@@ -1404,7 +1389,7 @@ export class Game {
     // v2.0: Track mission progress
     this.missionSystem.trackClick();
 
-    // Visual effects (ripples, particles) are now handled in applyDamageBatch
+    // Visual effects (particles) are now handled in applyDamageBatch
     // to avoid duplicates and properly differentiate main ship vs auto-fire ship damage
   }
 
@@ -1638,16 +1623,8 @@ export class Game {
         isCrit,
       );
 
-      // Only spawn ripples and particles for main ship hits (not auto-fire ships)
+      // Only spawn particles for main ship hits (not auto-fire ships)
       if (!isFromShip) {
-        // Ripples (only if enabled)
-        if (this.userSettings.showRipples) {
-          this.rippleSystem.spawnRipple(
-            { x: this.ball.x, y: this.ball.y },
-            this.ball.radius * 2,
-          );
-        }
-
         // Particles (only if high graphics enabled)
         if (this.userSettings.highGraphics) {
           // Apply particle theme
@@ -1960,7 +1937,6 @@ export class Game {
     // Clear systems that may have pooled objects
     // Note: clear() methods already handle object pooling efficiently
     this.laserSystem.clear();
-    this.rippleSystem.clear();
     this.particleSystem.clear();
     this.damageNumberSystem.clear();
     
@@ -2123,7 +2099,6 @@ export class Game {
       );
     }
 
-    this.rippleSystem.update(dt);
     this.particleSystem.update(dt);
     this.damageNumberSystem.update(dt);
     this.comboSystem.update(dt);
@@ -2312,7 +2287,6 @@ export class Game {
     const hasBall = this.ball && this.ball.currentHp > 0;
     const hasBoss = this.bossBall && this.bossBall.currentHp > 0;
     const hasParticles = this.userSettings.highGraphics && this.particleSystem.getParticleCount() > 0;
-    const hasRipples = this.userSettings.showRipples && this.rippleSystem.getCount() > 0;
     const hasDamageNumbers = this.damageNumberSystem.getCount() > 0;
     const hasCombo = this.comboSystem.getCombo() > 0;
     const hasPowerUps = this.powerUpSystem.getPowerUps().length > 0;
@@ -2320,11 +2294,6 @@ export class Game {
     // Render particles first (background layer)
     if (hasParticles) {
       this.particleSystem.draw(this.draw);
-    }
-
-    // Render ripples (background effects)
-    if (hasRipples) {
-      this.rippleSystem.draw(this.draw);
     }
 
     // Render lasers (projectiles)

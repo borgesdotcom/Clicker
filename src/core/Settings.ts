@@ -4,7 +4,6 @@ export interface UserSettings {
   volume: number;
   highGraphics: boolean;
   showShipLasers: boolean;
-  showRipples: boolean;
   showDamageNumbers: boolean;
 }
 
@@ -38,7 +37,6 @@ export class Settings {
           volume: data.volume ?? 0.3,
           highGraphics: data.highGraphics ?? true,
           showShipLasers: data.showShipLasers ?? true,
-          showRipples: data.showRipples ?? true,
           showDamageNumbers: data.showDamageNumbers ?? true,
         };
       }
@@ -55,7 +53,6 @@ export class Settings {
       volume: 0.3,
       highGraphics: true,
       showShipLasers: true,
-      showRipples: true,
       showDamageNumbers: true,
     };
   }

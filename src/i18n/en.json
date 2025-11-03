@@ -30,8 +30,6 @@
     "highGraphicsHint": "Disable particles for better performance",
     "shipLasers": "Ship Auto-Fire Lasers:",
     "shipLasersHint": "Disable to reduce lag (only your clicks will fire lasers)",
-    "ripples": "Click Ripples:",
-    "ripplesHint": "Disable for minimal visual clutter",
     "damageNumbers": "Damage Numbers:",
     "damageNumbersHint": "Disable to improve performance (damage still applies)",
     "language": "Language:",

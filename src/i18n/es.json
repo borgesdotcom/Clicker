@@ -30,8 +30,6 @@
     "highGraphicsHint": "Desactivar partículas para mejor rendimiento",
     "shipLasers": "Láseres Automáticos de Nave:",
     "shipLasersHint": "Desactivar para reducir lag (solo tus clics dispararán láseres)",
-    "ripples": "Ondulaciones de Clic:",
-    "ripplesHint": "Desactivar para reducir desorden visual",
     "damageNumbers": "Números de Daño:",
     "damageNumbersHint": "Desactivar para mejorar el rendimiento (el daño aún se aplica)",
     "language": "Idioma:",

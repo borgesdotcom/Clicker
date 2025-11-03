@@ -32,7 +32,6 @@ export class PerformanceMonitor {
     getParticles?: () => number;
     getShips?: () => number;
     getDamageNumbers?: () => number;
-    getRipples?: () => number;
   } = {};
 
   constructor() {
@@ -104,10 +103,6 @@ export class PerformanceMonitor {
               <span class="perf-label">Damage #s:</span>
               <span id="perf-damagenumbers" class="perf-value">--</span>
             </div>
-            <div class="perf-entity-row">
-              <span class="perf-label">Ripples:</span>
-              <span id="perf-ripples" class="perf-value">--</span>
-            </div>
           </div>
         </div>
 
@@ -161,7 +156,6 @@ export class PerformanceMonitor {
     getParticles?: () => number;
     getShips?: () => number;
     getDamageNumbers?: () => number;
-    getRipples?: () => number;
   }): void {
     this.entityCountProviders = providers;
   }
@@ -273,15 +267,6 @@ export class PerformanceMonitor {
       if (damageNumbersElement) {
         damageNumbersElement.textContent = this.entityCountProviders
           .getDamageNumbers()
-          .toString();
-      }
-    }
-
-    if (this.entityCountProviders.getRipples) {
-      const ripplesElement = document.getElementById('perf-ripples');
-      if (ripplesElement) {
-        ripplesElement.textContent = this.entityCountProviders
-          .getRipples()
           .toString();
       }
     }

@@ -9,14 +9,12 @@ export class SettingsModal {
   private volumeValue: HTMLSpanElement | null = null;
   private graphicsCallback: ((enabled: boolean) => void) | null = null;
   private shipLasersCallback: ((enabled: boolean) => void) | null = null;
-  private ripplesCallback: ((enabled: boolean) => void) | null = null;
   private damageNumbersCallback: ((enabled: boolean) => void) | null = null;
   private soundCallback: ((enabled: boolean) => void) | null = null;
   private soundtrackCallback: ((enabled: boolean) => void) | null = null;
   private volumeCallback: ((volume: number) => void) | null = null;
   private graphicsToggle: HTMLButtonElement | null = null;
   private shipLasersToggle: HTMLButtonElement | null = null;
-  private ripplesToggle: HTMLButtonElement | null = null;
   private damageNumbersToggle: HTMLButtonElement | null = null;
   private soundtrackToggle: HTMLButtonElement | null = null;
   private languageSelect: HTMLSelectElement | null = null;
@@ -39,10 +37,6 @@ export class SettingsModal {
     this.shipLasersCallback = callback;
   }
 
-  setRipplesCallback(callback: (enabled: boolean) => void): void {
-    this.ripplesCallback = callback;
-  }
-
   setDamageNumbersCallback(callback: (enabled: boolean) => void): void {
     this.damageNumbersCallback = callback;
   }
@@ -62,7 +56,6 @@ export class SettingsModal {
   updateGraphicsToggles(
     graphics: boolean,
     shipLasers: boolean,
-    ripples: boolean,
     damageNumbers: boolean,
   ): void {
     if (this.graphicsToggle) {
@@ -74,10 +67,6 @@ export class SettingsModal {
       this.shipLasersToggle.style.backgroundColor = shipLasers
         ? '#4CAF50'
         : '#666';
-    }
-    if (this.ripplesToggle) {
-      this.ripplesToggle.textContent = ripples ? t('common.on') : t('common.off');
-      this.ripplesToggle.style.backgroundColor = ripples ? '#4CAF50' : '#666';
     }
     if (this.damageNumbersToggle) {
       this.damageNumbersToggle.textContent = damageNumbers ? t('common.on') : t('common.off');
@@ -405,45 +394,6 @@ export class SettingsModal {
     shipLasersHint.style.marginTop = '5px';
     graphicsSection.appendChild(shipLasersHint);
 
-    // Ripples toggle
-    const ripplesContainer = document.createElement('div');
-    ripplesContainer.style.marginBottom = '10px';
-    ripplesContainer.style.marginTop = '15px';
-    ripplesContainer.style.display = 'flex';
-    ripplesContainer.style.alignItems = 'center';
-    ripplesContainer.style.justifyContent = 'space-between';
-
-    const ripplesLabel = document.createElement('label');
-    ripplesLabel.textContent = t('settings.ripples');
-    ripplesLabel.style.fontSize = '16px';
-
-    this.ripplesToggle = document.createElement('button');
-    this.ripplesToggle.className = 'modal-button';
-    this.ripplesToggle.textContent = t('common.on');
-    this.ripplesToggle.style.width = '80px';
-    this.ripplesToggle.style.backgroundColor = '#4CAF50';
-
-    this.ripplesToggle.addEventListener('click', () => {
-      if (!this.ripplesToggle) return;
-      const newState = this.ripplesToggle.textContent === t('common.off');
-      this.ripplesToggle.textContent = newState ? t('common.on') : t('common.off');
-      this.ripplesToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
-      if (this.ripplesCallback) {
-        this.ripplesCallback(newState);
-      }
-    });
-
-    ripplesContainer.appendChild(ripplesLabel);
-    ripplesContainer.appendChild(this.ripplesToggle);
-    graphicsSection.appendChild(ripplesContainer);
-
-    const ripplesHint = document.createElement('div');
-    ripplesHint.textContent = t('settings.ripplesHint');
-    ripplesHint.style.fontSize = '12px';
-    ripplesHint.style.color = '#888';
-    ripplesHint.style.marginTop = '5px';
-    graphicsSection.appendChild(ripplesHint);
-
     // Damage numbers toggle
     const damageNumbersContainer = document.createElement('div');
     damageNumbersContainer.style.marginBottom = '10px';
@@ -555,7 +505,6 @@ export class SettingsModal {
     const volumeCallback = this.volumeCallback;
     const graphicsCallback = this.graphicsCallback;
     const shipLasersCallback = this.shipLasersCallback;
-    const ripplesCallback = this.ripplesCallback;
     const damageNumbersCallback = this.damageNumbersCallback;
     
     this.createModal();
@@ -566,7 +515,6 @@ export class SettingsModal {
     if (volumeCallback) this.volumeCallback = volumeCallback;
     if (graphicsCallback) this.graphicsCallback = graphicsCallback;
     if (shipLasersCallback) this.shipLasersCallback = shipLasersCallback;
-    if (ripplesCallback) this.ripplesCallback = ripplesCallback;
     if (damageNumbersCallback) this.damageNumbersCallback = damageNumbersCallback;
     
     // Restore visibility
