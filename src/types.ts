@@ -30,6 +30,10 @@ export interface SaveData {
   discoveredUpgrades?: Record<string, boolean>;
   // Ascension tracking: highest level reached for prestige point calculation
   highestLevelReached?: number;
+  // Auto-buy toggle
+  autoBuyEnabled?: boolean;
+  // Offline progress tracking
+  lastPlayTime?: number;
 }
 
 export interface GameStats {
@@ -74,6 +78,8 @@ export interface GameState {
   discoveredUpgrades?: Record<string, boolean>;
   // Ascension tracking: highest level reached for prestige point calculation
   highestLevelReached?: number;
+  // Auto-buy toggle
+  autoBuyEnabled?: boolean;
 }
 
 export interface UpgradeConfig {

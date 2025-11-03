@@ -1,4 +1,5 @@
 import type { Store } from '../core/Store';
+import { Save } from '../core/Save';
 
 export class CreditsModal {
   private modal: HTMLElement | null = null;
@@ -52,7 +53,7 @@ export class CreditsModal {
     gameInfoSection.appendChild(gameDesc);
 
     const version = document.createElement('p');
-    version.textContent = 'Version 0.0.3 - Alpha Update';
+    version.textContent = 'Version 0.0.4 - UI Improvements';
     version.style.fontSize = '14px';
     version.style.color = '#888';
     gameInfoSection.appendChild(version);
@@ -109,6 +110,87 @@ export class CreditsModal {
     shareSection.appendChild(shareHint);
 
     content.appendChild(shareSection);
+
+    // Save Data Section
+    const saveSection = document.createElement('div');
+    saveSection.style.marginBottom = '25px';
+
+    const saveTitle = document.createElement('h3');
+    saveTitle.textContent = '💾 Save Data Management';
+    saveTitle.style.marginBottom = '15px';
+    saveTitle.style.color = '#00ff88';
+    saveSection.appendChild(saveTitle);
+
+    // Export Button
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'modal-button';
+    exportBtn.innerHTML = '📥 Export Save Data';
+    exportBtn.style.width = '100%';
+    exportBtn.style.padding = '12px';
+    exportBtn.style.fontSize = '14px';
+    exportBtn.style.marginBottom = '10px';
+    exportBtn.style.background = '#00ff88';
+    exportBtn.style.border = 'none';
+    exportBtn.style.borderRadius = '8px';
+    exportBtn.style.color = '#000';
+    exportBtn.style.cursor = 'pointer';
+    exportBtn.style.transition = 'all 0.2s';
+    exportBtn.style.fontWeight = 'bold';
+
+    exportBtn.addEventListener('mouseenter', () => {
+      exportBtn.style.background = '#00cc6f';
+      exportBtn.style.transform = 'scale(1.02)';
+    });
+    exportBtn.addEventListener('mouseleave', () => {
+      exportBtn.style.background = '#00ff88';
+      exportBtn.style.transform = 'scale(1)';
+    });
+
+    exportBtn.addEventListener('click', () => {
+      this.exportSave();
+    });
+    saveSection.appendChild(exportBtn);
+
+    // Import Button
+    const importBtn = document.createElement('button');
+    importBtn.className = 'modal-button';
+    importBtn.innerHTML = '📤 Import Save Data';
+    importBtn.style.width = '100%';
+    importBtn.style.padding = '12px';
+    importBtn.style.fontSize = '14px';
+    importBtn.style.marginBottom = '10px';
+    importBtn.style.background = '#ffaa00';
+    importBtn.style.border = 'none';
+    importBtn.style.borderRadius = '8px';
+    importBtn.style.color = '#000';
+    importBtn.style.cursor = 'pointer';
+    importBtn.style.transition = 'all 0.2s';
+    importBtn.style.fontWeight = 'bold';
+
+    importBtn.addEventListener('mouseenter', () => {
+      importBtn.style.background = '#cc8800';
+      importBtn.style.transform = 'scale(1.02)';
+    });
+    importBtn.addEventListener('mouseleave', () => {
+      importBtn.style.background = '#ffaa00';
+      importBtn.style.transform = 'scale(1)';
+    });
+
+    importBtn.addEventListener('click', () => {
+      this.importSave();
+    });
+    saveSection.appendChild(importBtn);
+
+    const saveHint = document.createElement('p');
+    saveHint.textContent =
+      'Backup your progress or transfer it between devices';
+    saveHint.style.fontSize = '12px';
+    saveHint.style.color = '#888';
+    saveHint.style.textAlign = 'center';
+    saveHint.style.marginTop = '5px';
+    saveSection.appendChild(saveHint);
+
+    content.appendChild(saveSection);
 
     // Steam Section
     const steamSection = document.createElement('div');
@@ -314,15 +396,105 @@ export class CreditsModal {
     window.open(twitterUrl, '_blank', 'width=550,height=420');
   }
 
+  private exportSave(): void {
+    const saveData = Save.export();
+    if (!saveData) {
+      alert('❌ No save data found to export!');
+      return;
+    }
+
+    // Create a blob and download it
+    const blob = new Blob([saveData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bobble-save-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Show success message
+    alert('✅ Save data exported successfully!\n\nSaved as: ' + a.download);
+  }
+
+  private importSave(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.style.display = 'none';
+
+    input.addEventListener('change', (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const saveDataString = event.target?.result as string;
+          if (!saveDataString) {
+            throw new Error('Empty file');
+          }
+
+          // Confirm before importing
+          const confirmed = confirm(
+            '⚠️ WARNING: This will replace your current save data!\n\n' +
+            'Are you sure you want to continue?',
+          );
+
+          if (confirmed) {
+            try {
+              Save.import(saveDataString);
+              // Reload game state immediately if game is available (prevents auto-save from overwriting)
+              if (window.game && window.game instanceof Object) {
+                try {
+                  const newState = Save.load();
+                  this.store.setState(newState);
+                } catch (e) {
+                  console.error('Failed to reload state after import:', e);
+                }
+              }
+              
+              alert('✅ Save data imported successfully!\n\nThe page will reload now.');
+              // Force immediate reload - the imported data is already properly formatted in localStorage
+              window.location.reload();
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              alert(`❌ Failed to import save data!\n\n${errorMessage}\n\nPlease check that the file is valid.`);
+              console.error('Import error:', error);
+            }
+          }
+        } catch (error) {
+          alert('❌ Error reading save file!\n\nPlease ensure it\'s a valid save file.');
+          console.error('Import error:', error);
+        }
+      };
+
+      reader.readAsText(file);
+    });
+
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  }
+
   show(): void {
     if (this.modal) {
       this.modal.style.display = 'flex';
+      // Trigger animation
+      requestAnimationFrame(() => {
+        this.modal?.classList.add('show');
+      });
     }
   }
 
   hide(): void {
     if (this.modal) {
-      this.modal.style.display = 'none';
+      this.modal.classList.remove('show');
+      // Wait for animation to complete
+      setTimeout(() => {
+        this.modal!.style.display = 'none';
+      }, 300);
     }
   }
 }

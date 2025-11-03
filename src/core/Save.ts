@@ -35,11 +35,34 @@ export class Save {
       energyCoreLevel: state.energyCoreLevel,
       cosmicKnowledgeLevel: state.cosmicKnowledgeLevel,
       discoveredUpgrades: state.discoveredUpgrades,
+      // Ascension tracking
+      highestLevelReached: state.highestLevelReached,
+      // Auto-buy toggle
+      autoBuyEnabled: state.autoBuyEnabled ?? false,
+      // Offline progress tracking
+      lastPlayTime: Date.now(),
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
     } catch (error) {
       console.error('Failed to save:', error);
+      // Show user-friendly error notification if possible
+      if (typeof window !== 'undefined' && window.game) {
+        try {
+          // Try to show notification if game is available
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const game = window.game as any;
+          if (game.notificationSystem?.show) {
+            game.notificationSystem.show(
+              '⚠️ Failed to save game data. Your progress may not be saved.',
+              'warning',
+              5000,
+            );
+          }
+        } catch {
+          // Ignore notification errors
+        }
+      }
     }
   }
 
@@ -54,6 +77,107 @@ export class Save {
       console.error('Failed to load save:', error);
     }
     return Save.getDefault();
+  }
+
+  /**
+   * Get the last play time from save data
+   */
+  static getLastPlayTime(): number | null {
+    try {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved) as SaveData;
+        return data.lastPlayTime ?? null;
+      }
+    } catch (error) {
+      console.error('Failed to load last play time:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Export save data as a JSON string
+   */
+  static export(): string | null {
+    try {
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Failed to export save:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Import save data from JSON string
+   * Validates, formats, and saves the data properly
+   * @throws Error if import fails
+   */
+  static import(saveDataString: string): void {
+    try {
+      const data = JSON.parse(saveDataString) as SaveData;
+      // Validate the data (this converts SaveData to GameState)
+      const validatedState = Save.validate(data);
+      
+      // Convert validated GameState back to SaveData format for storage
+      // This ensures all fields are properly formatted and no data is lost
+      const saveData: SaveData = {
+        points: validatedState.points,
+        shipsCount: validatedState.shipsCount,
+        attackSpeedLevel: validatedState.attackSpeedLevel,
+        autoFireUnlocked: validatedState.autoFireUnlocked,
+        pointMultiplierLevel: validatedState.pointMultiplierLevel,
+        critChanceLevel: validatedState.critChanceLevel,
+        resourceGenLevel: validatedState.resourceGenLevel,
+        xpBoostLevel: validatedState.xpBoostLevel,
+        level: validatedState.level,
+        experience: validatedState.experience,
+        subUpgrades: validatedState.subUpgrades,
+        achievements: validatedState.achievements,
+        stats: validatedState.stats,
+        prestigeLevel: validatedState.prestigeLevel,
+        prestigePoints: validatedState.prestigePoints,
+        prestigeUpgrades: validatedState.prestigeUpgrades,
+        blockedOnBossLevel: validatedState.blockedOnBossLevel,
+        // v3.0: New upgrades
+        weaponMasteryLevel: validatedState.weaponMasteryLevel,
+        fleetCommandLevel: validatedState.fleetCommandLevel,
+        mutationEngineLevel: validatedState.mutationEngineLevel,
+        energyCoreLevel: validatedState.energyCoreLevel,
+        cosmicKnowledgeLevel: validatedState.cosmicKnowledgeLevel,
+        discoveredUpgrades: validatedState.discoveredUpgrades,
+        // Ascension tracking
+        highestLevelReached: validatedState.highestLevelReached,
+        // Auto-buy toggle
+        autoBuyEnabled: validatedState.autoBuyEnabled ?? false,
+        // Preserve lastPlayTime from imported data if it exists, otherwise use current time
+        lastPlayTime: data.lastPlayTime ?? Date.now(),
+      };
+      
+      // Save the properly formatted data
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+      } catch (storageError) {
+        throw new Error('Failed to save imported data. Your browser may have storage restrictions.');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to import save:', error);
+      
+      // Provide more specific error messages
+      if (errorMessage.includes('JSON') || errorMessage.includes('parse')) {
+        throw new Error('Invalid save file format. Please ensure the file is a valid JSON file.');
+      }
+      if (errorMessage.includes('localStorage') || errorMessage.includes('storage')) {
+        throw new Error('Failed to save imported data. Please check your browser storage settings.');
+      }
+      if (error instanceof Error) {
+        throw error; // Re-throw the original error if it's already an Error
+      }
+      throw new Error('Failed to import save data. Please check that the file is valid.');
+    }
   }
 
   static clear(): void {
@@ -97,6 +221,8 @@ export class Save {
       energyCoreLevel: data.energyCoreLevel ?? 0,
       cosmicKnowledgeLevel: data.cosmicKnowledgeLevel ?? 0,
       discoveredUpgrades: data.discoveredUpgrades ?? { ship: true }, // Ship is always visible
+      highestLevelReached: data.highestLevelReached,
+      autoBuyEnabled: data.autoBuyEnabled ?? false,
     };
   }
 
@@ -126,6 +252,8 @@ export class Save {
       energyCoreLevel: 0,
       cosmicKnowledgeLevel: 0,
       discoveredUpgrades: { ship: true }, // Ship is always visible
+      highestLevelReached: undefined,
+      autoBuyEnabled: false,
     };
   }
 

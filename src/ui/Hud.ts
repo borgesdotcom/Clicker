@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { NumberFormatter } from '../utils/NumberFormatter';
+import { t } from '../core/I18n';
 
 export class Hud {
   private pointsDisplay: HTMLElement;
@@ -15,7 +16,7 @@ export class Hud {
   private passiveDisplay: HTMLElement | null = null;
   private critDisplay: HTMLElement | null = null;
 
-  private damageHistory: number[] = [];
+  private damageHistory: Array<{ damage: number; time: number }> = [];
   private readonly DPS_WINDOW = 5000; // 5 seconds window for DPS calculation
 
   // Cache last values to avoid unnecessary DOM updates
@@ -170,6 +171,8 @@ export class Hud {
       border: 2px solid rgba(0, 255, 136, 0.5);
       border-radius: 4px;
       font-size: 14px;
+      width: 300px;
+      min-width: 300px;
       max-width: 300px;
       font-family: 'Courier New', monospace;
       box-shadow: 
@@ -194,7 +197,7 @@ export class Hud {
       border-left: 2px solid rgba(0, 255, 136, 0.5);
       padding-left: 8px;
     `;
-    this.dpsDisplay.textContent = '⚔️ DPS: 0';
+    this.dpsDisplay.textContent = `⚔️ ${t('hud.dps')}: 0`;
 
     // Passive Display - White label, green value
     this.passiveDisplay = document.createElement('div');
@@ -207,7 +210,7 @@ export class Hud {
       border-left: 2px solid rgba(0, 255, 136, 0.5);
       padding-left: 8px;
     `;
-    this.passiveDisplay.textContent = '🏭 Passive: 0/sec';
+    this.passiveDisplay.textContent = `🏭 ${t('hud.passive')}: 0${t('hud.perSec')}`;
 
     // Crit Display - White label, green value
     this.critDisplay = document.createElement('div');
@@ -219,7 +222,7 @@ export class Hud {
       border-left: 2px solid rgba(0, 255, 136, 0.5);
       padding-left: 8px;
     `;
-    this.critDisplay.textContent = '✨ Crit: 0%';
+    this.critDisplay.textContent = `✨ ${t('hud.crit')}: 0%`;
 
     statsContainer.appendChild(this.dpsDisplay);
     statsContainer.appendChild(this.passiveDisplay);
@@ -228,6 +231,13 @@ export class Hud {
     const hudElement = document.getElementById('hud');
     if (hudElement) {
       hudElement.appendChild(statsContainer);
+      
+      // Move buttons container to be after stats display
+      const buttonsContainer = document.getElementById('hud-buttons-container');
+      if (buttonsContainer && buttonsContainer.parentElement === hudElement) {
+        // Only move if it exists and is already in the HUD
+        hudElement.insertBefore(buttonsContainer, statsContainer.nextSibling);
+      }
     }
   }
 
@@ -240,12 +250,12 @@ export class Hud {
   }
 
   updateStats(dps: number, passive: number, critChance: number, critBonus: number = 0): void {
-    const dpsText = `⚔️ DPS: ${NumberFormatter.format(dps)}`;
-    const passiveText = `🏭 Passive: ${NumberFormatter.format(passive)}/sec`;
+    const dpsText = `⚔️ ${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
+    const passiveText = `🏭 ${t('hud.passive')}: ${NumberFormatter.format(passive)}${t('hud.perSec')}`;
     
     // Show crit chance with power-up bonus if active
     const totalCritChance = critChance + critBonus;
-    let critText = `✨ Crit: ${NumberFormatter.formatDecimal(totalCritChance, 1)}%`;
+    let critText = `✨ ${t('hud.crit')}: ${NumberFormatter.formatDecimal(totalCritChance, 1)}%`;
     if (critBonus > 0) {
       critText += ` (+${NumberFormatter.formatDecimal(critBonus, 1)}%)`;
     }
@@ -274,12 +284,22 @@ export class Hud {
 
   recordDamage(amount: number): void {
     const now = Date.now();
-    this.damageHistory.push({ damage: amount, time: now } as any);
+    this.damageHistory.push({ damage: amount, time: now });
 
-    // Remove old entries outside the DPS window
-    this.damageHistory = this.damageHistory.filter(
-      (entry: any) => now - entry.time < this.DPS_WINDOW,
-    );
+    // Remove old entries outside the DPS window in-place (more efficient than filter)
+    // Since entries are time-ordered, we can remove from the start until we find valid ones
+    const cutoff = now - this.DPS_WINDOW;
+    let removeCount = 0;
+    for (let i = 0; i < this.damageHistory.length; i++) {
+      const entry = this.damageHistory[i];
+      if (entry && entry.time >= cutoff) {
+        break;
+      }
+      removeCount++;
+    }
+    if (removeCount > 0) {
+      this.damageHistory.splice(0, removeCount);
+    }
   }
 
   calculateDPS(): number {
@@ -287,23 +307,29 @@ export class Hud {
 
     const now = Date.now();
     const windowStart = now - this.DPS_WINDOW;
-    const recentDamage = this.damageHistory.filter(
-      (entry: any) => entry.time >= windowStart,
-    );
+    
+    // Single pass: find first valid entry and calculate total
+    let totalDamage = 0;
+    let firstValidIndex = -1;
+    
+    for (let i = 0; i < this.damageHistory.length; i++) {
+      const entry = this.damageHistory[i];
+      if (entry && entry.time >= windowStart) {
+        if (firstValidIndex === -1) {
+          firstValidIndex = i;
+        }
+        totalDamage += entry.damage;
+      }
+    }
 
-    if (recentDamage.length === 0) return 0;
+    if (firstValidIndex === -1 || totalDamage === 0) return 0;
 
-    const totalDamage = recentDamage.reduce(
-      (sum: number, entry: any) => sum + entry.damage,
-      0,
-    );
-    const timeSpan = (now - (recentDamage[0] as any).time) / 1000; // Convert to seconds
-
+    const timeSpan = (now - this.damageHistory[firstValidIndex]!.time) / 1000;
     return timeSpan > 0 ? totalDamage / timeSpan : 0;
   }
 
   updateLevel(level: number, experience: number, expToNext: number): void {
-    const levelText = `Level ${level}`;
+    const levelText = `${t('hud.level')} ${level}`;
     const expText = `${Math.floor(experience)} / ${expToNext}`;
     const percent = Math.min(100, (experience / expToNext) * 100);
 

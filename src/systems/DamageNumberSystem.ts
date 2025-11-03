@@ -31,9 +31,11 @@ export class DamageNumberSystem {
     if (!this.enabled) return;
 
     // Limit number of active damage numbers
+    // Use pop() instead of shift() for O(1) performance (removes newest instead of oldest)
+    // The update() method filters dead items anyway, so order doesn't matter much
     if (this.numbers.length >= this.maxNumbers) {
-      // Remove oldest number
-      this.numbers.shift();
+      // Remove newest number (O(1) operation)
+      this.numbers.pop();
     }
 
     const text = this.formatDamage(damage);
@@ -52,13 +54,22 @@ export class DamageNumberSystem {
   }
 
   update(dt: number): void {
-    for (const num of this.numbers) {
+    // Update and remove dead numbers in-place (O(n) instead of O(n²) with filter)
+    for (let i = this.numbers.length - 1; i >= 0; i--) {
+      const num = this.numbers[i];
+      if (!num) {
+        this.numbers.splice(i, 1);
+        continue;
+      }
+
       num.y += num.vy * dt;
       num.vy += 50 * dt; // Gravity
       num.life -= dt;
-    }
 
-    this.numbers = this.numbers.filter((n) => n.life > 0);
+      if (num.life <= 0) {
+        this.numbers.splice(i, 1);
+      }
+    }
   }
 
   draw(drawer: Draw): void {
@@ -93,8 +104,7 @@ export class DamageNumberSystem {
   }
 
   getCount(): number {
-    const count: number = this.numbers.length;
-    return count;
+    return this.numbers.length;
   }
 
   private formatDamage(damage: number): string {

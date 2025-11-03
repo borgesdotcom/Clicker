@@ -97,10 +97,18 @@ export class AchievementsModal {
   show(): void {
     this.update();
     this.modal.style.display = 'flex';
+    // Trigger animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   hide(): void {
-    this.modal.style.display = 'none';
+    this.modal.classList.remove('show');
+    // Wait for animation to complete
+    setTimeout(() => {
+      this.modal.style.display = 'none';
+    }, 300);
   }
 
   update(): void {

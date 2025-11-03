@@ -70,10 +70,18 @@ export class MissionsModal {
   public show(): void {
     this.modal.style.display = 'flex';
     this.renderMissions();
+    // Trigger animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   public hide(): void {
-    this.modal.style.display = 'none';
+    this.modal.classList.remove('show');
+    // Wait for animation to complete
+    setTimeout(() => {
+      this.modal.style.display = 'none';
+    }, 300);
   }
 
   private getRewardForMission(type: MissionType, level: number): { points?: number; ships?: number; xp?: number } {

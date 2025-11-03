@@ -8,17 +8,26 @@ export class RippleSystem {
 
   spawnRipple(center: Vec2, maxRadius: number): void {
     // Limit number of active ripples
+    // Use pop() instead of shift() for O(1) performance (removes newest instead of oldest)
+    // The update() method filters dead items anyway, so order doesn't matter much
     if (this.ripples.length >= this.maxRipples) {
-      this.ripples.shift();
+      this.ripples.pop();
     }
     this.ripples.push(new Ripple(center, maxRadius));
   }
 
   update(dt: number): void {
-    for (const ripple of this.ripples) {
-      ripple.update(dt);
+    // Use reverse iteration for safe in-place removal (O(n) instead of O(n²) with filter)
+    for (let i = this.ripples.length - 1; i >= 0; i--) {
+      const ripple = this.ripples[i];
+      if (ripple) {
+        ripple.update(dt);
+        if (!ripple.alive) {
+          // Remove dead ripples in-place (O(1) removal from end)
+          this.ripples.splice(i, 1);
+        }
+      }
     }
-    this.ripples = this.ripples.filter((ripple) => ripple.alive);
   }
 
   draw(drawer: Draw): void {
@@ -32,7 +41,6 @@ export class RippleSystem {
   }
 
   getCount(): number {
-    const count: number = this.ripples.length;
-    return count;
+    return this.ripples.length;
   }
 }

@@ -75,10 +75,18 @@ export class PowerUpSystem {
   private spawnInterval = 180; // Spawn every 180 seconds (3 minutes) - very rare like Cookie Clicker
   private canvasWidth: number;
   private canvasHeight: number;
+  private onPowerUpSpawnCallback: ((type: PowerUpType) => void) | null = null;
 
   constructor(canvasWidth: number, canvasHeight: number) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
+  }
+
+  /**
+   * Set callback for when a power-up spawns
+   */
+  setOnPowerUpSpawn(callback: (type: PowerUpType) => void): void {
+    this.onPowerUpSpawnCallback = callback;
   }
 
   public resize(width: number, height: number): void {
@@ -95,9 +103,13 @@ export class PowerUpSystem {
       this.spawnTimer = 0;
     }
 
-    // Update power-ups
-    for (const powerUp of this.powerUps) {
-      if (!powerUp.active) continue;
+    // Update power-ups and remove inactive ones in-place (O(n) instead of O(n²) with filter)
+    for (let i = this.powerUps.length - 1; i >= 0; i--) {
+      const powerUp = this.powerUps[i];
+      if (!powerUp || !powerUp.active) {
+        this.powerUps.splice(i, 1);
+        continue;
+      }
 
       powerUp.lifetime -= dt;
       powerUp.pulseTime += dt;
@@ -105,19 +117,20 @@ export class PowerUpSystem {
       // Despawn if lifetime expired
       if (powerUp.lifetime <= 0) {
         powerUp.active = false;
+        this.powerUps.splice(i, 1);
       }
     }
 
-    // Clean up inactive power-ups
-    this.powerUps = this.powerUps.filter((p) => p.active);
-
-    // Update active buffs
-    for (const buff of this.activeBuffs) {
-      buff.duration -= dt;
+    // Update active buffs and remove expired ones in-place
+    for (let i = this.activeBuffs.length - 1; i >= 0; i--) {
+      const buff = this.activeBuffs[i];
+      if (buff) {
+        buff.duration -= dt;
+        if (buff.duration <= 0) {
+          this.activeBuffs.splice(i, 1);
+        }
+      }
     }
-
-    // Remove expired buffs
-    this.activeBuffs = this.activeBuffs.filter((b) => b.duration > 0);
   }
 
   private spawnRandomPowerUp(): void {
@@ -145,6 +158,11 @@ export class PowerUpSystem {
       maxLifetime: 15,
       pulseTime: 0,
     });
+
+    // Trigger spawn callback
+    if (this.onPowerUpSpawnCallback) {
+      this.onPowerUpSpawnCallback(type);
+    }
   }
 
   public render(ctx: CanvasRenderingContext2D): void {
@@ -429,5 +447,10 @@ export class PowerUpSystem {
       maxLifetime: 15,
       pulseTime: 0,
     });
+
+    // Trigger spawn callback
+    if (this.onPowerUpSpawnCallback) {
+      this.onPowerUpSpawnCallback(powerUpType);
+    }
   }
 }

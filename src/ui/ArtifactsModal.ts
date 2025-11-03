@@ -61,16 +61,24 @@ export class ArtifactsModal {
     }
     this.modal.style.display = 'flex';
     this.render();
+    // Trigger animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   public hide(): void {
-    this.modal.style.display = 'none';
-    // Call callback if set (used for sequencing modals)
-    if (this.onCloseCallback) {
-      const callback = this.onCloseCallback;
-      this.onCloseCallback = null; // Clear callback after use
-      callback();
-    }
+    this.modal.classList.remove('show');
+    // Wait for animation to complete
+    setTimeout(() => {
+      this.modal.style.display = 'none';
+      // Call callback if set (used for sequencing modals)
+      if (this.onCloseCallback) {
+        const callback = this.onCloseCallback;
+        this.onCloseCallback = null; // Clear callback after use
+        callback();
+      }
+    }, 300);
   }
 
   public setOnCloseCallback(callback: () => void): void {

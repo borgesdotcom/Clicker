@@ -81,13 +81,21 @@ export class StatsPanel {
       this.modalElement.style.display = 'flex';
       this.isOpen = true;
       this.render();
+      // Trigger animation
+      requestAnimationFrame(() => {
+        this.modalElement?.classList.add('show');
+      });
     }
   }
 
   public hide(): void {
     if (this.modalElement) {
-      this.modalElement.style.display = 'none';
-      this.isOpen = false;
+      this.modalElement.classList.remove('show');
+      // Wait for animation to complete
+      setTimeout(() => {
+        this.modalElement!.style.display = 'none';
+        this.isOpen = false;
+      }, 300);
     }
   }
 

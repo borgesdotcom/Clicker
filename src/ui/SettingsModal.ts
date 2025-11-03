@@ -1,4 +1,6 @@
 import type { SoundManager } from '../systems/SoundManager';
+import { i18n, t } from '../core/I18n';
+import type { Language } from '../core/I18n';
 
 export class SettingsModal {
   private modal: HTMLElement | null = null;
@@ -17,10 +19,16 @@ export class SettingsModal {
   private ripplesToggle: HTMLButtonElement | null = null;
   private damageNumbersToggle: HTMLButtonElement | null = null;
   private soundtrackToggle: HTMLButtonElement | null = null;
+  private languageSelect: HTMLSelectElement | null = null;
 
   constructor(soundManager: SoundManager) {
     this.soundManager = soundManager;
     this.createModal();
+    
+    // Subscribe to language changes (subscription persists for modal lifetime)
+    i18n.subscribe(() => {
+      this.updateTranslations();
+    });
   }
 
   setGraphicsCallback(callback: (enabled: boolean) => void): void {
@@ -58,21 +66,21 @@ export class SettingsModal {
     damageNumbers: boolean,
   ): void {
     if (this.graphicsToggle) {
-      this.graphicsToggle.textContent = graphics ? 'ON' : 'OFF';
+      this.graphicsToggle.textContent = graphics ? t('common.on') : t('common.off');
       this.graphicsToggle.style.backgroundColor = graphics ? '#4CAF50' : '#666';
     }
     if (this.shipLasersToggle) {
-      this.shipLasersToggle.textContent = shipLasers ? 'ON' : 'OFF';
+      this.shipLasersToggle.textContent = shipLasers ? t('common.on') : t('common.off');
       this.shipLasersToggle.style.backgroundColor = shipLasers
         ? '#4CAF50'
         : '#666';
     }
     if (this.ripplesToggle) {
-      this.ripplesToggle.textContent = ripples ? 'ON' : 'OFF';
+      this.ripplesToggle.textContent = ripples ? t('common.on') : t('common.off');
       this.ripplesToggle.style.backgroundColor = ripples ? '#4CAF50' : '#666';
     }
     if (this.damageNumbersToggle) {
-      this.damageNumbersToggle.textContent = damageNumbers ? 'ON' : 'OFF';
+      this.damageNumbersToggle.textContent = damageNumbers ? t('common.on') : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = damageNumbers
         ? '#4CAF50'
         : '#666';
@@ -95,7 +103,7 @@ export class SettingsModal {
 
     // Title
     const title = document.createElement('h2');
-    title.textContent = '⚙️ Settings';
+    title.textContent = t('settings.title');
     title.style.marginBottom = '20px';
     title.style.textAlign = 'center';
     content.appendChild(title);
@@ -105,7 +113,7 @@ export class SettingsModal {
     soundSection.style.marginBottom = '25px';
 
     const soundTitle = document.createElement('h3');
-    soundTitle.textContent = 'Sound Settings';
+    soundTitle.textContent = t('settings.soundSettings');
     soundTitle.style.marginBottom = '15px';
     soundSection.appendChild(soundTitle);
 
@@ -117,17 +125,17 @@ export class SettingsModal {
     soundToggleContainer.style.justifyContent = 'space-between';
 
     const soundLabel = document.createElement('label');
-    soundLabel.textContent = 'Sound Enabled:';
+    soundLabel.textContent = t('settings.soundEnabled');
     soundLabel.style.fontSize = '16px';
 
     const soundToggle = document.createElement('button');
     soundToggle.className = 'modal-button';
-    soundToggle.textContent = this.soundManager.isEnabled() ? 'ON' : 'OFF';
+    soundToggle.textContent = this.soundManager.isEnabled() ? t('common.on') : t('common.off');
     soundToggle.style.width = '80px';
     soundToggle.addEventListener('click', () => {
       const newState = !this.soundManager.isEnabled();
       this.soundManager.setEnabled(newState);
-      soundToggle.textContent = newState ? 'ON' : 'OFF';
+      soundToggle.textContent = newState ? t('common.on') : t('common.off');
       soundToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
       if (this.soundCallback) {
         this.soundCallback(newState);
@@ -142,7 +150,7 @@ export class SettingsModal {
     soundSection.appendChild(soundToggleContainer);
 
     const soundHint = document.createElement('div');
-    soundHint.textContent = 'Enable or disable all game sounds';
+    soundHint.textContent = t('settings.soundEnabledHint');
     soundHint.style.fontSize = '12px';
     soundHint.style.color = '#888';
     soundHint.style.marginTop = '5px';
@@ -157,20 +165,20 @@ export class SettingsModal {
     soundtrackToggleContainer.style.justifyContent = 'space-between';
 
     const soundtrackLabel = document.createElement('label');
-    soundtrackLabel.textContent = 'Background Music:';
+    soundtrackLabel.textContent = t('settings.backgroundMusic');
     soundtrackLabel.style.fontSize = '16px';
 
     this.soundtrackToggle = document.createElement('button');
     this.soundtrackToggle.className = 'modal-button';
     this.soundtrackToggle.textContent = this.soundManager.isSoundtrackEnabled()
-      ? 'ON'
-      : 'OFF';
+      ? t('common.on')
+      : t('common.off');
     this.soundtrackToggle.style.width = '80px';
     this.soundtrackToggle.addEventListener('click', () => {
       if (!this.soundtrackToggle) return;
       const newState = !this.soundManager.isSoundtrackEnabled();
       this.soundManager.setSoundtrackEnabled(newState);
-      this.soundtrackToggle.textContent = newState ? 'ON' : 'OFF';
+      this.soundtrackToggle.textContent = newState ? t('common.on') : t('common.off');
       this.soundtrackToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
       if (this.soundtrackCallback) {
         this.soundtrackCallback(newState);
@@ -185,7 +193,7 @@ export class SettingsModal {
     soundSection.appendChild(soundtrackToggleContainer);
 
     const soundtrackHint = document.createElement('div');
-    soundtrackHint.textContent = 'Enable or disable background music';
+    soundtrackHint.textContent = t('settings.backgroundMusicHint');
     soundtrackHint.style.fontSize = '12px';
     soundtrackHint.style.color = '#888';
     soundtrackHint.style.marginTop = '5px';
@@ -197,7 +205,7 @@ export class SettingsModal {
     volumeContainer.style.marginBottom = '15px';
 
     const volumeLabel = document.createElement('label');
-    volumeLabel.textContent = 'Volume:';
+    volumeLabel.textContent = t('settings.volume');
     volumeLabel.style.display = 'block';
     volumeLabel.style.marginBottom = '8px';
     volumeLabel.style.fontSize = '16px';
@@ -246,12 +254,76 @@ export class SettingsModal {
 
     content.appendChild(soundSection);
 
+    // Language section
+    const languageSection = document.createElement('div');
+    languageSection.style.marginBottom = '25px';
+
+    const languageTitle = document.createElement('h3');
+    languageTitle.textContent = t('settings.languageSettings');
+    languageTitle.style.marginBottom = '15px';
+    languageSection.appendChild(languageTitle);
+
+    const languageContainer = document.createElement('div');
+    languageContainer.style.marginBottom = '15px';
+    languageContainer.style.display = 'flex';
+    languageContainer.style.alignItems = 'center';
+    languageContainer.style.justifyContent = 'space-between';
+
+    const languageLabel = document.createElement('label');
+    languageLabel.textContent = t('settings.language');
+    languageLabel.style.fontSize = '16px';
+
+    this.languageSelect = document.createElement('select');
+    this.languageSelect.className = 'modal-button';
+    this.languageSelect.style.width = '200px';
+    this.languageSelect.style.padding = '8px';
+    
+    const languages: { code: Language; name: string }[] = [
+      { code: 'en', name: 'English' },
+      { code: 'pt', name: 'Português' },
+      { code: 'es', name: 'Español' },
+    ];
+
+    languages.forEach((lang) => {
+      const option = document.createElement('option');
+      option.value = lang.code;
+      option.textContent = lang.name;
+      if (i18n.getLanguage() === lang.code) {
+        option.selected = true;
+      }
+      if (this.languageSelect) {
+        this.languageSelect.appendChild(option);
+      }
+    });
+
+    this.languageSelect.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      const newLang = target.value as Language;
+      i18n.setLanguage(newLang);
+      // Reload page to apply language changes fully
+      window.location.reload();
+    });
+
+    languageContainer.appendChild(languageLabel);
+    languageContainer.appendChild(this.languageSelect);
+    languageSection.appendChild(languageContainer);
+
+    const languageHint = document.createElement('div');
+    languageHint.textContent = t('settings.languageHint');
+    languageHint.style.fontSize = '12px';
+    languageHint.style.color = '#888';
+    languageHint.style.marginTop = '5px';
+    languageHint.style.marginBottom = '15px';
+    languageSection.appendChild(languageHint);
+
+    content.appendChild(languageSection);
+
     // Graphics section
     const graphicsSection = document.createElement('div');
     graphicsSection.style.marginBottom = '25px';
 
     const graphicsTitle = document.createElement('h3');
-    graphicsTitle.textContent = 'Graphics Settings';
+    graphicsTitle.textContent = t('settings.graphicsSettings');
     graphicsTitle.style.marginBottom = '15px';
     graphicsSection.appendChild(graphicsTitle);
 
@@ -263,19 +335,19 @@ export class SettingsModal {
     graphicsToggleContainer.style.justifyContent = 'space-between';
 
     const graphicsLabel = document.createElement('label');
-    graphicsLabel.textContent = 'High Graphics (Particles):';
+    graphicsLabel.textContent = t('settings.highGraphics');
     graphicsLabel.style.fontSize = '16px';
 
     this.graphicsToggle = document.createElement('button');
     this.graphicsToggle.className = 'modal-button';
-    this.graphicsToggle.textContent = 'ON';
+    this.graphicsToggle.textContent = t('common.on');
     this.graphicsToggle.style.width = '80px';
     this.graphicsToggle.style.backgroundColor = '#4CAF50';
 
     this.graphicsToggle.addEventListener('click', () => {
       if (!this.graphicsToggle) return;
-      const newState = this.graphicsToggle.textContent === 'OFF';
-      this.graphicsToggle.textContent = newState ? 'ON' : 'OFF';
+      const newState = this.graphicsToggle.textContent === t('common.off');
+      this.graphicsToggle.textContent = newState ? t('common.on') : t('common.off');
       this.graphicsToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
       if (this.graphicsCallback) {
         this.graphicsCallback(newState);
@@ -287,7 +359,7 @@ export class SettingsModal {
     graphicsSection.appendChild(graphicsToggleContainer);
 
     const graphicsHint = document.createElement('div');
-    graphicsHint.textContent = 'Disable particles for better performance';
+    graphicsHint.textContent = t('settings.highGraphicsHint');
     graphicsHint.style.fontSize = '12px';
     graphicsHint.style.color = '#888';
     graphicsHint.style.marginTop = '5px';
@@ -301,19 +373,19 @@ export class SettingsModal {
     shipLasersContainer.style.justifyContent = 'space-between';
 
     const shipLasersLabel = document.createElement('label');
-    shipLasersLabel.textContent = 'Ship Auto-Fire Lasers:';
+    shipLasersLabel.textContent = t('settings.shipLasers');
     shipLasersLabel.style.fontSize = '16px';
 
     this.shipLasersToggle = document.createElement('button');
     this.shipLasersToggle.className = 'modal-button';
-    this.shipLasersToggle.textContent = 'ON';
+    this.shipLasersToggle.textContent = t('common.on');
     this.shipLasersToggle.style.width = '80px';
     this.shipLasersToggle.style.backgroundColor = '#4CAF50';
 
     this.shipLasersToggle.addEventListener('click', () => {
       if (!this.shipLasersToggle) return;
-      const newState = this.shipLasersToggle.textContent === 'OFF';
-      this.shipLasersToggle.textContent = newState ? 'ON' : 'OFF';
+      const newState = this.shipLasersToggle.textContent === t('common.off');
+      this.shipLasersToggle.textContent = newState ? t('common.on') : t('common.off');
       this.shipLasersToggle.style.backgroundColor = newState
         ? '#4CAF50'
         : '#666';
@@ -327,8 +399,7 @@ export class SettingsModal {
     graphicsSection.appendChild(shipLasersContainer);
 
     const shipLasersHint = document.createElement('div');
-    shipLasersHint.textContent =
-      'Disable to reduce lag (only your clicks will fire lasers)';
+    shipLasersHint.textContent = t('settings.shipLasersHint');
     shipLasersHint.style.fontSize = '12px';
     shipLasersHint.style.color = '#888';
     shipLasersHint.style.marginTop = '5px';
@@ -343,19 +414,19 @@ export class SettingsModal {
     ripplesContainer.style.justifyContent = 'space-between';
 
     const ripplesLabel = document.createElement('label');
-    ripplesLabel.textContent = 'Click Ripples:';
+    ripplesLabel.textContent = t('settings.ripples');
     ripplesLabel.style.fontSize = '16px';
 
     this.ripplesToggle = document.createElement('button');
     this.ripplesToggle.className = 'modal-button';
-    this.ripplesToggle.textContent = 'ON';
+    this.ripplesToggle.textContent = t('common.on');
     this.ripplesToggle.style.width = '80px';
     this.ripplesToggle.style.backgroundColor = '#4CAF50';
 
     this.ripplesToggle.addEventListener('click', () => {
       if (!this.ripplesToggle) return;
-      const newState = this.ripplesToggle.textContent === 'OFF';
-      this.ripplesToggle.textContent = newState ? 'ON' : 'OFF';
+      const newState = this.ripplesToggle.textContent === t('common.off');
+      this.ripplesToggle.textContent = newState ? t('common.on') : t('common.off');
       this.ripplesToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
       if (this.ripplesCallback) {
         this.ripplesCallback(newState);
@@ -367,7 +438,7 @@ export class SettingsModal {
     graphicsSection.appendChild(ripplesContainer);
 
     const ripplesHint = document.createElement('div');
-    ripplesHint.textContent = 'Disable for minimal visual clutter';
+    ripplesHint.textContent = t('settings.ripplesHint');
     ripplesHint.style.fontSize = '12px';
     ripplesHint.style.color = '#888';
     ripplesHint.style.marginTop = '5px';
@@ -382,19 +453,19 @@ export class SettingsModal {
     damageNumbersContainer.style.justifyContent = 'space-between';
 
     const damageNumbersLabel = document.createElement('label');
-    damageNumbersLabel.textContent = 'Damage Numbers:';
+    damageNumbersLabel.textContent = t('settings.damageNumbers');
     damageNumbersLabel.style.fontSize = '16px';
 
     this.damageNumbersToggle = document.createElement('button');
     this.damageNumbersToggle.className = 'modal-button';
-    this.damageNumbersToggle.textContent = 'ON';
+    this.damageNumbersToggle.textContent = t('common.on');
     this.damageNumbersToggle.style.width = '80px';
     this.damageNumbersToggle.style.backgroundColor = '#4CAF50';
 
     this.damageNumbersToggle.addEventListener('click', () => {
       if (!this.damageNumbersToggle) return;
-      const newState = this.damageNumbersToggle.textContent === 'OFF';
-      this.damageNumbersToggle.textContent = newState ? 'ON' : 'OFF';
+      const newState = this.damageNumbersToggle.textContent === t('common.off');
+      this.damageNumbersToggle.textContent = newState ? t('common.on') : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = newState
         ? '#4CAF50'
         : '#666';
@@ -408,8 +479,7 @@ export class SettingsModal {
     graphicsSection.appendChild(damageNumbersContainer);
 
     const damageNumbersHint = document.createElement('div');
-    damageNumbersHint.textContent =
-      'Disable to improve performance (damage still applies)';
+    damageNumbersHint.textContent = t('settings.damageNumbersHint');
     damageNumbersHint.style.fontSize = '12px';
     damageNumbersHint.style.color = '#888';
     damageNumbersHint.style.marginTop = '5px';
@@ -420,7 +490,7 @@ export class SettingsModal {
     // Close button
     const closeButton = document.createElement('button');
     closeButton.className = 'modal-button';
-    closeButton.textContent = 'Close';
+    closeButton.textContent = t('common.close');
     closeButton.style.width = '100%';
     closeButton.style.marginTop = '20px';
     closeButton.addEventListener('click', () => {
@@ -450,18 +520,71 @@ export class SettingsModal {
       // Update soundtrack toggle when opening
       if (this.soundtrackToggle) {
         const soundtrackEnabled = this.soundManager.isSoundtrackEnabled();
-        this.soundtrackToggle.textContent = soundtrackEnabled ? 'ON' : 'OFF';
+        this.soundtrackToggle.textContent = soundtrackEnabled ? t('common.on') : t('common.off');
         this.soundtrackToggle.style.backgroundColor = soundtrackEnabled
           ? '#4CAF50'
           : '#666';
       }
+      // Update language selector
+      if (this.languageSelect) {
+        this.languageSelect.value = i18n.getLanguage();
+      }
       this.modal.style.display = 'flex';
+      // Trigger animation
+      requestAnimationFrame(() => {
+        this.modal?.classList.add('show');
+      });
+    }
+  }
+
+  private updateTranslations(): void {
+    if (!this.modal) return;
+    
+    // Store current state
+    const wasVisible = this.modal.style.display !== 'none';
+    
+    // Recreate modal content
+    const content = this.modal.querySelector('.modal-content');
+    if (content) {
+      content.remove();
+    }
+    
+    // Recreate modal (this will reset all references, so we need to store callbacks)
+    const soundCallback = this.soundCallback;
+    const soundtrackCallback = this.soundtrackCallback;
+    const volumeCallback = this.volumeCallback;
+    const graphicsCallback = this.graphicsCallback;
+    const shipLasersCallback = this.shipLasersCallback;
+    const ripplesCallback = this.ripplesCallback;
+    const damageNumbersCallback = this.damageNumbersCallback;
+    
+    this.createModal();
+    
+    // Restore callbacks
+    if (soundCallback) this.soundCallback = soundCallback;
+    if (soundtrackCallback) this.soundtrackCallback = soundtrackCallback;
+    if (volumeCallback) this.volumeCallback = volumeCallback;
+    if (graphicsCallback) this.graphicsCallback = graphicsCallback;
+    if (shipLasersCallback) this.shipLasersCallback = shipLasersCallback;
+    if (ripplesCallback) this.ripplesCallback = ripplesCallback;
+    if (damageNumbersCallback) this.damageNumbersCallback = damageNumbersCallback;
+    
+    // Restore visibility
+    if (wasVisible) {
+      this.modal.style.display = 'flex';
+      this.show(); // This will update all the values
     }
   }
 
   hide(): void {
     if (this.modal) {
-      this.modal.style.display = 'none';
+      this.modal.classList.remove('show');
+      // Wait for animation to complete
+      setTimeout(() => {
+        if (this.modal) {
+          this.modal.style.display = 'none';
+        }
+      }, 300);
     }
   }
 }

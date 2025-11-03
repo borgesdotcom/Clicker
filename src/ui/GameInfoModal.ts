@@ -71,10 +71,18 @@ export class GameInfoModal {
   show(): void {
     this.modal.style.display = 'flex';
     this.renderTab('combat');
+    // Trigger animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   hide(): void {
-    this.modal.style.display = 'none';
+    this.modal.classList.remove('show');
+    // Wait for animation to complete
+    setTimeout(() => {
+      this.modal.style.display = 'none';
+    }, 300);
   }
 
   private renderTab(tabName: string): void {
@@ -393,7 +401,15 @@ export class GameInfoModal {
 
       <div class="info-section">
         <h3>⌨️ Keyboard Shortcuts</h3>
+        <p>• <strong>ESC:</strong> Close any open modal</p>
+        <p>• <strong>A:</strong> Toggle Auto-Buy</p>
+        <p>• <strong>M:</strong> Open Missions</p>
+        <p>• <strong>S:</strong> Open Settings</p>
+        <p>• <strong>H:</strong> Open Achievements</p>
+        <p>• <strong>P:</strong> Open Prestige/Ascension</p>
+        <p>• <strong>I:</strong> Open Game Info</p>
         <p>• <strong>Ctrl + F1:</strong> Toggle Debug Panel (cheat mode)</p>
+        <p>• <strong>Ctrl + M:</strong> Toggle Performance Monitor</p>
       </div>
     `;
   }

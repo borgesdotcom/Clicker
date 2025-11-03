@@ -140,12 +140,28 @@ export class MissionSystem {
     upgrades: 0,
     maxCombo: 0,
   };
+  private onMissionCompleteCallback: ((mission: Mission) => void) | null = null;
+  private onDailyResetCallback: (() => void) | null = null;
 
   constructor(store: Store) {
     this.store = store;
     this.loadProgress();
     this.generateMissions();
     this.checkDailyReset();
+  }
+
+  /**
+   * Set callback for when a mission is completed
+   */
+  setOnMissionComplete(callback: (mission: Mission) => void): void {
+    this.onMissionCompleteCallback = callback;
+  }
+
+  /**
+   * Set callback for when daily missions reset
+   */
+  setOnDailyReset(callback: () => void): void {
+    this.onDailyResetCallback = callback;
   }
 
   private loadProgress(): void {
@@ -183,9 +199,15 @@ export class MissionSystem {
     const oneDayMs = 24 * 60 * 60 * 1000;
 
     if (now - this.lastDailyReset > oneDayMs) {
+      const hadDailyMissions = this.dailyMissions.length > 0;
       this.generateDailyMissions();
       this.lastDailyReset = now;
       this.saveProgress();
+
+      // Notify if daily missions were reset (not on first load)
+      if (hadDailyMissions && this.onDailyResetCallback) {
+        this.onDailyResetCallback();
+      }
     }
   }
 
@@ -284,6 +306,7 @@ export class MissionSystem {
 
   private updateMissions(type: MissionType, value: number): void {
     let updated = false;
+    const completedMissions: Mission[] = [];
 
     // Update regular missions
     for (const mission of this.missions) {
@@ -297,6 +320,7 @@ export class MissionSystem {
         if (mission.progress >= mission.target) {
           mission.completed = true;
           updated = true;
+          completedMissions.push(mission);
         }
       }
     }
@@ -313,7 +337,15 @@ export class MissionSystem {
         if (mission.progress >= mission.target) {
           mission.completed = true;
           updated = true;
+          completedMissions.push(mission);
         }
+      }
+    }
+
+    // Trigger callbacks for completed missions
+    if (this.onMissionCompleteCallback && completedMissions.length > 0) {
+      for (const mission of completedMissions) {
+        this.onMissionCompleteCallback(mission);
       }
     }
 

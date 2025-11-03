@@ -28,6 +28,7 @@ import { DamageNumberSystem } from './systems/DamageNumberSystem';
 import { ComboSystem } from './systems/ComboSystem';
 import { SoundManager } from './systems/SoundManager';
 import { PowerUpSystem } from './systems/PowerUpSystem';
+import type { PowerUpType } from './systems/PowerUpSystem';
 import { Hud } from './ui/Hud';
 import { Shop } from './ui/Shop';
 import { AchievementSnackbar } from './ui/AchievementSnackbar';
@@ -45,6 +46,7 @@ import { GameInfoModal } from './ui/GameInfoModal';
 import { PerformanceMonitor } from './ui/PerformanceMonitor';
 import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
+import { NotificationSystem } from './ui/NotificationSystem';
 import type { Vec2, GameMode } from './types';
 import type { UserSettings } from './core/Settings';
 
@@ -81,10 +83,13 @@ export class Game {
   private creditsModal: CreditsModal;
   private gameInfoModal: GameInfoModal;
   private performanceMonitor: PerformanceMonitor;
+  private notificationSystem: NotificationSystem;
   private hud: Hud;
   private shop: Shop;
   private saveTimer = 0;
   private saveInterval = 3;
+  private autoBuyTimer = 0;
+  private autoBuyInterval = 0.5; // Check every 0.5 seconds
   private lastPowerUpCount = 0; // Track power-up changes for shop refresh
   private lastHadSpeedBuff = false; // Track speed buff specifically for shop refresh
   private lastHadDamageBuff = false; // Track damage buff specifically for shop refresh
@@ -206,11 +211,40 @@ export class Game {
         return this.damageNumberSystem.getCount();
       },
       getRipples: (): number => {
-        type RippleSystemType = typeof this.rippleSystem;
-        const system: RippleSystemType = this.rippleSystem;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
-        return (system as any).getCount();
+        return this.rippleSystem.getCount();
       },
+    });
+
+    // Initialize notification system
+    this.notificationSystem = new NotificationSystem();
+
+    // Setup mission completion notifications
+    this.missionSystem.setOnMissionComplete((mission) => {
+      this.notificationSystem.show(
+        `🎯 Mission Complete: ${mission.title}`,
+        'mission',
+        4000,
+      );
+    });
+
+    // Setup daily mission reset notifications
+    this.missionSystem.setOnDailyReset(() => {
+      this.notificationSystem.show(
+        '📅 New Daily Missions Available!',
+        'info',
+        5000,
+      );
+    });
+
+    // Setup power-up spawn notifications
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    this.powerUpSystem.setOnPowerUpSpawn((type: PowerUpType) => {
+      const config = this.powerUpSystem.getBuffName(type);
+      this.notificationSystem.show(
+        `⚡ Power-Up Spawned: ${config}`,
+        'success',
+        3000,
+      );
     });
 
     (this as any).debugPanel = new DebugPanel(
@@ -291,6 +325,7 @@ export class Game {
     // Setup stats panel button
     const statsBtn = document.getElementById('stats-btn');
     if (statsBtn) {
+      statsBtn.setAttribute('aria-label', 'Open Statistics');
       statsBtn.addEventListener('click', () => {
         this.statsPanel.show();
       });
@@ -368,20 +403,23 @@ export class Game {
 
   private setupBossRetryButton(): void {
     // Create boss retry button
-    this.bossRetryButton = document.createElement('button');
-    this.bossRetryButton.id = 'boss-retry-btn';
-    this.bossRetryButton.className = 'hud-button boss-retry-button';
-    this.bossRetryButton.textContent = '⚔️ Retry Boss';
-    this.bossRetryButton.style.display = 'none';
-    this.bossRetryButton.style.pointerEvents = 'auto';
+    const buttonsContainer = document.getElementById('hud-buttons-container');
+    if (buttonsContainer) {
+      this.bossRetryButton = document.createElement('button');
+      this.bossRetryButton.id = 'boss-retry-btn';
+      this.bossRetryButton.className = 'hud-button boss-retry-button';
+      this.bossRetryButton.setAttribute('data-icon', '⚔️');
+      this.bossRetryButton.setAttribute('data-text', 'Retry Boss');
+      this.bossRetryButton.setAttribute('aria-label', 'Retry Boss Fight');
+      this.bossRetryButton.innerHTML = '<span class="hud-button-icon">⚔️</span><span class="hud-button-text">Retry Boss</span>';
+      this.bossRetryButton.style.display = 'none';
+      this.bossRetryButton.style.pointerEvents = 'auto';
 
-    this.bossRetryButton.addEventListener('click', () => {
-      this.retryBossFight();
-    });
+      this.bossRetryButton.addEventListener('click', () => {
+        this.retryBossFight();
+      });
 
-    const hudElement = document.getElementById('hud');
-    if (hudElement) {
-      hudElement.appendChild(this.bossRetryButton);
+      buttonsContainer.appendChild(this.bossRetryButton);
     }
   }
 
@@ -488,7 +526,7 @@ export class Game {
 
     // Show retry button
     if (this.bossRetryButton) {
-      this.bossRetryButton.style.display = 'block';
+      this.bossRetryButton.style.display = 'flex';
     }
 
     setTimeout(() => {
@@ -504,6 +542,9 @@ export class Game {
   }
 
   start(): void {
+    // Check for offline progress before starting
+    this.checkOfflineProgress();
+
     // Initialize page title
     const state = this.store.getState();
     this.updatePageTitle(state.points);
@@ -514,9 +555,69 @@ export class Game {
     this.loop.start();
   }
 
+  private checkOfflineProgress(): void {
+    const lastPlayTime = Save.getLastPlayTime();
+    if (!lastPlayTime) return;
+
+    const now = Date.now();
+    const timeAway = now - lastPlayTime;
+    const secondsAway = Math.floor(timeAway / 1000);
+    const minutesAway = Math.floor(secondsAway / 60);
+    const hoursAway = Math.floor(minutesAway / 60);
+
+    // Only reward if away for at least 1 minute
+    if (secondsAway < 60) return;
+
+    // Cap offline time at 24 hours (86400 seconds)
+    const cappedSeconds = Math.min(secondsAway, 86400);
+
+    const state = this.store.getState();
+    const passiveGenPerSecond = this.upgradeSystem.getPassiveGen(state);
+
+    if (passiveGenPerSecond > 0) {
+      // Calculate offline rewards (50% efficiency - encourages active play)
+      const offlineReward = Math.floor(passiveGenPerSecond * cappedSeconds * 0.5);
+      
+      if (offlineReward > 0) {
+        this.store.addPoints(offlineReward);
+        
+        // Show offline reward message
+        let timeText = '';
+        if (hoursAway >= 1) {
+          const remainingMinutes = minutesAway % 60;
+          timeText = remainingMinutes > 0 
+            ? `${hoursAway.toString()}h ${remainingMinutes.toString()}m`
+            : `${hoursAway.toString()}h`;
+        } else {
+          timeText = `${minutesAway.toString()}m`;
+        }
+
+        const formattedReward = this.formatOfflineReward(offlineReward);
+        this.hud.showMessage(
+          `⏰ Offline Progress!\nAway: ${timeText}\nReward: +${formattedReward}`,
+          '#00ff88',
+          5000,
+        );
+
+        // Play achievement sound for offline reward
+        this.soundManager.playAchievement();
+      }
+    }
+  }
+
+  private formatOfflineReward(amount: number): string {
+    if (amount >= 1e12) return `${(amount / 1e12).toFixed(2)}T`;
+    if (amount >= 1e9) return `${(amount / 1e9).toFixed(2)}B`;
+    if (amount >= 1e6) return `${(amount / 1e6).toFixed(2)}M`;
+    if (amount >= 1e3) return `${(amount / 1e3).toFixed(1)}K`;
+    return Math.floor(amount).toString();
+  }
+
   private setupAchievementsButton(): void {
     const achievementsBtn = document.getElementById('achievements-btn');
     if (achievementsBtn) {
+      achievementsBtn.setAttribute('aria-label', 'Open Achievements');
+      achievementsBtn.setAttribute('aria-keyshortcuts', 'H');
       achievementsBtn.addEventListener('click', () => {
         this.achievementsModal.show();
       });
@@ -525,12 +626,16 @@ export class Game {
 
   private setupAscensionButton(): void {
     // Create ascension button dynamically
-    const hudElement = document.getElementById('hud');
-    if (hudElement) {
+    const buttonsContainer = document.getElementById('hud-buttons-container');
+    if (buttonsContainer) {
       const ascensionBtn = document.createElement('button');
-      ascensionBtn.id = 'ascension-btn';
+      ascensionBtn.id = 'ascension-button';
       ascensionBtn.className = 'hud-button ascension-hud-btn';
-      ascensionBtn.textContent = '🌟 Ascend';
+      ascensionBtn.setAttribute('data-icon', '🌟');
+      ascensionBtn.setAttribute('data-text', 'Ascend');
+      ascensionBtn.setAttribute('aria-label', 'Open Prestige/Ascension');
+      ascensionBtn.setAttribute('aria-keyshortcuts', 'P');
+      ascensionBtn.innerHTML = '<span class="hud-button-icon">🌟</span><span class="hud-button-text">Ascend</span>';
       ascensionBtn.addEventListener('click', () => {
         this.ascensionModal.show();
       });
@@ -546,49 +651,60 @@ export class Game {
       this.store.subscribe(updateAscensionBtn);
       updateAscensionBtn();
 
-      hudElement.appendChild(ascensionBtn);
+      buttonsContainer.appendChild(ascensionBtn);
     }
   }
 
   private setupSettingsButton(): void {
-    const hudElement = document.getElementById('hud');
-    if (hudElement) {
+    const buttonsContainer = document.getElementById('hud-buttons-container');
+    if (buttonsContainer) {
       const settingsBtn = document.createElement('button');
-      settingsBtn.id = 'settings-btn';
+      settingsBtn.id = 'settings-button';
       settingsBtn.className = 'hud-button';
-      settingsBtn.textContent = '⚙️ Settings';
+      settingsBtn.setAttribute('data-icon', '⚙️');
+      settingsBtn.setAttribute('data-text', 'Settings');
+      settingsBtn.setAttribute('aria-label', 'Open Settings');
+      settingsBtn.setAttribute('aria-keyshortcuts', 'S');
+      settingsBtn.innerHTML = '<span class="hud-button-icon">⚙️</span><span class="hud-button-text">Settings</span>';
       settingsBtn.addEventListener('click', () => {
         this.settingsModal.show();
       });
-      hudElement.appendChild(settingsBtn);
+      buttonsContainer.appendChild(settingsBtn);
     }
   }
 
+
   private setupMissionsButton(): void {
-    const hudElement = document.getElementById('hud');
-    if (hudElement) {
+    const buttonsContainer = document.getElementById('hud-buttons-container');
+    if (buttonsContainer) {
       const missionsBtn = document.createElement('button');
       missionsBtn.id = 'missions-button';
       missionsBtn.className = 'hud-button';
-      missionsBtn.textContent = '🎯 Missions';
+      missionsBtn.setAttribute('data-icon', '🎯');
+      missionsBtn.setAttribute('data-text', 'Missions');
+      missionsBtn.setAttribute('aria-label', 'Open Missions');
+      missionsBtn.setAttribute('aria-keyshortcuts', 'M');
+      missionsBtn.innerHTML = '<span class="hud-button-icon">🎯</span><span class="hud-button-text">Missions</span>';
       missionsBtn.addEventListener('click', () => {
         this.missionsModal.show();
       });
-      hudElement.appendChild(missionsBtn);
+      buttonsContainer.appendChild(missionsBtn);
     }
   }
 
   private setupArtifactsButton(): void {
-    const hudElement = document.getElementById('hud');
-    if (hudElement) {
+    const buttonsContainer = document.getElementById('hud-buttons-container');
+    if (buttonsContainer) {
       const artifactsBtn = document.createElement('button');
       artifactsBtn.id = 'artifacts-button';
       artifactsBtn.className = 'hud-button';
-      artifactsBtn.textContent = '✨ Artifacts';
+      artifactsBtn.setAttribute('data-icon', '✨');
+      artifactsBtn.setAttribute('data-text', 'Artifacts');
+      artifactsBtn.innerHTML = '<span class="hud-button-icon">✨</span><span class="hud-button-text">Artifacts</span>';
       artifactsBtn.addEventListener('click', () => {
         this.artifactsModal.show();
       });
-      hudElement.appendChild(artifactsBtn);
+      buttonsContainer.appendChild(artifactsBtn);
     }
   }
 
@@ -643,8 +759,9 @@ export class Game {
       const infoBtn = document.createElement('button');
       infoBtn.id = 'game-info-button';
       infoBtn.className = 'hud-button';
-      infoBtn.textContent = '📖 Game Info';
-      infoBtn.style.width = '100%';
+      infoBtn.setAttribute('data-icon', '📖');
+      infoBtn.setAttribute('data-text', 'Game Info');
+      infoBtn.innerHTML = '<span class="hud-button-icon">📖</span><span class="hud-button-text">Game Info</span>';
       infoBtn.addEventListener('click', () => {
         this.gameInfoModal.show();
       });
@@ -738,6 +855,69 @@ export class Game {
   private setupKeyboard(): void {
     window.addEventListener('keydown', (event) => {
       this.keys.add(event.key.toLowerCase());
+      
+      // Keyboard shortcuts (only when not typing in input fields)
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return; // Don't trigger shortcuts when typing
+      }
+
+      // Handle shortcuts
+      if (event.key === 'Escape') {
+        // Close any open modals
+        this.achievementsModal.hide();
+        this.ascensionModal.hide();
+        this.missionsModal.hide();
+        this.artifactsModal.hide();
+        this.statsPanel.hide();
+        this.settingsModal.hide();
+        this.creditsModal.hide();
+        this.gameInfoModal.hide();
+      } else if (event.key === 'a' || event.key === 'A') {
+        // Toggle auto-buy
+        if (!event.ctrlKey && !event.altKey && !event.shiftKey) {
+          event.preventDefault();
+          const state = this.store.getState();
+          state.autoBuyEnabled = !(state.autoBuyEnabled ?? false);
+          this.store.setState(state);
+          // Show notification
+          this.notificationSystem.show(
+            state.autoBuyEnabled ? '🤖 Auto-Buy Enabled' : '🤖 Auto-Buy Disabled',
+            'info',
+            2000,
+          );
+        }
+      } else if (event.key === 'm' || event.key === 'M') {
+        // Open missions modal
+        if (!event.ctrlKey && !event.altKey) {
+          event.preventDefault();
+          this.missionsModal.show();
+        }
+      } else if (event.key === 's' || event.key === 'S') {
+        // Open settings modal
+        if (!event.ctrlKey && !event.altKey) {
+          event.preventDefault();
+          this.settingsModal.show();
+        }
+      } else if (event.key === 'h' || event.key === 'H') {
+        // Open achievements modal
+        if (!event.ctrlKey && !event.altKey) {
+          event.preventDefault();
+          this.achievementsModal.show();
+        }
+      } else if (event.key === 'p' || event.key === 'P') {
+        // Open prestige/ascension modal
+        if (!event.ctrlKey && !event.altKey) {
+          event.preventDefault();
+          this.ascensionModal.show();
+        }
+      } else if (event.key === 'i' || event.key === 'I') {
+        // Open game info modal
+        if (!event.ctrlKey && !event.altKey) {
+          event.preventDefault();
+          this.gameInfoModal.show();
+        }
+      }
     });
     window.addEventListener('keyup', (event) => {
       this.keys.delete(event.key.toLowerCase());
@@ -1608,31 +1788,34 @@ export class Game {
 
     // Check if we should use beam mode based on attack speed
     // Apply power-up speed multiplier (divide cooldown by multiplier = faster firing)
-    let cooldown = this.upgradeSystem.getFireCooldown(state);
+    // Calculate once and reuse for both beam check and auto-fire
     const speedMultiplier = this.powerUpSystem.getSpeedMultiplier();
-    cooldown /= speedMultiplier;
+    const cooldown = this.upgradeSystem.getFireCooldown(state) / speedMultiplier;
     const shouldUseBeam = this.laserSystem.shouldUseBeamMode(cooldown);
     const wasInBeamMode = this.laserSystem.isBeamMode();
 
     this.laserSystem.setBeamMode(shouldUseBeam);
 
-    // When entering beam mode, calculate total damage and set it once
-    if (shouldUseBeam && !wasInBeamMode) {
-      const totalDamage = this.calculateTotalBeamDamage(state);
-      this.laserSystem.setBeamDamage(totalDamage);
-    } else if (!shouldUseBeam && wasInBeamMode) {
-      // Exiting beam mode, clear beams
-      this.laserSystem.clearBeams();
-    } else if (shouldUseBeam) {
-      // Recalculate beam damage periodically in case of upgrades/ship changes
-      // Do this every 0.5 seconds to minimize performance impact
-      if (
-        this.saveTimer > 0.5 &&
-        Math.floor(this.saveTimer) !== Math.floor(this.saveTimer - dt)
-      ) {
+    // When entering beam mode or periodically, recalculate beam damage
+    if (shouldUseBeam) {
+      if (!wasInBeamMode) {
+        // Entering beam mode - calculate immediately
         const totalDamage = this.calculateTotalBeamDamage(state);
         this.laserSystem.setBeamDamage(totalDamage);
+      } else {
+        // Recalculate beam damage periodically (every 0.5s) to account for upgrades/ship changes
+        // Use saveTimer as it's already incrementing every frame
+        const beamRecalcInterval = 0.5;
+        const oldTimerFloor = Math.floor((this.saveTimer - dt) / beamRecalcInterval);
+        const newTimerFloor = Math.floor(this.saveTimer / beamRecalcInterval);
+        if (newTimerFloor > oldTimerFloor && this.saveTimer >= beamRecalcInterval) {
+          const totalDamage = this.calculateTotalBeamDamage(state);
+          this.laserSystem.setBeamDamage(totalDamage);
+        }
       }
+    } else if (wasInBeamMode) {
+      // Exiting beam mode, clear beams
+      this.laserSystem.clearBeams();
     }
 
     this.laserSystem.update(dt, (damage, isCrit, isFromShip) => {
@@ -1713,15 +1896,11 @@ export class Game {
       }
     }
 
-    // Calculate cooldown with power-up speed multiplier for auto-fire ships
-    let shipCooldown = this.upgradeSystem.getFireCooldown(state);
-    const shipSpeedMultiplier = this.powerUpSystem.getSpeedMultiplier();
-    shipCooldown /= shipSpeedMultiplier;
-    
+    // Reuse already-calculated cooldown (already includes speed multiplier)
     this.autoFireSystem.update(
       dt,
       true, // Auto-fire always enabled for non-main ships
-      shipCooldown,
+      cooldown,
       (shipIndex) => {
         if (shipIndex > 0) {
           return this.fireSingleShip(shipIndex);
@@ -1740,6 +1919,15 @@ export class Game {
     if (this.titleUpdateTimer >= 1.0) {
       this.updatePageTitle(state.points);
       this.titleUpdateTimer = 0;
+    }
+
+    // Auto-buy check
+    this.autoBuyTimer += dt;
+    if (this.autoBuyTimer >= this.autoBuyInterval) {
+      if (state.autoBuyEnabled) {
+        this.shop.checkAndBuyAffordableUpgrades();
+      }
+      this.autoBuyTimer = 0;
     }
 
     if (this.shakeTime > 0) {

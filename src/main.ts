@@ -1,5 +1,6 @@
 import { Game } from './Game';
 import { MobileUI } from './ui/MobileUI';
+import { i18n } from './core/I18n';
 import '../styles.css';
 
 // Extend Window interface for debugging properties
@@ -28,7 +29,13 @@ document.addEventListener('dragover', (e) => {
   return false;
 });
 
-function init(): void {
+async function init(): Promise<void> {
+  // Load translations first
+  await i18n.loadTranslations();
+  
+  // Set HTML lang attribute
+  document.documentElement.lang = i18n.getLanguage();
+  
   const game = new Game();
   const mobileUI = new MobileUI();
   game.start();
@@ -38,7 +45,13 @@ function init(): void {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    init().catch((error) => {
+      console.error('Failed to initialize game:', error);
+    });
+  });
 } else {
-  init();
+  init().catch((error) => {
+    console.error('Failed to initialize game:', error);
+  });
 }

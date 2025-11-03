@@ -6,16 +6,18 @@ export class Store {
   private listeners: (() => void)[] = [];
   private pendingNotify = false;
   private lastNotifyPoints = 0;
+  private notificationIntervalId: number | undefined;
 
   constructor(initialState: GameState) {
     this.state = { ...initialState };
 
     // Set up periodic notification for throttled updates
-    setInterval(() => {
+    this.notificationIntervalId = window.setInterval(() => {
       if (this.pendingNotify) {
-        // Always notify if points changed significantly (>5%)
+        // Always notify if points changed significantly (>5% or when starting from 0)
         const pointDiff = Math.abs(this.state.points - this.lastNotifyPoints);
-        const shouldNotify = pointDiff > this.lastNotifyPoints * 0.05;
+        const threshold = this.lastNotifyPoints === 0 ? 0 : this.lastNotifyPoints * 0.05;
+        const shouldNotify = pointDiff > threshold;
 
         if (shouldNotify || this.pendingNotify) {
           this.notifyListeners();
@@ -24,6 +26,18 @@ export class Store {
         }
       }
     }, 30); // Reduced from 50ms to 30ms for more responsive UI
+  }
+
+  /**
+   * Clean up resources (intervals, listeners)
+   * Call this when the Store instance is no longer needed
+   */
+  destroy(): void {
+    if (this.notificationIntervalId !== undefined) {
+      clearInterval(this.notificationIntervalId);
+      this.notificationIntervalId = undefined;
+    }
+    this.listeners = [];
   }
 
   getState(): GameState {

@@ -44,13 +44,11 @@ export class NumberFormatter {
     }
 
     // Cache the result (with size limit)
-    if (formatCache.size < CACHE_SIZE_LIMIT) {
-      formatCache.set(cacheKey, result);
-    } else if (formatCache.size === CACHE_SIZE_LIMIT) {
-      // Clear cache when limit reached
+    // Clear cache if at or over limit to prevent unbounded growth
+    if (formatCache.size >= CACHE_SIZE_LIMIT) {
       formatCache.clear();
-      formatCache.set(cacheKey, result);
     }
+    formatCache.set(cacheKey, result);
 
     return result;
   }

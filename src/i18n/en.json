@@ -1,0 +1,810 @@
+{
+  "common": {
+    "on": "ON",
+    "off": "OFF",
+    "close": "Close",
+    "buy": "BUY",
+    "owned": "OWNED",
+    "max": "MAX",
+    "level": "Level",
+    "points": "Points",
+    "cost": "Cost",
+    "yes": "Yes",
+    "no": "No",
+    "language": "Language",
+    "english": "English",
+    "portuguese": "Portuguese",
+    "spanish": "Spanish"
+  },
+  "settings": {
+    "title": "⚙️ Settings",
+    "soundSettings": "Sound Settings",
+    "graphicsSettings": "Graphics Settings",
+    "languageSettings": "Language Settings",
+    "soundEnabled": "Sound Enabled:",
+    "soundEnabledHint": "Enable or disable all game sounds",
+    "backgroundMusic": "Background Music:",
+    "backgroundMusicHint": "Enable or disable background music",
+    "volume": "Volume:",
+    "highGraphics": "High Graphics (Particles):",
+    "highGraphicsHint": "Disable particles for better performance",
+    "shipLasers": "Ship Auto-Fire Lasers:",
+    "shipLasersHint": "Disable to reduce lag (only your clicks will fire lasers)",
+    "ripples": "Click Ripples:",
+    "ripplesHint": "Disable for minimal visual clutter",
+    "damageNumbers": "Damage Numbers:",
+    "damageNumbersHint": "Disable to improve performance (damage still applies)",
+    "language": "Language:",
+    "languageHint": "Change the game language"
+  },
+  "hud": {
+    "points": "Points",
+    "dps": "DPS",
+    "passive": "Passive",
+    "crit": "Crit",
+    "level": "Level",
+    "perSec": "/sec"
+  },
+  "shop": {
+    "title": "UPGRADES",
+    "available": "Available",
+    "owned": "Owned",
+    "buyQuantity": "Buy Quantity:",
+    "specialUpgrades": "⭐ SPECIAL UPGRADES ⭐",
+    "noOwned": "No special upgrades owned yet.",
+    "resetSave": "Reset Save"
+  },
+  "boss": {
+    "encounter": "⚠️ BOSS ENCOUNTER ⚠️",
+    "warning": "A massive alien entity blocks your progress!",
+    "details": "This enemy is larger and much more powerful!",
+    "ready": "You cannot level up until this boss is defeated!",
+    "timeLimit": "Time Limit:",
+    "engage": "ENGAGE!",
+    "time": "TIME:"
+  },
+  "ascension": {
+    "title": "🌟 ASCENSION 🌟",
+    "description": "Ascend to a higher plane of existence. You will lose all progress except:",
+    "keepAchievements": "✓ Achievements",
+    "keepStatistics": "✓ Statistics",
+    "keepPrestige": "✓ Prestige Upgrades",
+    "gain": "You will gain Prestige Points to unlock permanent bonuses!",
+    "current": "Current:",
+    "gainOnAscension": "Gain on Ascension:",
+    "prestigeUpgrades": "Prestige Upgrades",
+    "ascendNow": "ASCEND NOW",
+    "reachLevel100": "REACH LEVEL 100 TO ASCEND (Current: {{level}})",
+    "confirm": "Are you sure you want to ascend? All non-permanent progress will be reset!",
+    "level": "Level:",
+    "cost": "Cost:"
+  },
+  "achievements": {
+    "title": "🏆 Achievements",
+    "all": "All",
+    "combat": "⚔️ Combat",
+    "progression": "📈 Progression",
+    "collection": "📦 Collection",
+    "mastery": "👑 Mastery",
+    "secret": "🔒 Secret"
+  },
+  "gameInfo": {
+    "title": "📚 Game Information",
+    "stats": "Statistics",
+    "mechanics": "Mechanics",
+    "tips": "Tips & Strategies",
+    "earlyGame": "🎯 Early Game (Levels 1-30)",
+    "midGame": "🚀 Mid Game (Levels 30-100)",
+    "lateGame": "⭐ Late Game (100+)",
+    "proTips": "💡 Pro Tips",
+    "keyboardShortcuts": "⌨️ Keyboard Shortcuts"
+  },
+  "missions": {
+    "title": "📋 Missions",
+    "active": "Active Mission",
+    "completed": "Completed",
+    "claimReward": "Claim Reward",
+    "noActive": "No active mission"
+  },
+  "stats": {
+    "title": "📊 Statistics",
+    "totalClicks": "Total Clicks",
+    "totalDamage": "Total Damage",
+    "aliensKilled": "Aliens Killed",
+    "bossesDefeated": "Bosses Defeated",
+    "upgradesPurchased": "Upgrades Purchased",
+    "timePlayed": "Time Played",
+    "highestLevel": "Highest Level",
+    "prestigePoints": "Prestige Points"
+  },
+  "debug": {
+    "title": "🛠️ Admin Debug Panel",
+    "resources": "💰 Resources",
+    "levelXP": "⭐ Level & XP",
+    "fleetUpgrades": "🚀 Fleet & Upgrades",
+    "bossControls": "👾 Boss Controls",
+    "stats": "📊 Stats",
+    "powerUps": "⚡ Power-Ups",
+    "gameControls": "🎮 Game Controls",
+    "addPoints": "+1K Points",
+    "add100KPoints": "+100K Points",
+    "add1MPoints": "+1M Points",
+    "add100MPoints": "+100M Points",
+    "customAmount": "Custom amount",
+    "setPoints": "Set Points",
+    "level": "Level",
+    "setLevel": "Set Level",
+    "add10Levels": "+10 Levels",
+    "add100Levels": "+100 Levels",
+    "maxXP": "Max Current XP",
+    "add5Ships": "+5 Ships",
+    "add20Ships": "+20 Ships",
+    "maxShips": "Max Ships (50)",
+    "unlockAllUpgrades": "Unlock All Special Upgrades",
+    "maxAllUpgrades": "Max All Basic Upgrades",
+    "triggerBoss": "Trigger Boss Fight",
+    "instantKillBoss": "Instant Kill Boss",
+    "add1KClicks": "+1K Clicks",
+    "add100Bosses": "+100 Boss Kills",
+    "damageBoost": "Damage Boost",
+    "speedBoost": "Speed Boost",
+    "pointsBoost": "Points Boost",
+    "multishot": "Multishot",
+    "criticalSurge": "Critical Surge",
+    "clearPowerUps": "Clear All Power-Ups",
+    "godMode": "Toggle God Mode",
+    "speed2x": "2x Speed",
+    "speed5x": "5x Speed",
+    "normalSpeed": "Normal Speed",
+    "resetGame": "Reset Game",
+    "toggleHint": "Press Ctrl + D to toggle this panel"
+  },
+  "versionSplash": {
+    "welcome": "Welcome to the Alpha Test!",
+    "powerUpSystem": "Power-Up System",
+    "powerUpDesc": "Collect temporary power-ups from defeated enemies! Boost your damage, speed, crit chance, multishot, and points!",
+    "improvedHUD": "Improved HUD",
+    "hudDesc": "Enhanced heads-up display with real-time power-up buff timers, updated stats, and better visual feedback!",
+    "bugFixes": "Major Bug Fixes",
+    "bugFixesDesc": "Fixed shop display updates, power-up stacking, attack speed calculations, and multishot mechanics!",
+    "performance": "Performance Optimizations",
+    "performanceDesc": "Improved rendering efficiency, better memory management, and smoother gameplay experience!",
+    "soundtrack": "Soundtrack Added",
+    "soundtrackDesc": "Enjoy immersive background music while playing! Toggle it on/off in the settings menu.",
+    "debugPanel": "Debug Panel Updates",
+    "debugPanelDesc": "Added power-up controls to the admin panel for easier testing and debugging!",
+    "thankYou": "Thank you for playing! Collect power-ups to boost your performance and enjoy the improved experience!",
+    "startPlaying": "Start Playing!",
+    "majorUpdate": "MAJOR UPDATE"
+  },
+  "upgrades": {
+    "main": {
+      "ship": {
+        "name": "🚀 Starship Fleet",
+        "description": "Recruit another starship to your armada. More ships = more firepower!"
+      },
+      "attackSpeed": {
+        "name": "⚡ Attack Speed",
+        "description": "Upgrade targeting computers to fire faster. Speed is everything."
+      },
+      "pointMultiplier": {
+        "name": "💎 Damage Amplifier",
+        "description": "Enhance laser power for maximum destruction per hit."
+      },
+      "critChance": {
+        "name": "✨ Critical Strike",
+        "description": "Master the perfect critical hit. Maximum destruction efficiency. Very satisfying."
+      },
+      "resourceGen": {
+        "name": "🏭 Passive Income",
+        "description": "Automated alien elimination stations. They work while you sleep. Very efficient defense system."
+      },
+      "xpBoost": {
+        "name": "📚 Knowledge Core",
+        "description": "Learn advanced alien elimination techniques. Knowledge is power. Especially when eliminating."
+      },
+      "weaponMastery": {
+        "name": "🔥 Weapon Mastery",
+        "description": "Master the art of destruction - increase main ship firepower"
+      },
+      "fleetCommand": {
+        "name": "🛸 Fleet Command",
+        "description": "Command your fleet with precision - boost all ships effectiveness"
+      },
+      "mutationEngine": {
+        "name": "🧬 Mutation Engine",
+        "description": "Evolve beyond limits - unlock transformative abilities"
+      },
+      "energyCore": {
+        "name": "⚡ Energy Core",
+        "description": "Harness pure energy - boost all systems"
+      },
+      "cosmicKnowledge": {
+        "name": "🌌 Cosmic Knowledge",
+        "description": "Understand the universe - reduce costs and increase rewards"
+      },
+      "misc": {
+        "name": "🔬 Research & Development",
+        "description": "Unlock experimental technologies and forbidden knowledge."
+      }
+    },
+    "special": {
+      "death_pact": {
+        "name": "Death Pact Agreement",
+        "description": "Ships gain +10% attack speed",
+        "flavor": "Signed contract guarantees \"hostile\" alien supply chain. Very convenient."
+      },
+      "laser_focusing": {
+        "name": "Laser Focusing Crystals",
+        "description": "Increase point gain by 15%",
+        "flavor": "These crystals make the aliens make a very satisfying *pop* sound when destroyed."
+      },
+      "coffee_machine": {
+        "name": "Crew Coffee Machine",
+        "description": "Passive point generation +50/sec",
+        "flavor": "Crew stays awake for 24/7 defense operations. The aliens are coming. Definitely coming."
+      },
+      "quantum_targeting": {
+        "name": "Quantum Targeting Array",
+        "description": "Ships fire 20% faster",
+        "flavor": "Precise targeting ensures maximum... elimination efficiency. The paperwork checks out."
+      },
+      "lucky_dice": {
+        "name": "Lucky Space Dice",
+        "description": "+5% critical hit chance",
+        "flavor": "Rolled a 7! These dice ensure maximum alien destruction rates. The invasion pays... wait."
+      },
+      "energy_recycling": {
+        "name": "Energy Recycling System",
+        "description": "All upgrades are 5% cheaper",
+        "flavor": "Recycle alien material for maximum efficiency. Very environmentally conscious defense operation."
+      },
+      "overclocked_reactors": {
+        "name": "Overclocked Reactors",
+        "description": "Gain 25% more points per hit",
+        "flavor": "Overclock reactors beyond safety limits. Defense emergencies require... creative solutions."
+      },
+      "ship_swarm": {
+        "name": "Swarm Intelligence Protocol",
+        "description": "Ships coordinate attacks for +20% damage",
+        "flavor": "Fleet coordinates synchronized attacks. The aliens never stand a chance. Especially these ones."
+      },
+      "neural_link": {
+        "name": "Neural Link Interface",
+        "description": "Clicking grants 10% bonus points",
+        "flavor": "Neural link directly to your trigger finger. Click faster, eliminate faster. Very efficient."
+      },
+      "space_pizza": {
+        "name": "Intergalactic Pizza Delivery",
+        "description": "Passive generation +200/sec",
+        "flavor": "Keep crews fed during extended defense operations. Happy workers eliminate aliens better."
+      },
+      "rubber_duck": {
+        "name": "Debugging Rubber Duck",
+        "description": "+3% critical damage multiplier",
+        "flavor": "Explains your problems back to you. Very therapeutic."
+      },
+      "antimatter_rounds": {
+        "name": "Antimatter Ammunition",
+        "description": "Double all point gains",
+        "flavor": "Antimatter makes the aliens pop twice as satisfyingly. Very therapeutic for stress relief."
+      },
+      "motivational_posters": {
+        "name": "Motivational Posters",
+        "description": "XP gain +25%",
+        "flavor": "\"Hang in there!\" says the cat dangling from a satellite dish."
+      },
+      "warp_core": {
+        "name": "Experimental Warp Core",
+        "description": "Ships fire 50% faster",
+        "flavor": "Theoretical physics becomes practical firepower."
+      },
+      "disco_ball": {
+        "name": "Hypnotic Disco Ball",
+        "description": "Aliens confused, +15% all stats",
+        "flavor": "The aliens can't resist the disco beat. They line up perfectly for... elimination."
+      },
+      "ai_optimizer": {
+        "name": "AI Optimization Subroutines",
+        "description": "Ship fire cooldown reduced by 30%",
+        "flavor": "The AI promises it won't become self-aware. Probably."
+      },
+      "lucky_horseshoe": {
+        "name": "Lucky Horseshoe",
+        "description": "Critical hits deal 50% more damage",
+        "flavor": "Who needs horses in space? Apparently, luck does."
+      },
+      "perfect_precision": {
+        "name": "Perfect Precision Arrays",
+        "description": "Critical hits: 5% chance for 10x damage",
+        "flavor": "Every shot finds its mark. Every. Single. One."
+      },
+      "arcade_machine": {
+        "name": "Retro Arcade Machine",
+        "description": "Passive generation +1000/sec",
+        "flavor": "Plays Pac-Man while generating infinite energy. Science!"
+      },
+      "void_channeling": {
+        "name": "Void Energy Channeling",
+        "description": "Destroying aliens grants bonus XP",
+        "flavor": "The void stares back. It approves of your... efficient defense operations."
+      },
+      "chaos_emeralds": {
+        "name": "Seven Chaos Emeralds",
+        "description": "All damage +35%",
+        "flavor": "Gotta go fast! Wait, wrong franchise..."
+      },
+      "time_machine": {
+        "name": "Malfunctioning Time Machine",
+        "description": "XP gain +50%",
+        "flavor": "Sets time forward, backward, and sideways. Results may vary."
+      },
+      "nanobots": {
+        "name": "Self-Replicating Nanobots",
+        "description": "Passive generation +2500/sec",
+        "flavor": "They multiply. They evolve. They pay dividends."
+      },
+      "plasma_matrix": {
+        "name": "Plasma Energy Matrix",
+        "description": "All damage +25%, Attack speed +15%",
+        "flavor": "Harness the power of contained supernovas."
+      },
+      "holographic_decoys": {
+        "name": "Holographic Decoy System",
+        "description": "Ships can attack twice as often",
+        "flavor": "One ship becomes many. Confusion intensifies."
+      },
+      "temporal_acceleration": {
+        "name": "Temporal Acceleration Field",
+        "description": "All ships gain +100% attack speed",
+        "flavor": "Time is relative. Especially when you control it."
+      },
+      "quantum_entanglement": {
+        "name": "Quantum Entanglement Core",
+        "description": "Critical hits +8%, Damage x1.5",
+        "flavor": "Spooky action at a distance. Einstein hated it. You'll love it."
+      },
+      "philosophers_stone": {
+        "name": "Philosopher's Stone",
+        "description": "Passive generation x5",
+        "flavor": "Turns lead into gold. And boredom into... productivity. Very efficient."
+      },
+      "stellar_forge": {
+        "name": "Stellar Forge",
+        "description": "XP gain +75%, All damage +20%",
+        "flavor": "Where stars are born, and enemies meet their end."
+      },
+      "golden_goose": {
+        "name": "Quantum Golden Goose",
+        "description": "Points per click +50%",
+        "flavor": "Lays golden eggs. In multiple dimensions. Simultaneously."
+      },
+      "dark_matter_engine": {
+        "name": "Dark Matter Engine",
+        "description": "Passive generation x3, Ships +25% speed",
+        "flavor": "95% of the universe is dark matter. Now it's yours."
+      },
+      "antimatter_cascade": {
+        "name": "Antimatter Cascade Reactor",
+        "description": "All click damage x4",
+        "flavor": "Click once. Destroy everything. Repeat."
+      },
+      "infinity_gauntlet": {
+        "name": "Infinity Gauntlet (Replica)",
+        "description": "All stats +40%",
+        "flavor": "Perfectly balanced, as all things should be. Also, not trademarked."
+      },
+      "nebula_harvester": {
+        "name": "Nebula Energy Harvester",
+        "description": "Passive generation +5000/sec, XP +50%",
+        "flavor": "Siphon energy from the cosmic clouds themselves."
+      },
+      "alien_cookbook": {
+        "name": "Alien Recipe Book",
+        "description": "Boss kill rewards +100%",
+        "flavor": "\"To Serve Aliens\" - A cookbook! Wait, what? These are definitely hostile aliens, right?"
+      },
+      "hyper_reactor": {
+        "name": "Hyper-Dimensional Reactor",
+        "description": "All damage x2, Critical chance +5%",
+        "flavor": "Powers drawn from dimensions we can't even see."
+      },
+      "nuclear_reactor": {
+        "name": "Pocket Nuclear Reactor",
+        "description": "Passive generation +10000/sec",
+        "flavor": "Fits in your pocket. Do not put in pocket."
+      },
+      "photon_amplifier": {
+        "name": "Photon Wave Amplifier",
+        "description": "Ships fire 75% faster, Damage +30%",
+        "flavor": "Light speed is too slow. We're going to ludicrous speed!"
+      },
+      "reality_anchor": {
+        "name": "Reality Anchor",
+        "description": "Critical damage x2, All gains +25%",
+        "flavor": "Keep reality in check. Or break it. Your choice."
+      },
+      "cosmic_battery": {
+        "name": "Cosmic Energy Battery",
+        "description": "Passive generation x7",
+        "flavor": "Stores the energy of dying stars. Batteries not included."
+      },
+      "singularity_core": {
+        "name": "Singularity Power Core",
+        "description": "Gain 5x points from all sources",
+        "flavor": "A black hole in a box. What could be safer?"
+      },
+      "cheat_codes": {
+        "name": "Cheat Code Manual",
+        "description": "All upgrades 20% cheaper",
+        "flavor": "Up, Up, Down, Down, Left, Right, Left, Right, B, A, Start."
+      },
+      "dragon_egg": {
+        "name": "Dragon Egg",
+        "description": "Critical hit chance +5%, Critical damage +50%",
+        "flavor": "It's either a dragon egg or a really angry space chicken."
+      },
+      "universe_map": {
+        "name": "Map of the Universe",
+        "description": "XP gain x3",
+        "flavor": "You are here. So is everything else. Helpful!"
+      },
+      "answer_to_everything": {
+        "name": "Answer to Everything",
+        "description": "All passive generation x10",
+        "flavor": "It's 42. But what was the question again?"
+      },
+      "heart_of_galaxy": {
+        "name": "Heart of the Galaxy",
+        "description": "All damage x3",
+        "flavor": "The galaxy had a heart. HAD."
+      },
+      "cosmic_ascension": {
+        "name": "Cosmic Ascension Protocol",
+        "description": "Unlock ultimate power: 10x all gains",
+        "flavor": "Transcend mortal limitations. Become the click itself."
+      },
+      "meaning_of_life": {
+        "name": "Meaning of Life",
+        "description": "Unlock prestige system & all stats x2",
+        "flavor": "The answer is 42. But what was the question?"
+      },
+      "master_clicker": {
+        "name": "Master Clicker",
+        "description": "Clicking gives +100% more points",
+        "flavor": "Click with the power of a thousand suns. Or at least a few."
+      },
+      "rapid_fire": {
+        "name": "Rapid Fire Protocol",
+        "description": "Each click fires 2 additional lasers",
+        "flavor": "Why fire one laser when you can fire three? Science!"
+      },
+      "click_multiplier": {
+        "name": "Click Multiplier Matrix",
+        "description": "Clicking multiplies damage by 3x",
+        "flavor": "One click. Triple the destruction. Math checks out."
+      },
+      "super_clicker": {
+        "name": "Super Clicker Ultimate",
+        "description": "Clicks deal 5x damage and grant bonus XP",
+        "flavor": "The ultimate clicking experience. Maximum satisfaction guaranteed."
+      },
+      "multiversal_matrix": {
+        "name": "Multiversal Probability Matrix",
+        "description": "Damage x5, Critical chance +15%",
+        "flavor": "Draw power from infinite parallel realities. All of them."
+      },
+      "entropy_reversal": {
+        "name": "Entropy Reversal Engine",
+        "description": "Passive generation x15, XP gain +100%",
+        "flavor": "Heat death? Not on your watch."
+      },
+      "omniscient_ai": {
+        "name": "Omniscient AI Core",
+        "description": "All stats +75%, Upgrades 30% cheaper",
+        "flavor": "Knows everything. Destroys everything. Still not self-aware. Probably."
+      },
+      "big_bang_generator": {
+        "name": "Big Bang Generator",
+        "description": "All damage x10, Creates universes per hit",
+        "flavor": "Recreate the birth of the universe. For fun."
+      },
+      "dimensional_collapse": {
+        "name": "Dimensional Collapse Weapon",
+        "description": "Critical damage x3, Attack speed +100%",
+        "flavor": "Collapse dimensions. Break reality. Win game."
+      },
+      "reality_compiler": {
+        "name": "Reality Compiler",
+        "description": "Recompile reality: All gains x20",
+        "flavor": "If reality is a program, you just optimized it."
+      },
+      "akashic_records": {
+        "name": "Akashic Records Access",
+        "description": "XP x10, Retain all knowledge between lives",
+        "flavor": "Access the universal library. Read the manual."
+      },
+      "void_heart": {
+        "name": "Heart of the Void",
+        "description": "Boss damage +500%, Absorb enemy essence",
+        "flavor": "The void stares back. You stare harder."
+      },
+      "eternal_engine": {
+        "name": "Eternal Engine",
+        "description": "Passive generation x50, Never stops",
+        "flavor": "Perpetual motion achieved. Physics weeps."
+      },
+      "omega_protocol": {
+        "name": "Omega Protocol: Final Form",
+        "description": "ALL MULTIPLIERS x25",
+        "flavor": "This isn't even my final form. Wait, yes it is."
+      },
+      "infinity_engine": {
+        "name": "Infinity Engine",
+        "description": "Clicks deal ∞ × 0.01 damage (effectively x100)",
+        "flavor": "Infinity contained in a box. Do not open."
+      },
+      "universe_seed": {
+        "name": "Universe Seed",
+        "description": "Plant new universes: All gains x100",
+        "flavor": "Water daily. Harvest in 13.8 billion years."
+      },
+      "transcendence": {
+        "name": "True Transcendence",
+        "description": "Ascend beyond ascension: Prestige points x10",
+        "flavor": "You have become clicking itself."
+      },
+      "scope_calibration": {
+        "name": "Scope Calibration",
+        "description": "+10% main ship damage",
+        "flavor": "Measure twice, destroy once."
+      },
+      "hair_trigger": {
+        "name": "Hair Trigger Mechanism",
+        "description": "+15% main ship damage, +5% click speed",
+        "flavor": "Accidents happen. A lot."
+      },
+      "hollow_point": {
+        "name": "Hollow Point Rounds",
+        "description": "+20% main ship damage, +10% crit damage",
+        "flavor": "They expand on impact. So does your damage."
+      },
+      "explosive_payload": {
+        "name": "Explosive Payload",
+        "description": "+30% main ship damage",
+        "flavor": "Sometimes subtlety is overrated."
+      },
+      "particle_accelerator": {
+        "name": "Particle Accelerator Cannon",
+        "description": "+50% main ship damage",
+        "flavor": "Accelerates particles. And destruction."
+      },
+      "singularity_cannon": {
+        "name": "Singularity Cannon",
+        "description": "+75% main ship damage, small AoE",
+        "flavor": "Contains a microscopic black hole. Totally safe."
+      },
+      "antimatter_warheads": {
+        "name": "Antimatter Warheads",
+        "description": "+100% main ship damage",
+        "flavor": "When matter meets antimatter, things get interesting."
+      },
+      "quark_disruptor": {
+        "name": "Quark Disruptor",
+        "description": "+150% main ship damage",
+        "flavor": "Disrupts quarks. And everything else."
+      },
+      "gamma_ray_burst": {
+        "name": "Gamma Ray Burst",
+        "description": "+200% main ship damage",
+        "flavor": "Harness the power of dying stars."
+      },
+      "planck_piercer": {
+        "name": "Planck Piercer",
+        "description": "+300% main ship damage, +15% critical hit chance",
+        "flavor": "Strikes at the fabric of reality itself."
+      },
+      "drill_sergeant": {
+        "name": "Drill Sergeant AI",
+        "description": "+8% auto-fire damage",
+        "flavor": "DROP AND GIVE ME TWENTY... MILLION DAMAGE!"
+      },
+      "formation_delta": {
+        "name": "Formation Delta",
+        "description": "+12% auto-fire damage, ships move in formation",
+        "flavor": "Unity is strength. And more damage."
+      },
+      "emergency_repairs": {
+        "name": "Emergency Repair Drones",
+        "description": "+15% auto-fire damage, ships self-repair",
+        "flavor": "Duct tape in space. It works!"
+      },
+      "fleet_tactics": {
+        "name": "Advanced Fleet Tactics",
+        "description": "+20% auto-fire damage per 10 ships",
+        "flavor": "Coordination makes the dream work."
+      },
+      "automated_repairs": {
+        "name": "Automated Repair System",
+        "description": "+25% auto-fire damage, reduced ship costs",
+        "flavor": "Ships that fix themselves. The future is now."
+      },
+      "ai_swarm": {
+        "name": "AI Swarm Intelligence",
+        "description": "+35% auto-fire damage, ships learn from each other",
+        "flavor": "The collective knows all. The collective destroys all."
+      },
+      "nanite_reconstruction": {
+        "name": "Nanite Reconstruction",
+        "description": "+50% auto-fire damage, ships rebuild instantly",
+        "flavor": "Nanomachines, son!"
+      },
+      "fleet_synchronization": {
+        "name": "Fleet Synchronization Matrix",
+        "description": "+75% auto-fire damage, perfect coordination",
+        "flavor": "One mind, infinite ships."
+      },
+      "quantum_coordination": {
+        "name": "Quantum Coordination",
+        "description": "+100% auto-fire damage, instant communication",
+        "flavor": "Entangled ships attack as one."
+      },
+      "universal_fleet": {
+        "name": "Universal Fleet Consciousness",
+        "description": "+150% auto-fire damage, ships share damage",
+        "flavor": "The fleet is eternal. The fleet is unstoppable."
+      },
+      "adaptive_evolution": {
+        "name": "Adaptive Evolution",
+        "description": "+5% all damage, adapts to enemy types",
+        "flavor": "Survival of the fittest. You are the fittest."
+      },
+      "symbiotic_weapons": {
+        "name": "Symbiotic Weapons",
+        "description": "+8% all damage, weapons evolve with use",
+        "flavor": "Your weapons are alive. And hungry."
+      },
+      "regenerative_hull": {
+        "name": "Regenerative Hull",
+        "description": "+12% all damage, passive healing",
+        "flavor": "Damage? What damage?"
+      },
+      "hive_mind": {
+        "name": "Hive Mind Connection",
+        "description": "+18% all damage, shared consciousness",
+        "flavor": "We are many. We are one."
+      },
+      "perfect_organism": {
+        "name": "Perfect Organism",
+        "description": "+25% all damage, immune to debuffs",
+        "flavor": "Perfection achieved. Evolution complete."
+      },
+      "eldritch_evolution": {
+        "name": "Eldritch Evolution",
+        "description": "+35% all damage, unknowable forms",
+        "flavor": "You have seen beyond the veil. It stares back."
+      },
+      "cosmic_horror": {
+        "name": "Cosmic Horror",
+        "description": "+50% all damage, enemies fear you",
+        "flavor": "That is not dead which can eternal lie..."
+      },
+      "transcendent_form": {
+        "name": "Transcendent Form",
+        "description": "+75% all damage, beyond mortality",
+        "flavor": "You are no longer bound by flesh."
+      },
+      "living_weapon": {
+        "name": "Living Weapon",
+        "description": "+100% all damage, you ARE the weapon",
+        "flavor": "Weapon and wielder are one."
+      },
+      "apex_predator": {
+        "name": "Apex Predator",
+        "description": "+150% all damage, top of the food chain",
+        "flavor": "Nothing survives your hunt."
+      },
+      "fusion_reactor": {
+        "name": "Fusion Reactor",
+        "description": "+5% attack speed, +100/sec passive",
+        "flavor": "The power of the sun, in your hands."
+      },
+      "zero_point": {
+        "name": "Zero Point Energy",
+        "description": "+8% attack speed, +250/sec passive",
+        "flavor": "Harvest energy from the quantum foam."
+      },
+      "perpetual_motion": {
+        "name": "Perpetual Motion Machine",
+        "description": "+12% attack speed, +500/sec passive",
+        "flavor": "Physics professors hate this one trick!"
+      },
+      "tesla_coils": {
+        "name": "Tesla Coils",
+        "description": "+15% attack speed, chain lightning",
+        "flavor": "Unlimited power!"
+      },
+      "arc_reactor": {
+        "name": "Arc Reactor",
+        "description": "+20% attack speed, +1000/sec passive",
+        "flavor": "Proof that you have a heart. A mechanical one."
+      },
+      "harvested_star": {
+        "name": "Harvested Star",
+        "description": "+30% attack speed, +5000/sec passive",
+        "flavor": "You plucked a star from the sky. Now it works for you."
+      },
+      "vacuum_energy_tap": {
+        "name": "Vacuum Energy Tap",
+        "description": "+40% attack speed, +10000/sec passive",
+        "flavor": "Siphon energy from the fabric of space."
+      },
+      "entropy_reversal_engine": {
+        "name": "Entropy Reversal Engine",
+        "description": "+55% attack speed, time flows backward",
+        "flavor": "Heat death? Not on your watch."
+      },
+      "big_crunch_generator": {
+        "name": "Big Crunch Generator",
+        "description": "+75% attack speed, reverse the universe",
+        "flavor": "Contains a miniature universe collapse."
+      },
+      "multiversal_tap": {
+        "name": "Multiversal Energy Tap",
+        "description": "+100% attack speed, infinite parallel power",
+        "flavor": "Draw power from infinite realities."
+      },
+      "ancient_texts": {
+        "name": "Ancient Texts",
+        "description": "-3% all costs, +10% XP",
+        "flavor": "The wisdom of civilizations long dead."
+      },
+      "akashic_records_library": {
+        "name": "Akashic Records",
+        "description": "-5% all costs, +15% XP",
+        "flavor": "Access the universal library."
+      },
+      "prophetic_vision": {
+        "name": "Prophetic Vision",
+        "description": "-7% all costs, +20% XP, see the future",
+        "flavor": "You know what comes next."
+      },
+      "universal_translator": {
+        "name": "Universal Translator",
+        "description": "-10% all costs, +25% XP",
+        "flavor": "Understand all languages. Even alien ones."
+      },
+      "omniscience_lite": {
+        "name": "Omniscience Lite",
+        "description": "-12% all costs, +30% XP",
+        "flavor": "Almost all-knowing. Close enough."
+      },
+      "forbidden_theorems": {
+        "name": "Forbidden Theorems",
+        "description": "-15% all costs, +35% XP",
+        "flavor": "Knowledge that breaks minds. Very efficient."
+      },
+      "schrodinger_upgrade": {
+        "name": "Schrödinger's Upgrade",
+        "description": "-18% all costs, +40% XP",
+        "flavor": "Both exists and doesn't exist. Both cheaper and more powerful."
+      },
+      "universal_constants": {
+        "name": "Universal Constants Manipulator",
+        "description": "-20% all costs, +45% XP",
+        "flavor": "Change the fundamental laws. Just a little."
+      },
+      "apotheosis": {
+        "name": "Apotheosis",
+        "description": "-25% all costs, +50% XP",
+        "flavor": "Achieve godhood. Through clicking."
+      },
+      "omniscience": {
+        "name": "True Omniscience",
+        "description": "-30% all costs, +60% XP",
+        "flavor": "Know everything. Optimize everything."
+      }
+    }
+  }
+}
+

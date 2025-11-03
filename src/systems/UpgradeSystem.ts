@@ -1,5 +1,6 @@
 import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
 import { NumberFormatter } from '../utils/NumberFormatter';
+import { t } from '../core/I18n';
 
 export class UpgradeSystem {
   private basePoints = 1;
@@ -1699,9 +1700,8 @@ export class UpgradeSystem {
 
     const shipUpgrade: UpgradeConfig = {
       id: 'ship',
-      name: '🚀 Starship Fleet',
-      description:
-        'Recruit another starship to your armada. More ships = more firepower!',
+      name: t('upgrades.main.ship.name'),
+      description: t('upgrades.main.ship.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(10 * Math.pow(1.15, level))),
       canBuy: (state: GameState) => {
@@ -1721,9 +1721,8 @@ export class UpgradeSystem {
 
     const attackSpeedUpgrade: UpgradeConfig = {
       id: 'attackSpeed',
-      name: '⚡ Attack Speed',
-      description:
-        'Upgrade targeting computers to fire faster. Speed is everything.',
+      name: t('upgrades.main.attackSpeed.name'),
+      description: t('upgrades.main.attackSpeed.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(50 * Math.pow(1.25, level))),
       canBuy: (state: GameState) => {
@@ -1758,8 +1757,8 @@ export class UpgradeSystem {
 
     const pointMultiplierUpgrade: UpgradeConfig = {
       id: 'pointMultiplier',
-      name: '💎 Damage Amplifier',
-      description: 'Enhance laser power for maximum destruction per hit.',
+      name: t('upgrades.main.pointMultiplier.name'),
+      description: t('upgrades.main.pointMultiplier.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(100 * Math.pow(1.3, level))),
       canBuy: (state: GameState) => {
@@ -1793,9 +1792,8 @@ export class UpgradeSystem {
 
     const critChanceUpgrade: UpgradeConfig = {
       id: 'critChance',
-      name: '✨ Critical Strike',
-      description:
-        'Master the perfect critical hit. Maximum destruction efficiency. Very satisfying.',
+      name: t('upgrades.main.critChance.name'),
+      description: t('upgrades.main.critChance.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(150 * Math.pow(1.35, level))),
       canBuy: (state: GameState) => {
@@ -1815,9 +1813,8 @@ export class UpgradeSystem {
 
     const resourceGenUpgrade: UpgradeConfig = {
       id: 'resourceGen',
-      name: '🏭 Passive Income',
-      description:
-        'Automated alien elimination stations. They work while you sleep. Very efficient defense system.',
+      name: t('upgrades.main.resourceGen.name'),
+      description: t('upgrades.main.resourceGen.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(200 * Math.pow(1.4, level))),
       canBuy: (state: GameState) => {
@@ -1843,8 +1840,8 @@ export class UpgradeSystem {
 
     const xpBoostUpgrade: UpgradeConfig = {
       id: 'xpBoost',
-      name: '📚 Knowledge Core',
-      description: 'Learn advanced alien elimination techniques. Knowledge is power. Especially when eliminating.',
+      name: t('upgrades.main.xpBoost.name'),
+      description: t('upgrades.main.xpBoost.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(250 * Math.pow(1.38, level))),
       canBuy: (state: GameState) => {
@@ -1880,9 +1877,8 @@ export class UpgradeSystem {
 
     const weaponMasteryUpgrade: UpgradeConfig = {
       id: 'weaponMastery',
-      name: '🔥 Weapon Mastery',
-      description:
-        'Master the art of destruction - increase main ship firepower',
+      name: t('upgrades.main.weaponMastery.name'),
+      description: t('upgrades.main.weaponMastery.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(5000 * Math.pow(1.55, level))),
       canBuy: (state: GameState) => {
@@ -1924,9 +1920,8 @@ export class UpgradeSystem {
 
     const fleetCommandUpgrade: UpgradeConfig = {
       id: 'fleetCommand',
-      name: '🛸 Fleet Command',
-      description:
-        'Command your fleet with precision - boost all ships effectiveness',
+      name: t('upgrades.main.fleetCommand.name'),
+      description: t('upgrades.main.fleetCommand.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(10000 * Math.pow(1.6, level))),
       canBuy: (state: GameState) => {
@@ -1968,8 +1963,8 @@ export class UpgradeSystem {
 
     const mutationEngineUpgrade: UpgradeConfig = {
       id: 'mutationEngine',
-      name: '🧬 Mutation Engine',
-      description: 'Evolve beyond limits - unlock transformative abilities',
+      name: t('upgrades.main.mutationEngine.name'),
+      description: t('upgrades.main.mutationEngine.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(25000 * Math.pow(1.7, level))),
       canBuy: (state: GameState) => {
@@ -2005,8 +2000,8 @@ export class UpgradeSystem {
 
     const energyCoreUpgrade: UpgradeConfig = {
       id: 'energyCore',
-      name: '⚡ Energy Core',
-      description: 'Harness pure energy - boost all systems',
+      name: t('upgrades.main.energyCore.name'),
+      description: t('upgrades.main.energyCore.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(7500 * Math.pow(1.5, level))),
       canBuy: (state: GameState) => {
@@ -2048,9 +2043,8 @@ export class UpgradeSystem {
 
     const cosmicKnowledgeUpgrade: UpgradeConfig = {
       id: 'cosmicKnowledge',
-      name: '🌌 Cosmic Knowledge',
-      description:
-        'Understand the universe - reduce costs and increase rewards',
+      name: t('upgrades.main.cosmicKnowledge.name'),
+      description: t('upgrades.main.cosmicKnowledge.description'),
       getCost: (level: number) =>
         this.applyDiscount(Math.ceil(15000 * Math.pow(1.65, level))),
       canBuy: (state: GameState) => {
@@ -2070,8 +2064,8 @@ export class UpgradeSystem {
 
     const miscUpgrade: UpgradeConfig = {
       id: 'misc',
-      name: '🔬 Research & Development',
-      description: 'Unlock experimental technologies and forbidden knowledge.',
+      name: t('upgrades.main.misc.name'),
+      description: t('upgrades.main.misc.description'),
       getCost: () => 0,
       canBuy: () => false,
       buy: () => {},

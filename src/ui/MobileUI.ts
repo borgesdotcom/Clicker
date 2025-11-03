@@ -79,7 +79,6 @@ export class MobileUI {
         mobileShopClose.addEventListener('click', (e) => {
           e.stopPropagation();
           e.preventDefault();
-          console.log('Shop close button clicked');
           this.closeShop();
         });
       }
@@ -124,12 +123,6 @@ export class MobileUI {
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileShopToggle = document.getElementById('mobile-shop-toggle');
     const mobileShopClose = document.getElementById('mobile-shop-close');
-    const achievementsBtn = document.getElementById('achievements-btn');
-    const statsBtn = document.getElementById('stats-btn');
-    const missionsBtn = document.getElementById('missions-button');
-    const artifactsBtn = document.getElementById('artifacts-button');
-    const ascensionBtn = document.getElementById('ascension-button');
-    const settingsBtn = document.getElementById('settings-button');
     const hudButtonsContainer = document.getElementById(
       'hud-buttons-container',
     );
@@ -140,13 +133,7 @@ export class MobileUI {
       if (mobileShopToggle) mobileShopToggle.style.display = 'flex';
       if (mobileShopClose) mobileShopClose.style.display = 'flex';
 
-      // Hide ALL desktop HUD buttons on mobile
-      if (achievementsBtn) achievementsBtn.style.display = 'none';
-      if (statsBtn) statsBtn.style.display = 'none';
-      if (missionsBtn) missionsBtn.style.display = 'none';
-      if (artifactsBtn) artifactsBtn.style.display = 'none';
-      if (ascensionBtn) ascensionBtn.style.display = 'none';
-      if (settingsBtn) settingsBtn.style.display = 'none';
+      // Hide desktop HUD buttons container on mobile
       if (hudButtonsContainer) hudButtonsContainer.style.display = 'none';
 
       // Move buttons to mobile menu
@@ -164,14 +151,8 @@ export class MobileUI {
       if (mobileShopToggle) mobileShopToggle.style.display = 'none';
       if (mobileShopClose) mobileShopClose.style.display = 'none';
 
-      // Show ALL desktop HUD buttons
-      if (achievementsBtn) achievementsBtn.style.display = '';
-      if (statsBtn) statsBtn.style.display = '';
-      if (missionsBtn) missionsBtn.style.display = '';
-      if (artifactsBtn) artifactsBtn.style.display = '';
-      if (ascensionBtn) ascensionBtn.style.display = '';
-      if (settingsBtn) settingsBtn.style.display = '';
-      if (hudButtonsContainer) hudButtonsContainer.style.display = '';
+      // Show desktop HUD buttons container
+      if (hudButtonsContainer) hudButtonsContainer.style.display = 'grid';
 
       // Move buttons back to HUD
       this.moveButtonsToHUD();
@@ -196,6 +177,8 @@ export class MobileUI {
     const artifactsBtn = document.getElementById('artifacts-button');
     const ascensionBtn = document.getElementById('ascension-button');
     const settingsBtn = document.getElementById('settings-button');
+    const gameInfoBtn = document.getElementById('game-info-button');
+    const bossRetryBtn = document.getElementById('boss-retry-btn');
 
     // Clear mobile menu content
     this.mobileMenuContent.innerHTML = '';
@@ -207,11 +190,21 @@ export class MobileUI {
       missionsBtn,
       artifactsBtn,
       ascensionBtn,
+      gameInfoBtn,
       settingsBtn,
+      bossRetryBtn,
     ];
 
     buttons.forEach((btn) => {
       if (btn) {
+        // Check visibility for ascension button and boss retry button
+        if (btn.id === 'ascension-button' || btn.id === 'boss-retry-btn') {
+          const computedStyle = window.getComputedStyle(btn);
+          if (computedStyle.display === 'none') {
+            return; // Skip hidden buttons
+          }
+        }
+
         const clone = btn.cloneNode(true) as HTMLElement;
         clone.style.display = 'flex';
         clone.style.width = '100%';
@@ -246,6 +239,8 @@ export class MobileUI {
 
   private openMobileMenu(): void {
     if (this.mobileMenu) {
+      // Refresh menu buttons to respect current visibility (e.g., ascension button)
+      this.moveButtomnsToMobileMenu();
       this.mobileMenu.style.display = 'block';
       // Force reflow for animation
       void this.mobileMenu.offsetHeight;
@@ -277,7 +272,6 @@ export class MobileUI {
   private openShop(): void {
     const shopPanel = document.getElementById('shop-panel');
     if (shopPanel) {
-      console.log('Opening shop');
       // First make it visible
       shopPanel.style.display = 'block';
       // Small delay to allow display change to take effect before animation
@@ -291,7 +285,6 @@ export class MobileUI {
   private closeShop(): void {
     const shopPanel = document.getElementById('shop-panel');
     if (shopPanel) {
-      console.log('Closing shop');
       shopPanel.classList.remove('mobile-open');
       // Wait for animation to finish before hiding
       setTimeout(() => {

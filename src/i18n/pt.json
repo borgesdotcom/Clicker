@@ -1,0 +1,810 @@
+{
+  "common": {
+    "on": "LIGADO",
+    "off": "DESLIGADO",
+    "close": "Fechar",
+    "buy": "COMPRAR",
+    "owned": "OBTIDO",
+    "max": "MÁX",
+    "level": "Nível",
+    "points": "Pontos",
+    "cost": "Custo",
+    "yes": "Sim",
+    "no": "Não",
+    "language": "Idioma",
+    "english": "Inglês",
+    "portuguese": "Português",
+    "spanish": "Espanhol"
+  },
+  "settings": {
+    "title": "⚙️ Configurações",
+    "soundSettings": "Configurações de Áudio",
+    "graphicsSettings": "Configurações de Gráficos",
+    "languageSettings": "Configurações de Idioma",
+    "soundEnabled": "Áudio Habilitado:",
+    "soundEnabledHint": "Ativar ou desativar todos os sons do jogo",
+    "backgroundMusic": "Música de Fundo:",
+    "backgroundMusicHint": "Ativar ou desativar música de fundo",
+    "volume": "Volume:",
+    "highGraphics": "Grágicos Altos (Partículas):",
+    "highGraphicsHint": "Desativar partículas para melhor desempenho",
+    "shipLasers": "Lasers Automáticos da Nave:",
+    "shipLasersHint": "Desativar para reduzir lag (apenas seus cliques dispararão lasers)",
+    "ripples": "Ondulações de Clique:",
+    "ripplesHint": "Desativar para reduzir poluição visual",
+    "damageNumbers": "Números de Dano:",
+    "damageNumbersHint": "Desativar para melhorar o desempenho (o dano ainda será aplicado)",
+    "language": "Idioma:",
+    "languageHint": "Alterar o idioma do jogo"
+  },
+  "hud": {
+    "points": "Pontos",
+    "dps": "DPS",
+    "passive": "Passivo",
+    "crit": "Crítico",
+    "level": "Nível",
+    "perSec": "/seg"
+  },
+  "shop": {
+    "title": "MELHORIAS",
+    "available": "Disponível",
+    "owned": "Obtido",
+    "buyQuantity": "Quantidade de Compra:",
+    "specialUpgrades": "⭐ MELHORIAS ESPECIAIS ⭐",
+    "noOwned": "Nenhuma melhoria especial obtida ainda.",
+    "resetSave": "Resetar Salvamento"
+  },
+  "boss": {
+    "encounter": "⚠️ ENCONTRO COM CHEFE ⚠️",
+    "warning": "Uma entidade alienígena massiva bloqueia seu progresso!",
+    "details": "Este inimigo é maior e muito mais poderoso!",
+    "ready": "Você não pode subir de nível até este chefe ser derrotado!",
+    "timeLimit": "Tempo Limite:",
+    "engage": "ENFRENTAR!",
+    "time": "TEMPO:"
+  },
+  "ascension": {
+    "title": "🌟 ASCENSÃO 🌟",
+    "description": "Ascenda para um plano superior de existência. Você perderá todo o progresso exceto:",
+    "keepAchievements": "✓ Conquistas",
+    "keepStatistics": "✓ Estatísticas",
+    "keepPrestige": "✓ Melhorias de Prestígio",
+    "gain": "Você ganhará Pontos de Prestígio para desbloquear bônus permanentes!",
+    "current": "Atual:",
+    "gainOnAscension": "Ganho na Ascensão:",
+    "prestigeUpgrades": "Melhorias de Prestígio",
+    "ascendNow": "ASCENDER AGORA",
+    "reachLevel100": "ALCANÇE O NÍVEL 100 PARA ASCENDER (Atual: {{level}})",
+    "confirm": "Tem certeza de que deseja ascender? Todo o progresso não permanente será resetado!",
+    "level": "Nível:",
+    "cost": "Custo:"
+  },
+  "achievements": {
+    "title": "🏆 Conquistas",
+    "all": "Todas",
+    "combat": "⚔️ Combate",
+    "progression": "📈 Progressão",
+    "collection": "📦 Coleção",
+    "mastery": "👑 Maestria",
+    "secret": "🔒 Secreto"
+  },
+  "gameInfo": {
+    "title": "📚 Informações do Jogo",
+    "stats": "Estatísticas",
+    "mechanics": "Mecânicas",
+    "tips": "Dicas e Estratégias",
+    "earlyGame": "🎯 Início do Jogo (Níveis 1-30)",
+    "midGame": "🚀 Meio do Jogo (Níveis 30-100)",
+    "lateGame": "⭐ Fim do Jogo (100+)",
+    "proTips": "💡 Dicas de Profissional",
+    "keyboardShortcuts": "⌨️ Atalhos de Teclado"
+  },
+  "missions": {
+    "title": "📋 Missões",
+    "active": "Missão Ativa",
+    "completed": "Concluída",
+    "claimReward": "Reivindicar Recompensa",
+    "noActive": "Nenhuma missão ativa"
+  },
+  "stats": {
+    "title": "📊 Estatísticas",
+    "totalClicks": "Total de Cliques",
+    "totalDamage": "Dano Total",
+    "aliensKilled": "Alienígenas Mortos",
+    "bossesDefeated": "Chefes Derrotados",
+    "upgradesPurchased": "Melhorias Compradas",
+    "timePlayed": "Tempo Jogado",
+    "highestLevel": "Nível Mais Alto",
+    "prestigePoints": "Pontos de Prestígio"
+  },
+  "debug": {
+    "title": "🛠️ Painel de Debug Admin",
+    "resources": "💰 Recursos",
+    "levelXP": "⭐ Nível e XP",
+    "fleetUpgrades": "🚀 Frota e Melhorias",
+    "bossControls": "👾 Controles de Chefe",
+    "stats": "📊 Estatísticas",
+    "powerUps": "⚡ Power-Ups",
+    "gameControls": "🎮 Controles do Jogo",
+    "addPoints": "+1K Pontos",
+    "add100KPoints": "+100K Pontos",
+    "add1MPoints": "+1M Pontos",
+    "add100MPoints": "+100M Pontos",
+    "customAmount": "Quantidade personalizada",
+    "setPoints": "Definir Pontos",
+    "level": "Nível",
+    "setLevel": "Definir Nível",
+    "add10Levels": "+10 Níveis",
+    "add100Levels": "+100 Níveis",
+    "maxXP": "XP Máximo Atual",
+    "add5Ships": "+5 Naves",
+    "add20Ships": "+20 Naves",
+    "maxShips": "Naves Máximas (50)",
+    "unlockAllUpgrades": "Desbloquear Todas as Melhorias Especiais",
+    "maxAllUpgrades": "Maximizar Todas as Melhorias Básicas",
+    "triggerBoss": "Iniciar Luta com Chefe",
+    "instantKillBoss": "Matar Chefe Instantaneamente",
+    "add1KClicks": "+1K Cliques",
+    "add100Bosses": "+100 Mortes de Chefe",
+    "damageBoost": "Aumento de Dano",
+    "speedBoost": "Aumento de Velocidade",
+    "pointsBoost": "Aumento de Pontos",
+    "multishot": "Disparo Múltiplo",
+    "criticalSurge": "Surto Crítico",
+    "clearPowerUps": "Limpar Todos os Power-Ups",
+    "godMode": "Alternar Modo Deus",
+    "speed2x": "Velocidade 2x",
+    "speed5x": "Velocidade 5x",
+    "normalSpeed": "Velocidade Normal",
+    "resetGame": "Resetar Jogo",
+    "toggleHint": "Pressione Ctrl + D para alternar este painel"
+  },
+  "versionSplash": {
+    "welcome": "Bem-vindo ao Teste Alfa!",
+    "powerUpSystem": "Sistema de Power-Ups",
+    "powerUpDesc": "Colete power-ups temporários de inimigos derrotados! Aumente seu dano, velocidade, chance de crítico, disparo múltiplo e pontos!",
+    "improvedHUD": "HUD Melhorado",
+    "hudDesc": "Display aprimorado com temporizadores de buffs de power-up em tempo real, estatísticas atualizadas e melhor feedback visual!",
+    "bugFixes": "Correções Importantes de Bugs",
+    "bugFixesDesc": "Corrigidas atualizações de exibição da loja, empilhamento de power-ups, cálculos de velocidade de ataque e mecânicas de disparo múltiplo!",
+    "performance": "Otimizações de Desempenho",
+    "performanceDesc": "Eficiência de renderização melhorada, melhor gerenciamento de memória e experiência de jogo mais suave!",
+    "soundtrack": "Trilha Sonora Adicionada",
+    "soundtrackDesc": "Aproveite música de fundo imersiva enquanto joga! Ative/desative no menu de configurações.",
+    "debugPanel": "Atualizações do Painel de Debug",
+    "debugPanelDesc": "Adicionados controles de power-up ao painel admin para facilitar testes e depuração!",
+    "thankYou": "Obrigado por jogar! Colete power-ups para aumentar seu desempenho e aproveite a experiência melhorada!",
+    "startPlaying": "Começar a Jogar!",
+    "majorUpdate": "ATUALIZAÇÃO MAJOR"
+  },
+  "upgrades": {
+    "main": {
+      "ship": {
+        "name": "🚀 Frota de Naves Espaciais",
+        "description": "Recrute outra nave para sua armada. Mais naves = mais poder de fogo!"
+      },
+      "attackSpeed": {
+        "name": "⚡ Velocidade de Ataque",
+        "description": "Aprimore os computadores de mira para disparar mais rápido. Velocidade é tudo."
+      },
+      "pointMultiplier": {
+        "name": "💎 Amplificador de Dano",
+        "description": "Aumente o poder do laser para máxima destruição por acerto."
+      },
+      "critChance": {
+        "name": "✨ Golpe Crítico",
+        "description": "Domine o acerto crítico perfeito. Eficiência máxima de destruição. Muito satisfatório."
+      },
+      "resourceGen": {
+        "name": "🏭 Renda Passiva",
+        "description": "Estações automatizadas de eliminação alienígena. Elas trabalham enquanto você dorme. Sistema de defesa muito eficiente."
+      },
+      "xpBoost": {
+        "name": "📚 Núcleo de Conhecimento",
+        "description": "Aprenda técnicas avançadas de eliminação alienígena. Conhecimento é poder. Especialmente ao eliminar."
+      },
+      "weaponMastery": {
+        "name": "🔥 Maestria em Armas",
+        "description": "Domine a arte da destruição - aumente o poder de fogo da nave principal"
+      },
+      "fleetCommand": {
+        "name": "🛸 Comando da Frota",
+        "description": "Comande sua frota com precisão - aumente a eficácia de todas as naves"
+      },
+      "mutationEngine": {
+        "name": "🧬 Motor de Mutação",
+        "description": "Evolua além dos limites - desbloqueie habilidades transformadoras"
+      },
+      "energyCore": {
+        "name": "⚡ Núcleo de Energia",
+        "description": "Aproveite energia pura - impulsione todos os sistemas"
+      },
+      "cosmicKnowledge": {
+        "name": "🌌 Conhecimento Cósmico",
+        "description": "Compreenda o universo - reduza custos e aumente recompensas"
+      },
+      "misc": {
+        "name": "🔬 Pesquisa e Desenvolvimento",
+        "description": "Desbloqueie tecnologias experimentais e conhecimento proibido."
+      }
+    },
+    "special": {
+      "death_pact": {
+        "name": "Acordo de Pacto de Morte",
+        "description": "Naves ganham +10% de velocidade de ataque",
+        "flavor": "Contrato assinado garante cadeia de suprimentos alienígena \"hostil\". Muito conveniente."
+      },
+      "laser_focusing": {
+        "name": "Cristais de Foco de Laser",
+        "description": "Aumenta o ganho de pontos em 15%",
+        "flavor": "Esses cristais fazem os alienígenas fazerem um som *pop* muito satisfatório quando destruídos."
+      },
+      "coffee_machine": {
+        "name": "Máquina de Café da Tripulação",
+        "description": "Geração passiva de pontos +50/seg",
+        "flavor": "Tripulação permanece acordada para operações de defesa 24/7. Os alienígenas estão vindo. Definitivamente vindo."
+      },
+      "quantum_targeting": {
+        "name": "Matriz de Mira Quântica",
+        "description": "Naves disparam 20% mais rápido",
+        "flavor": "Mira precisa garante máxima... eficiência de eliminação. A papelada está ok."
+      },
+      "lucky_dice": {
+        "name": "Dados Espaciais da Sorte",
+        "description": "+5% de chance de acerto crítico",
+        "flavor": "Rolou 7! Esses dados garantem taxas máximas de destruição alienígena. A invasão paga... espera."
+      },
+      "energy_recycling": {
+        "name": "Sistema de Reciclagem de Energia",
+        "description": "Todas as melhorias custam 5% a menos",
+        "flavor": "Recicle material alienígena para máxima eficiência. Operação de defesa muito consciente ambientalmente."
+      },
+      "overclocked_reactors": {
+        "name": "Reatores Superaquecidos",
+        "description": "Ganhe 25% mais pontos por acerto",
+        "flavor": "Superaqueça reatores além dos limites de segurança. Emergências de defesa requerem... soluções criativas."
+      },
+      "ship_swarm": {
+        "name": "Protocolo de Inteligência de Enxame",
+        "description": "Naves coordenam ataques para +20% de dano",
+        "flavor": "Frota coordena ataques sincronizados. Os alienígenas nunca têm chance. Especialmente estes."
+      },
+      "neural_link": {
+        "name": "Interface de Conexão Neural",
+        "description": "Clicar concede 10% de pontos bônus",
+        "flavor": "Conexão neural direta ao seu dedo no gatilho. Clique mais rápido, elimine mais rápido. Muito eficiente."
+      },
+      "space_pizza": {
+        "name": "Entrega de Pizza Intergaláctica",
+        "description": "Geração passiva +200/seg",
+        "flavor": "Mantenha as tripulações alimentadas durante operações de defesa prolongadas. Trabalhadores felizes eliminam alienígenas melhor."
+      },
+      "rubber_duck": {
+        "name": "Pato de Borracha de Depuração",
+        "description": "+3% de multiplicador de dano crítico",
+        "flavor": "Explica seus problemas de volta para você. Muito terapêutico."
+      },
+      "antimatter_rounds": {
+        "name": "Munição de Antimatéria",
+        "description": "Dobra todos os ganhos de pontos",
+        "flavor": "Antimatéria faz os alienígenas estourarem duas vezes mais satisfatoriamente. Muito terapêutico para alívio do estresse."
+      },
+      "motivational_posters": {
+        "name": "Pôsteres Motivacionais",
+        "description": "Ganho de XP +25%",
+        "flavor": "\"Continue assim!\" diz o gato pendurado em uma antena parabólica."
+      },
+      "warp_core": {
+        "name": "Núcleo de Dobra Experimental",
+        "description": "Naves disparam 50% mais rápido",
+        "flavor": "Física teórica se torna poder de fogo prático."
+      },
+      "disco_ball": {
+        "name": "Bola de Disco Hipnótica",
+        "description": "Alienígenas confusos, +15% todos os stats",
+        "flavor": "Os alienígenas não conseguem resistir à batida do disco. Eles se alinham perfeitamente para... eliminação."
+      },
+      "ai_optimizer": {
+        "name": "Sub-rotinas de Otimização de IA",
+        "description": "Tempo de recarga de tiro das naves reduzido em 30%",
+        "flavor": "A IA promete que não se tornará autoconsciente. Provavelmente."
+      },
+      "lucky_horseshoe": {
+        "name": "Ferradura da Sorte",
+        "description": "Acertos críticos causam 50% mais dano",
+        "flavor": "Quem precisa de cavalos no espaço? Aparentemente, a sorte precisa."
+      },
+      "perfect_precision": {
+        "name": "Matrizes de Precisão Perfeita",
+        "description": "Acertos críticos: 5% de chance de 10x dano",
+        "flavor": "Cada tiro encontra seu alvo. Cada. Um. Deles."
+      },
+      "arcade_machine": {
+        "name": "Máquina de Arcade Retrô",
+        "description": "Geração passiva +1000/seg",
+        "flavor": "Toca Pac-Man enquanto gera energia infinita. Ciência!"
+      },
+      "void_channeling": {
+        "name": "Canalização de Energia do Vazio",
+        "description": "Destruir alienígenas concede XP bônus",
+        "flavor": "O vazio olha de volta. Aprova suas... operações de defesa eficientes."
+      },
+      "chaos_emeralds": {
+        "name": "Sete Esmeraldas do Caos",
+        "description": "Todo dano +35%",
+        "flavor": "Gotta go fast! Espera, franquia errada..."
+      },
+      "time_machine": {
+        "name": "Máquina do Tempo com Defeito",
+        "description": "Ganho de XP +50%",
+        "flavor": "Define o tempo para frente, para trás e lateralmente. Resultados podem variar."
+      },
+      "nanobots": {
+        "name": "Nanobots Auto-Replicantes",
+        "description": "Geração passiva +2500/seg",
+        "flavor": "Eles se multiplicam. Eles evoluem. Eles pagam dividendos."
+      },
+      "plasma_matrix": {
+        "name": "Matriz de Energia de Plasma",
+        "description": "Todo dano +25%, Velocidade de ataque +15%",
+        "flavor": "Aproveite o poder de supernovas contidas."
+      },
+      "holographic_decoys": {
+        "name": "Sistema de Iscas Holográficas",
+        "description": "Naves podem atacar duas vezes mais frequentemente",
+        "flavor": "Uma nave se torna muitas. A confusão aumenta."
+      },
+      "temporal_acceleration": {
+        "name": "Campo de Aceleração Temporal",
+        "description": "Todas as naves ganham +100% de velocidade de ataque",
+        "flavor": "O tempo é relativo. Especialmente quando você o controla."
+      },
+      "quantum_entanglement": {
+        "name": "Núcleo de Emaranhamento Quântico",
+        "description": "Acertos críticos +8%, Dano x1.5",
+        "flavor": "Ação assustadora à distância. Einstein odiava. Você vai amar."
+      },
+      "philosophers_stone": {
+        "name": "Pedra Filosofal",
+        "description": "Geração passiva x5",
+        "flavor": "Transforma chumbo em ouro. E tédio em... produtividade. Muito eficiente."
+      },
+      "stellar_forge": {
+        "name": "Forja Estelar",
+        "description": "Ganho de XP +75%, Todo dano +20%",
+        "flavor": "Onde as estrelas nascem, e os inimigos encontram seu fim."
+      },
+      "golden_goose": {
+        "name": "Gansa Dourada Quântica",
+        "description": "Pontos por clique +50%",
+        "flavor": "Coloca ovos dourados. Em múltiplas dimensões. Simultaneamente."
+      },
+      "dark_matter_engine": {
+        "name": "Motor de Matéria Escura",
+        "description": "Geração passiva x3, Naves +25% velocidade",
+        "flavor": "95% do universo é matéria escura. Agora é seu."
+      },
+      "antimatter_cascade": {
+        "name": "Reator de Cascata de Antimatéria",
+        "description": "Todo dano de clique x4",
+        "flavor": "Clique uma vez. Destrua tudo. Repita."
+      },
+      "infinity_gauntlet": {
+        "name": "Manopla do Infinito (Réplica)",
+        "description": "Todos os stats +40%",
+        "flavor": "Perfeitamente equilibrado, como todas as coisas devem ser. Também, não é marca registrada."
+      },
+      "nebula_harvester": {
+        "name": "Colhedor de Energia de Nebulosa",
+        "description": "Geração passiva +5000/seg, XP +50%",
+        "flavor": "Roube energia das próprias nuvens cósmicas."
+      },
+      "alien_cookbook": {
+        "name": "Livro de Receitas Alienígena",
+        "description": "Recompensas por matar chefes +100%",
+        "flavor": "\"Para Servir Alienígenas\" - Um livro de receitas! Espera, o quê? Esses são definitivamente alienígenas hostis, certo?"
+      },
+      "hyper_reactor": {
+        "name": "Reator Hiperdimensional",
+        "description": "Todo dano x2, Chance crítica +5%",
+        "flavor": "Poderes extraídos de dimensões que nem podemos ver."
+      },
+      "nuclear_reactor": {
+        "name": "Reator Nuclear de Bolso",
+        "description": "Geração passiva +10000/seg",
+        "flavor": "Cabe no seu bolso. Não coloque no bolso."
+      },
+      "photon_amplifier": {
+        "name": "Amplificador de Onda de Fótons",
+        "description": "Naves disparam 75% mais rápido, Dano +30%",
+        "flavor": "A velocidade da luz é muito lenta. Vamos para velocidade absurda!"
+      },
+      "reality_anchor": {
+        "name": "Âncora da Realidade",
+        "description": "Dano crítico x2, Todos os ganhos +25%",
+        "flavor": "Mantenha a realidade sob controle. Ou quebre-a. Sua escolha."
+      },
+      "cosmic_battery": {
+        "name": "Bateria de Energia Cósmica",
+        "description": "Geração passiva x7",
+        "flavor": "Armazena a energia de estrelas morrendo. Baterias não incluídas."
+      },
+      "singularity_core": {
+        "name": "Núcleo de Energia de Singularidade",
+        "description": "Ganhe 5x pontos de todas as fontes",
+        "flavor": "Um buraco negro em uma caixa. O que poderia ser mais seguro?"
+      },
+      "cheat_codes": {
+        "name": "Manual de Códigos de Trapaça",
+        "description": "Todas as melhorias custam 20% a menos",
+        "flavor": "Cima, Cima, Baixo, Baixo, Esquerda, Direita, Esquerda, Direita, B, A, Start."
+      },
+      "dragon_egg": {
+        "name": "Ovo de Dragão",
+        "description": "Chance de acerto crítico +5%, Dano crítico +50%",
+        "flavor": "É um ovo de dragão ou uma galinha espacial muito brava."
+      },
+      "universe_map": {
+        "name": "Mapa do Universo",
+        "description": "Ganho de XP x3",
+        "flavor": "Você está aqui. Então está tudo mais. Útil!"
+      },
+      "answer_to_everything": {
+        "name": "Resposta para Tudo",
+        "description": "Toda geração passiva x10",
+        "flavor": "É 42. Mas qual era a pergunta mesmo?"
+      },
+      "heart_of_galaxy": {
+        "name": "Coração da Galáxia",
+        "description": "Todo dano x3",
+        "flavor": "A galáxia tinha um coração. TINHA."
+      },
+      "cosmic_ascension": {
+        "name": "Protocolo de Ascensão Cósmica",
+        "description": "Desbloqueie poder supremo: 10x todos os ganhos",
+        "flavor": "Transcenda limitações mortais. Torne-se o clique em si."
+      },
+      "meaning_of_life": {
+        "name": "Significado da Vida",
+        "description": "Desbloqueie sistema de prestígio e todos os stats x2",
+        "flavor": "A resposta é 42. Mas qual era a pergunta?"
+      },
+      "master_clicker": {
+        "name": "Mestre dos Cliques",
+        "description": "Clicar dá +100% mais pontos",
+        "flavor": "Clique com o poder de mil sóis. Ou pelo menos alguns."
+      },
+      "rapid_fire": {
+        "name": "Protocolo de Tiro Rápido",
+        "description": "Cada clique dispara 2 lasers adicionais",
+        "flavor": "Por que disparar um laser quando você pode disparar três? Ciência!"
+      },
+      "click_multiplier": {
+        "name": "Matriz Multiplicadora de Cliques",
+        "description": "Clicar multiplica o dano por 3x",
+        "flavor": "Um clique. Triplo a destruição. A matemática confere."
+      },
+      "super_clicker": {
+        "name": "Super Clique Ultimate",
+        "description": "Cliques causam 5x dano e concedem XP bônus",
+        "flavor": "A experiência definitiva de cliques. Máxima satisfação garantida."
+      },
+      "multiversal_matrix": {
+        "name": "Matriz de Probabilidade Multiversal",
+        "description": "Dano x5, Chance crítica +15%",
+        "flavor": "Extraia poder de infinitas realidades paralelas. Todas elas."
+      },
+      "entropy_reversal": {
+        "name": "Motor de Reversão de Entropia",
+        "description": "Geração passiva x15, Ganho de XP +100%",
+        "flavor": "Morte térmica? Não no seu relógio."
+      },
+      "omniscient_ai": {
+        "name": "Núcleo de IA Onisciente",
+        "description": "Todos os stats +75%, Melhorias 30% mais baratas",
+        "flavor": "Sabe tudo. Destrói tudo. Ainda não é autoconsciente. Provavelmente."
+      },
+      "big_bang_generator": {
+        "name": "Gerador do Big Bang",
+        "description": "Todo dano x10, Cria universos por acerto",
+        "flavor": "Recrie o nascimento do universo. Por diversão."
+      },
+      "dimensional_collapse": {
+        "name": "Arma de Colapso Dimensional",
+        "description": "Dano crítico x3, Velocidade de ataque +100%",
+        "flavor": "Colapse dimensões. Quebre a realidade. Ganhe o jogo."
+      },
+      "reality_compiler": {
+        "name": "Compilador da Realidade",
+        "description": "Recompile a realidade: Todos os ganhos x20",
+        "flavor": "Se a realidade é um programa, você acabou de otimizá-la."
+      },
+      "akashic_records": {
+        "name": "Acesso aos Registros Akáshicos",
+        "description": "XP x10, Retenha todo conhecimento entre vidas",
+        "flavor": "Acesse a biblioteca universal. Leia o manual."
+      },
+      "void_heart": {
+        "name": "Coração do Vazio",
+        "description": "Dano em chefes +500%, Absorva essência inimiga",
+        "flavor": "O vazio olha de volta. Você olha mais forte."
+      },
+      "eternal_engine": {
+        "name": "Motor Eterno",
+        "description": "Geração passiva x50, Nunca para",
+        "flavor": "Movimento perpétuo alcançado. A física chora."
+      },
+      "omega_protocol": {
+        "name": "Protocolo Ômega: Forma Final",
+        "description": "TODOS OS MULTIPLICADORES x25",
+        "flavor": "Esta nem é minha forma final. Espera, sim é."
+      },
+      "infinity_engine": {
+        "name": "Motor do Infinito",
+        "description": "Cliques causam ∞ × 0.01 de dano (efetivamente x100)",
+        "flavor": "Infinito contido em uma caixa. Não abra."
+      },
+      "universe_seed": {
+        "name": "Semente do Universo",
+        "description": "Plante novos universos: Todos os ganhos x100",
+        "flavor": "Regue diariamente. Colha em 13.8 bilhões de anos."
+      },
+      "transcendence": {
+        "name": "Verdadeira Transcendência",
+        "description": "Ascenda além da ascensão: Pontos de prestígio x10",
+        "flavor": "Você se tornou o clique em si."
+      },
+      "scope_calibration": {
+        "name": "Calibração de Mira",
+        "description": "+10% dano da nave principal",
+        "flavor": "Meça duas vezes, destrua uma vez."
+      },
+      "hair_trigger": {
+        "name": "Mecanismo de Gatilho Leve",
+        "description": "+15% dano da nave principal, +5% velocidade de clique",
+        "flavor": "Acidentes acontecem. Muito."
+      },
+      "hollow_point": {
+        "name": "Munição de Ponta Oca",
+        "description": "+20% dano da nave principal, +10% dano crítico",
+        "flavor": "Eles expandem no impacto. Assim como seu dano."
+      },
+      "explosive_payload": {
+        "name": "Carga Explosiva",
+        "description": "+30% dano da nave principal",
+        "flavor": "Às vezes a sutileza é superestimada."
+      },
+      "particle_accelerator": {
+        "name": "Canhão de Acelerador de Partículas",
+        "description": "+50% dano da nave principal",
+        "flavor": "Acelera partículas. E destruição."
+      },
+      "singularity_cannon": {
+        "name": "Canhão de Singularidade",
+        "description": "+75% dano da nave principal, pequena área",
+        "flavor": "Contém um buraco negro microscópico. Totalmente seguro."
+      },
+      "antimatter_warheads": {
+        "name": "Ogivas de Antimatéria",
+        "description": "+100% dano da nave principal",
+        "flavor": "Quando matéria encontra antimatéria, as coisas ficam interessantes."
+      },
+      "quark_disruptor": {
+        "name": "Disruptor de Quarks",
+        "description": "+150% dano da nave principal",
+        "flavor": "Interrompe quarks. E tudo mais."
+      },
+      "gamma_ray_burst": {
+        "name": "Explosão de Raios Gama",
+        "description": "+200% dano da nave principal",
+        "flavor": "Aproveite o poder de estrelas morrendo."
+      },
+      "planck_piercer": {
+        "name": "Perfurador de Planck",
+        "description": "+300% dano da nave principal, +15% chance de acerto crítico",
+        "flavor": "Ataca o próprio tecido da realidade."
+      },
+      "drill_sergeant": {
+        "name": "IA de Sargento Instrutor",
+        "description": "+8% dano de auto-tiro",
+        "flavor": "FAÇA FLEXÃO E ME DE VINTE... MILHÕES DE DANO!"
+      },
+      "formation_delta": {
+        "name": "Formação Delta",
+        "description": "+12% dano de auto-tiro, naves se movem em formação",
+        "flavor": "Unidade é força. E mais dano."
+      },
+      "emergency_repairs": {
+        "name": "Drones de Reparo de Emergência",
+        "description": "+15% dano de auto-tiro, naves se auto-reparam",
+        "flavor": "Fita adesiva no espaço. Funciona!"
+      },
+      "fleet_tactics": {
+        "name": "Táticas Avançadas de Frota",
+        "description": "+20% dano de auto-tiro por 10 naves",
+        "flavor": "Coordenação faz o sonho funcionar."
+      },
+      "automated_repairs": {
+        "name": "Sistema de Reparo Automatizado",
+        "description": "+25% dano de auto-tiro, custos de naves reduzidos",
+        "flavor": "Naves que se consertam sozinhas. O futuro é agora."
+      },
+      "ai_swarm": {
+        "name": "Inteligência de Enxame de IA",
+        "description": "+35% dano de auto-tiro, naves aprendem umas com as outras",
+        "flavor": "O coletivo sabe tudo. O coletivo destrói tudo."
+      },
+      "nanite_reconstruction": {
+        "name": "Reconstrução de Nanitas",
+        "description": "+50% dano de auto-tiro, naves se reconstroem instantaneamente",
+        "flavor": "Nanomáquinas, filho!"
+      },
+      "fleet_synchronization": {
+        "name": "Matriz de Sincronização de Frota",
+        "description": "+75% dano de auto-tiro, coordenação perfeita",
+        "flavor": "Uma mente, infinitas naves."
+      },
+      "quantum_coordination": {
+        "name": "Coordenação Quântica",
+        "description": "+100% dano de auto-tiro, comunicação instantânea",
+        "flavor": "Naves entrelaçadas atacam como uma."
+      },
+      "universal_fleet": {
+        "name": "Consciência Universal da Frota",
+        "description": "+150% dano de auto-tiro, naves compartilham dano",
+        "flavor": "A frota é eterna. A frota é imparável."
+      },
+      "adaptive_evolution": {
+        "name": "Evolução Adaptativa",
+        "description": "+5% todo dano, adapta-se a tipos de inimigos",
+        "flavor": "Sobrevivência do mais apto. Você é o mais apto."
+      },
+      "symbiotic_weapons": {
+        "name": "Armas Simbióticas",
+        "description": "+8% todo dano, armas evoluem com o uso",
+        "flavor": "Suas armas estão vivas. E com fome."
+      },
+      "regenerative_hull": {
+        "name": "Casco Regenerativo",
+        "description": "+12% todo dano, cura passiva",
+        "flavor": "Dano? Que dano?"
+      },
+      "hive_mind": {
+        "name": "Conexão de Mente Colmeia",
+        "description": "+18% todo dano, consciência compartilhada",
+        "flavor": "Somos muitos. Somos um."
+      },
+      "perfect_organism": {
+        "name": "Organismo Perfeito",
+        "description": "+25% todo dano, imune a debuffs",
+        "flavor": "Perfeição alcançada. Evolução completa."
+      },
+      "eldritch_evolution": {
+        "name": "Evolução Eldritch",
+        "description": "+35% todo dano, formas incognoscíveis",
+        "flavor": "Você viu além do véu. Ele olha de volta."
+      },
+      "cosmic_horror": {
+        "name": "Horror Cósmico",
+        "description": "+50% todo dano, inimigos temem você",
+        "flavor": "Aquilo que não está morto pode eternamente repousar..."
+      },
+      "transcendent_form": {
+        "name": "Forma Transcendente",
+        "description": "+75% todo dano, além da mortalidade",
+        "flavor": "Você não está mais preso à carne."
+      },
+      "living_weapon": {
+        "name": "Arma Viva",
+        "description": "+100% todo dano, você É a arma",
+        "flavor": "Arma e portador são um."
+      },
+      "apex_predator": {
+        "name": "Predador Apex",
+        "description": "+150% todo dano, topo da cadeia alimentar",
+        "flavor": "Nada sobrevive à sua caça."
+      },
+      "fusion_reactor": {
+        "name": "Reator de Fusão",
+        "description": "+5% velocidade de ataque, +100/seg passivo",
+        "flavor": "O poder do sol, em suas mãos."
+      },
+      "zero_point": {
+        "name": "Energia de Ponto Zero",
+        "description": "+8% velocidade de ataque, +250/seg passivo",
+        "flavor": "Colha energia da espuma quântica."
+      },
+      "perpetual_motion": {
+        "name": "Máquina de Movimento Perpétuo",
+        "description": "+12% velocidade de ataque, +500/seg passivo",
+        "flavor": "Professores de física odeiam este truque!"
+      },
+      "tesla_coils": {
+        "name": "Bobinas de Tesla",
+        "description": "+15% velocidade de ataque, relâmpago em cadeia",
+        "flavor": "Poder ilimitado!"
+      },
+      "arc_reactor": {
+        "name": "Reator Arc",
+        "description": "+20% velocidade de ataque, +1000/seg passivo",
+        "flavor": "Prova de que você tem um coração. Um mecânico."
+      },
+      "harvested_star": {
+        "name": "Estrela Colhida",
+        "description": "+30% velocidade de ataque, +5000/seg passivo",
+        "flavor": "Você arrancou uma estrela do céu. Agora ela trabalha para você."
+      },
+      "vacuum_energy_tap": {
+        "name": "Torneira de Energia do Vácuo",
+        "description": "+40% velocidade de ataque, +10000/seg passivo",
+        "flavor": "Roube energia do próprio tecido do espaço."
+      },
+      "entropy_reversal_engine": {
+        "name": "Motor de Reversão de Entropia",
+        "description": "+55% velocidade de ataque, tempo flui para trás",
+        "flavor": "Morte térmica? Não no seu relógio."
+      },
+      "big_crunch_generator": {
+        "name": "Gerador do Grande Colapso",
+        "description": "+75% velocidade de ataque, reverta o universo",
+        "flavor": "Contém um colapso de universo em miniatura."
+      },
+      "multiversal_tap": {
+        "name": "Torneira de Energia Multiversal",
+        "description": "+100% velocidade de ataque, poder paralelo infinito",
+        "flavor": "Extraia poder de realidades infinitas."
+      },
+      "ancient_texts": {
+        "name": "Textos Antigos",
+        "description": "-3% todos os custos, +10% XP",
+        "flavor": "A sabedoria de civilizações há muito mortas."
+      },
+      "akashic_records_library": {
+        "name": "Registros Akáshicos",
+        "description": "-5% todos os custos, +15% XP",
+        "flavor": "Acesse a biblioteca universal."
+      },
+      "prophetic_vision": {
+        "name": "Visão Profética",
+        "description": "-7% todos os custos, +20% XP, veja o futuro",
+        "flavor": "Você sabe o que vem a seguir."
+      },
+      "universal_translator": {
+        "name": "Tradutor Universal",
+        "description": "-10% todos os custos, +25% XP",
+        "flavor": "Compreenda todos os idiomas. Até os alienígenas."
+      },
+      "omniscience_lite": {
+        "name": "Onisciência Lite",
+        "description": "-12% todos os custos, +30% XP",
+        "flavor": "Quase onisciente. Perto o suficiente."
+      },
+      "forbidden_theorems": {
+        "name": "Teoremas Proibidos",
+        "description": "-15% todos os custos, +35% XP",
+        "flavor": "Conhecimento que quebra mentes. Muito eficiente."
+      },
+      "schrodinger_upgrade": {
+        "name": "Melhoria de Schrödinger",
+        "description": "-18% todos os custos, +40% XP",
+        "flavor": "Tanto existe quanto não existe. Tanto mais barato quanto mais poderoso."
+      },
+      "universal_constants": {
+        "name": "Manipulador de Constantes Universais",
+        "description": "-20% todos os custos, +45% XP",
+        "flavor": "Mude as leis fundamentais. Só um pouco."
+      },
+      "apotheosis": {
+        "name": "Apoteose",
+        "description": "-25% todos os custos, +50% XP",
+        "flavor": "Alcance a divindade. Através de cliques."
+      },
+      "omniscience": {
+        "name": "Verdadeira Onisciência",
+        "description": "-30% todos os custos, +60% XP",
+        "flavor": "Sabe tudo. Otimiza tudo."
+      }
+    }
+  }
+}
+

@@ -6,7 +6,7 @@ export class VersionSplash {
   }
 
   private checkVersion(): void {
-    const currentVersion = '0.0.3';
+    const currentVersion = '0.0.4';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -22,44 +22,44 @@ export class VersionSplash {
       <div class="version-splash-content">
         <div class="version-splash-header">
           <h1>🚀 VERSION ${version}</h1>
-          <div class="version-badge">MAJOR UPDATE</div>
+          <div class="version-badge">FEATURE UPDATE</div>
         </div>
         <div class="version-splash-body">
-          <h2>Welcome to the Alpha Test!</h2>
+          <h2>UI Improvements & New Features!</h2>
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-icon">⚡</div>
-              <h3>Power-Up System</h3>
-              <p>Collect temporary power-ups from defeated enemies! Boost your damage, speed, crit chance, multishot, and points!</p>
+              <div class="feature-icon">🌍</div>
+              <h3>Internationalization</h3>
+              <p>Full multi-language support! Play in English, Portuguese, Spanish, and more. The game automatically detects your language preference!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">📊</div>
-              <h3>Improved HUD</h3>
-              <p>Enhanced heads-up display with real-time power-up buff timers, updated stats, and better visual feedback!</p>
+              <div class="feature-icon">⏰</div>
+              <h3>Offline Progress</h3>
+              <p>Your progress continues even when you're away! Get rewarded for offline time with passive generation bonuses!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">🛠️</div>
-              <h3>Major Bug Fixes</h3>
-              <p>Fixed shop display updates, power-up stacking, attack speed calculations, and multishot mechanics!</p>
+              <div class="feature-icon">⚔️</div>
+              <h3>Boss Retry Button Redesigned</h3>
+              <p>The boss retry button is now integrated with other HUD buttons for a cleaner, more organized interface!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">⚙️</div>
-              <h3>Performance Optimizations</h3>
-              <p>Improved rendering efficiency, better memory management, and smoother gameplay experience!</p>
+              <div class="feature-icon">🎨</div>
+              <h3>Improved Button Design</h3>
+              <p>Buttons now use elegant tooltips instead of expanding horizontally, preventing layout shifts and keeping everything neat!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">🎵</div>
-              <h3>Soundtrack Added</h3>
-              <p>Enjoy immersive background music while playing! Toggle it on/off in the settings menu.</p>
+              <div class="feature-icon">📱</div>
+              <h3>Mobile Support Enhanced</h3>
+              <p>Boss retry button now appears in the mobile menu, ensuring all features are accessible on mobile devices!</p>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">🎮</div>
-              <h3>Debug Panel Updates</h3>
-              <p>Added power-up controls to the admin panel for easier testing and debugging!</p>
+              <div class="feature-icon">✨</div>
+              <h3>Consistent Button Layout</h3>
+              <p>All buttons maintain a perfect square grid layout - no more buttons pushing each other around on hover!</p>
             </div>
           </div>
           <div class="version-footer">
-            <p>Thank you for playing! Collect power-ups to boost your performance and enjoy the improved experience!</p>
+            <p>Enjoy the improved interface and new features! The game now supports multiple languages and rewards you for offline progress!</p>
           </div>
         </div>
         <button class="version-splash-close">Start Playing!</button>

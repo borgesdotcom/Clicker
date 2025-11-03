@@ -1,6 +1,7 @@
 export class ObjectPool<T> {
   private available: T[] = [];
   private active: T[] = [];
+  private activeSet: Set<T> = new Set(); // Fast O(1) lookup for active objects
   private factory: () => T;
   private reset: (obj: T) => void;
   private maxSize: number;
@@ -33,23 +34,33 @@ export class ObjectPool<T> {
     } else if (this.active.length < this.maxSize) {
       obj = this.factory();
     } else {
+      // Reuse oldest object (FIFO)
       const shifted = this.active.shift();
       if (shifted === undefined) {
         obj = this.factory();
       } else {
         obj = shifted;
+        this.activeSet.delete(obj);
         this.reset(obj);
       }
     }
 
     this.active.push(obj);
+    this.activeSet.add(obj);
     return obj;
   }
 
   release(obj: T): void {
+    // Use Set for O(1) lookup instead of O(n) indexOf
+    if (!this.activeSet.has(obj)) {
+      return;
+    }
+
+    // Find and remove from array (still O(n) but only happens on release)
     const index = this.active.indexOf(obj);
     if (index !== -1) {
       this.active.splice(index, 1);
+      this.activeSet.delete(obj);
       this.reset(obj);
 
       if (this.available.length < this.maxSize / 2) {
@@ -71,6 +82,7 @@ export class ObjectPool<T> {
   clear(): void {
     this.active = [];
     this.available = [];
+    this.activeSet.clear();
   }
 
   getStats(): { active: number; available: number; total: number } {

@@ -8,8 +8,8 @@
     <title>BOBBLE</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="description" content="Pop bubblewrap aliens in a fake invasion! BOBBLE - The most satisfying bubblewrap popper game in the galaxy!" />
-    <script type="module" crossorigin src="./assets/index-DrPqltaD.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DCfJZAis.css">
+    <script type="module" crossorigin src="./assets/index-WoJhHr4U.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DFdtOSTV.css">
   </head>
   <body>
     <div id="app">
@@ -18,9 +18,10 @@
         <div id="hud">
           <div id="points-display">Points: 0</div>
           <button id="mobile-menu-toggle" class="mobile-menu-toggle" style="display: none;">☰</button>
-          <button id="achievements-btn" class="hud-button">🏆 Achievements</button>
-          <button id="stats-btn" class="hud-button">📊 Statistics</button>
-          <div id="hud-buttons-container"></div>
+          <div id="hud-buttons-container">
+            <button id="achievements-btn" class="hud-button" data-icon="🏆" data-text="Achievements" aria-label="Open Achievements (Press H)"><span class="hud-button-icon">🏆</span><span class="hud-button-text">Achievements</span></button>
+            <button id="stats-btn" class="hud-button" data-icon="📊" data-text="Statistics" aria-label="Open Statistics"><span class="hud-button-icon">📊</span><span class="hud-button-text">Statistics</span></button>
+          </div>
         </div>
         <div id="mobile-menu" class="mobile-menu" style="display: none;">
           <button id="mobile-menu-close" class="mobile-menu-close">✕</button>
@@ -43,7 +44,7 @@
             <p class="boss-ready">You cannot level up until this boss is defeated!</p>
             <p class="boss-timer-info" id="boss-dialog-timer">Time Limit: <span>30s</span></p>
             <div class="boss-dialog-buttons">
-              <button id="boss-start-btn" class="boss-btn boss-btn-start">ENGAGE!</button>
+          <button id="boss-start-btn" class="boss-btn boss-btn-start" aria-label="Start Boss Fight">ENGAGE!</button>
             </div>
           </div>
         </div>
@@ -64,12 +65,12 @@
         <button id="desktop-shop-toggle" class="desktop-shop-toggle">◀</button>
         <h2>UPGRADES</h2>
         <div id="shop-tabs">
-          <button id="tab-available" class="shop-tab active">Available</button>
-          <button id="tab-owned" class="shop-tab">Owned</button>
+          <button id="tab-available" class="shop-tab active" aria-label="Show Available Upgrades">Available</button>
+          <button id="tab-owned" class="shop-tab" aria-label="Show Owned Upgrades">Owned</button>
         </div>
         <div id="shop-content"></div>
         <div id="reset-container">
-          <button id="reset-btn" class="shop-button">Reset Save</button>
+          <button id="reset-btn" class="shop-button" aria-label="Reset Game Save">Reset Save</button>
         </div>
       </div>
     </div>

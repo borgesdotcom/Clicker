@@ -1,5 +1,6 @@
 import type { GameState } from '../types';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
+import { t } from '../core/I18n';
 
 export class UpgradesDisplay {
   private container: HTMLElement;
@@ -32,7 +33,7 @@ export class UpgradesDisplay {
       // Add tooltip on hover
       const tooltip = document.createElement('div');
       tooltip.className = 'tooltip';
-      tooltip.textContent = upgrade.name;
+      tooltip.textContent = t(`upgrades.special.${upgrade.id}.name`);
       icon.appendChild(tooltip);
 
       this.container.appendChild(icon);

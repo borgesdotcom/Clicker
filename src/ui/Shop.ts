@@ -5,6 +5,7 @@ import type { UpgradeSystem } from '../systems/UpgradeSystem';
 import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
 import { Button } from './Button';
 import { NumberFormatter } from '../utils/NumberFormatter';
+import { t } from '../core/I18n';
 
 export class Shop {
   private container: HTMLElement;
@@ -89,7 +90,7 @@ export class Shop {
     quantityContainer.className = 'buy-quantity-selector';
 
     const label = document.createElement('span');
-    label.textContent = 'Buy Quantity:';
+    label.textContent = t('shop.buyQuantity');
     quantityContainer.appendChild(label);
 
     const quantities: (1 | 5 | 10 | 'max')[] = [1, 5, 10, 'max'];
@@ -132,6 +133,88 @@ export class Shop {
 
     // Insert before shop tabs
     shopTabs.parentNode?.insertBefore(quantityContainer, shopTabs);
+
+    // Add auto-buy toggle button
+    this.setupAutoBuyToggle(quantityContainer);
+  }
+
+  private setupAutoBuyToggle(container: HTMLElement): void {
+    const autoBuyBtn = document.createElement('button');
+    autoBuyBtn.className = 'buy-quantity-btn auto-buy-toggle';
+    autoBuyBtn.innerHTML = '🤖 Auto-Buy';
+    autoBuyBtn.title = 'Automatically purchase affordable upgrades every 0.5 seconds when enabled';
+    autoBuyBtn.setAttribute('aria-label', 'Toggle Auto-Buy');
+    autoBuyBtn.setAttribute('aria-keyshortcuts', 'A');
+    autoBuyBtn.setAttribute('role', 'switch');
+    autoBuyBtn.setAttribute('aria-checked', 'false');
+
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'auto-buy-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 8px;
+      background: rgba(0, 0, 0, 0.95);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 255, 136, 0.5);
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1000;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 1px 0 #000;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    `;
+    tooltip.textContent = 'Automatically purchase affordable upgrades every 0.5 seconds';
+    container.appendChild(tooltip);
+
+    const updateAutoBuyButton = () => {
+      const state = this.store.getState();
+      const isEnabled = state.autoBuyEnabled ?? false;
+      autoBuyBtn.setAttribute('aria-checked', isEnabled.toString());
+      if (isEnabled) {
+        autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.4)';
+        autoBuyBtn.style.borderColor = '#00ff88';
+        autoBuyBtn.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+        tooltip.textContent = 'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
+      } else {
+        autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.1)';
+        autoBuyBtn.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+        autoBuyBtn.style.boxShadow = 'none';
+        tooltip.textContent = 'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
+      }
+    };
+
+    // Show tooltip on hover
+    autoBuyBtn.addEventListener('mouseenter', () => {
+      tooltip.style.opacity = '1';
+    });
+
+    autoBuyBtn.addEventListener('mouseleave', () => {
+      tooltip.style.opacity = '0';
+    });
+
+    autoBuyBtn.addEventListener('click', () => {
+      const state = this.store.getState();
+      state.autoBuyEnabled = !(state.autoBuyEnabled ?? false);
+      this.store.setState(state);
+      updateAutoBuyButton();
+    });
+
+    container.appendChild(autoBuyBtn);
+    updateAutoBuyButton();
+
+    // Update button state when store changes
+    this.store.subscribe(() => {
+      updateAutoBuyButton();
+    });
   }
 
   private setupDesktopToggle(): void {
@@ -448,8 +531,12 @@ export class Shop {
       const specialBox = document.createElement('div');
       specialBox.className = 'special-upgrades-box';
 
+      // Create inner wrapper for the animated effect
+      const effectWrapper = document.createElement('div');
+      effectWrapper.className = 'special-upgrades-effect-wrapper';
+
       const title = document.createElement('h3');
-      title.textContent = '⭐ SPECIAL UPGRADES ⭐';
+      title.textContent = t('shop.specialUpgrades');
       specialBox.appendChild(title);
 
       const grid = document.createElement('div');
@@ -460,6 +547,7 @@ export class Shop {
         grid.appendChild(subItem);
       }
 
+      specialBox.appendChild(effectWrapper);
       specialBox.appendChild(grid);
       this.container.appendChild(specialBox);
     }
@@ -511,8 +599,8 @@ export class Shop {
 
       const costText =
         quantity > 1
-          ? `Cost: ${this.formatNumber(totalCost)} (x${quantity})`
-          : `Cost: ${this.formatNumber(totalCost)}`;
+          ? `${t('common.cost')}: ${this.formatNumber(totalCost)} (x${quantity})`
+          : `${t('common.cost')}: ${this.formatNumber(totalCost)}`;
       cost.textContent = costText;
 
       // Can buy if we can afford at least 1, or the exact quantity requested (not MAX)
@@ -520,7 +608,7 @@ export class Shop {
         state.points >= totalCost &&
         (this.buyQuantity === 'max' || actualAffordable === requestedQty);
       const button = new Button(
-        quantity > 1 ? `BUY x${quantity}` : 'BUY',
+        quantity > 1 ? `${t('common.buy')} x${quantity}` : t('common.buy'),
         () => {
           this.buyUpgrade(upgrade, quantity);
         },
@@ -551,7 +639,7 @@ export class Shop {
       message.style.padding = '40px';
       message.style.textAlign = 'center';
       message.style.color = '#666';
-      message.textContent = 'No special upgrades owned yet.';
+      message.textContent = t('shop.noOwned');
       this.container.appendChild(message);
       return;
     }
@@ -583,21 +671,24 @@ export class Shop {
 
     const name = document.createElement('div');
     name.className = 'sub-upgrade-name';
-    name.textContent = subUpgrade.name;
+    name.textContent = t(`upgrades.special.${subUpgrade.id}.name`);
     card.appendChild(name);
 
     const cost = document.createElement('div');
     cost.className = 'sub-upgrade-cost';
     const discountedCost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
     cost.textContent = subUpgrade.owned
-      ? '✓ OWNED'
+      ? `✓ ${t('common.owned')}`
       : this.formatNumber(discountedCost);
     card.appendChild(cost);
 
     // Tooltip
     const tooltip = document.createElement('div');
     tooltip.className = 'sub-upgrade-tooltip';
-    tooltip.innerHTML = `<strong>${subUpgrade.name}</strong><br>${subUpgrade.description}<br><em style="color: #888; font-size: 10px;">${subUpgrade.flavor}</em>`;
+    const upgradeName = t(`upgrades.special.${subUpgrade.id}.name`);
+    const upgradeDescription = t(`upgrades.special.${subUpgrade.id}.description`);
+    const upgradeFlavor = t(`upgrades.special.${subUpgrade.id}.flavor`);
+    tooltip.innerHTML = `<strong>${upgradeName}</strong><br>${upgradeDescription}<br><em style="color: #888; font-size: 10px;">${upgradeFlavor}</em>`;
     card.appendChild(tooltip);
 
     if (!subUpgrade.owned) {
@@ -794,6 +885,26 @@ export class Shop {
         this.soundManager.playPurchase();
       }
 
+      // Visual feedback: briefly highlight the purchased upgrade button
+      const button = this.buttonCache.get(upgrade.id);
+      if (button) {
+        const originalTransition = button.style.transition;
+        const originalTransform = button.style.transform;
+        const originalBoxShadow = button.style.boxShadow;
+        
+        button.style.transition = 'all 0.3s ease';
+        button.style.transform = 'scale(1.05)';
+        button.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.8), 0 4px 12px rgba(0, 255, 136, 0.5)';
+        
+        setTimeout(() => {
+          button.style.transform = originalTransform;
+          button.style.boxShadow = originalBoxShadow;
+          setTimeout(() => {
+            button.style.transition = originalTransition;
+          }, 300);
+        }, 300);
+      }
+
       // Force immediate UI update
       this.lastAffordability.clear();
       this.render();
@@ -831,6 +942,51 @@ export class Shop {
     }
 
     this.isProcessingPurchase = false;
+  }
+
+  /**
+   * Auto-buy affordable upgrades
+   * Called periodically when auto-buy is enabled
+   */
+  public checkAndBuyAffordableUpgrades(): void {
+    const state = this.store.getState();
+    if (!(state.autoBuyEnabled ?? false)) return;
+    if (this.isProcessingPurchase) return; // Prevent concurrent purchases
+
+    const upgrades = this.upgradeSystem.getUpgrades();
+    let purchasedAny = false;
+
+    // Check main upgrades (skip misc category)
+    for (const upgrade of upgrades) {
+      if (upgrade.id === 'misc') continue;
+      
+      // Only buy discovered upgrades
+      if (!state.discoveredUpgrades?.[upgrade.id] && upgrade.getLevel(state) === 0) {
+        continue;
+      }
+
+      // Check if we can afford at least one
+      if (upgrade.canBuy(state)) {
+        // Buy one at a time for auto-buy (safer and more predictable)
+        this.buyUpgrade(upgrade, 1);
+        purchasedAny = true;
+        break; // Only buy one upgrade per check to avoid buying too many at once
+      }
+    }
+
+    // If no main upgrades were purchased, check sub-upgrades
+    if (!purchasedAny) {
+      const subUpgrades = this.upgradeSystem.getSubUpgrades();
+      for (const subUpgrade of subUpgrades) {
+        if (!subUpgrade.isVisible(state) || subUpgrade.owned) continue;
+        
+        const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+        if (state.points >= cost) {
+          this.buySubUpgrade(subUpgrade);
+          break; // Only buy one sub-upgrade per check
+        }
+      }
+    }
   }
 
   // Deprecated - use NumberFormatter instead
