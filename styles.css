@@ -1266,7 +1266,7 @@ body {
   transform: translateX(-50%);
   width: 450px;
   max-width: 90%;
-  z-index: 90;
+  z-index: 110;
   pointer-events: none;
   animation: timerHudEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -3741,11 +3741,12 @@ body {
 
   /* Boss timer adjustments for mobile */
   #boss-timer-hud {
-    top: 60px;
+    top: 140px;
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
     max-width: 250px;
+    z-index: 110;
   }
 
   /* Modals adjustments for mobile */
