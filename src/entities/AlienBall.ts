@@ -212,105 +212,64 @@ export class AlienBall {
       scaleY = parallelScale;
     }
     
-    // Draw space-themed alien bubble with enhanced visuals
+    // Draw simple bubble
     const centerX = this.x + deformationX;
     const centerY = this.y + deformationY;
     
-    // Subtle pulsing animation for energy effect
+    // Subtle pulsing animation
     const pulseValue = Math.sin(this.animationTime * 1.5 + this.rotationOffset) * 0.02;
     const currentRadius = this.radius * (1 + pulseValue);
     
     const deformedRadiusX = currentRadius * scaleX;
     const deformedRadiusY = currentRadius * scaleY;
     
-    // Outer energy glow - space-themed pulsing aura (enhanced multi-layer)
-    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + pulseValue * 0.1);
-    const glowAlpha = 0.2 + Math.sin(this.animationTime * 2) * 0.05;
+    // Color values
     const r = parseInt(this.color.fill.substring(1, 3), 16);
     const g = parseInt(this.color.fill.substring(3, 5), 16);
     const b = parseInt(this.color.fill.substring(5, 7), 16);
     
-    // Multi-layer glow for depth
-    for (let glowLayer = 0; glowLayer < 2; glowLayer++) {
-      const layerRadius = glowRadius * (0.8 + glowLayer * 0.4);
-      const layerAlpha = glowAlpha * (1 - glowLayer * 0.3);
-      const glowGradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        layerRadius,
-      );
-      glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${layerAlpha})`);
-      glowGradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${layerAlpha * 0.6})`);
-      glowGradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, ${layerAlpha * 0.3})`);
-      glowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-      ctx.fillStyle = glowGradient;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Simple outer glow - bubble-like soft aura
+    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * 1.15;
+    const glowGradient = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      glowRadius,
+    );
+    glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.15)`);
+    glowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.08)`);
+    glowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
     
-    // Energy particles orbiting around (subtle sparkles)
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + this.animationTime * 1.2 + this.rotationOffset;
-      const distance = currentRadius * (1.1 + Math.sin(this.animationTime * 4 + i) * 0.05);
-      const particleX = Math.cos(angle) * distance;
-      const particleY = Math.sin(angle) * distance;
-      const particleAlpha = 0.3 + Math.sin(this.animationTime * 5 + i) * 0.2;
-      const particleSize = 1.5 + Math.sin(this.animationTime * 3 + i) * 0.5;
-      
-      ctx.fillStyle = `rgba(255, 255, 255, ${particleAlpha})`;
-      ctx.shadowBlur = 4;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
-      ctx.beginPath();
-      ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.shadowBlur = 0;
-    ctx.restore();
-    
-    // Subtle color shift during deformation - much less noticeable
-    const colorShift = deformationAmount * 0.2; // Much less color shift
-    const shiftedR = Math.min(255, r + colorShift * 100);
-    const shiftedG = Math.min(255, g + colorShift * 100);
-    const shiftedB = Math.min(255, b + colorShift * 50);
-    const deformedColor = `rgba(${Math.floor(shiftedR)}, ${Math.floor(shiftedG)}, ${Math.floor(shiftedB)}, 0.7)`;
-    
-    // Enhanced multi-layer gradient for depth with color transitions
+    // Simple bubble gradient - translucent bubble effect
     const gradient = ctx.createRadialGradient(
       centerX - deformedRadiusX * 0.3,
       centerY - deformedRadiusY * 0.3,
-      Math.min(deformedRadiusX, deformedRadiusY) * 0.08,
+      Math.min(deformedRadiusX, deformedRadiusY) * 0.1,
       centerX,
       centerY,
       Math.max(deformedRadiusX, deformedRadiusY),
     );
-    // Bright energy core
-    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.7 + Math.sin(this.animationTime * 3) * 0.1})`);
+    // Light center (highlight source) - less translucent
+    gradient.addColorStop(0, `rgba(255, 255, 255, 0.6)`);
     // Transition to main color
-    gradient.addColorStop(0.12, deformedColor);
-    // Rich mid-tone
-    gradient.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, 0.85)`);
-    // Deep color
-    gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.9)`);
-    // Convert hex stroke color to rgba format
+    gradient.addColorStop(0.2, `rgba(${r}, ${g}, ${b}, 0.5)`);
+    // Main bubble color
+    gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.6)`);
+    // Darker edge
     const strokeR = parseInt(this.color.stroke.substring(1, 3), 16);
     const strokeG = parseInt(this.color.stroke.substring(3, 5), 16);
     const strokeB = parseInt(this.color.stroke.substring(5, 7), 16);
-    // Edge transition
-    gradient.addColorStop(0.8, `rgba(${strokeR}, ${strokeG}, ${strokeB}, 0.95)`);
-    // Outer rim
-    gradient.addColorStop(0.95, `rgba(${strokeR}, ${strokeG}, ${strokeB}, 0.7)`);
-    gradient.addColorStop(1, `rgba(${strokeR}, ${strokeG}, ${strokeB}, 0.5)`);
+    gradient.addColorStop(0.9, `rgba(${strokeR}, ${strokeG}, ${strokeB}, 0.7)`);
+    gradient.addColorStop(1, `rgba(${strokeR}, ${strokeG}, ${strokeB}, 0.8)`);
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    // Draw ellipse for dramatic deformation effect
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
@@ -318,159 +277,24 @@ export class AlienBall {
     ctx.restore();
     ctx.fill();
 
-    // Inner energy rings - space-themed pattern with enhanced effects
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.rotate(this.animationTime * 0.3 + this.rotationOffset); // Slow rotation
+    // Simple glossy highlight - bubble reflection
+    const highlightSize = currentRadius * 0.35;
+    const highlightAlpha = 0.5;
     
-    for (let ring = 1; ring <= 3; ring++) {
-      const ringRadius = currentRadius * (0.35 + ring * 0.18);
-      const ringAlpha = 0.18 + Math.sin(this.animationTime * 3 + ring) * 0.06;
-      const ringPulse = Math.sin(this.animationTime * 4 + ring * 0.5) * 0.02;
-      
-      // Main ring
-      ctx.strokeStyle = `rgba(255, 255, 255, ${ringAlpha})`;
-      ctx.lineWidth = 1.5 + ringPulse;
-      ctx.shadowBlur = 3;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
-      ctx.beginPath();
-      ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
-      ctx.stroke();
-      
-      // Glowing segments on ring
-      if (ring <= 2) {
-        for (let segment = 0; segment < 4; segment++) {
-          const segmentAngle = (segment / 4) * Math.PI * 2 + this.animationTime * 0.5;
-          const segmentAlpha = 0.3 + Math.sin(this.animationTime * 5 + segment) * 0.2;
-          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${segmentAlpha})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(
-            Math.cos(segmentAngle) * ringRadius * 0.3,
-            Math.sin(segmentAngle) * ringRadius * 0.3,
-            ringRadius * 0.15,
-            0,
-            Math.PI * 2,
-          );
-          ctx.stroke();
-        }
-      }
-    }
-    ctx.shadowBlur = 0;
-    ctx.restore();
-
-    // Surface texture pattern - energy grid overlay
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.rotate(this.animationTime * 0.15);
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.08 + pulseValue * 2})`;
-    ctx.lineWidth = 0.8;
-    const gridSize = currentRadius * 0.5;
-    for (let i = -2; i <= 2; i++) {
-      for (let j = -2; j <= 2; j++) {
-        if ((i + j) % 2 === 0) continue; // Checkerboard pattern
-        const gridX = i * gridSize;
-        const gridY = j * gridSize;
-        const dist = Math.sqrt(gridX * gridX + gridY * gridY);
-        if (dist < currentRadius * 0.9) {
-          ctx.beginPath();
-          ctx.arc(gridX, gridY, currentRadius * 0.08, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-    }
-    ctx.restore();
-
-    // Enhanced glossy highlight with energy effect and secondary highlight
-    const highlightSize = currentRadius * 0.4;
-    const highlightAlpha = 0.4 + Math.sin(this.animationTime * 2) * 0.1;
-    
-    // Main highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
     ctx.beginPath();
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
     ctx.arc(
-      -currentRadius * 0.35,
-      -currentRadius * 0.35,
+      -currentRadius * 0.3,
+      -currentRadius * 0.3,
       highlightSize,
       0,
       Math.PI * 2,
     );
     ctx.restore();
     ctx.fill();
-    
-    // Secondary smaller highlight for extra depth
-    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.6})`;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(
-      -currentRadius * 0.25,
-      -currentRadius * 0.25,
-      highlightSize * 0.5,
-      0,
-      Math.PI * 2,
-    );
-    ctx.restore();
-    ctx.fill();
-
-    // Outer energy border - enhanced glow with multiple layers
-    ctx.strokeStyle = this.color.stroke;
-    ctx.lineWidth = 2.5;
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.stroke();
-    ctx.shadowBlur = 0; // Reset shadow
-
-    // Secondary outer border with glow
-    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 + pulseValue * 3})`;
-    ctx.lineWidth = 1.5;
-    ctx.shadowBlur = 4;
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, currentRadius * 1.05, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Inner energy border - subtle depth with pulsing
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 + pulseValue * 2})`;
-    ctx.lineWidth = 1.5;
-    ctx.shadowBlur = 2;
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, currentRadius * 0.88, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    
-    // Additional inner ring for extra depth
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 + pulseValue * 1.5})`;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, currentRadius * 0.75, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.stroke();
 
     // Health bar (bubble integrity) - position relative to deformed center
     const hpBarWidth = this.radius * 2;
@@ -501,20 +325,14 @@ export class AlienBall {
     ctx.lineWidth = 1;
     ctx.strokeRect(centerX - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
 
-    // Enhanced flash effect when damaged - space-themed energy burst
+    // Simple flash effect when damaged
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      const flashRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1 + (1 - flashAlpha) * 0.25);
+      const flashRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1 + (1 - flashAlpha) * 0.2);
       
-      // Outer flash glow
-      drawer.setAlpha(flashAlpha * 0.5);
-      drawer.setStroke(`rgba(${r}, ${g}, ${b}, 0.8)`, 6);
+      drawer.setAlpha(flashAlpha * 0.6);
+      drawer.setStroke(`rgba(${r}, ${g}, ${b}, 0.9)`, 4);
       drawer.circle(centerX, centerY, flashRadius, false);
-      
-      // Inner bright flash
-      drawer.setAlpha(flashAlpha * 0.9);
-      drawer.setStroke('#fff', 3);
-      drawer.circle(centerX, centerY, flashRadius * 0.8, false);
       
       drawer.resetAlpha();
     }
