@@ -221,7 +221,8 @@ export class Save {
       energyCoreLevel: data.energyCoreLevel ?? 0,
       cosmicKnowledgeLevel: data.cosmicKnowledgeLevel ?? 0,
       discoveredUpgrades: data.discoveredUpgrades ?? { ship: true }, // Ship is always visible
-      highestLevelReached: data.highestLevelReached,
+      // Initialize highestLevelReached to current level if undefined (for new players)
+      highestLevelReached: data.highestLevelReached ?? (data.level && data.level >= 100 ? data.level : undefined),
       autoBuyEnabled: data.autoBuyEnabled ?? false,
     };
   }

@@ -181,7 +181,7 @@
     "main": {
       "ship": {
         "name": "🚀 Starship Fleet",
-        "description": "Recruit another starship to your armada. More ships = more firepower!"
+        "description": "Recruit another starship to your armada. Each ship fires independently, adding to your total DPS. More ships = more simultaneous attacks!"
       },
       "attackSpeed": {
         "name": "⚡ Attack Speed",
@@ -197,7 +197,7 @@
       },
       "resourceGen": {
         "name": "🏭 Passive Income",
-        "description": "Automated alien elimination stations. They work while you sleep. Very efficient defense system."
+        "description": "Automated alien elimination stations. They generate Points (currency) continuously while you play. Very efficient defense system."
       },
       "xpBoost": {
         "name": "📚 Knowledge Core",
@@ -209,7 +209,7 @@
       },
       "fleetCommand": {
         "name": "🛸 Fleet Command",
-        "description": "Command your fleet with precision - boost all ships effectiveness"
+        "description": "Command your fleet with precision - boosts all ships' effectiveness and reduces ship upgrade costs"
       },
       "mutationEngine": {
         "name": "🧬 Mutation Engine",
@@ -221,7 +221,7 @@
       },
       "cosmicKnowledge": {
         "name": "🌌 Cosmic Knowledge",
-        "description": "Understand the universe - reduce costs and increase rewards"
+        "description": "Understand the universe - reduces ALL upgrade costs (including post-ascension prestige upgrades). Wisdom is power."
       },
       "misc": {
         "name": "🔬 Research & Development",

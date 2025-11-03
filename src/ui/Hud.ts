@@ -14,6 +14,7 @@ export class Hud {
   private levelBarFill: HTMLElement;
   private dpsDisplay: HTMLElement | null = null;
   private passiveDisplay: HTMLElement | null = null;
+  private totalIncomeDisplay: HTMLElement | null = null; // Combined income display
   private critDisplay: HTMLElement | null = null;
 
   private damageHistory: Array<{ damage: number; time: number }> = [];
@@ -21,7 +22,7 @@ export class Hud {
 
   // Cache last values to avoid unnecessary DOM updates
   private lastPointsText = '';
-  private lastStatsText = { dps: '', passive: '', crit: '' };
+  private lastStatsText = { dps: '', passive: '', totalIncome: '', crit: '' };
   private lastLevelText = { level: '', exp: '', percent: -1 };
 
   constructor() {
@@ -212,6 +213,21 @@ export class Hud {
     `;
     this.passiveDisplay.textContent = `🏭 ${t('hud.passive')}: 0${t('hud.perSec')}`;
 
+    // Total Income Display - Combined passive + active (DPS)
+    this.totalIncomeDisplay = document.createElement('div');
+    this.totalIncomeDisplay.style.cssText = `
+      margin-bottom: 5px; 
+      color: #00ff88; 
+      font-weight: bold;
+      text-shadow: 0 0 4px rgba(0, 255, 136, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      border-left: 3px solid rgba(0, 255, 136, 0.8);
+      padding-left: 8px;
+      font-size: 15px;
+    `;
+    this.totalIncomeDisplay.textContent = `💰 Total Income: 0${t('hud.perSec')}`;
+
     // Crit Display - White label, green value
     this.critDisplay = document.createElement('div');
     this.critDisplay.style.cssText = `
@@ -226,6 +242,7 @@ export class Hud {
 
     statsContainer.appendChild(this.dpsDisplay);
     statsContainer.appendChild(this.passiveDisplay);
+    statsContainer.appendChild(this.totalIncomeDisplay);
     statsContainer.appendChild(this.critDisplay);
 
     const hudElement = document.getElementById('hud');
@@ -253,6 +270,11 @@ export class Hud {
     const dpsText = `⚔️ ${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
     const passiveText = `🏭 ${t('hud.passive')}: ${NumberFormatter.format(passive)}${t('hud.perSec')}`;
     
+    // Calculate total income (passive + active combat income)
+    // DPS represents active income from combat since damage = points
+    const totalIncome = passive + dps;
+    const totalIncomeText = `💰 Total Income: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
+    
     // Show crit chance with power-up bonus if active
     const totalCritChance = critChance + critBonus;
     let critText = `✨ ${t('hud.crit')}: ${NumberFormatter.formatDecimal(totalCritChance, 1)}%`;
@@ -267,6 +289,10 @@ export class Hud {
     if (this.passiveDisplay && passiveText !== this.lastStatsText.passive) {
       this.passiveDisplay.textContent = passiveText;
       this.lastStatsText.passive = passiveText;
+    }
+    if (this.totalIncomeDisplay && totalIncomeText !== this.lastStatsText.totalIncome) {
+      this.totalIncomeDisplay.textContent = totalIncomeText;
+      this.lastStatsText.totalIncome = totalIncomeText;
     }
     if (this.critDisplay && critText !== this.lastStatsText.crit) {
       this.critDisplay.textContent = critText;

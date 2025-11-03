@@ -1,5 +1,6 @@
 import { AlienBall } from './AlienBall';
 import type { Draw } from '../render/Draw';
+import type { Vec2 } from '../types';
 import { ColorManager } from '../math/ColorManager';
 
 export type EnemyType = 'normal' | 'scout' | 'tank' | 'healer';
@@ -96,7 +97,7 @@ export class EnhancedAlienBall extends AlienBall {
   private stats: EnemyStats;
   private healTimer = 0;
   private healInterval = 2;
-  private animationTime = 0; // For visual animations
+  // animationTime is inherited from parent (protected)
 
   constructor(
     x: number,
@@ -154,9 +155,9 @@ export class EnhancedAlienBall extends AlienBall {
     return Math.floor(basePoints * this.stats.pointsMultiplier);
   }
 
-  public override takeDamage(amount: number): boolean {
+  public override takeDamage(amount: number, hitDirection?: Vec2, combo?: number, isBeam?: boolean): boolean {
     // Call parent takeDamage
-    return super.takeDamage(amount);
+    return super.takeDamage(amount, hitDirection, combo, isBeam);
   }
 
   public override update(
@@ -166,7 +167,7 @@ export class EnhancedAlienBall extends AlienBall {
   ): void {
     super.update(dt);
 
-    // Update animation time for all enemy types
+    // Update animation time for all enemy types (inherited from parent)
     this.animationTime += dt;
 
     // Healer ability: slowly regenerates health
@@ -182,38 +183,95 @@ export class EnhancedAlienBall extends AlienBall {
 
   public override draw(drawer: Draw): void {
     const ctx = drawer.getContext();
-    const centerX = this.x;
-    const centerY = this.y;
+    
+    // Calculate deformation effect - different for beams vs lasers (same as parent)
+    let deformationAmount = 0;
+    
+    if ((this as any).deformationTime > 0) {
+      if ((this as any).isBeamDeformation) {
+        // For beams: continuous pulsing sine wave for sustained effect
+        // Pulse at ~4Hz (4 cycles per second) for smooth, noticeable pulsing
+        const pulseSpeed = 4 * 2 * Math.PI; // 4 Hz = 4 complete cycles per second = 8π radians/sec
+        const pulseValue = Math.sin((this as any).beamDeformationTime * pulseSpeed);
+        // Map sine wave (-1 to 1) to (0 to 1) with some base intensity
+        const normalizedPulse = (pulseValue + 1) / 2; // 0 to 1
+        // Apply pulse with some base deformation (30% to 100% of intensity)
+        deformationAmount = (0.3 + normalizedPulse * 0.7) * (this as any).deformationIntensity;
+      } else {
+        // For regular lasers: smooth ease-out curve
+        const deformationProgress = 1 - ((this as any).deformationTime / (this as any).deformationDuration);
+        const easeOut = 1 - Math.pow(1 - deformationProgress, 2);
+        deformationAmount = easeOut * (this as any).deformationIntensity;
+      }
+    }
+    
+    // Calculate deformation displacement and scales
+    const pushDistance = deformationAmount * this.radius * 0.3;
+    const deformationX = (this as any).deformationDirection.x * pushDistance;
+    const deformationY = (this as any).deformationDirection.y * pushDistance;
+    
+    const squashAmount = deformationAmount * 0.15;
+    const stretchAmount = deformationAmount * 0.1;
+    
+    const perpendicularScale = 1 - squashAmount;
+    const parallelScale = 1 + stretchAmount;
+    
+    let scaleX = 1;
+    let scaleY = 1;
+    
+    if (Math.abs((this as any).deformationDirection.x) > Math.abs((this as any).deformationDirection.y)) {
+      scaleX = parallelScale;
+      scaleY = perpendicularScale;
+    } else {
+      scaleX = perpendicularScale;
+      scaleY = parallelScale;
+    }
+    
+    // Add pulsing animation for visual variety
+    const basePulseValue = Math.sin((this as any).animationTime * 1.5) * 0.02;
+    const currentRadius = this.radius * (1 + basePulseValue);
+    
+    const deformedRadiusX = currentRadius * scaleX;
+    const deformedRadiusY = currentRadius * scaleY;
+    
+    const centerX = this.x + deformationX;
+    const centerY = this.y + deformationY;
 
-    // Draw glow effect
-    const gradient = ctx.createRadialGradient(
+    // Draw enhanced glow effect - space-themed pulsing aura
+    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1);
+    const glowGradient = ctx.createRadialGradient(
       centerX,
       centerY,
       0,
       centerX,
       centerY,
-      this.radius * 2,
+      glowRadius,
     );
-    gradient.addColorStop(0, this.stats.glowColor);
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = gradient;
+    const glowAlpha = 0.2 + Math.sin((this as any).animationTime * 2) * 0.05;
+    const r = parseInt(this.stats.color.substring(1, 3), 16);
+    const g = parseInt(this.stats.color.substring(3, 5), 16);
+    const b = parseInt(this.stats.color.substring(5, 7), 16);
+    glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${glowAlpha})`);
+    glowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${glowAlpha * 0.5})`);
+    glowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+    ctx.fillStyle = glowGradient;
     ctx.fillRect(
-      centerX - this.radius * 2,
-      centerY - this.radius * 2,
-      this.radius * 4,
-      this.radius * 4,
+      centerX - glowRadius,
+      centerY - glowRadius,
+      glowRadius * 2,
+      glowRadius * 2,
     );
 
     // Draw enemy-specific effects
     switch (this.enemyType) {
       case 'scout':
-        this.drawScout(ctx, centerX, centerY);
+        this.drawScout(ctx, centerX, centerY, scaleX, scaleY, deformedRadiusX, deformedRadiusY);
         break;
       case 'tank':
-        this.drawTank(ctx, centerX, centerY);
+        this.drawTank(ctx, centerX, centerY, scaleX, scaleY, deformedRadiusX, deformedRadiusY);
         break;
       case 'healer':
-        this.drawHealer(ctx, centerX, centerY);
+        this.drawHealer(ctx, centerX, centerY, scaleX, scaleY, deformedRadiusX, deformedRadiusY);
         break;
       default:
         super.draw(drawer);
@@ -224,13 +282,16 @@ export class EnhancedAlienBall extends AlienBall {
     ctx: CanvasRenderingContext2D,
     centerX: number,
     centerY: number,
+    deformedRadiusX?: number,
+    deformedRadiusY?: number,
   ): void {
     const barWidth = this.radius * 2;
     const barHeight = 6;
     const barX = centerX - barWidth / 2;
     // Adjust position based on enemy type for better spacing
     const extraOffset = this.enemyType === 'tank' ? 5 : 0; // Tanks need more space due to armor
-    const barY = centerY - this.radius - 18 - extraOffset;
+    const maxRadius = deformedRadiusX && deformedRadiusY ? Math.max(deformedRadiusX, deformedRadiusY) : this.radius;
+    const barY = centerY - maxRadius - 18 - extraOffset;
 
     // Background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -257,62 +318,267 @@ export class EnhancedAlienBall extends AlienBall {
     ctx: CanvasRenderingContext2D,
     centerX: number,
     centerY: number,
+    scaleX: number,
+    scaleY: number,
+    deformedRadiusX: number,
+    deformedRadiusY: number,
   ): void {
     // Draw HP bar
-    this.drawHealthBar(ctx, centerX, centerY);
+    this.drawHealthBar(ctx, centerX, centerY, deformedRadiusX, deformedRadiusY);
 
-    // Main bubble body (smaller, faster bubble)
+    // Enhanced scout glow - faster energy with multi-layer
+    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * 1.4;
+    const animationTime = this.animationTime;
+    const pulseValue = Math.sin(animationTime * 2) * 0.015; // Faster pulse for scout
+    const currentRadius = this.radius * (1 + pulseValue);
+    const glowAlpha = 0.25 + Math.sin(animationTime * 3) * 0.05;
+    const r = parseInt(this.stats.color.substring(1, 3), 16);
+    const g = parseInt(this.stats.color.substring(3, 5), 16);
+    const b = parseInt(this.stats.color.substring(5, 7), 16);
+    
+    // Multi-layer glow
+    for (let glowLayer = 0; glowLayer < 2; glowLayer++) {
+      const layerRadius = glowRadius * (0.85 + glowLayer * 0.3);
+      const layerAlpha = glowAlpha * (1 - glowLayer * 0.25);
+      const glowGradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        0,
+        centerX,
+        centerY,
+        layerRadius,
+      );
+      glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${layerAlpha})`);
+      glowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${layerAlpha * 0.5})`);
+      glowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+      ctx.fillStyle = glowGradient;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Orbiting energy particles (scout is fast!)
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + animationTime * 3;
+      const distance = currentRadius * (1.15 + Math.sin(animationTime * 6 + i) * 0.08);
+      const particleX = Math.cos(angle) * distance;
+      const particleY = Math.sin(angle) * distance;
+      const particleAlpha = 0.4 + Math.sin(animationTime * 8 + i) * 0.3;
+      const particleSize = 2 + Math.sin(animationTime * 4 + i) * 0.8;
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${particleAlpha})`;
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.9)`;
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Main bubble body with enhanced gradient - apply deformation
     const gradient = ctx.createRadialGradient(
-      centerX - this.radius * 0.3,
-      centerY - this.radius * 0.3,
-      this.radius * 0.1,
+      centerX - deformedRadiusX * 0.3,
+      centerY - deformedRadiusY * 0.3,
+      Math.min(deformedRadiusX, deformedRadiusY) * 0.08,
       centerX,
       centerY,
-      this.radius,
+      Math.max(deformedRadiusX, deformedRadiusY),
     );
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-    gradient.addColorStop(0.3, this.stats.color + '99');
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.7 + Math.sin(animationTime * 4) * 0.1})`);
+    gradient.addColorStop(0.15, this.stats.color + 'dd');
+    gradient.addColorStop(0.4, this.stats.color + 'bb');
+    gradient.addColorStop(0.65, this.stats.color + '99');
+    gradient.addColorStop(0.85, this.stats.color + 'aa');
     gradient.addColorStop(1, this.stats.color + 'cc');
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+    ctx.restore();
     ctx.fill();
 
-    // Glossy highlight
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    // Speed lines effect (scout is fast!) - enhanced with trailing effect
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(animationTime * 2);
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + pulseValue * 3})`;
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const startRadius = currentRadius * 0.7;
+      const endRadius = currentRadius * 0.95;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * startRadius, Math.sin(angle) * startRadius);
+      ctx.lineTo(Math.cos(angle) * endRadius, Math.sin(angle) * endRadius);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+    
+    // Additional speed trail particles
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(animationTime * 2 + Math.PI / 4);
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const trailDistance = currentRadius * (0.75 + Math.sin(animationTime * 6 + i) * 0.1);
+      const trailAlpha = 0.15 + Math.sin(animationTime * 8 + i) * 0.1;
+      ctx.fillStyle = `rgba(255, 255, 255, ${trailAlpha})`;
+      ctx.beginPath();
+      ctx.arc(
+        Math.cos(angle) * trailDistance,
+        Math.sin(angle) * trailDistance,
+        1.5,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Enhanced glossy highlight - also deformed with secondary highlight
+    const highlightAlpha = 0.35 + Math.sin(animationTime * 2) * 0.1;
+    
+    // Main highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
     ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
     ctx.arc(
-      centerX - this.radius * 0.35,
-      centerY - this.radius * 0.35,
-      this.radius * 0.35,
+      -currentRadius * 0.35,
+      -currentRadius * 0.35,
+      currentRadius * 0.4,
       0,
       Math.PI * 2,
     );
+    ctx.restore();
+    ctx.fill();
+    
+    // Secondary highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.5})`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(
+      -currentRadius * 0.25,
+      -currentRadius * 0.25,
+      currentRadius * 0.25,
+      0,
+      Math.PI * 2,
+    );
+    ctx.restore();
     ctx.fill();
 
-    // Bubble edge
+    // Energy border with glow - also deformed with multiple layers
     ctx.strokeStyle = this.stats.color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.7)`;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+    ctx.restore();
     ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // Secondary outer border
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.4 + pulseValue * 3})`;
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius * 1.05, 0, Math.PI * 2);
+    ctx.restore();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 
   private drawTank(
     ctx: CanvasRenderingContext2D,
     centerX: number,
     centerY: number,
+    scaleX: number,
+    scaleY: number,
+    deformedRadiusX: number,
+    deformedRadiusY: number,
   ): void {
     // Draw HP bar
-    this.drawHealthBar(ctx, centerX, centerY);
+    this.drawHealthBar(ctx, centerX, centerY, deformedRadiusX, deformedRadiusY);
 
-    // Tank = thick reinforced bubble!
-    const shieldPulse = Math.sin(this.animationTime * 2) * 2;
-
-    // Draw outer shield layers (multiple bubble layers)
+    // Tank = heavily armored reinforced bubble! - apply deformation
+    const animationTime = this.animationTime;
+    const shieldPulse = Math.sin(animationTime * 1.5) * 2;
+    const pulseValue = Math.sin(animationTime * 1.2) * 0.01; // Slower, stronger pulse
+    const currentRadius = this.radius * (1 + pulseValue);
+    
+    // Enhanced tank glow - stronger, more menacing multi-layer
+    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1.5 + pulseValue * 0.15);
+    const r = parseInt(this.stats.color.substring(1, 3), 16);
+    const g = parseInt(this.stats.color.substring(3, 5), 16);
+    const b = parseInt(this.stats.color.substring(5, 7), 16);
+    
+    // Multi-layer menacing glow
+    for (let glowLayer = 0; glowLayer < 3; glowLayer++) {
+      const layerRadius = glowRadius * (0.7 + glowLayer * 0.2);
+      const layerAlpha = (0.25 - glowLayer * 0.05) + Math.sin(animationTime * 1.5 + glowLayer) * 0.03;
+      const glowGradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        0,
+        centerX,
+        centerY,
+        layerRadius,
+      );
+      glowGradient.addColorStop(0, `rgba(${r}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${layerAlpha})`);
+      glowGradient.addColorStop(0.4, `rgba(${r}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)}, ${layerAlpha * 0.7})`);
+      glowGradient.addColorStop(0.7, `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, ${layerAlpha * 0.4})`);
+      glowGradient.addColorStop(1, `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, 0)`);
+      ctx.fillStyle = glowGradient;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Armor plating particles - defensive energy field
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + animationTime * 0.8;
+      const distance = currentRadius * (1.25 + Math.sin(animationTime * 2 + i) * 0.08);
+      const particleX = Math.cos(angle) * distance;
+      const particleY = Math.sin(angle) * distance;
+      const particleAlpha = 0.25 + Math.sin(animationTime * 3 + i) * 0.15;
+      
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${particleAlpha})`;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+    
+    // Draw outer shield layers (multiple reinforced bubble layers) - also deformed
     for (let layer = 0; layer < 3; layer++) {
-      const layerRadius = this.radius + 10 + layer * 5 + shieldPulse;
-      const layerAlpha = 0.15 - layer * 0.03;
+      const layerRadius = Math.max(deformedRadiusX, deformedRadiusY) + 12 + layer * 6 + shieldPulse;
+      const layerAlpha = 0.2 - layer * 0.04;
       const layerGradient = ctx.createRadialGradient(
         centerX - layerRadius * 0.3,
         centerY - layerRadius * 0.3,
@@ -323,61 +589,188 @@ export class EnhancedAlienBall extends AlienBall {
       );
       layerGradient.addColorStop(
         0,
-        `rgba(255, 100, 100, ${String(layerAlpha + 0.2)})`,
+        `rgba(${r}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${String(layerAlpha + 0.25)})`,
       );
       layerGradient.addColorStop(
-        0.5,
-        `rgba(255, 68, 68, ${String(layerAlpha)})`,
+        0.4,
+        `rgba(${r}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)}, ${String(layerAlpha + 0.15)})`,
       );
-      layerGradient.addColorStop(1, `rgba(255, 68, 68, 0)`);
+      layerGradient.addColorStop(
+        0.7,
+        `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, ${String(layerAlpha)})`,
+      );
+      layerGradient.addColorStop(1, `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, 0)`);
       ctx.fillStyle = layerGradient;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.scale(scaleX, scaleY);
+      ctx.arc(0, 0, layerRadius / Math.max(scaleX, scaleY), 0, Math.PI * 2);
+      ctx.restore();
       ctx.fill();
     }
 
-    // Main reinforced bubble body (larger, thicker)
-    const bodyScale = 1 + Math.sin(this.animationTime * 1.5) * 0.02;
+    // Main reinforced bubble body (larger, thicker) - apply deformation with enhanced gradient
+    const bodyScale = 1 + Math.sin(animationTime * 1.2) * 0.02;
     const gradient = ctx.createRadialGradient(
-      centerX - this.radius * 0.3,
-      centerY - this.radius * 0.3,
-      this.radius * 0.1,
+      centerX - deformedRadiusX * 0.3,
+      centerY - deformedRadiusY * 0.3,
+      Math.min(deformedRadiusX, deformedRadiusY) * 0.08,
       centerX,
       centerY,
-      this.radius * bodyScale,
+      Math.max(deformedRadiusX, deformedRadiusY) * bodyScale,
     );
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-    gradient.addColorStop(0.3, this.stats.color + 'aa');
-    gradient.addColorStop(1, this.stats.color + 'dd');
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.6 + Math.sin(animationTime * 2) * 0.1})`);
+    gradient.addColorStop(0.12, this.stats.color + 'ee');
+    gradient.addColorStop(0.3, this.stats.color + 'dd');
+    gradient.addColorStop(0.5, this.stats.color + 'bb');
+    gradient.addColorStop(0.7, this.stats.color + '99');
+    gradient.addColorStop(0.85, this.stats.color + 'aa');
+    gradient.addColorStop(1, this.stats.color + 'cc');
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius * bodyScale, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius * bodyScale, 0, Math.PI * 2);
+    ctx.restore();
     ctx.fill();
 
-    // Extra thick glossy highlight
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    // Armor plating pattern - rotating hexagon pattern with enhanced detail
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.rotate(animationTime * 0.5);
+    
+    // Main hexagon
+    ctx.strokeStyle = `rgba(0, 0, 0, ${0.35 + pulseValue * 2})`;
+    ctx.lineWidth = 2;
+    const hexSize = currentRadius * 0.75;
     ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const x = Math.cos(angle) * hexSize;
+      const y = Math.sin(angle) * hexSize;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Inner hexagon for layered armor effect
+    ctx.strokeStyle = `rgba(0, 0, 0, ${0.25 + pulseValue * 1.5})`;
+    ctx.lineWidth = 1.5;
+    const innerHexSize = currentRadius * 0.55;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const x = Math.cos(angle) * innerHexSize;
+      const y = Math.sin(angle) * innerHexSize;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Armor plate segments
+    for (let segment = 0; segment < 6; segment++) {
+      const angle = (segment / 6) * Math.PI * 2;
+      const segmentAlpha = 0.2 + Math.sin(animationTime * 2 + segment) * 0.1;
+      ctx.fillStyle = `rgba(0, 0, 0, ${segmentAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * hexSize, Math.sin(angle) * hexSize);
+      ctx.lineTo(Math.cos(angle + Math.PI / 3) * hexSize, Math.sin(angle + Math.PI / 3) * hexSize);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Extra thick glossy highlight - also deformed with triple highlight
+    const highlightAlpha = 0.4 + Math.sin(animationTime * 1.5) * 0.1;
+    
+    // Main highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
     ctx.arc(
-      centerX - this.radius * 0.35,
-      centerY - this.radius * 0.35,
-      this.radius * 0.4,
+      -currentRadius * 0.35,
+      -currentRadius * 0.35,
+      currentRadius * 0.45,
       0,
       Math.PI * 2,
     );
+    ctx.restore();
+    ctx.fill();
+    
+    // Secondary highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.65})`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(
+      -currentRadius * 0.28,
+      -currentRadius * 0.28,
+      currentRadius * 0.3,
+      0,
+      Math.PI * 2,
+    );
+    ctx.restore();
+    ctx.fill();
+    
+    // Tertiary highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.4})`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(
+      -currentRadius * 0.22,
+      -currentRadius * 0.22,
+      currentRadius * 0.18,
+      0,
+      Math.PI * 2,
+    );
+    ctx.restore();
     ctx.fill();
 
-    // Thick bubble edge
+    // Thick energy border with strong glow - also deformed
     ctx.strokeStyle = this.stats.color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius * bodyScale, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius * bodyScale, 0, Math.PI * 2);
+    ctx.restore();
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Inner reinforcement rings
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.lineWidth = 3;
+    // Inner reinforcement rings - also deformed
+    ctx.strokeStyle = `rgba(0, 0, 0, ${0.4 + pulseValue * 3})`;
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius * 0.85, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius * 0.88, 0, Math.PI * 2);
+    ctx.restore();
+    ctx.stroke();
+    
+    // Second reinforcement ring
+    ctx.strokeStyle = `rgba(0, 0, 0, ${0.25 + pulseValue * 2})`;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius * 0.92, 0, Math.PI * 2);
+    ctx.restore();
     ctx.stroke();
   }
 
@@ -385,82 +778,226 @@ export class EnhancedAlienBall extends AlienBall {
     ctx: CanvasRenderingContext2D,
     centerX: number,
     centerY: number,
+    scaleX: number,
+    scaleY: number,
+    deformedRadiusX: number,
+    deformedRadiusY: number,
   ): void {
     // Draw HP bar
-    this.drawHealthBar(ctx, centerX, centerY);
+    this.drawHealthBar(ctx, centerX, centerY, deformedRadiusX, deformedRadiusY);
 
-    // Healing aura (soothing green bubble glow)
-    const pulseSize = Math.sin(Date.now() * 0.003) * 5;
-    const auraGradient = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      0,
-      centerX,
-      centerY,
-      this.radius + 15 + pulseSize,
-    );
-    auraGradient.addColorStop(0, 'rgba(0, 255, 136, 0.3)');
-    auraGradient.addColorStop(0.5, 'rgba(0, 255, 136, 0.15)');
-    auraGradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
-    ctx.fillStyle = auraGradient;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius + 15 + pulseSize, 0, Math.PI * 2);
-    ctx.fill();
+    // Enhanced healing aura - soothing pulsing energy field with multi-layer
+    const animationTime = this.animationTime;
+    const pulseSize = Math.sin(animationTime * 1.8) * 8;
+    const pulseValue = Math.sin(animationTime * 1.5) * 0.015;
+    const currentRadius = this.radius * (1 + pulseValue);
+    
+    // Extract green and blue for healing colors (healer uses green/teal palette)
+    const g = parseInt(this.stats.color.substring(3, 5), 16);
+    const b = parseInt(this.stats.color.substring(5, 7), 16);
+    
+    // Multiple healing aura layers with enhanced pulsing
+    for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
+      const auraRadius = Math.max(deformedRadiusX, deformedRadiusY) + 10 + auraLayer * 7 + pulseSize;
+      const auraAlpha = 0.28 - auraLayer * 0.08;
+      const auraPulse = Math.sin(animationTime * 2 + auraLayer * 0.5) * 0.05;
+      const auraGradient = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        0,
+        centerX,
+        centerY,
+        auraRadius,
+      );
+      auraGradient.addColorStop(0, `rgba(0, ${g + 50}, ${b + 50}, ${auraAlpha + auraPulse})`);
+      auraGradient.addColorStop(0.4, `rgba(0, ${g + 30}, ${b + 30}, ${(auraAlpha + auraPulse) * 0.7})`);
+      auraGradient.addColorStop(0.7, `rgba(0, ${g + 15}, ${b + 15}, ${(auraAlpha + auraPulse) * 0.4})`);
+      auraGradient.addColorStop(1, `rgba(0, ${g}, ${b}, 0)`);
+      ctx.fillStyle = auraGradient;
+      ctx.beginPath();
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.scale(scaleX, scaleY);
+      ctx.arc(0, 0, auraRadius / Math.max(scaleX, scaleY), 0, Math.PI * 2);
+      ctx.restore();
+      ctx.fill();
+    }
+    
+    // Healing energy particles orbiting
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + animationTime * 1.5;
+      const distance = currentRadius * (1.2 + Math.sin(animationTime * 4 + i) * 0.1);
+      const particleX = Math.cos(angle) * distance;
+      const particleY = Math.sin(angle) * distance;
+      const particleAlpha = 0.35 + Math.sin(animationTime * 6 + i) * 0.25;
+      
+      ctx.fillStyle = `rgba(0, ${g + 40}, ${b + 40}, ${particleAlpha})`;
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = `rgba(0, ${g + 50}, ${b + 50}, 0.7)`;
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
 
-    // Main healing bubble body
+    // Main healing bubble body with enhanced gradient - apply deformation
     const gradient = ctx.createRadialGradient(
-      centerX - this.radius * 0.3,
-      centerY - this.radius * 0.3,
-      this.radius * 0.1,
+      centerX - deformedRadiusX * 0.3,
+      centerY - deformedRadiusY * 0.3,
+      Math.min(deformedRadiusX, deformedRadiusY) * 0.08,
       centerX,
       centerY,
-      this.radius,
+      Math.max(deformedRadiusX, deformedRadiusY),
     );
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-    gradient.addColorStop(0.3, this.stats.color + '99');
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.7 + Math.sin(animationTime * 3) * 0.1})`);
+    gradient.addColorStop(0.15, this.stats.color + 'dd');
+    gradient.addColorStop(0.35, this.stats.color + 'bb');
+    gradient.addColorStop(0.55, this.stats.color + 'aa');
+    gradient.addColorStop(0.75, this.stats.color + '99');
+    gradient.addColorStop(0.9, this.stats.color + 'aa');
     gradient.addColorStop(1, this.stats.color + 'cc');
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+    ctx.restore();
     ctx.fill();
 
-    // Glossy highlight
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    // Healing energy rings - rotating pattern with enhanced glow
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.rotate(animationTime * 0.8);
+    for (let ring = 1; ring <= 3; ring++) {
+      const ringRadius = currentRadius * (0.45 + ring * 0.12);
+      const ringAlpha = 0.25 + Math.sin(animationTime * 2 + ring) * 0.1;
+      const ringPulse = Math.sin(animationTime * 3 + ring * 0.7) * 0.03;
+      
+      ctx.strokeStyle = `rgba(0, 255, 136, ${ringAlpha})`;
+      ctx.lineWidth = 2 + ringPulse;
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = `rgba(0, ${g + 40}, ${b + 40}, 0.6)`;
+      ctx.beginPath();
+      ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Glowing segments on rings
+      if (ring <= 2) {
+        for (let segment = 0; segment < 3; segment++) {
+          const segmentAngle = (segment / 3) * Math.PI * 2 + animationTime * 0.8;
+          const segmentAlpha = 0.3 + Math.sin(animationTime * 4 + segment) * 0.2;
+          ctx.fillStyle = `rgba(0, 255, 136, ${segmentAlpha})`;
+          ctx.beginPath();
+          ctx.arc(
+            Math.cos(segmentAngle) * ringRadius,
+            Math.sin(segmentAngle) * ringRadius,
+            ringRadius * 0.12,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+      }
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Enhanced glossy highlight with pulsing - also deformed with dual highlights
+    const highlightAlpha = 0.4 + Math.sin(animationTime * 2) * 0.15;
+    
+    // Main highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
     ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
     ctx.arc(
-      centerX - this.radius * 0.35,
-      centerY - this.radius * 0.35,
-      this.radius * 0.35,
+      -currentRadius * 0.35,
+      -currentRadius * 0.35,
+      currentRadius * 0.4,
       0,
       Math.PI * 2,
     );
+    ctx.restore();
+    ctx.fill();
+    
+    // Secondary highlight
+    ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.6})`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(
+      -currentRadius * 0.28,
+      -currentRadius * 0.28,
+      currentRadius * 0.25,
+      0,
+      Math.PI * 2,
+    );
+    ctx.restore();
     ctx.fill();
 
-    // Bubble edge
+    // Energy border with healing glow - also deformed with multiple layers
     ctx.strokeStyle = this.stats.color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = `rgba(0, ${g + 50}, ${b + 50}, 0.7)`;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+    ctx.restore();
     ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // Secondary outer border
+    ctx.strokeStyle = `rgba(0, ${g + 40}, ${b + 40}, ${0.5 + pulseValue * 2})`;
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = `rgba(0, ${g + 50}, ${b + 50}, 0.5)`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.arc(0, 0, currentRadius * 1.05, 0, Math.PI * 2);
+    ctx.restore();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Healing cross inside bubble
-    ctx.strokeStyle = 'rgba(0, 255, 136, 0.8)';
-    ctx.lineWidth = 3;
+    // Enhanced healing cross - glowing energy symbol
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+    ctx.rotate(Math.sin(animationTime * 1.2) * 0.1); // Subtle rotation
+    const crossAlpha = 0.85 + Math.sin(animationTime * 2.5) * 0.1;
+    ctx.strokeStyle = `rgba(0, 255, 136, ${crossAlpha})`;
+    ctx.lineWidth = 3.5;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = 'rgba(0, 255, 136, 0.6)';
     ctx.beginPath();
-    ctx.moveTo(centerX - 10, centerY);
-    ctx.lineTo(centerX + 10, centerY);
-    ctx.moveTo(centerX, centerY - 10);
-    ctx.lineTo(centerX, centerY + 10);
+    ctx.moveTo(-12, 0);
+    ctx.lineTo(12, 0);
+    ctx.moveTo(0, -12);
+    ctx.lineTo(0, 12);
     ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.restore();
 
     // Healing particles (tiny bubbles)
     if (
       this.currentHp < this.maxHp &&
-      this.healTimer > this.healInterval * 0.5
+      (this as any).healTimer > (this as any).healInterval * 0.5
     ) {
       for (let i = 0; i < 5; i++) {
         const angle = (i / 5) * Math.PI * 2 + Date.now() * 0.001;
-        const distance = this.radius + 20;
+        const distance = Math.max(deformedRadiusX, deformedRadiusY) + 20;
         const px = centerX + Math.cos(angle) * distance;
         const py = centerY + Math.sin(angle) * distance;
 

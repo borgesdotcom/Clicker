@@ -121,6 +121,8 @@ export class Game {
   private damageBatch = 0;
   private critBatch = false;
   private shipDamageBatch = false; // Track if damage is from auto-fire ships
+  private batchHitDirection?: Vec2; // Track hit direction for deformation
+  private batchIsBeam = false; // Track if batch damage is from beams
   private batchTimer = 0;
   private batchInterval = 0.05; // Apply damage every 50ms
 
@@ -414,6 +416,12 @@ export class Game {
       this.bossRetryButton.innerHTML = '<span class="hud-button-icon">⚔️</span><span class="hud-button-text">Retry Boss</span>';
       this.bossRetryButton.style.display = 'none';
       this.bossRetryButton.style.pointerEvents = 'auto';
+
+      // Add tooltip AFTER setting innerHTML
+      const tooltip = document.createElement('div');
+      tooltip.className = 'boss-retry-tooltip';
+      tooltip.textContent = 'Retry the boss fight. Shows the boss dialog again to restart the encounter.';
+      this.bossRetryButton.appendChild(tooltip);
 
       this.bossRetryButton.addEventListener('click', () => {
         this.retryBossFight();
@@ -775,6 +783,8 @@ export class Game {
     this.damageBatch = 0;
     this.critBatch = false;
     this.shipDamageBatch = false;
+    this.batchHitDirection = undefined;
+    this.batchIsBeam = false;
     this.batchTimer = 0;
 
     // Calculate prestige points to gain
@@ -1353,6 +1363,8 @@ export class Game {
     damage: number,
     isCrit: boolean = false,
     isFromShip: boolean = false,
+    hitDirection?: Vec2,
+    isBeam?: boolean,
   ): void {
     let finalDamage = damage;
 
@@ -1393,6 +1405,15 @@ export class Game {
     if (isFromShip) {
       this.shipDamageBatch = true;
     }
+
+    // Store hit direction for deformation effect
+    if (hitDirection && !this.batchHitDirection) {
+      this.batchHitDirection = hitDirection;
+    }
+    // Store if this is beam damage
+    if (isBeam) {
+      this.batchIsBeam = true;
+    }
   }
 
   private applyDamageBatch(): void {
@@ -1401,9 +1422,21 @@ export class Game {
     const finalDamage = this.damageBatch;
     const isCrit = this.critBatch;
     const isFromShip = this.shipDamageBatch;
+    const hitDirection = this.batchHitDirection;
+
+    // Reset batch state
+    this.damageBatch = 0;
+    this.critBatch = false;
+    this.shipDamageBatch = false;
+    this.batchHitDirection = undefined;
+    const isBeam = this.batchIsBeam;
+    this.batchIsBeam = false;
 
       if (this.mode === 'normal' && this.ball) {
-      const broken = this.ball.takeDamage(finalDamage);
+      // Get current combo for deformation scaling
+      const currentCombo = this.comboSystem.getCombo();
+      // Check if this batch is from a beam (stored in batch state)
+      const broken = this.ball.takeDamage(finalDamage, hitDirection, currentCombo, isBeam);
       
       // Apply points multiplier for enhanced aliens
       let pointsEarned = finalDamage;
@@ -1509,6 +1542,8 @@ export class Game {
     this.damageBatch = 0;
     this.critBatch = false;
     this.shipDamageBatch = false;
+    this.batchHitDirection = undefined;
+    this.batchIsBeam = false;
   }
 
   private onBallDestroyed(): void {
@@ -1818,17 +1853,32 @@ export class Game {
       this.laserSystem.clearBeams();
     }
 
-    this.laserSystem.update(dt, (damage, isCrit, isFromShip) => {
-      this.handleDamage(damage, isCrit, isFromShip);
+    this.laserSystem.update(dt, (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2) => {
+      this.handleDamage(damage, isCrit, isFromShip, hitDirection);
     });
 
     // Process beam damage if in beam mode (respects attack speed)
     if (shouldUseBeam) {
+      const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+      const targetPosition = targetEntity ? { x: targetEntity.x, y: targetEntity.y } : undefined;
+      
+      // Get beam origin from first ship or use canvas center as fallback
+      let beamOrigin: Vec2 | undefined;
+      if (this.ships.length > 0 && this.ships[0]) {
+        const shipPos = this.ships[0].getPosition();
+        beamOrigin = shipPos;
+      } else {
+        // Fallback to canvas center if no ships
+        beamOrigin = { x: this.canvas.getCenterX(), y: this.canvas.getCenterY() };
+      }
+      
       this.laserSystem.processBeamDamage(
         cooldown,
-        (damage, isCrit, isFromShip) => {
-          this.handleDamage(damage, isCrit, isFromShip);
+        (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2, isBeam?: boolean) => {
+          this.handleDamage(damage, isCrit, isFromShip, hitDirection, isBeam);
         },
+        targetPosition,
+        beamOrigin,
       );
     }
 
@@ -2063,6 +2113,8 @@ export class Game {
     this.damageBatch = 0;
     this.critBatch = false;
     this.shipDamageBatch = false;
+    this.batchHitDirection = undefined;
+    this.batchIsBeam = false;
 
     this.powerUpSystem.clear();
 

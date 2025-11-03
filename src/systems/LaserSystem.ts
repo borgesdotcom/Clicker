@@ -207,7 +207,7 @@ export class LaserSystem {
 
   update(
     dt: number,
-    onHit?: (damage: number, isCrit: boolean, isFromShip: boolean) => void,
+    onHit?: (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2) => void,
   ): void {
     if (this.beamMode && onHit) {
       this.beamDamageTimer += dt;
@@ -219,7 +219,11 @@ export class LaserSystem {
     for (const laser of activeLasers) {
       laser.update(dt);
       if (onHit && laser.checkHit()) {
-        onHit(laser.damage, laser.isCrit, laser.isFromShip);
+        // Calculate hit direction from origin to target
+        const dx = laser.target.x - laser.origin.x;
+        const dy = laser.target.y - laser.origin.y;
+        const hitDirection: Vec2 = { x: dx, y: dy };
+        onHit(laser.damage, laser.isCrit, laser.isFromShip, hitDirection);
       }
       if (!laser.alive) {
         toRelease.push(laser);
@@ -233,14 +237,23 @@ export class LaserSystem {
 
   processBeamDamage(
     cooldownMs: number,
-    onHit: (damage: number, isCrit: boolean, isFromShip: boolean) => void,
+    onHit: (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2, isBeam?: boolean) => void,
+    targetPosition?: Vec2,
+    beamOrigin?: Vec2,
   ): void {
     if (!this.beamMode || this.beamDamagePerTick <= 0) return;
 
     const cooldownSec = cooldownMs / 1000;
 
     if (this.beamDamageTimer >= cooldownSec) {
-      onHit(this.beamDamagePerTick, false, true);
+      // Calculate hit direction for beam deformation
+      let hitDirection: Vec2 | undefined;
+      if (targetPosition && beamOrigin) {
+        const dx = targetPosition.x - beamOrigin.x;
+        const dy = targetPosition.y - beamOrigin.y;
+        hitDirection = { x: dx, y: dy };
+      }
+      onHit(this.beamDamagePerTick, false, true, hitDirection, true);
       this.beamDamageTimer = 0;
     }
   }
