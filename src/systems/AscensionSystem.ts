@@ -116,6 +116,16 @@ export class AscensionSystem {
           state.prestigeUpgrades?.prestige_combo_boost ?? 0,
         effect: '+0.0005× combo per level (total +0.001×)',
       },
+      {
+        id: 'auto_buy_unlock',
+        name: 'Auto-Buy Protocol',
+        description: 'Unlock automatic purchase of affordable upgrades',
+        cost: 50,
+        maxLevel: 1,
+        getCurrentLevel: (state) =>
+          state.prestigeUpgrades?.auto_buy_unlock ?? 0,
+        effect: 'Unlocks Auto-Buy feature',
+      },
     ];
   }
 
@@ -243,6 +253,11 @@ export class AscensionSystem {
     const level = state.prestigeUpgrades?.prestige_combo_boost ?? 0;
     // Adds extra combo multiplier rate
     return 0.001 + level * 0.0005;
+  }
+
+  isAutoBuyUnlocked(state: GameState): boolean {
+    const level = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
+    return level >= 1;
   }
 
   buyPrestigeUpgrade(state: GameState, upgradeId: string): boolean {

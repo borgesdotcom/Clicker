@@ -378,6 +378,7 @@ export class Game {
     this.shop = new Shop(this.store, this.upgradeSystem);
     this.shop.setSoundManager(this.soundManager);
     this.shop.setMissionSystem(this.missionSystem);
+    this.shop.setAscensionSystem(this.ascensionSystem);
 
     this.achievementSystem.setOnUnlock((achievement) => {
       this.achievementSnackbar.show(achievement);
@@ -2193,11 +2194,15 @@ export class Game {
       this.titleUpdateTimer = 0;
     }
 
-    // Auto-buy check
+    // Auto-buy check (only if unlocked)
     this.autoBuyTimer += dt;
     if (this.autoBuyTimer >= this.autoBuyInterval) {
-      if (state.autoBuyEnabled) {
+      const isUnlocked = this.ascensionSystem.isAutoBuyUnlocked(state);
+      if (isUnlocked && state.autoBuyEnabled) {
         this.shop.checkAndBuyAffordableUpgrades();
+      } else if (!isUnlocked && state.autoBuyEnabled) {
+        // Disable auto-buy if it was enabled but unlock was lost (shouldn't happen, but safety check)
+        state.autoBuyEnabled = false;
       }
       this.autoBuyTimer = 0;
     }

@@ -17,6 +17,7 @@ export class Shop {
   private buttonCache: Map<string, HTMLButtonElement> = new Map();
   private soundManager: { playPurchase: () => void } | null = null;
   private missionSystem: { trackUpgrade: () => void } | null = null;
+  private ascensionSystem: { isAutoBuyUnlocked: (state: GameState) => boolean } | null = null;
   private lastUpdateTime = 0;
   private updateThrottle = 30; // Update at most every 30ms (much more responsive)
   private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
@@ -59,6 +60,10 @@ export class Shop {
 
   setMissionSystem(missionSystem: { trackUpgrade: () => void }): void {
     this.missionSystem = missionSystem;
+  }
+
+  setAscensionSystem(ascensionSystem: { isAutoBuyUnlocked: (state: GameState) => boolean }): void {
+    this.ascensionSystem = ascensionSystem;
   }
 
   private setupTabs(): void {
@@ -175,20 +180,54 @@ export class Shop {
     tooltip.textContent = 'Automatically purchase affordable upgrades every 0.5 seconds';
     container.appendChild(tooltip);
 
+    // Create info text for locked state
+    const infoText = document.createElement('div');
+    infoText.className = 'auto-buy-info-text';
+    infoText.style.cssText = `
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 4px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      display: none;
+    `;
+    infoText.textContent = 'Purchase in Ascension Store (50 PP)';
+    container.appendChild(infoText);
+
     const updateAutoBuyButton = () => {
       const state = this.store.getState();
+      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? false;
       const isEnabled = state.autoBuyEnabled ?? false;
-      autoBuyBtn.setAttribute('aria-checked', isEnabled.toString());
-      if (isEnabled) {
-        autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.4)';
-        autoBuyBtn.style.borderColor = '#00ff88';
-        autoBuyBtn.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
-        tooltip.textContent = 'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
-      } else {
-        autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.1)';
-        autoBuyBtn.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+      
+      if (!isUnlocked) {
+        // Disabled - not unlocked
+        autoBuyBtn.disabled = true;
+        autoBuyBtn.style.background = 'rgba(100, 100, 100, 0.3)';
+        autoBuyBtn.style.borderColor = 'rgba(100, 100, 100, 0.5)';
         autoBuyBtn.style.boxShadow = 'none';
-        tooltip.textContent = 'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
+        autoBuyBtn.style.cursor = 'not-allowed';
+        autoBuyBtn.style.opacity = '0.6';
+        autoBuyBtn.setAttribute('aria-checked', 'false');
+        tooltip.textContent = 'Auto-Buy: LOCKED - Purchase in Ascension Store for 50 Ascension Points';
+        infoText.style.display = 'block';
+      } else {
+        // Unlocked - can toggle
+        autoBuyBtn.disabled = false;
+        autoBuyBtn.style.cursor = 'pointer';
+        autoBuyBtn.style.opacity = '1';
+        autoBuyBtn.setAttribute('aria-checked', isEnabled.toString());
+        infoText.style.display = 'none';
+        if (isEnabled) {
+          autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.4)';
+          autoBuyBtn.style.borderColor = '#00ff88';
+          autoBuyBtn.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+          tooltip.textContent = 'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
+        } else {
+          autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.1)';
+          autoBuyBtn.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+          autoBuyBtn.style.boxShadow = 'none';
+          tooltip.textContent = 'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
+        }
       }
     };
 
@@ -203,6 +242,11 @@ export class Shop {
 
     autoBuyBtn.addEventListener('click', () => {
       const state = this.store.getState();
+      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? false;
+      if (!isUnlocked) {
+        // Show info about needing to unlock
+        return;
+      }
       state.autoBuyEnabled = !(state.autoBuyEnabled ?? false);
       this.store.setState(state);
       updateAutoBuyButton();
