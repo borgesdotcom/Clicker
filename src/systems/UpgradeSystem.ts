@@ -2111,44 +2111,52 @@ export class UpgradeSystem {
       discount *= 1 - fleetDiscount;
     }
 
+    // Helper to check if sub-upgrade is owned (from state if available, otherwise from this.subUpgrades)
+    const hasSubUpgrade = (id: string): boolean => {
+      if (state && state.subUpgrades) {
+        return state.subUpgrades[id] ?? false;
+      }
+      return this.subUpgrades.find((u) => u.id === id)?.owned ?? false;
+    };
+
     // v3.0: COSMIC KNOWLEDGE SUBUPGRADES
-    if (this.subUpgrades.find((u) => u.id === 'ancient_texts')?.owned)
+    if (hasSubUpgrade('ancient_texts'))
       discount *= 0.97;
-    if (this.subUpgrades.find((u) => u.id === 'akashic_records_library')?.owned)
+    if (hasSubUpgrade('akashic_records_library'))
       discount *= 0.95;
-    if (this.subUpgrades.find((u) => u.id === 'prophetic_vision')?.owned)
+    if (hasSubUpgrade('prophetic_vision'))
       discount *= 0.93;
-    if (this.subUpgrades.find((u) => u.id === 'universal_translator')?.owned)
+    if (hasSubUpgrade('universal_translator'))
       discount *= 0.9;
-    if (this.subUpgrades.find((u) => u.id === 'omniscience_lite')?.owned)
+    if (hasSubUpgrade('omniscience_lite'))
       discount *= 0.85;
-    if (this.subUpgrades.find((u) => u.id === 'forbidden_theorems')?.owned)
+    if (hasSubUpgrade('forbidden_theorems'))
       discount *= 0.8;
-    if (this.subUpgrades.find((u) => u.id === 'schrodinger_upgrade')?.owned)
+    if (hasSubUpgrade('schrodinger_upgrade'))
       discount *= 0.75;
-    if (this.subUpgrades.find((u) => u.id === 'universal_constants')?.owned)
+    if (hasSubUpgrade('universal_constants'))
       discount *= 0.7;
-    if (this.subUpgrades.find((u) => u.id === 'apotheosis')?.owned)
+    if (hasSubUpgrade('apotheosis'))
       discount *= 0.6;
-    if (this.subUpgrades.find((u) => u.id === 'omniscience')?.owned)
+    if (hasSubUpgrade('omniscience'))
       discount *= 0.5;
 
     // v3.0: FLEET COMMAND SUBUPGRADES (ship cost reduction)
-    if (this.subUpgrades.find((u) => u.id === 'automated_repairs')?.owned)
+    if (hasSubUpgrade('automated_repairs'))
       discount *= 0.9;
 
     // Energy recycling: 5% discount
-    if (this.subUpgrades.find((u) => u.id === 'energy_recycling')?.owned) {
+    if (hasSubUpgrade('energy_recycling')) {
       discount *= 0.95;
     }
 
     // Cheat codes: 20% discount
-    if (this.subUpgrades.find((u) => u.id === 'cheat_codes')?.owned) {
+    if (hasSubUpgrade('cheat_codes')) {
       discount *= 0.8;
     }
 
     // Omniscient AI: 30% discount
-    if (this.subUpgrades.find((u) => u.id === 'omniscient_ai')?.owned) {
+    if (hasSubUpgrade('omniscient_ai')) {
       discount *= 0.7;
     }
 

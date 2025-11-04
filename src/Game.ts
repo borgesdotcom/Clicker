@@ -375,6 +375,9 @@ export class Game {
       });
     }
     this.hud = new Hud();
+    // Configure UpgradeSystem to access game state for discounts
+    this.upgradeSystem.setGameStateGetter(() => this.store.getState());
+    
     this.shop = new Shop(this.store, this.upgradeSystem);
     this.shop.setSoundManager(this.soundManager);
     this.shop.setMissionSystem(this.missionSystem);
