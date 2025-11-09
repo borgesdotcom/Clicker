@@ -1567,14 +1567,6 @@ export class Game {
     const comboMult = this.comboSystem.getMultiplier(this.store.getState());
     finalDamage *= comboMult;
 
-    // Play combo sound on milestone combos (boss mode only for sound)
-    if (this.mode === 'boss') {
-      const currentCombo = this.comboSystem.getCombo();
-      if (currentCombo % 10 === 0 && currentCombo > 0) {
-        this.soundManager.playCombo(currentCombo / 10);
-      }
-    }
-
     // Record damage for DPS calculation
     this.hud.recordDamage(finalDamage);
 
