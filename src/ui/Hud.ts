@@ -230,14 +230,15 @@ export class Hud {
   }
 
   private createStatsDisplay(): void {
-    // Create stats container - Green spaceship style
+    // Create stats container - Colorful space theme
     const statsContainer = document.createElement('div');
     statsContainer.id = 'stats-display';
     statsContainer.style.cssText = `
       margin-top: 15px;
       background: rgba(0, 0, 0, 0.8);
       padding: 10px;
-      border: 2px solid rgba(0, 255, 136, 0.5);
+      border: 2px solid;
+      border-image: linear-gradient(135deg, #ff00ff, #0088ff, #00ffff) 1;
       border-radius: 4px;
       font-size: 14px;
       width: 300px;
@@ -245,72 +246,61 @@ export class Hud {
       max-width: 300px;
       font-family: 'Courier New', monospace;
       box-shadow: 
-        0 0 10px rgba(0, 255, 136, 0.3),
-        inset 0 0 20px rgba(0, 255, 136, 0.1);
-      /* Scanline effect */
+        0 0 15px rgba(255, 0, 255, 0.4),
+        0 0 20px rgba(0, 136, 255, 0.3),
+        inset 0 0 20px rgba(136, 0, 255, 0.12);
+      /* Colorful scanline effect */
       background-image: linear-gradient(
         transparent 50%,
-        rgba(0, 255, 136, 0.03) 50%
+        rgba(255, 0, 255, 0.04) 50%
       );
       background-size: 100% 4px;
     `;
 
-    // DPS Display - White label, green value
+    // DPS Display - White label, colorful border
     this.dpsDisplay = document.createElement('div');
     this.dpsDisplay.style.cssText = `
       margin-bottom: 5px; 
       color: #fff; 
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
       font-family: 'Courier New', monospace;
       letter-spacing: 1px;
-      border-left: 2px solid rgba(0, 255, 136, 0.5);
+      border-left: 3px solid;
+      border-image: linear-gradient(180deg, #ff00ff, #0088ff) 1;
       padding-left: 8px;
     `;
     this.dpsDisplay.textContent = `⚔️ ${t('hud.dps')}: 0`;
 
-    // Passive Display - White label, green value
+    // Passive Display - White label, colorful border
     this.passiveDisplay = document.createElement('div');
     this.passiveDisplay.style.cssText = `
       margin-bottom: 5px; 
       color: #fff; 
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
       font-family: 'Courier New', monospace;
       letter-spacing: 1px;
-      border-left: 2px solid rgba(0, 255, 136, 0.5);
+      border-left: 3px solid;
+      border-image: linear-gradient(180deg, #0088ff, #00ffff) 1;
       padding-left: 8px;
     `;
     this.passiveDisplay.textContent = `🏭 ${t('hud.passive')}: 0${t('hud.perSec')}`;
 
-    // Total Income Display - Combined passive + active (DPS)
-    this.totalIncomeDisplay = document.createElement('div');
-    this.totalIncomeDisplay.style.cssText = `
-      margin-bottom: 5px; 
-      color: #00ff88; 
-      font-weight: bold;
-      text-shadow: 0 0 4px rgba(0, 255, 136, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 1px;
-      border-left: 3px solid rgba(0, 255, 136, 0.8);
-      padding-left: 8px;
-      font-size: 15px;
-    `;
-    this.totalIncomeDisplay.textContent = `💰 Total Income: 0${t('hud.perSec')}`;
-
-    // Crit Display - White label, green value
+    // Crit Display - White label, colorful border
     this.critDisplay = document.createElement('div');
     this.critDisplay.style.cssText = `
       color: #fff; 
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
       font-family: 'Courier New', monospace;
       letter-spacing: 1px;
-      border-left: 2px solid rgba(0, 255, 136, 0.5);
+      border-left: 3px solid;
+      border-image: linear-gradient(180deg, #8800ff, #ff00ff) 1;
       padding-left: 8px;
     `;
     this.critDisplay.textContent = `✨ ${t('hud.crit')}: 0%`;
 
     statsContainer.appendChild(this.dpsDisplay);
     statsContainer.appendChild(this.passiveDisplay);
-    statsContainer.appendChild(this.totalIncomeDisplay);
+    // totalIncomeDisplay is now below points, not in stats panel
     statsContainer.appendChild(this.critDisplay);
 
     const hudElement = document.getElementById('hud');
@@ -322,6 +312,41 @@ export class Hud {
       if (buttonsContainer && buttonsContainer.parentElement === hudElement) {
         // Only move if it exists and is already in the HUD
         hudElement.insertBefore(buttonsContainer, statsContainer.nextSibling);
+      }
+    }
+
+    // Create income display below points display
+    this.createIncomeDisplay();
+  }
+
+  private createIncomeDisplay(): void {
+    // Create income display below points display
+    this.totalIncomeDisplay = document.createElement('div');
+    this.totalIncomeDisplay.id = 'income-display';
+    this.totalIncomeDisplay.style.cssText = `
+      order: 1;
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 0 0 2px rgba(255, 0, 255, 0.4), 0 0 3px rgba(0, 136, 255, 0.3), 0 1px 0 rgba(0, 0, 0, 0.8);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+    `;
+    this.totalIncomeDisplay.textContent = `💰 ${t('hud.perSec')}: 0`;
+
+    const hudElement = document.getElementById('hud');
+    if (hudElement) {
+      // Insert right after points display
+      const pointsDisplay = document.getElementById('points-display');
+      if (pointsDisplay && pointsDisplay.parentNode === hudElement) {
+        // Insert after points display
+        if (pointsDisplay.nextSibling) {
+          hudElement.insertBefore(this.totalIncomeDisplay, pointsDisplay.nextSibling);
+        } else {
+          hudElement.appendChild(this.totalIncomeDisplay);
+        }
       }
     }
   }

@@ -104,7 +104,7 @@ export class NotificationSystem {
       notifElement.className = 'notification';
       notifElement.setAttribute('data-notif-id', notification.id);
       
-      // Match HUD styling: dark background, green border, Courier New font
+      // Match HUD styling: dark background, colorful border, Courier New font
       const borderColor = this.getBorderColor(notification.type);
       // Create glow color with reduced opacity
       const glowColor = borderColor.replace(/[\d.]+\)$/, '0.2)');
@@ -158,7 +158,7 @@ export class NotificationSystem {
   private getBorderColor(type: NotificationType): string {
     switch (type) {
       case 'success':
-        return 'rgba(0, 255, 136, 0.5)'; // Green like HUD
+        return 'rgba(255, 0, 255, 0.5)'; // Colorful like HUD
       case 'warning':
         return 'rgba(255, 170, 0, 0.5)'; // Orange/yellow
       case 'error':
@@ -166,10 +166,10 @@ export class NotificationSystem {
       case 'achievement':
         return 'rgba(255, 215, 0, 0.5)'; // Gold
       case 'mission':
-        return 'rgba(0, 255, 136, 0.7)'; // Brighter green for missions
+        return 'rgba(0, 136, 255, 0.7)'; // Brighter blue for missions
       case 'info':
       default:
-        return 'rgba(0, 255, 136, 0.5)'; // Default green
+        return 'rgba(255, 0, 255, 0.5)'; // Default colorful
     }
   }
 

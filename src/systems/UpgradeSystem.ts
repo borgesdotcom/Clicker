@@ -279,7 +279,7 @@ export class UpgradeSystem {
       {
         id: 'lucky_horseshoe',
         name: 'Lucky Horseshoe',
-        description: 'Critical hits deal 50% more damage',
+        description: 'Critical hits deal 20% more damage',
         flavor: 'Who needs horses in space? Apparently, luck does.',
         cost: 120000,
         owned: false,
@@ -569,7 +569,7 @@ export class UpgradeSystem {
       {
         id: 'reality_anchor',
         name: 'Reality Anchor',
-        description: 'Critical damage x2, All gains +25%',
+        description: 'Critical damage +50%, All gains +25%',
         flavor: 'Keep reality in check. Or break it. Your choice.',
         cost: 200000000,
         owned: false,
@@ -623,7 +623,7 @@ export class UpgradeSystem {
       {
         id: 'dragon_egg',
         name: 'Dragon Egg',
-        description: 'Critical hit chance +5%, Critical damage +50%',
+        description: 'Critical hit chance +5%, Critical damage +20%',
         flavor: "It's either a dragon egg or a really angry space chicken.",
         cost: 3000000,
         owned: false,
@@ -807,7 +807,7 @@ export class UpgradeSystem {
       {
         id: 'dimensional_collapse',
         name: 'Dimensional Collapse Weapon',
-        description: 'Critical damage x3, Attack speed +100%',
+        description: 'Critical damage +80%, Attack speed +100%',
         flavor: 'Collapses dimensions. Please aim responsibly.',
         cost: 5000000000,
         owned: false,
@@ -2394,10 +2394,16 @@ export class UpgradeSystem {
     // Base multiplier is always 2.0x (critical hits deal 2x damage)
     let multiplier = 2.0;
 
-    // Artifact bonus (some artifacts boost crit damage instead of chance)
+    // Artifact bonus: Apply multiplicatively with strong diminishing returns
+    // Use square root scaling to prevent exponential growth
     if (this.artifactSystem) {
       const artifactBonus = this.artifactSystem.getCritBonus();
-      multiplier += artifactBonus * 2; // Crit damage artifacts add to the multiplier
+      // artifactBonus is already in decimal form (e.g., 20.0 for 2000%)
+      // Apply square root scaling with reduced factor to keep multipliers reasonable
+      if (artifactBonus > 0) {
+        const artifactMultiplier = 1 + Math.sqrt(artifactBonus) * 0.15; // Further reduced scaling factor
+        multiplier *= artifactMultiplier;
+      }
     }
 
     // Rubber duck: +3%
@@ -2405,27 +2411,28 @@ export class UpgradeSystem {
       multiplier *= 1.03;
     }
 
-    // Lucky horseshoe: +50%
+    // Lucky horseshoe: +20% (reduced from 50%)
     if (state.subUpgrades['lucky_horseshoe']) {
-      multiplier *= 1.5;
+      multiplier *= 1.2;
     }
 
-    // Dragon egg: 50%
+    // Dragon egg: +20% (reduced from 50%)
     if (state.subUpgrades['dragon_egg']) {
+      multiplier *= 1.2;
+    }
+
+    // Reality anchor: +50% (reduced from x2)
+    if (state.subUpgrades['reality_anchor']) {
       multiplier *= 1.5;
     }
 
-    // Reality anchor: x2
-    if (state.subUpgrades['reality_anchor']) {
-      multiplier *= 2;
-    }
-
-    // Dimensional collapse: x3
+    // Dimensional collapse: +80% (reduced from x3)
     if (state.subUpgrades['dimensional_collapse']) {
-      multiplier *= 3;
+      multiplier *= 1.8;
     }
 
-    return multiplier;
+    // Cap the multiplier to prevent excessive damage (max 30x)
+    return Math.min(multiplier, 30.0);
   }
 
   getPassiveGen(state: GameState): number {

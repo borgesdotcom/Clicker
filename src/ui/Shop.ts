@@ -104,11 +104,11 @@ export class Shop {
       btn.textContent = qty === 'max' ? 'MAX' : `x${qty}`;
       btn.className = 'buy-quantity-btn';
       if (this.buyQuantity === qty) {
-        btn.style.background = 'rgba(0, 255, 136, 0.4)';
-        btn.style.borderColor = '#00ff88';
-        btn.style.color = '#00ff88';
-        btn.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
-        btn.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+        btn.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+        btn.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+        btn.style.color = '#ffffff';
+        btn.style.textShadow = '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
+        btn.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
       }
       btn.addEventListener('click', () => {
         this.buyQuantity = qty;
@@ -117,17 +117,17 @@ export class Shop {
           const button = quantityContainer.children[i + 1] as HTMLElement;
           if (button) {
             if (q === qty) {
-              button.style.background = 'rgba(0, 255, 136, 0.4)';
-              button.style.borderColor = '#00ff88';
-              button.style.color = '#00ff88';
-              button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
-              button.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+              button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+              button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+              button.style.color = '#ffffff';
+              button.style.textShadow = '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
+              button.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
             } else {
-              button.style.background = 'rgba(0, 255, 136, 0.1)';
-              button.style.borderColor = 'rgba(0, 255, 136, 0.5)';
-              button.style.color = '#00ff88';
-              button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
-              button.style.boxShadow = 'none';
+              button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
+              button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+              button.style.color = '#ffffff';
+              button.style.textShadow = '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
+              button.style.boxShadow = '0 0 8px rgba(255, 0, 255, 0.3)';
             }
           }
         });
@@ -166,7 +166,7 @@ export class Shop {
       color: #fff;
       padding: 8px 12px;
       border-radius: 4px;
-      border: 1px solid rgba(0, 255, 136, 0.5);
+      border: 1px solid rgba(255, 0, 255, 0.5);
       font-size: 12px;
       white-space: nowrap;
       pointer-events: none;
@@ -218,13 +218,13 @@ export class Shop {
         autoBuyBtn.setAttribute('aria-checked', isEnabled.toString());
         infoText.style.display = 'none';
         if (isEnabled) {
-          autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.4)';
-          autoBuyBtn.style.borderColor = '#00ff88';
-          autoBuyBtn.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+          autoBuyBtn.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+          autoBuyBtn.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+          autoBuyBtn.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
           tooltip.textContent = 'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
         } else {
-          autoBuyBtn.style.background = 'rgba(0, 255, 136, 0.1)';
-          autoBuyBtn.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+          autoBuyBtn.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
+          autoBuyBtn.style.borderImage = 'linear-gradient(135deg, #ff00ff, #0088ff) 1';
           autoBuyBtn.style.boxShadow = 'none';
           tooltip.textContent = 'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
         }
@@ -341,17 +341,17 @@ export class Shop {
       buttons.forEach((btn, index) => {
         const button = btn as HTMLElement;
         if (index === 0) { // First button is x1
-          button.style.background = 'rgba(0, 255, 136, 0.4)';
-          button.style.borderColor = '#00ff88';
-          button.style.color = '#00ff88';
-          button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
-          button.style.boxShadow = '0 0 12px rgba(0, 255, 136, 0.6)';
+          button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+          button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+          button.style.color = '#ffffff';
+          button.style.textShadow = '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
+          button.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
         } else {
-          button.style.background = 'rgba(0, 255, 136, 0.1)';
-          button.style.borderColor = 'rgba(0, 255, 136, 0.5)';
-          button.style.color = '#00ff88';
-          button.style.textShadow = '0 0 3px #00ff88, 0 1px 0 #000, 0 -1px 0 #000';
-          button.style.boxShadow = 'none';
+          button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
+          button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+          button.style.color = '#ffffff';
+          button.style.textShadow = '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
+          button.style.boxShadow = '0 0 8px rgba(255, 0, 255, 0.3)';
         }
       });
     }
@@ -1051,7 +1051,7 @@ export class Shop {
         
         button.style.transition = 'all 0.3s ease';
         button.style.transform = 'scale(1.05)';
-        button.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.8), 0 4px 12px rgba(0, 255, 136, 0.5)';
+        button.style.boxShadow = '0 0 20px rgba(255, 0, 255, 0.8), 0 0 30px rgba(0, 136, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)';
         
         setTimeout(() => {
           button.style.transform = originalTransform;

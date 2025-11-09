@@ -52,16 +52,23 @@ export class Ship {
   }
 
   getFrontPosition(): Vec2 {
-    const size = this.isMainShip ? 13 : 8;
+    // Match the WebGL rendering scale calculation exactly
+    // WebGL vertex shader: scale = a_size * (isMainShip > 0.5 ? 1.0 : 0.61538461538)
+    // WebGL fragment shader: tipPos = v_center + vec2(cos(tipAngle), sin(tipAngle)) * v_size
+    // Where tipAngle = v_angle + PI and v_size = scale
+    const baseSize = this.isMainShip ? 20 : 14; // Match increased sizes
+    const scale = this.isMainShip ? baseSize : baseSize * 0.61538461538;
+    // Ship tip is at angle + PI, and extends by scale distance from center
+    // This matches exactly where the WebGL shader renders the ship tip
     return {
-      x: this.x + Math.cos(this.angle + Math.PI) * size,
-      y: this.y + Math.sin(this.angle + Math.PI) * size,
+      x: this.x + Math.cos(this.angle + Math.PI) * scale,
+      y: this.y + Math.sin(this.angle + Math.PI) * scale,
     };
   }
 
   draw(drawer: Draw, state?: GameState): void {
     const ctx = drawer.getContext();
-    const size = this.isMainShip ? 13 : 8;
+    const size = this.isMainShip ? 20 : 14; // Match increased sizes for 2D fallback
     
     // Determine ship appearance - check for custom visuals first, then upgrades
     const customVisuals = (this as any).customVisuals;

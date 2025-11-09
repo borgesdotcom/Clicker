@@ -204,7 +204,7 @@ export class PerformanceMonitor {
       fpsElement.textContent = this.currentFps.toString();
 
       if (this.currentFps >= 55) {
-        fpsElement.style.color = '#00ff88';
+        fpsElement.style.color = '#ff00ff';
       } else if (this.currentFps >= 30) {
         fpsElement.style.color = '#ffaa00';
       } else {
@@ -217,7 +217,7 @@ export class PerformanceMonitor {
       frameTimeElement.textContent = `${this.currentFrameTime.toFixed(2)}ms`;
 
       if (this.currentFrameTime <= 16.67) {
-        frameTimeElement.style.color = '#00ff88';
+        frameTimeElement.style.color = '#0088ff';
       } else if (this.currentFrameTime <= 33.33) {
         frameTimeElement.style.color = '#ffaa00';
       } else {
@@ -318,7 +318,7 @@ export class PerformanceMonitor {
     }
 
     if (this.fpsHistory.length > 1) {
-      ctx.strokeStyle = '#00ff88';
+      ctx.strokeStyle = '#ff00ff';
       ctx.lineWidth = 2;
       ctx.beginPath();
 
@@ -357,7 +357,7 @@ export class PerformanceMonitor {
       ctx.stroke();
     }
 
-    ctx.fillStyle = '#00ff88';
+    ctx.fillStyle = '#0088ff';
     ctx.fillRect(width - 100, 5, 15, 3);
     ctx.fillStyle = '#fff';
     ctx.font = '10px monospace';

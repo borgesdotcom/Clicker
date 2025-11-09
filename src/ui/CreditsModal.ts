@@ -53,7 +53,7 @@ export class CreditsModal {
     gameInfoSection.appendChild(gameDesc);
 
     const version = document.createElement('p');
-    version.textContent = 'Version 0.0.4 - UI Improvements';
+    version.textContent = 'Release Beta 1.0';
     version.style.fontSize = '14px';
     version.style.color = '#888';
     gameInfoSection.appendChild(version);
@@ -246,8 +246,7 @@ export class CreditsModal {
     });
 
     steamBtn.addEventListener('click', () => {
-      // TODO: Replace with actual Steam store page URL when available
-      // For now, show a message
+      // Steam store page - coming soon
       alert(
         '🎮 BOBBLE is coming to Steam soon!\n\nStay tuned for the official announcement and wishlist link!',
       );

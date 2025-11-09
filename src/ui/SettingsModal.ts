@@ -60,18 +60,18 @@ export class SettingsModal {
   ): void {
     if (this.graphicsToggle) {
       this.graphicsToggle.textContent = graphics ? t('common.on') : t('common.off');
-      this.graphicsToggle.style.backgroundColor = graphics ? '#4CAF50' : '#666';
+      this.graphicsToggle.style.backgroundColor = graphics ? '#0088ff' : '#666';
     }
     if (this.shipLasersToggle) {
       this.shipLasersToggle.textContent = shipLasers ? t('common.on') : t('common.off');
       this.shipLasersToggle.style.backgroundColor = shipLasers
-        ? '#4CAF50'
+        ? '#0088ff'
         : '#666';
     }
     if (this.damageNumbersToggle) {
       this.damageNumbersToggle.textContent = damageNumbers ? t('common.on') : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = damageNumbers
-        ? '#4CAF50'
+        ? '#0088ff'
         : '#666';
     }
   }
@@ -376,7 +376,7 @@ export class SettingsModal {
       const newState = this.shipLasersToggle.textContent === t('common.off');
       this.shipLasersToggle.textContent = newState ? t('common.on') : t('common.off');
       this.shipLasersToggle.style.backgroundColor = newState
-        ? '#4CAF50'
+        ? '#0088ff'
         : '#666';
       if (this.shipLasersCallback) {
         this.shipLasersCallback(newState);
@@ -417,7 +417,7 @@ export class SettingsModal {
       const newState = this.damageNumbersToggle.textContent === t('common.off');
       this.damageNumbersToggle.textContent = newState ? t('common.on') : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = newState
-        ? '#4CAF50'
+        ? '#0088ff'
         : '#666';
       if (this.damageNumbersCallback) {
         this.damageNumbersCallback(newState);
@@ -472,7 +472,7 @@ export class SettingsModal {
         const soundtrackEnabled = this.soundManager.isSoundtrackEnabled();
         this.soundtrackToggle.textContent = soundtrackEnabled ? t('common.on') : t('common.off');
         this.soundtrackToggle.style.backgroundColor = soundtrackEnabled
-          ? '#4CAF50'
+          ? '#0088ff'
           : '#666';
       }
       // Update language selector

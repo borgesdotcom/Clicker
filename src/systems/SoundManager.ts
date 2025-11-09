@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Import sound files
 import laserSound from '../sound/laser.mp3';
 import popSound from '../sound/pop.mp3';
@@ -145,8 +146,8 @@ export class SoundManager {
 
     // Resume AudioContext if suspended (required for some browsers)
     if (this.context && this.context.state === 'suspended') {
-      this.context.resume().catch((error: unknown) => {
-        console.debug('AudioContext resume error:', error);
+      this.context.resume().catch((_error: unknown) => {
+        // AudioContext resume error (silent fail for production)
       });
     }
 
@@ -154,9 +155,9 @@ export class SoundManager {
     const audio = this.laserAudio.cloneNode() as HTMLAudioElement;
     // Laser sound uses 5% of main volume
     audio.volume = this.volume * 0.05;
-    audio.play().catch((error: unknown) => {
+    audio.play().catch((_error: unknown) => {
       // Ignore playback errors (e.g., user interaction required)
-      console.debug('Laser sound playback error:', error);
+      // Laser sound playback error (silent fail for production)
     });
   }
 
@@ -168,9 +169,9 @@ export class SoundManager {
     const audio = this.popAudio.cloneNode() as HTMLAudioElement;
     // Pop sound uses 140% of main volume (clamped to [0, 1])
     audio.volume = Math.max(0, Math.min(1, this.volume * 1.4));
-    audio.play().catch((error: unknown) => {
+    audio.play().catch((_error: unknown) => {
       // Ignore playback errors (e.g., user interaction required)
-      console.debug('Pop sound playback error:', error);
+      // Pop sound playback error (silent fail for production)
     });
   }
 
@@ -387,17 +388,17 @@ export class SoundManager {
 
     // Resume AudioContext if suspended (required for some browsers)
     if (this.context && this.context.state === 'suspended') {
-      this.context.resume().catch((error: unknown) => {
-        console.debug('AudioContext resume error:', error);
+      this.context.resume().catch((_error: unknown) => {
+        // AudioContext resume error (silent fail for production)
       });
     }
 
     // Ensure volume is set correctly before playing (soundtrackAudio already checked above)
     this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
 
-    this.soundtrackAudio.play().catch((error: unknown) => {
+    this.soundtrackAudio.play().catch((_error: unknown) => {
       // Ignore playback errors - will retry on next user interaction
-      console.debug('Soundtrack playback error (will retry):', error);
+      // Soundtrack playback error (will retry silently)
     });
   }
 

@@ -382,81 +382,53 @@ export class VisualCustomizationSystem {
   /**
    * Get ship color based on selected theme
    */
-  getShipColors(state: GameState): { fillColor: string; outlineColor: string; glowColor: string } {
+  getShipColors(_state: GameState): { fillColor: string; outlineColor: string; glowColor: string; themeId?: string } {
     const theme = this.getSelectedTheme('ship');
     if (!theme) {
-      // Fallback to upgrade-based colors
+      // Fallback to default colors
       return {
         fillColor: '#ffffff',
         outlineColor: '#cccccc',
         glowColor: 'rgba(255, 255, 255, 0.3)',
+        themeId: 'default_ship',
       };
     }
 
-    // Use theme colors, but can still be overridden by upgrades
-    let fillColor = theme.colors.primary;
+    // Use theme colors ONLY - no upgrade overrides
+    const fillColor = theme.colors.primary;
     const glowColor = theme.colors.glow ?? `rgba(${this.hexToRgb(theme.colors.primary).join(', ')}, 0.4)`;
-
-    // If upgrades are active, prefer them over theme (user choice)
-    if (state.subUpgrades['cosmic_ascension']) {
-      fillColor = '#ff00ff';
-    } else if (state.subUpgrades['singularity_core']) {
-      fillColor = '#8800ff';
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      fillColor = '#ff0044';
-    } else {
-      // Use theme color
-      fillColor = theme.colors.primary;
-    }
 
     return {
       fillColor,
       outlineColor: theme.colors.secondary,
       glowColor,
+      themeId: theme.id,
     };
+  }
+  
+  getLaserThemeId(): string {
+    const theme = this.getSelectedTheme('laser');
+    return theme?.id ?? 'default_laser';
   }
 
   /**
    * Get laser color based on selected theme
    */
-  getLaserColor(state: GameState, isCrit: boolean): string {
+  getLaserColor(_state: GameState, isCrit: boolean): string {
     if (isCrit) {
       return '#ffff00'; // Always yellow for crits
     }
 
     const theme = this.getSelectedTheme('laser');
     if (!theme) {
-      // Fallback to upgrade-based colors
-      return this.getDefaultLaserColor(state);
+      // Fallback to default white
+      return '#ffffff';
     }
 
-    // Use theme color, but upgrades can override
-    if (state.subUpgrades['cosmic_ascension']) {
-      return '#ff00ff';
-    } else if (state.subUpgrades['singularity_core']) {
-      return '#8800ff';
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      return '#ff0044';
-    }
-
-    // Use theme color
+    // Use theme color ONLY - no upgrade overrides
     return theme.colors.primary;
   }
 
-  /**
-   * Get default laser color based on upgrades
-   */
-  private getDefaultLaserColor(state: GameState): string {
-    if (state.subUpgrades['cosmic_ascension']) return '#ff00ff';
-    if (state.subUpgrades['singularity_core']) return '#8800ff';
-    if (state.subUpgrades['heart_of_galaxy']) return '#ff0044';
-    if (state.subUpgrades['antimatter_rounds']) return '#ff0088';
-    if (state.subUpgrades['chaos_emeralds']) return '#00ff88';
-    if (state.subUpgrades['overclocked_reactors']) return '#ff6600';
-    if (state.subUpgrades['laser_focusing']) return '#00ffff';
-    if (state.pointMultiplierLevel >= 10) return '#88ff88';
-    return '#ffffff';
-  }
 
   /**
    * Get particle style and colors

@@ -10,6 +10,7 @@ import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
 import { Draw } from './render/Draw';
 import { Background } from './render/Background';
+import type { WebGLRenderer } from './render/WebGLRenderer';
 import { Loop } from './core/Loop';
 import { Input } from './core/Input';
 import { Store } from './core/Store';
@@ -124,12 +125,14 @@ export class Game {
     damage: number;
     isCrit: boolean;
     isFromShip: boolean;
+    clickDamage: number; // Track click damage separately
     hitDirection?: Vec2;
     isBeam: boolean;
   } = {
     damage: 0,
     isCrit: false,
     isFromShip: false,
+    clickDamage: 0,
     hitDirection: undefined,
     isBeam: false,
   };
@@ -152,7 +155,12 @@ export class Game {
     }
 
     this.canvas = new Canvas(canvasElement);
-    this.draw = new Draw(this.canvas.getContext(), true); // GPU acceleration enabled by default
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const webglRenderer: WebGLRenderer | null = this.canvas.getWebGLRenderer();
+    this.draw = new Draw(
+      this.canvas.getContext(),
+      webglRenderer !== null ? webglRenderer : undefined,
+    );
     this.background = new Background(
       this.canvas.getWidth(),
       this.canvas.getHeight(),
@@ -922,6 +930,7 @@ export class Game {
     this.damageBatch.damage = 0;
     this.damageBatch.isCrit = false;
     this.damageBatch.isFromShip = false;
+    this.damageBatch.clickDamage = 0;
     this.damageBatch.hitDirection = undefined;
     this.damageBatch.isBeam = false;
     this.batchTimer = 0;
@@ -1258,8 +1267,9 @@ export class Game {
       if (this.userSettings.highGraphics) {
         // Apply particle theme if available
         const particleTheme = this.customizationSystem.getParticleStyle();
+        const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
         const particleColor = particleTheme.colors.primary;
-        const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle';
+        const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle';
         
         this.particleSystem.spawnParticles({
           x: pos.x,
@@ -1271,6 +1281,7 @@ export class Game {
           size: 4,
           life: 0.8,
           glow: useGlow,
+          style: particleStyle,
         });
       }
       
@@ -1450,11 +1461,24 @@ export class Game {
       return false; // No target to shoot at - don't reset timer
     }
 
-    const target = { x: targetEntity.x, y: targetEntity.y };
-    const laserVisuals = this.getLaserVisuals(state);
+    const origin = ship.getFrontPosition();
+    const center = { x: targetEntity.x, y: targetEntity.y };
+    const hitPoint = this.calculateHitPoint(origin, center, targetEntity.radius);
+    
+    // Small ships (shipIndex > 0) cannot crit - use non-crit visuals only
+    const laserVisuals = shipIndex > 0 
+      ? this.getLaserVisualsNoCrit(state)
+      : this.getLaserVisuals(state);
+    
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const laserThemeId = this.customizationSystem.getLaserThemeId();
+    
+    // Store theme ID for laser rendering
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    this.laserSystem.lastBeamThemeId = laserThemeId;
 
     // Mark laser as from ship so it can be hidden for performance
-    this.laserSystem.spawnLaser(ship.getFrontPosition(), target, damage, {
+    this.laserSystem.spawnLaser(origin, hitPoint, damage, {
       ...laserVisuals,
       isFromShip: true,
     });
@@ -1462,79 +1486,65 @@ export class Game {
     return true; // Shot was fired successfully
   }
 
+  private calculateHitPoint(origin: Vec2, center: Vec2, radius: number): Vec2 {
+    const dx = center.x - origin.x;
+    const dy = center.y - origin.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance <= radius) {
+      return center;
+    }
+    
+    const nx = dx / distance;
+    const ny = dy / distance;
+    
+    return {
+      x: center.x - nx * radius,
+      y: center.y - ny * radius,
+    };
+  }
+
   private getLaserVisuals(state: import('./types').GameState): {
     isCrit: boolean;
     color: string;
     width: number;
   } {
-    // Check customization system first for theme color
-    const themeColor = this.customizationSystem.getLaserColor(state, false);
-    
-    // Use theme color if no upgrade override
-    if (themeColor && !state.subUpgrades['cosmic_ascension'] && 
-        !state.subUpgrades['singularity_core'] && 
-        !state.subUpgrades['heart_of_galaxy']) {
-      // Check for crit after getting base color
-      const critChance = this.upgradeSystem.getCritChance(state) + this.powerUpSystem.getCritChanceBonus() * 100;
-      if (Math.random() * 100 < critChance) {
-        return { isCrit: true, color: '#ffff00', width: 2 };
-      }
-      return { isCrit: false, color: themeColor, width: 1.5 };
-    }
-    let color = '#fff';
-    let width = 1.5; // Thin lasers
+    let color = this.customizationSystem.getLaserColor(state, false);
+    let width = 2.5;
     let isCrit = false;
 
-    // Check for critical hit
     let critChance = this.upgradeSystem.getCritChance(state);
-    critChance += this.powerUpSystem.getCritChanceBonus() * 100; // Add power-up crit bonus
+    critChance += this.powerUpSystem.getCritChanceBonus() * 100;
     if (Math.random() * 100 < critChance) {
       isCrit = true;
-      color = '#ffff00'; // Yellow for crit
-      width = 2; // Thin even for crits
+      color = '#ffff00';
+      width = 3.5;
       this.store.getState().stats.criticalHits++;
       return { isCrit, color, width };
     }
 
-    // Check for perfect precision super crit
     if (state.subUpgrades['perfect_precision']) {
       if (Math.random() < 0.05) {
         isCrit = true;
-        color = '#ff00ff'; // Magenta for super crit
-        width = 2; // Thin even for super crits
+        color = '#ffff00';
+        width = 4.0;
         this.store.getState().stats.criticalHits++;
         return { isCrit, color, width };
       }
     }
 
-    // Laser color based on damage upgrades (all thin)
-    if (state.subUpgrades['cosmic_ascension']) {
-      color = '#ff00ff'; // Magenta for cosmic
-      width = 2;
-    } else if (state.subUpgrades['singularity_core']) {
-      color = '#8800ff'; // Purple for singularity
-      width = 2;
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      color = '#ff0044'; // Red for heart of galaxy
-      width = 2;
-    } else if (state.subUpgrades['antimatter_rounds']) {
-      color = '#ff0088'; // Pink for antimatter
-      width = 1.5;
-    } else if (state.subUpgrades['chaos_emeralds']) {
-      color = '#00ff88'; // Emerald green
-      width = 1.5;
-    } else if (state.subUpgrades['overclocked_reactors']) {
-      color = '#ff6600'; // Orange for overclocked
-      width = 1.5;
-    } else if (state.subUpgrades['laser_focusing']) {
-      color = '#00ffff'; // Cyan for focusing
-      width = 1.5;
-    } else if (state.pointMultiplierLevel >= 10) {
-      color = '#88ff88'; // Light green for high level
-      width = 1.5;
-    }
-
     return { isCrit, color, width };
+  }
+
+  private getLaserVisualsNoCrit(state: import('./types').GameState): {
+    isCrit: boolean;
+    color: string;
+    width: number;
+  } {
+    // Small ships cannot crit - always return non-crit visuals
+    const color = this.customizationSystem.getLaserColor(state, false);
+    const width = 2.5;
+    return { isCrit: false, color, width };
   }
 
   private handleDamage(
@@ -1574,14 +1584,17 @@ export class Game {
 
     // Batch damage instead of applying immediately - reuse pre-allocated object
     this.damageBatch.damage += finalDamage;
-    if (isCrit && !isFromShip) {
-      // Only show crit effects for main ship, not auto-fire ships
+    if (isCrit) {
+      // Show crit effects for all ships (main ship and small ships)
       this.damageBatch.isCrit = true;
     }
 
     // Track if this batch includes ship damage to skip visual effects
     if (isFromShip) {
       this.damageBatch.isFromShip = true;
+    } else {
+      // Track click damage separately so we can spawn particles even if mixed with auto-fire
+      this.damageBatch.clickDamage += finalDamage;
     }
 
     // Store hit direction for deformation effect
@@ -1601,6 +1614,7 @@ export class Game {
     const finalDamage = this.damageBatch.damage;
     const isCrit = this.damageBatch.isCrit;
     const isFromShip = this.damageBatch.isFromShip;
+    const clickDamage = this.damageBatch.clickDamage;
     const hitDirection = this.damageBatch.hitDirection;
     const isBeam = this.damageBatch.isBeam;
 
@@ -1608,10 +1622,11 @@ export class Game {
     this.damageBatch.damage = 0;
     this.damageBatch.isCrit = false;
     this.damageBatch.isFromShip = false;
+    this.damageBatch.clickDamage = 0;
     this.damageBatch.hitDirection = undefined;
     this.damageBatch.isBeam = false;
 
-      if (this.mode === 'normal' && this.ball) {
+      if (this.mode === 'normal' && this.ball && this.ball.currentHp > 0) {
       // Get current combo for deformation scaling
       const currentCombo = this.comboSystem.getCombo();
       // Check if this batch is from a beam (stored in batch state)
@@ -1634,25 +1649,39 @@ export class Game {
         isCrit,
       );
 
-      // Only spawn particles for main ship hits (not auto-fire ships)
-      if (!isFromShip) {
-        // Particles (only if high graphics enabled)
-        if (this.userSettings.highGraphics) {
+      // Spawn particles for hits - always spawn if there's click damage, or if no auto-fire damage
+      // Particles (only if high graphics enabled)
+      if (this.userSettings.highGraphics) {
+        // Spawn particles if there's click damage, or if this is purely click damage (not from auto-fire ships)
+        const hasClickDamage = clickDamage > 0;
+        const shouldSpawnParticles = hasClickDamage || !isFromShip;
+        
+        if (shouldSpawnParticles) {
           // Apply particle theme
           const particleTheme = this.customizationSystem.getParticleStyle();
-          const themeParticleColor = particleTheme.style === 'sparkle' 
+          const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
+          const themeParticleColor = particleStyle === 'sparkle' 
             ? particleTheme.colors.secondary ?? particleTheme.colors.primary
             : particleTheme.colors.primary;
-          const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle' || this.ball instanceof EnhancedAlienBall;
+          const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle' || this.ball instanceof EnhancedAlienBall;
+          
+          // Use click damage if available, otherwise use total damage
+          // Spawn more particles for clicks, fewer for pure auto-fire
+          const damageForParticles = hasClickDamage ? clickDamage : finalDamage;
+          const baseCount = hasClickDamage ? 8 : 3; // More for clicks
+          const damageCount = Math.floor(damageForParticles / 50); // Lower threshold
+          const particleCount = Math.max(baseCount, Math.min(25, baseCount + damageCount));
           
           this.particleSystem.spawnParticles({
             x: this.ball.x,
             y: this.ball.y,
-            count: Math.min(5, Math.floor(finalDamage / 500)),
+            count: particleCount,
             color: themeParticleColor,
-            speed: 50,
+            speed: 80,
+            size: 3,
             life: 0.8,
             glow: useGlow,
+            style: particleStyle,
           });
         }
       }
@@ -1666,7 +1695,7 @@ export class Game {
         }
         this.onBallDestroyed();
       }
-    } else if (this.mode === 'boss' && this.bossBall) {
+    } else if (this.mode === 'boss' && this.bossBall && this.bossBall.currentHp > 0) {
       const broken = this.bossBall.takeDamage(finalDamage);
       const state = this.store.getState();
       const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
@@ -1689,10 +1718,11 @@ export class Game {
         if (this.userSettings.highGraphics && Math.random() < 0.3) {
           // Apply particle theme
           const particleTheme = this.customizationSystem.getParticleStyle();
-          const themeParticleColor = isCrit && particleTheme.style === 'sparkle'
+          const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
+          const themeParticleColor = isCrit && particleStyle === 'sparkle'
             ? particleTheme.colors.secondary ?? particleTheme.colors.primary
             : particleTheme.colors.primary;
-          const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle';
+          const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle';
           
           this.particleSystem.spawnParticles({
             x: bossPos.x + (Math.random() - 0.5) * this.bossBall.radius,
@@ -1704,6 +1734,7 @@ export class Game {
             size: isCrit ? 4 : 3,
             life: 0.6,
             glow: useGlow,
+            style: particleStyle,
           });
         }
       }
@@ -1869,13 +1900,14 @@ export class Game {
       const centerY = this.canvas.getCenterY();
       // Apply particle theme for explosions
       const particleTheme = this.customizationSystem.getParticleStyle();
+      const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
       const explosionColor1 = particleTheme.colors.primary;
       const explosionColor2 = particleTheme.colors.secondary ?? particleTheme.colors.primary;
-      const useGlow = particleTheme.style === 'glow' || particleTheme.style === 'sparkle';
+      const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle';
       
-      this.particleSystem.spawnExplosion(centerX, centerY, explosionColor1, useGlow);
+      this.particleSystem.spawnExplosion(centerX, centerY, explosionColor1, useGlow, particleStyle);
       setTimeout(() => {
-        this.particleSystem.spawnExplosion(centerX, centerY, explosionColor2, useGlow);
+        this.particleSystem.spawnExplosion(centerX, centerY, explosionColor2, useGlow, particleStyle);
       }, 200);
     }
 
@@ -1961,6 +1993,7 @@ export class Game {
     this.damageBatch.damage = 0;
     this.damageBatch.isCrit = false;
     this.damageBatch.isFromShip = false;
+    this.damageBatch.clickDamage = 0;
     this.damageBatch.hitDirection = undefined;
     this.damageBatch.isBeam = false;
     this.batchTimer = 0;
@@ -1969,6 +2002,14 @@ export class Game {
   private update(dt: number): void {
     dt = dt * this.gameSpeed;
     this.frameCount++;
+    
+    // Update WebGL renderer time for animations
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const webglRenderer = this.canvas.getWebGLRenderer();
+    if (webglRenderer) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      webglRenderer.updateTime(dt);
+    }
 
     const state = this.store.getState();
 
@@ -2094,12 +2135,12 @@ export class Game {
     // Process beam damage if in beam mode (respects attack speed)
     if (shouldUseBeam) {
       const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
-      const targetPosition = targetEntity ? { x: targetEntity.x, y: targetEntity.y } : undefined;
+      const targetCenter = targetEntity ? { x: targetEntity.x, y: targetEntity.y } : undefined;
       
       // Get beam origin from first ship or use canvas center as fallback
       let beamOrigin: Vec2 | undefined;
       if (this.ships.length > 0 && this.ships[0]) {
-        const shipPos = this.ships[0].getPosition();
+        const shipPos = this.ships[0].getFrontPosition();
         beamOrigin = shipPos;
       } else {
         // Fallback to canvas center if no ships
@@ -2111,7 +2152,7 @@ export class Game {
         (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2, isBeam?: boolean) => {
           this.handleDamage(damage, isCrit, isFromShip, hitDirection, isBeam);
         },
-        targetPosition,
+        targetCenter,
         beamOrigin,
       );
     }
@@ -2140,11 +2181,15 @@ export class Game {
 
       // Apply particle theme for trails
       const particleTheme = this.customizationSystem.getParticleStyle();
-      const trailThemeColor = particleTheme.style === 'trail' 
+      const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
+      const trailThemeColor = particleStyle === 'trail' 
         ? particleTheme.colors.primary
         : trailColor;
+      const trailStyle = particleStyle === 'trail' 
+        ? 'trail' as const
+        : 'classic' as const;
       
-      this.particleSystem.spawnTrail(bossPos.x, bossPos.y, trailThemeColor);
+      this.particleSystem.spawnTrail(bossPos.x, bossPos.y, trailThemeColor, trailStyle);
     }
 
     for (const ship of this.ships) {
@@ -2162,19 +2207,31 @@ export class Game {
           ? { x: targetEntity.x, y: targetEntity.y }
           : null;
 
-      if (target) {
-        // Auto-fire ships: Static beams, no crits (just update positions)
+      if (target && targetEntity) {
+        // Auto-fire ships: Static beams with theme colors
         // Main ship (index 0) doesn't use beams - it fires regular projectiles for click feedback
+        const beamColor = this.customizationSystem.getLaserColor(state, false);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const beamThemeId = this.customizationSystem.getLaserThemeId();
+        const beamWidth = 2;
+        
         for (let i = 1; i < this.ships.length; i++) {
           const ship = this.ships[i];
           if (ship) {
-            // Update positions every single frame for smooth tracking
+            const origin = ship.getFrontPosition();
+            const shipHitPoint = this.calculateHitPoint(origin, target, targetEntity.radius);
+            // Update positions and colors every frame (colors from theme)
             this.laserSystem.updateShipBeamTarget(
               i,
-              ship.getFrontPosition(),
-              target,
-              // No color/width/crit params = keeps existing constant beam color
+              origin,
+              shipHitPoint,
+              beamColor, // Use theme color
+              beamWidth,
+              false, // No crits for beams
             );
+            // Store theme ID for beam rendering
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            this.laserSystem.lastBeamThemeId = beamThemeId;
           }
         }
       } else {
@@ -2272,7 +2329,20 @@ export class Game {
     const currentBgTheme = this.customizationSystem.getSelectedTheme('background');
     const themeId: string = currentBgTheme?.id ?? 'default_background';
     this.background.setThemeColors(bgColors, themeId);
-    this.canvas.clear(bgColors.primary);
+    
+    // Clear canvas (WebGL or 2D)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const webglRenderer: WebGLRenderer | null = this.canvas.getWebGLRenderer();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    if (this.canvas.isWebGLEnabled() && webglRenderer !== null) {
+      // Clear WebGL canvas
+      webglRenderer.clear(bgColors.primary);
+      // Also clear offscreen 2D canvas for background/text
+      this.canvas.clear(bgColors.primary);
+    } else {
+      this.canvas.clear(bgColors.primary);
+    }
+    
     const ctx = this.canvas.getContext();
 
     // Early exit if nothing to render (shouldn't happen, but safety check)
@@ -2280,6 +2350,7 @@ export class Game {
       return;
     }
 
+    // Background always uses 2D canvas (complex gradients and effects)
     this.background.render(ctx);
 
     ctx.save();
@@ -2294,6 +2365,12 @@ export class Game {
     if (this.mode === 'transition') {
       this.renderTransition();
       ctx.restore();
+      // Flush WebGL batches before frame end
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      this.draw.flush();
+      // Also flush WebGL and composite overlay
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      this.canvas.flushWebGL();
       return;
     }
 
@@ -2301,6 +2378,13 @@ export class Game {
     this.renderGameEntities(ctx);
 
     ctx.restore();
+    
+    // Flush WebGL batches at end of frame (critical for performance)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    this.draw.flush();
+    // Also flush WebGL and composite overlay
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    this.canvas.flushWebGL();
   }
 
   private renderGameEntities(ctx: CanvasRenderingContext2D): void {
@@ -2330,12 +2414,34 @@ export class Game {
 
     // Render ships (batch by entity type)
     const state = this.store.getState();
-    for (const ship of this.ships) {
-      // Apply customization
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const webglRenderer = this.canvas.getWebGLRenderer();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const useWebGL = this.canvas.isWebGLEnabled() && webglRenderer !== null;
+    
+    if (useWebGL) {
+      // Use WebGL instanced rendering for ships (MUCH faster - single draw call for all ships)
       const visuals = this.customizationSystem.getShipColors(state);
-      // Store visuals for ship to use
-      (ship as any).customVisuals = visuals;
-      ship.draw(this.draw, state);
+    
+      
+      for (const ship of this.ships) {
+        // Make ships bigger and more visible
+        const size = ship.isMainShip ? 20 : 14; // Increased from 13/8 to 20/14
+        const shipColor = visuals.fillColor;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const themeId = visuals.themeId;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.draw.addShip(ship.x, ship.y, ship.angle, size, shipColor, ship.isMainShip, themeId);
+      }
+    } else {
+      // Fallback to 2D canvas rendering
+      for (const ship of this.ships) {
+        // Apply customization
+        const visuals = this.customizationSystem.getShipColors(state);
+        // Store visuals for ship to use
+        (ship as any).customVisuals = visuals;
+        ship.draw(this.draw, state);
+      }
     }
 
     // Render UI elements
@@ -2395,6 +2501,7 @@ export class Game {
     this.damageBatch.damage = 0;
     this.damageBatch.isCrit = false;
     this.damageBatch.isFromShip = false;
+    this.damageBatch.clickDamage = 0;
     this.damageBatch.hitDirection = undefined;
     this.damageBatch.isBeam = false;
 

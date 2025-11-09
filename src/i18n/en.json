@@ -309,7 +309,7 @@
       },
       "lucky_horseshoe": {
         "name": "Lucky Horseshoe",
-        "description": "Critical hits deal 50% more damage",
+        "description": "Critical hits deal 20% more damage",
         "flavor": "Who needs horses in space? Apparently, luck does."
       },
       "perfect_precision": {
@@ -419,7 +419,7 @@
       },
       "reality_anchor": {
         "name": "Reality Anchor",
-        "description": "Critical damage x2, All gains +25%",
+        "description": "Critical damage +50%, All gains +25%",
         "flavor": "Keep reality in check. Or break it. Your choice."
       },
       "cosmic_battery": {
@@ -439,7 +439,7 @@
       },
       "dragon_egg": {
         "name": "Dragon Egg",
-        "description": "Critical hit chance +5%, Critical damage +50%",
+        "description": "Critical hit chance +5%, Critical damage +20%",
         "flavor": "It's either a dragon egg or a really angry space chicken."
       },
       "universe_map": {
@@ -509,7 +509,7 @@
       },
       "dimensional_collapse": {
         "name": "Dimensional Collapse Weapon",
-        "description": "Critical damage x3, Attack speed +100%",
+        "description": "Critical damage +80%, Attack speed +100%",
         "flavor": "Collapse dimensions. Break reality. Win game."
       },
       "reality_compiler": {

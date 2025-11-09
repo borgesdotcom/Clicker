@@ -2,7 +2,7 @@
 
 > A modern incremental clicker game built with TypeScript and HTML5 Canvas
 
-**Current Version: 1.0.0-beta**
+**Current Version: Release Beta 1.0**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF.svg)](https://vitejs.dev/)
