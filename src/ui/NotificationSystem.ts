@@ -3,7 +3,13 @@
  * Supports multiple notification types and auto-dismissal
  */
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'achievement' | 'mission';
+export type NotificationType =
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'achievement'
+  | 'mission';
 
 export interface Notification {
   id: string;
@@ -36,7 +42,11 @@ export class NotificationSystem {
   /**
    * Show a notification
    */
-  show(message: string, type: NotificationType = 'info', duration: number = 3000): void {
+  show(
+    message: string,
+    type: NotificationType = 'info',
+    duration: number = 3000,
+  ): void {
     if (!this.container) return;
 
     const notification: Notification = {
@@ -70,10 +80,13 @@ export class NotificationSystem {
   private dismiss(id: string): void {
     const notification = this.notifications.find((n) => n.id === id);
     if (notification && this.container) {
-      const element = this.container.querySelector(`[data-notif-id="${id}"]`) as HTMLElement;
+      const element = this.container.querySelector(
+        `[data-notif-id="${id}"]`,
+      ) as HTMLElement;
       if (element) {
         // Fade out animation matching HUD style
-        element.style.transition = 'opacity 0.3s ease-in, transform 0.3s ease-in';
+        element.style.transition =
+          'opacity 0.3s ease-in, transform 0.3s ease-in';
         element.style.opacity = '0';
         element.style.transform = 'translateX(100px)';
         setTimeout(() => {
@@ -97,13 +110,15 @@ export class NotificationSystem {
     this.container.innerHTML = '';
 
     // Show only the most recent notifications
-    const visibleNotifications = this.notifications.slice(-this.maxNotifications);
+    const visibleNotifications = this.notifications.slice(
+      -this.maxNotifications,
+    );
 
     visibleNotifications.forEach((notification, index) => {
       const notifElement = document.createElement('div');
       notifElement.className = 'notification';
       notifElement.setAttribute('data-notif-id', notification.id);
-      
+
       // Match HUD styling: dark background, colorful border, Courier New font
       const borderColor = this.getBorderColor(notification.type);
       // Create glow color with reduced opacity
@@ -199,4 +214,3 @@ export class NotificationSystem {
     this.render();
   }
 }
-

@@ -84,46 +84,49 @@ export class MissionsModal {
     }, 300);
   }
 
-  private getRewardForMission(type: MissionType, level: number): { points?: number; ships?: number; xp?: number } {
+  private getRewardForMission(
+    type: MissionType,
+    level: number,
+  ): { points?: number; ships?: number; xp?: number } {
     // Replicate the reward calculation logic from MissionSystem
     switch (type) {
       case 'clicks':
-        return { 
-          points: Math.floor(level * level * 500), 
-          xp: Math.floor(level * 15) 
+        return {
+          points: Math.floor(level * level * 500),
+          xp: Math.floor(level * 15),
         };
       case 'damage':
-        return { 
-          points: Math.floor(level * level * 750), 
-          ships: Math.max(1, Math.floor(level / 10)) 
+        return {
+          points: Math.floor(level * level * 750),
+          ships: Math.max(1, Math.floor(level / 10)),
         };
       case 'kills':
-        return { 
-          points: Math.floor(level * level * 400), 
-          xp: Math.floor(level * 12) 
+        return {
+          points: Math.floor(level * level * 400),
+          xp: Math.floor(level * 12),
         };
       case 'boss_kills':
-        return { 
-          points: Math.floor(level * level * 2500), 
-          ships: Math.max(2, Math.floor(level / 5)) 
+        return {
+          points: Math.floor(level * level * 2500),
+          ships: Math.max(2, Math.floor(level / 5)),
         };
       case 'upgrades':
-        return { 
-          points: Math.floor(level * level * 600) 
+        return {
+          points: Math.floor(level * level * 600),
         };
       case 'level':
-        return { 
-          points: Math.floor(level * level * 1000), 
-          xp: Math.floor(level * 30) 
+        return {
+          points: Math.floor(level * level * 1000),
+          xp: Math.floor(level * 30),
         };
       case 'ships':
-        return { 
-          points: Math.floor(level * level * 1500) 
+        return {
+          points: Math.floor(level * level * 1500),
         };
       case 'combo':
-        return { 
-          points: Math.floor(level * level * 1250), 
-          xp: Math.floor(level * 25) 
+        return {
+          points: Math.floor(level * level * 1250),
+          xp: Math.floor(level * 25),
         };
       default:
         return {};
@@ -151,24 +154,26 @@ export class MissionsModal {
     const currentLevel = state.level;
 
     container.innerHTML = missions
-      .map(
-        (mission) => {
-          // Calculate reward based on current level
-          const calculatedReward = this.getRewardForMission(mission.type, currentLevel);
-          
-          // For daily missions, double the points and XP
-          const isDailyMission = mission.title.startsWith('[DAILY]');
-          const displayedReward = {
-            points: isDailyMission 
-              ? (calculatedReward.points || 0) * 2 
-              : calculatedReward.points || 0,
-            ships: calculatedReward.ships || 0,
-            xp: isDailyMission 
-              ? (calculatedReward.xp || 0) * 2 
-              : calculatedReward.xp || 0,
-          };
+      .map((mission) => {
+        // Calculate reward based on current level
+        const calculatedReward = this.getRewardForMission(
+          mission.type,
+          currentLevel,
+        );
 
-          return `
+        // For daily missions, double the points and XP
+        const isDailyMission = mission.title.startsWith('[DAILY]');
+        const displayedReward = {
+          points: isDailyMission
+            ? (calculatedReward.points || 0) * 2
+            : calculatedReward.points || 0,
+          ships: calculatedReward.ships || 0,
+          xp: isDailyMission
+            ? (calculatedReward.xp || 0) * 2
+            : calculatedReward.xp || 0,
+        };
+
+        return `
       <div class="mission-card ${mission.completed ? 'completed' : ''} ${mission.claimed ? 'claimed' : ''}">
         <div class="mission-icon">${mission.icon}</div>
         <div class="mission-info">
@@ -188,8 +193,7 @@ export class MissionsModal {
         </div>
       </div>
     `;
-        },
-      )
+      })
       .join('');
 
     // Add claim button listeners

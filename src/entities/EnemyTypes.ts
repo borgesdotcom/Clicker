@@ -1,9 +1,16 @@
 import { AlienBall } from './AlienBall';
 import type { Draw } from '../render/Draw';
 import type { Vec2 } from '../types';
+import { t } from '../core/I18n';
 import { ColorManager } from '../math/ColorManager';
 
-export type EnemyType = 'normal' | 'scout' | 'tank' | 'healer';
+export type EnemyType =
+  | 'normal'
+  | 'scout'
+  | 'tank'
+  | 'healer'
+  | 'guardian'
+  | 'hoarder';
 
 export interface EnemyStats {
   type: EnemyType;
@@ -45,6 +52,18 @@ const HEALER_COLORS = [
   { color: '#00cc88', glow: 'rgba(0, 204, 136, 0.5)' }, // Teal green
 ];
 
+const GUARDIAN_COLORS = [
+  { color: '#66ccff', glow: 'rgba(102, 204, 255, 0.5)' },
+  { color: '#3388ff', glow: 'rgba(51, 136, 255, 0.5)' },
+  { color: '#00b3ff', glow: 'rgba(0, 179, 255, 0.5)' },
+];
+
+const HOARDER_COLORS = [
+  { color: '#ffd84d', glow: 'rgba(255, 216, 77, 0.5)' },
+  { color: '#ffc107', glow: 'rgba(255, 193, 7, 0.5)' },
+  { color: '#ffb347', glow: 'rgba(255, 179, 71, 0.5)' },
+];
+
 function getRandomColor(colors: Array<{ color: string; glow: string }>): {
   color: string;
   glow: string;
@@ -68,27 +87,43 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   },
   scout: {
     type: 'scout',
-    hpMultiplier: 0.5,
-    pointsMultiplier: 1.5,
+    hpMultiplier: 0.35,
+    pointsMultiplier: 1.8,
     color: '#ffff66',
     glowColor: 'rgba(255, 255, 102, 0.5)',
-    size: 0.7,
+    size: 0.6,
   },
   tank: {
     type: 'tank',
-    hpMultiplier: 3,
-    pointsMultiplier: 2.5,
+    hpMultiplier: 4,
+    pointsMultiplier: 3,
     color: '#ff6666',
     glowColor: 'rgba(255, 102, 102, 0.5)',
-    size: 1.4,
+    size: 1.6,
   },
   healer: {
     type: 'healer',
-    hpMultiplier: 0.8,
-    pointsMultiplier: 3,
+    hpMultiplier: 0.9,
+    pointsMultiplier: 3.5,
     color: '#66ff99',
     glowColor: 'rgba(102, 255, 153, 0.5)',
     size: 1,
+  },
+  guardian: {
+    type: 'guardian',
+    hpMultiplier: 2.2,
+    pointsMultiplier: 1.5,
+    color: '#66ccff',
+    glowColor: 'rgba(102, 204, 255, 0.5)',
+    size: 1.2,
+  },
+  hoarder: {
+    type: 'hoarder',
+    hpMultiplier: 1.1,
+    pointsMultiplier: 8,
+    color: '#ffd84d',
+    glowColor: 'rgba(255, 216, 77, 0.5)',
+    size: 1.1,
   },
 };
 
@@ -120,6 +155,12 @@ export class EnhancedAlienBall extends AlienBall {
         break;
       case 'healer':
         colorData = getRandomColor(HEALER_COLORS);
+        break;
+      case 'guardian':
+        colorData = getRandomColor(GUARDIAN_COLORS);
+        break;
+      case 'hoarder':
+        colorData = getRandomColor(HOARDER_COLORS);
         break;
       default:
         colorData = getRandomColor(NORMAL_COLORS);
@@ -155,7 +196,12 @@ export class EnhancedAlienBall extends AlienBall {
     return Math.floor(basePoints * this.stats.pointsMultiplier);
   }
 
-  public override takeDamage(amount: number, hitDirection?: Vec2, combo?: number, isBeam?: boolean): boolean {
+  public override takeDamage(
+    amount: number,
+    hitDirection?: Vec2,
+    combo?: number,
+    isBeam?: boolean,
+  ): boolean {
     // Call parent takeDamage
     return super.takeDamage(amount, hitDirection, combo, isBeam);
   }
@@ -183,65 +229,73 @@ export class EnhancedAlienBall extends AlienBall {
 
   public override draw(drawer: Draw): void {
     const ctx = drawer.getContext();
-    
+
     // Disable deformation on mobile for performance
     const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
-    
+
     // Calculate deformation effect - different for beams vs lasers (same as parent)
     let deformationAmount = 0;
-    
+
     if (!isMobile && (this as any).deformationTime > 0) {
       if ((this as any).isBeamDeformation) {
         // For beams: continuous pulsing sine wave for sustained effect
         // Pulse at ~4Hz (4 cycles per second) for smooth, noticeable pulsing
         const pulseSpeed = 4 * 2 * Math.PI; // 4 Hz = 4 complete cycles per second = 8π radians/sec
-        const pulseValue = Math.sin((this as any).beamDeformationTime * pulseSpeed);
+        const pulseValue = Math.sin(
+          (this as any).beamDeformationTime * pulseSpeed,
+        );
         // Map sine wave (-1 to 1) to (0 to 1) with some base intensity
         const normalizedPulse = (pulseValue + 1) / 2; // 0 to 1
         // Apply pulse with some base deformation (30% to 100% of intensity)
-        deformationAmount = (0.3 + normalizedPulse * 0.7) * (this as any).deformationIntensity;
+        deformationAmount =
+          (0.3 + normalizedPulse * 0.7) * (this as any).deformationIntensity;
       } else {
         // For regular lasers: smooth ease-out curve
-        const deformationProgress = 1 - ((this as any).deformationTime / (this as any).deformationDuration);
+        const deformationProgress =
+          1 - (this as any).deformationTime / (this as any).deformationDuration;
         const easeOut = 1 - Math.pow(1 - deformationProgress, 2);
         deformationAmount = easeOut * (this as any).deformationIntensity;
       }
     }
-    
+
     // Calculate deformation displacement and scales
     const pushDistance = deformationAmount * this.radius * 0.3;
     const deformationX = (this as any).deformationDirection.x * pushDistance;
     const deformationY = (this as any).deformationDirection.y * pushDistance;
-    
+
     const squashAmount = deformationAmount * 0.15;
     const stretchAmount = deformationAmount * 0.1;
-    
+
     const perpendicularScale = 1 - squashAmount;
     const parallelScale = 1 + stretchAmount;
-    
+
     let scaleX = 1;
     let scaleY = 1;
-    
-    if (Math.abs((this as any).deformationDirection.x) > Math.abs((this as any).deformationDirection.y)) {
+
+    if (
+      Math.abs((this as any).deformationDirection.x) >
+      Math.abs((this as any).deformationDirection.y)
+    ) {
       scaleX = parallelScale;
       scaleY = perpendicularScale;
     } else {
       scaleX = perpendicularScale;
       scaleY = parallelScale;
     }
-    
+
     // Add pulsing animation for visual variety
     const basePulseValue = Math.sin((this as any).animationTime * 1.5) * 0.02;
     const currentRadius = this.radius * (1 + basePulseValue);
-    
+
     const deformedRadiusX = currentRadius * scaleX;
     const deformedRadiusY = currentRadius * scaleY;
-    
+
     const centerX = this.x + deformationX;
     const centerY = this.y + deformationY;
 
     // Draw enhanced glow effect - space-themed pulsing aura
-    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1);
+    const glowRadius =
+      Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1);
     const glowGradient = ctx.createRadialGradient(
       centerX,
       centerY,
@@ -255,7 +309,10 @@ export class EnhancedAlienBall extends AlienBall {
     const g = parseInt(this.stats.color.substring(3, 5), 16);
     const b = parseInt(this.stats.color.substring(5, 7), 16);
     glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${glowAlpha})`);
-    glowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${glowAlpha * 0.5})`);
+    glowGradient.addColorStop(
+      0.5,
+      `rgba(${r}, ${g}, ${b}, ${glowAlpha * 0.5})`,
+    );
     glowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
     ctx.fillStyle = glowGradient;
     ctx.fillRect(
@@ -268,13 +325,59 @@ export class EnhancedAlienBall extends AlienBall {
     // Draw enemy-specific effects
     switch (this.enemyType) {
       case 'scout':
-        this.drawScout(ctx, centerX, centerY, scaleX, scaleY, deformedRadiusX, deformedRadiusY);
+        this.drawScout(
+          ctx,
+          centerX,
+          centerY,
+          scaleX,
+          scaleY,
+          deformedRadiusX,
+          deformedRadiusY,
+        );
         break;
       case 'tank':
-        this.drawTank(ctx, centerX, centerY, scaleX, scaleY, deformedRadiusX, deformedRadiusY);
+        this.drawTank(
+          ctx,
+          centerX,
+          centerY,
+          scaleX,
+          scaleY,
+          deformedRadiusX,
+          deformedRadiusY,
+        );
         break;
       case 'healer':
-        this.drawHealer(ctx, centerX, centerY, scaleX, scaleY, deformedRadiusX, deformedRadiusY);
+        this.drawHealer(
+          ctx,
+          centerX,
+          centerY,
+          scaleX,
+          scaleY,
+          deformedRadiusX,
+          deformedRadiusY,
+        );
+        break;
+      case 'guardian':
+        this.drawGuardian(
+          ctx,
+          centerX,
+          centerY,
+          scaleX,
+          scaleY,
+          deformedRadiusX,
+          deformedRadiusY,
+        );
+        break;
+      case 'hoarder':
+        this.drawHoarder(
+          ctx,
+          centerX,
+          centerY,
+          scaleX,
+          scaleY,
+          deformedRadiusX,
+          deformedRadiusY,
+        );
         break;
       default:
         super.draw(drawer);
@@ -293,7 +396,10 @@ export class EnhancedAlienBall extends AlienBall {
     const barX = centerX - barWidth / 2;
     // Adjust position based on enemy type for better spacing
     const extraOffset = this.enemyType === 'tank' ? 5 : 0; // Tanks need more space due to armor
-    const maxRadius = deformedRadiusX && deformedRadiusY ? Math.max(deformedRadiusX, deformedRadiusY) : this.radius;
+    const maxRadius =
+      deformedRadiusX && deformedRadiusY
+        ? Math.max(deformedRadiusX, deformedRadiusY)
+        : this.radius;
     const barY = centerY - maxRadius - 18 - extraOffset;
 
     // Background
@@ -315,6 +421,302 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
     ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+    this.drawEffectInfo(ctx, centerX, barWidth, barY);
+  }
+
+  private drawEffectInfo(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    barWidth: number,
+    barY: number,
+  ): void {
+    if (this.enemyType === 'normal') return;
+
+    const effectInfo = this.getEffectInfo();
+    if (!effectInfo) return;
+
+    const label = `${effectInfo.label} • ${effectInfo.description}`;
+
+    ctx.save();
+    ctx.font = 'bold 13px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textWidth = ctx.measureText(label).width;
+    const paddingX = 10;
+    const paddingY = 4;
+    const boxWidth = Math.max(textWidth + paddingX * 2, barWidth);
+    const boxHeight = 22;
+    const boxX = centerX - boxWidth / 2;
+    const boxY = barY - boxHeight - paddingY;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 1;
+
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+    ctx.fillStyle = '#fffae5';
+    ctx.fillText(label, centerX, boxY + boxHeight / 2);
+
+    ctx.restore();
+  }
+
+  private getEffectInfo(): { label: string; description: string } | null {
+    switch (this.enemyType) {
+      case 'scout':
+        return {
+          label: t('enemyTypes.scout.name'),
+          description: t('enemyTypes.scout.effect'),
+        };
+      case 'tank':
+        return {
+          label: t('enemyTypes.tank.name'),
+          description: t('enemyTypes.tank.effect'),
+        };
+      case 'healer':
+        return {
+          label: t('enemyTypes.healer.name'),
+          description: t('enemyTypes.healer.effect'),
+        };
+      case 'guardian':
+        return {
+          label: t('enemyTypes.guardian.name'),
+          description: t('enemyTypes.guardian.effect'),
+        };
+      case 'hoarder':
+        return {
+          label: t('enemyTypes.hoarder.name'),
+          description: t('enemyTypes.hoarder.effect'),
+        };
+      default:
+        return null;
+    }
+  }
+
+  private drawGuardian(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    scaleX: number,
+    scaleY: number,
+    deformedRadiusX: number,
+    deformedRadiusY: number,
+  ): void {
+    this.drawHealthBar(ctx, centerX, centerY, deformedRadiusX, deformedRadiusY);
+
+    const animationTime = this.animationTime;
+    const baseRadius =
+      this.radius * (1 + Math.sin(animationTime * 1.3) * 0.015);
+
+    const r = parseInt(this.stats.color.substring(1, 3), 16);
+    const g = parseInt(this.stats.color.substring(3, 5), 16);
+    const b = parseInt(this.stats.color.substring(5, 7), 16);
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+
+    // Outer shield ring
+    const shieldPulse = 0.08 + Math.sin(animationTime * 4) * 0.03;
+    const shieldGradient = ctx.createRadialGradient(
+      0,
+      0,
+      baseRadius * 0.85,
+      0,
+      0,
+      baseRadius * (1.3 + shieldPulse),
+    );
+    shieldGradient.addColorStop(
+      0,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0)`,
+    );
+    shieldGradient.addColorStop(
+      0.7,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.15)`,
+    );
+    shieldGradient.addColorStop(
+      1,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.4)`,
+    );
+    ctx.fillStyle = shieldGradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius * (1.35 + shieldPulse), 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rotating shield segments
+    ctx.save();
+    ctx.rotate(animationTime * 1.2);
+    ctx.strokeStyle = `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.65)`;
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.7)`;
+    for (let i = 0; i < 6; i++) {
+      const startAngle = (i / 6) * Math.PI * 2;
+      const endAngle = startAngle + Math.PI / 6;
+      ctx.beginPath();
+      ctx.arc(0, 0, baseRadius * 1.15, startAngle, endAngle);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Main body
+    const bodyGradient = ctx.createRadialGradient(
+      -baseRadius * 0.2,
+      -baseRadius * 0.2,
+      baseRadius * 0.05,
+      0,
+      0,
+      baseRadius,
+    );
+    bodyGradient.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
+    bodyGradient.addColorStop(
+      0.4,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.65)`,
+    );
+    bodyGradient.addColorStop(
+      1,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.5)`,
+    );
+
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core
+    const coreRadius = baseRadius * 0.35;
+    const corePulse = Math.sin(animationTime * 3) * 0.07;
+    ctx.fillStyle = `rgba(255, 255, 255, ${String(0.4 + corePulse * 0.5)})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, coreRadius * (1 + corePulse), 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  private drawHoarder(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    scaleX: number,
+    scaleY: number,
+    deformedRadiusX: number,
+    deformedRadiusY: number,
+  ): void {
+    this.drawHealthBar(ctx, centerX, centerY, deformedRadiusX, deformedRadiusY);
+
+    const animationTime = this.animationTime;
+    const baseRadius = this.radius * (1 + Math.sin(animationTime * 1.8) * 0.02);
+
+    const r = parseInt(this.stats.color.substring(1, 3), 16);
+    const g = parseInt(this.stats.color.substring(3, 5), 16);
+    const b = parseInt(this.stats.color.substring(5, 7), 16);
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scaleX, scaleY);
+
+    // Sparkling aura
+    ctx.fillStyle = `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.12)`;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius * 1.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Gold shimmer particles
+    const shimmerCount = 10;
+    for (let i = 0; i < shimmerCount; i++) {
+      const angle = (i / shimmerCount) * Math.PI * 2 + animationTime;
+      const distance =
+        baseRadius * (1 + Math.sin(animationTime * 2 + i) * 0.15);
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+      const alpha = 0.25 + Math.sin(animationTime * 3 + i) * 0.15;
+      ctx.fillStyle = `rgba(255, 215, 120, ${String(alpha)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Main body
+    const bodyGradient = ctx.createRadialGradient(
+      -baseRadius * 0.25,
+      -baseRadius * 0.25,
+      baseRadius * 0.1,
+      0,
+      0,
+      baseRadius,
+    );
+    bodyGradient.addColorStop(0, 'rgba(255, 240, 200, 0.75)');
+    bodyGradient.addColorStop(
+      0.4,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.7)`,
+    );
+    bodyGradient.addColorStop(
+      1,
+      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.6)`,
+    );
+
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Coin stacks inside
+    ctx.save();
+    ctx.rotate(animationTime * 0.5);
+    const stacks = 3;
+    for (let i = 0; i < stacks; i++) {
+      const angle = (i / stacks) * Math.PI * 2;
+      const stackX = Math.cos(angle) * baseRadius * 0.45;
+      const stackY = Math.sin(angle) * baseRadius * 0.45;
+
+      ctx.fillStyle = 'rgba(255, 225, 140, 0.9)';
+      ctx.beginPath();
+      ctx.ellipse(
+        stackX,
+        stackY,
+        baseRadius * 0.18,
+        baseRadius * 0.12,
+        angle,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 205, 90, 0.85)';
+      ctx.beginPath();
+      ctx.ellipse(
+        stackX,
+        stackY - baseRadius * 0.05,
+        baseRadius * 0.16,
+        baseRadius * 0.09,
+        angle,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Sparkle highlights
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + animationTime * 2;
+      const sparkleX = Math.cos(angle) * baseRadius * 0.7;
+      const sparkleY = Math.sin(angle) * baseRadius * 0.7;
+      ctx.beginPath();
+      ctx.moveTo(sparkleX, sparkleY - 4);
+      ctx.lineTo(sparkleX + 4, sparkleY);
+      ctx.lineTo(sparkleX, sparkleY + 4);
+      ctx.lineTo(sparkleX - 4, sparkleY);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   private drawScout(
@@ -338,7 +740,7 @@ export class EnhancedAlienBall extends AlienBall {
     const r = parseInt(this.stats.color.substring(1, 3), 16);
     const g = parseInt(this.stats.color.substring(3, 5), 16);
     const b = parseInt(this.stats.color.substring(5, 7), 16);
-    
+
     // Multi-layer glow
     for (let glowLayer = 0; glowLayer < 2; glowLayer++) {
       const layerRadius = glowRadius * (0.85 + glowLayer * 0.3);
@@ -352,26 +754,30 @@ export class EnhancedAlienBall extends AlienBall {
         layerRadius,
       );
       glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${layerAlpha})`);
-      glowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${layerAlpha * 0.5})`);
+      glowGradient.addColorStop(
+        0.5,
+        `rgba(${r}, ${g}, ${b}, ${layerAlpha * 0.5})`,
+      );
       glowGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
       ctx.fillStyle = glowGradient;
       ctx.beginPath();
       ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
       ctx.fill();
     }
-    
+
     // Orbiting energy particles (scout is fast!)
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2 + animationTime * 3;
-      const distance = currentRadius * (1.15 + Math.sin(animationTime * 6 + i) * 0.08);
+      const distance =
+        currentRadius * (1.15 + Math.sin(animationTime * 6 + i) * 0.08);
       const particleX = Math.cos(angle) * distance;
       const particleY = Math.sin(angle) * distance;
       const particleAlpha = 0.4 + Math.sin(animationTime * 8 + i) * 0.3;
       const particleSize = 2 + Math.sin(animationTime * 4 + i) * 0.8;
-      
+
       ctx.fillStyle = `rgba(255, 255, 255, ${particleAlpha})`;
       ctx.shadowBlur = 5;
       ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.9)`;
@@ -391,7 +797,10 @@ export class EnhancedAlienBall extends AlienBall {
       centerY,
       Math.max(deformedRadiusX, deformedRadiusY),
     );
-    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.7 + Math.sin(animationTime * 4) * 0.1})`);
+    gradient.addColorStop(
+      0,
+      `rgba(255, 255, 255, ${0.7 + Math.sin(animationTime * 4) * 0.1})`,
+    );
     gradient.addColorStop(0.15, this.stats.color + 'dd');
     gradient.addColorStop(0.4, this.stats.color + 'bb');
     gradient.addColorStop(0.65, this.stats.color + '99');
@@ -425,14 +834,15 @@ export class EnhancedAlienBall extends AlienBall {
     }
     ctx.shadowBlur = 0;
     ctx.restore();
-    
+
     // Additional speed trail particles
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(animationTime * 2 + Math.PI / 4);
     for (let i = 0; i < 4; i++) {
       const angle = (i / 4) * Math.PI * 2;
-      const trailDistance = currentRadius * (0.75 + Math.sin(animationTime * 6 + i) * 0.1);
+      const trailDistance =
+        currentRadius * (0.75 + Math.sin(animationTime * 6 + i) * 0.1);
       const trailAlpha = 0.15 + Math.sin(animationTime * 8 + i) * 0.1;
       ctx.fillStyle = `rgba(255, 255, 255, ${trailAlpha})`;
       ctx.beginPath();
@@ -449,7 +859,7 @@ export class EnhancedAlienBall extends AlienBall {
 
     // Enhanced glossy highlight - also deformed with secondary highlight
     const highlightAlpha = 0.35 + Math.sin(animationTime * 2) * 0.1;
-    
+
     // Main highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
     ctx.beginPath();
@@ -465,7 +875,7 @@ export class EnhancedAlienBall extends AlienBall {
     );
     ctx.restore();
     ctx.fill();
-    
+
     // Secondary highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.5})`;
     ctx.beginPath();
@@ -495,7 +905,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.restore();
     ctx.stroke();
     ctx.shadowBlur = 0;
-    
+
     // Secondary outer border
     ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.4 + pulseValue * 3})`;
     ctx.lineWidth = 1.5;
@@ -528,17 +938,21 @@ export class EnhancedAlienBall extends AlienBall {
     const shieldPulse = Math.sin(animationTime * 1.5) * 2;
     const pulseValue = Math.sin(animationTime * 1.2) * 0.01; // Slower, stronger pulse
     const currentRadius = this.radius * (1 + pulseValue);
-    
+
     // Enhanced tank glow - stronger, more menacing multi-layer
-    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * (1.5 + pulseValue * 0.15);
+    const glowRadius =
+      Math.max(deformedRadiusX, deformedRadiusY) * (1.5 + pulseValue * 0.15);
     const r = parseInt(this.stats.color.substring(1, 3), 16);
     const g = parseInt(this.stats.color.substring(3, 5), 16);
     const b = parseInt(this.stats.color.substring(5, 7), 16);
-    
+
     // Multi-layer menacing glow
     for (let glowLayer = 0; glowLayer < 3; glowLayer++) {
       const layerRadius = glowRadius * (0.7 + glowLayer * 0.2);
-      const layerAlpha = (0.25 - glowLayer * 0.05) + Math.sin(animationTime * 1.5 + glowLayer) * 0.03;
+      const layerAlpha =
+        0.25 -
+        glowLayer * 0.05 +
+        Math.sin(animationTime * 1.5 + glowLayer) * 0.03;
       const glowGradient = ctx.createRadialGradient(
         centerX,
         centerY,
@@ -547,27 +961,40 @@ export class EnhancedAlienBall extends AlienBall {
         centerY,
         layerRadius,
       );
-      glowGradient.addColorStop(0, `rgba(${r}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${layerAlpha})`);
-      glowGradient.addColorStop(0.4, `rgba(${r}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)}, ${layerAlpha * 0.7})`);
-      glowGradient.addColorStop(0.7, `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, ${layerAlpha * 0.4})`);
-      glowGradient.addColorStop(1, `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, 0)`);
+      glowGradient.addColorStop(
+        0,
+        `rgba(${r}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${layerAlpha})`,
+      );
+      glowGradient.addColorStop(
+        0.4,
+        `rgba(${r}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)}, ${layerAlpha * 0.7})`,
+      );
+      glowGradient.addColorStop(
+        0.7,
+        `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, ${layerAlpha * 0.4})`,
+      );
+      glowGradient.addColorStop(
+        1,
+        `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, 0)`,
+      );
       ctx.fillStyle = glowGradient;
       ctx.beginPath();
       ctx.arc(centerX, centerY, layerRadius, 0, Math.PI * 2);
       ctx.fill();
     }
-    
+
     // Armor plating particles - defensive energy field
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2 + animationTime * 0.8;
-      const distance = currentRadius * (1.25 + Math.sin(animationTime * 2 + i) * 0.08);
+      const distance =
+        currentRadius * (1.25 + Math.sin(animationTime * 2 + i) * 0.08);
       const particleX = Math.cos(angle) * distance;
       const particleY = Math.sin(angle) * distance;
       const particleAlpha = 0.25 + Math.sin(animationTime * 3 + i) * 0.15;
-      
+
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${particleAlpha})`;
       ctx.shadowBlur = 6;
       ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
@@ -577,10 +1004,14 @@ export class EnhancedAlienBall extends AlienBall {
     }
     ctx.shadowBlur = 0;
     ctx.restore();
-    
+
     // Draw outer shield layers (multiple reinforced bubble layers) - also deformed
     for (let layer = 0; layer < 3; layer++) {
-      const layerRadius = Math.max(deformedRadiusX, deformedRadiusY) + 12 + layer * 6 + shieldPulse;
+      const layerRadius =
+        Math.max(deformedRadiusX, deformedRadiusY) +
+        12 +
+        layer * 6 +
+        shieldPulse;
       const layerAlpha = 0.2 - layer * 0.04;
       const layerGradient = ctx.createRadialGradient(
         centerX - layerRadius * 0.3,
@@ -602,7 +1033,10 @@ export class EnhancedAlienBall extends AlienBall {
         0.7,
         `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, ${String(layerAlpha)})`,
       );
-      layerGradient.addColorStop(1, `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, 0)`);
+      layerGradient.addColorStop(
+        1,
+        `rgba(${r}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)}, 0)`,
+      );
       ctx.fillStyle = layerGradient;
       ctx.beginPath();
       ctx.save();
@@ -623,7 +1057,10 @@ export class EnhancedAlienBall extends AlienBall {
       centerY,
       Math.max(deformedRadiusX, deformedRadiusY) * bodyScale,
     );
-    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.6 + Math.sin(animationTime * 2) * 0.1})`);
+    gradient.addColorStop(
+      0,
+      `rgba(255, 255, 255, ${0.6 + Math.sin(animationTime * 2) * 0.1})`,
+    );
     gradient.addColorStop(0.12, this.stats.color + 'ee');
     gradient.addColorStop(0.3, this.stats.color + 'dd');
     gradient.addColorStop(0.5, this.stats.color + 'bb');
@@ -644,7 +1081,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
     ctx.rotate(animationTime * 0.5);
-    
+
     // Main hexagon
     ctx.strokeStyle = `rgba(0, 0, 0, ${0.35 + pulseValue * 2})`;
     ctx.lineWidth = 2;
@@ -659,7 +1096,7 @@ export class EnhancedAlienBall extends AlienBall {
     }
     ctx.closePath();
     ctx.stroke();
-    
+
     // Inner hexagon for layered armor effect
     ctx.strokeStyle = `rgba(0, 0, 0, ${0.25 + pulseValue * 1.5})`;
     ctx.lineWidth = 1.5;
@@ -674,7 +1111,7 @@ export class EnhancedAlienBall extends AlienBall {
     }
     ctx.closePath();
     ctx.stroke();
-    
+
     // Armor plate segments
     for (let segment = 0; segment < 6; segment++) {
       const angle = (segment / 6) * Math.PI * 2;
@@ -683,7 +1120,10 @@ export class EnhancedAlienBall extends AlienBall {
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(Math.cos(angle) * hexSize, Math.sin(angle) * hexSize);
-      ctx.lineTo(Math.cos(angle + Math.PI / 3) * hexSize, Math.sin(angle + Math.PI / 3) * hexSize);
+      ctx.lineTo(
+        Math.cos(angle + Math.PI / 3) * hexSize,
+        Math.sin(angle + Math.PI / 3) * hexSize,
+      );
       ctx.closePath();
       ctx.fill();
     }
@@ -691,7 +1131,7 @@ export class EnhancedAlienBall extends AlienBall {
 
     // Extra thick glossy highlight - also deformed with triple highlight
     const highlightAlpha = 0.4 + Math.sin(animationTime * 1.5) * 0.1;
-    
+
     // Main highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
     ctx.beginPath();
@@ -707,7 +1147,7 @@ export class EnhancedAlienBall extends AlienBall {
     );
     ctx.restore();
     ctx.fill();
-    
+
     // Secondary highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.65})`;
     ctx.beginPath();
@@ -723,7 +1163,7 @@ export class EnhancedAlienBall extends AlienBall {
     );
     ctx.restore();
     ctx.fill();
-    
+
     // Tertiary highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.4})`;
     ctx.beginPath();
@@ -764,7 +1204,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.arc(0, 0, currentRadius * 0.88, 0, Math.PI * 2);
     ctx.restore();
     ctx.stroke();
-    
+
     // Second reinforcement ring
     ctx.strokeStyle = `rgba(0, 0, 0, ${0.25 + pulseValue * 2})`;
     ctx.lineWidth = 2.5;
@@ -794,14 +1234,18 @@ export class EnhancedAlienBall extends AlienBall {
     const pulseSize = Math.sin(animationTime * 1.8) * 8;
     const pulseValue = Math.sin(animationTime * 1.5) * 0.015;
     const currentRadius = this.radius * (1 + pulseValue);
-    
+
     // Extract green and blue for healing colors (healer uses green/teal palette)
     const g = parseInt(this.stats.color.substring(3, 5), 16);
     const b = parseInt(this.stats.color.substring(5, 7), 16);
-    
+
     // Multiple healing aura layers with enhanced pulsing
     for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
-      const auraRadius = Math.max(deformedRadiusX, deformedRadiusY) + 10 + auraLayer * 7 + pulseSize;
+      const auraRadius =
+        Math.max(deformedRadiusX, deformedRadiusY) +
+        10 +
+        auraLayer * 7 +
+        pulseSize;
       const auraAlpha = 0.28 - auraLayer * 0.08;
       const auraPulse = Math.sin(animationTime * 2 + auraLayer * 0.5) * 0.05;
       const auraGradient = ctx.createRadialGradient(
@@ -812,9 +1256,18 @@ export class EnhancedAlienBall extends AlienBall {
         centerY,
         auraRadius,
       );
-      auraGradient.addColorStop(0, `rgba(0, ${g + 50}, ${b + 50}, ${auraAlpha + auraPulse})`);
-      auraGradient.addColorStop(0.4, `rgba(0, ${g + 30}, ${b + 30}, ${(auraAlpha + auraPulse) * 0.7})`);
-      auraGradient.addColorStop(0.7, `rgba(0, ${g + 15}, ${b + 15}, ${(auraAlpha + auraPulse) * 0.4})`);
+      auraGradient.addColorStop(
+        0,
+        `rgba(0, ${g + 50}, ${b + 50}, ${auraAlpha + auraPulse})`,
+      );
+      auraGradient.addColorStop(
+        0.4,
+        `rgba(0, ${g + 30}, ${b + 30}, ${(auraAlpha + auraPulse) * 0.7})`,
+      );
+      auraGradient.addColorStop(
+        0.7,
+        `rgba(0, ${g + 15}, ${b + 15}, ${(auraAlpha + auraPulse) * 0.4})`,
+      );
       auraGradient.addColorStop(1, `rgba(0, ${g}, ${b}, 0)`);
       ctx.fillStyle = auraGradient;
       ctx.beginPath();
@@ -825,18 +1278,19 @@ export class EnhancedAlienBall extends AlienBall {
       ctx.restore();
       ctx.fill();
     }
-    
+
     // Healing energy particles orbiting
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2 + animationTime * 1.5;
-      const distance = currentRadius * (1.2 + Math.sin(animationTime * 4 + i) * 0.1);
+      const distance =
+        currentRadius * (1.2 + Math.sin(animationTime * 4 + i) * 0.1);
       const particleX = Math.cos(angle) * distance;
       const particleY = Math.sin(angle) * distance;
       const particleAlpha = 0.35 + Math.sin(animationTime * 6 + i) * 0.25;
-      
+
       ctx.fillStyle = `rgba(0, ${g + 40}, ${b + 40}, ${particleAlpha})`;
       ctx.shadowBlur = 5;
       ctx.shadowColor = `rgba(0, ${g + 50}, ${b + 50}, 0.7)`;
@@ -856,7 +1310,10 @@ export class EnhancedAlienBall extends AlienBall {
       centerY,
       Math.max(deformedRadiusX, deformedRadiusY),
     );
-    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.7 + Math.sin(animationTime * 3) * 0.1})`);
+    gradient.addColorStop(
+      0,
+      `rgba(255, 255, 255, ${0.7 + Math.sin(animationTime * 3) * 0.1})`,
+    );
     gradient.addColorStop(0.15, this.stats.color + 'dd');
     gradient.addColorStop(0.35, this.stats.color + 'bb');
     gradient.addColorStop(0.55, this.stats.color + 'aa');
@@ -881,7 +1338,7 @@ export class EnhancedAlienBall extends AlienBall {
       const ringRadius = currentRadius * (0.45 + ring * 0.12);
       const ringAlpha = 0.25 + Math.sin(animationTime * 2 + ring) * 0.1;
       const ringPulse = Math.sin(animationTime * 3 + ring * 0.7) * 0.03;
-      
+
       ctx.strokeStyle = `rgba(0, 255, 136, ${ringAlpha})`;
       ctx.lineWidth = 2 + ringPulse;
       ctx.shadowBlur = 4;
@@ -889,12 +1346,14 @@ export class EnhancedAlienBall extends AlienBall {
       ctx.beginPath();
       ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
       ctx.stroke();
-      
+
       // Glowing segments on rings
       if (ring <= 2) {
         for (let segment = 0; segment < 3; segment++) {
-          const segmentAngle = (segment / 3) * Math.PI * 2 + animationTime * 0.8;
-          const segmentAlpha = 0.3 + Math.sin(animationTime * 4 + segment) * 0.2;
+          const segmentAngle =
+            (segment / 3) * Math.PI * 2 + animationTime * 0.8;
+          const segmentAlpha =
+            0.3 + Math.sin(animationTime * 4 + segment) * 0.2;
           ctx.fillStyle = `rgba(0, 255, 136, ${segmentAlpha})`;
           ctx.beginPath();
           ctx.arc(
@@ -913,7 +1372,7 @@ export class EnhancedAlienBall extends AlienBall {
 
     // Enhanced glossy highlight with pulsing - also deformed with dual highlights
     const highlightAlpha = 0.4 + Math.sin(animationTime * 2) * 0.15;
-    
+
     // Main highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
     ctx.beginPath();
@@ -929,7 +1388,7 @@ export class EnhancedAlienBall extends AlienBall {
     );
     ctx.restore();
     ctx.fill();
-    
+
     // Secondary highlight
     ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha * 0.6})`;
     ctx.beginPath();
@@ -959,7 +1418,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.restore();
     ctx.stroke();
     ctx.shadowBlur = 0;
-    
+
     // Secondary outer border
     ctx.strokeStyle = `rgba(0, ${g + 40}, ${b + 40}, ${0.5 + pulseValue * 2})`;
     ctx.lineWidth = 1.5;
@@ -1016,26 +1475,39 @@ export class EnhancedAlienBall extends AlienBall {
       }
     }
   }
-
 }
 
 export function selectEnemyType(level: number): EnemyType {
-  // Unlock enemy types based on level
-  if (level < 10) return 'normal';
-
-  // Build list of available special enemy types
-  const specialTypes: EnemyType[] = [];
-  if (level >= 10) specialTypes.push('scout');
-  if (level >= 20) specialTypes.push('tank');
-  if (level >= 30) specialTypes.push('healer');
-
-  // 60% normal, 40% special enemies
+  // Always allow all enemy archetypes from level 1.
+  // Keep the core probabilities but bias scout/tank/healer based on level.
   const rand = Math.random();
-  if (rand < 0.6 || specialTypes.length === 0) {
+
+  if (rand < 0.6) {
     return 'normal';
   }
 
-  // Select random special enemy type
-  const index = Math.floor(Math.random() * specialTypes.length);
-  return specialTypes[index] ?? 'normal';
+  // Adjust weighting so tougher enemies are still rarer at very low levels.
+  let scoutWeight = 0.22 + Math.min(level / 220, 0.2);
+  let tankWeight = 0.12 + Math.min(level / 320, 0.18);
+  let healerWeight = 0.08 + Math.min(level / 420, 0.12);
+  let guardianWeight = 0.08 + Math.min(level / 450, 0.12);
+  let hoarderWeight = 0.005 + Math.min(level / 1200, 0.01);
+
+  // Normalize weights
+  const total =
+    scoutWeight + tankWeight + healerWeight + guardianWeight + hoarderWeight;
+  scoutWeight /= total;
+  tankWeight /= total;
+  healerWeight /= total;
+  guardianWeight /= total;
+  hoarderWeight /= total;
+
+  const specialRoll = Math.random();
+  if (specialRoll < scoutWeight) return 'scout';
+  if (specialRoll < scoutWeight + tankWeight) return 'tank';
+  if (specialRoll < scoutWeight + tankWeight + healerWeight) return 'healer';
+  if (specialRoll < scoutWeight + tankWeight + healerWeight + guardianWeight) {
+    return 'guardian';
+  }
+  return 'hoarder';
 }

@@ -22,8 +22,6 @@ export interface SaveData {
   prestigeUpgrades?: Record<string, number>;
   blockedOnBossLevel?: number | null;
   // v3.0: New upgrade systems
-  weaponMasteryLevel?: number;
-  fleetCommandLevel?: number;
   mutationEngineLevel?: number;
   energyCoreLevel?: number;
   cosmicKnowledgeLevel?: number;
@@ -71,8 +69,6 @@ export interface GameState {
   prestigeUpgrades?: Record<string, number>;
   blockedOnBossLevel?: number | null;
   // v3.0: New upgrade systems
-  weaponMasteryLevel: number;
-  fleetCommandLevel: number;
   mutationEngineLevel: number;
   energyCoreLevel: number;
   cosmicKnowledgeLevel: number;

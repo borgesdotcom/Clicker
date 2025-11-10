@@ -212,7 +212,12 @@ export class LaserSystem {
 
   update(
     dt: number,
-    onHit?: (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2) => void,
+    onHit?: (
+      damage: number,
+      isCrit: boolean,
+      isFromShip: boolean,
+      hitDirection?: Vec2,
+    ) => void,
   ): void {
     if (this.beamMode && onHit) {
       this.beamDamageTimer += dt;
@@ -223,7 +228,7 @@ export class LaserSystem {
 
     for (const laser of activeLasers) {
       laser.update(dt);
-      
+
       // Check for hit (only processes once when laser reaches target)
       // Note: Even if target is gone, we still process the hit for consistency
       if (onHit && laser.checkHit()) {
@@ -233,7 +238,7 @@ export class LaserSystem {
         const hitDirection: Vec2 = { x: dx, y: dy };
         onHit(laser.damage, laser.isCrit, laser.isFromShip, hitDirection);
       }
-      
+
       // Remove laser only after animation completes (allows visual to finish)
       // Check if laser should be removed (after animation completes)
       if ('shouldRemove' in laser && typeof laser.shouldRemove === 'function') {
@@ -254,7 +259,13 @@ export class LaserSystem {
 
   processBeamDamage(
     cooldownMs: number,
-    onHit: (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2, isBeam?: boolean) => void,
+    onHit: (
+      damage: number,
+      isCrit: boolean,
+      isFromShip: boolean,
+      hitDirection?: Vec2,
+      isBeam?: boolean,
+    ) => void,
     targetPosition?: Vec2,
     beamOrigin?: Vec2,
   ): void {
@@ -282,14 +293,16 @@ export class LaserSystem {
 
     // Check if WebGL is available for laser rendering
     const drawerWithWebGL = drawer as Draw & {
-      getWebGLRenderer?: () => { addLaser?: (...args: unknown[]) => void } | null;
+      getWebGLRenderer?: () => {
+        addLaser?: (...args: unknown[]) => void;
+      } | null;
       isWebGLEnabled?: () => boolean;
     };
-    
+
     const webglRenderer = drawerWithWebGL.getWebGLRenderer?.();
     const useWebGL = drawerWithWebGL.isWebGLEnabled?.() ?? false;
     const laserThemeId: string | undefined = this.lastBeamThemeId; // Reuse beam theme ID for lasers
-    
+
     const activeLasers = this.laserPool.getActive();
     if (useWebGL && webglRenderer && webglRenderer.addLaser) {
       // Use WebGL for laser rendering
@@ -331,14 +344,16 @@ export class LaserSystem {
     // Check if WebGL is available for beam rendering
     // Use type assertion to access WebGL renderer methods
     const drawerWithWebGL = drawer as Draw & {
-      getWebGLRenderer?: () => { addBeam?: (...args: unknown[]) => void } | null;
+      getWebGLRenderer?: () => {
+        addBeam?: (...args: unknown[]) => void;
+      } | null;
       isWebGLEnabled?: () => boolean;
     };
-    
+
     const webglRenderer = drawerWithWebGL.getWebGLRenderer?.();
     const useWebGL = drawerWithWebGL.isWebGLEnabled?.() ?? false;
     const beamThemeId: string | undefined = this.lastBeamThemeId;
-    
+
     if (useWebGL && webglRenderer && webglRenderer.addBeam) {
       // Use WebGL for beam rendering with theme effects
       if (this.mainShipBeam) {
@@ -353,7 +368,7 @@ export class LaserSystem {
           beamThemeId,
         );
       }
-      
+
       if (this.showShipLasers) {
         for (const beam of this.shipBeams.values()) {
           webglRenderer.addBeam(
@@ -384,7 +399,11 @@ export class LaserSystem {
     }
   }
 
-  private drawBeam(ctx: CanvasRenderingContext2D, beam: BeamTarget, themeId?: string): void {
+  private drawBeam(
+    ctx: CanvasRenderingContext2D,
+    beam: BeamTarget,
+    themeId?: string,
+  ): void {
     ctx.save();
 
     const now = Date.now();
@@ -394,14 +413,20 @@ export class LaserSystem {
 
     if (themeId === 'rainbow_laser') {
       const colors = [
-        '#ff0000', '#ff8800', '#ffff00', '#00ff00',
-        '#0088ff', '#0000ff', '#8800ff', '#ff00ff'
+        '#ff0000',
+        '#ff8800',
+        '#ffff00',
+        '#00ff00',
+        '#0088ff',
+        '#0000ff',
+        '#8800ff',
+        '#ff00ff',
       ];
       const segmentCount = 20;
       const dx = (beam.target.x - beam.origin.x) / segmentCount;
       const dy = (beam.target.y - beam.origin.y) / segmentCount;
       const colorOffset = Math.floor(wavePhase * 100) % colors.length;
-      
+
       ctx.lineCap = 'round';
       for (let layer = 0; layer < 2; layer++) {
         for (let i = 0; i < segmentCount; i++) {
@@ -410,10 +435,12 @@ export class LaserSystem {
           const y1 = beam.origin.y + dy * i;
           const x2 = beam.origin.x + dx * (i + 1);
           const y2 = beam.origin.y + dy * (i + 1);
-          const segColor = colors[(i + colorOffset + layer) % colors.length] ?? beam.color;
+          const segColor =
+            colors[(i + colorOffset + layer) % colors.length] ?? beam.color;
           const alpha = pulseAlpha * wave * (1.0 - layer * 0.4);
-          const segWidth = beam.width * (1.4 + wave * 0.4) * pulseWidth * (1.0 - layer * 0.3);
-          
+          const segWidth =
+            beam.width * (1.4 + wave * 0.4) * pulseWidth * (1.0 - layer * 0.3);
+
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = segColor;
           ctx.lineWidth = segWidth;
@@ -429,19 +456,30 @@ export class LaserSystem {
       const segmentCount = 12;
       const dx = (beam.target.x - beam.origin.x) / segmentCount;
       const dy = (beam.target.y - beam.origin.y) / segmentCount;
-      const plasmaColors = ['#ff4400', '#ff6600', '#ff8800', '#ff4400', '#ff0044'];
-      
+      const plasmaColors = [
+        '#ff4400',
+        '#ff6600',
+        '#ff8800',
+        '#ff4400',
+        '#ff0044',
+      ];
+
       for (let layer = 0; layer < 3; layer++) {
         for (let i = 0; i < segmentCount; i++) {
-          const wave = Math.sin(wavePhase + i * 1.8 + layer * 0.5) * 0.35 + 0.65;
+          const wave =
+            Math.sin(wavePhase + i * 1.8 + layer * 0.5) * 0.35 + 0.65;
           const x1 = beam.origin.x + dx * i;
           const y1 = beam.origin.y + dy * i;
           const x2 = beam.origin.x + dx * (i + 1);
           const y2 = beam.origin.y + dy * (i + 1);
-          const segColor = plasmaColors[(i + Math.floor(wavePhase * 50)) % plasmaColors.length] ?? beam.color;
+          const segColor =
+            plasmaColors[
+              (i + Math.floor(wavePhase * 50)) % plasmaColors.length
+            ] ?? beam.color;
           const alpha = pulseAlpha * wave * (1.0 - layer * 0.3);
-          const segWidth = beam.width * (1.5 + wave * 0.5) * pulseWidth * (1.0 - layer * 0.25);
-          
+          const segWidth =
+            beam.width * (1.5 + wave * 0.5) * pulseWidth * (1.0 - layer * 0.25);
+
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = segColor;
           ctx.lineWidth = segWidth;
@@ -459,14 +497,14 @@ export class LaserSystem {
       const segmentCount = 10;
       const dx = (beam.target.x - beam.origin.x) / segmentCount;
       const dy = (beam.target.y - beam.origin.y) / segmentCount;
-      
+
       for (let i = 0; i < segmentCount; i++) {
         const wave = Math.sin(wavePhase + i * 1.5) * 0.25 + 0.75;
         const x1 = beam.origin.x + dx * i;
         const y1 = beam.origin.y + dy * i;
         const x2 = beam.origin.x + dx * (i + 1);
         const y2 = beam.origin.y + dy * (i + 1);
-        
+
         ctx.globalAlpha = pulseAlpha * wave * 0.6;
         ctx.strokeStyle = '#4400aa';
         ctx.lineWidth = beam.width * (1.6 + wave * 0.4) * pulseWidth;
@@ -476,7 +514,7 @@ export class LaserSystem {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
-        
+
         ctx.globalAlpha = pulseAlpha * wave * pulse2;
         ctx.strokeStyle = '#8800ff';
         ctx.lineWidth = beam.width * (1.1 + wave * 0.3) * pulseWidth;
@@ -486,7 +524,7 @@ export class LaserSystem {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
-        
+
         ctx.globalAlpha = pulseAlpha * wave * pulse3;
         ctx.strokeStyle = '#ff00ff';
         ctx.lineWidth = beam.width * (0.8 + wave * 0.25) * pulseWidth;
@@ -501,7 +539,7 @@ export class LaserSystem {
       const segmentCount = 8;
       const dx = (beam.target.x - beam.origin.x) / segmentCount;
       const dy = (beam.target.y - beam.origin.y) / segmentCount;
-      
+
       for (let layer = 0; layer < 2; layer++) {
         for (let i = 0; i < segmentCount; i++) {
           const wave = Math.sin(wavePhase + i * 1.5 + layer * 0.7) * 0.3 + 0.7;
@@ -510,13 +548,17 @@ export class LaserSystem {
           const x2 = beam.origin.x + dx * (i + 1);
           const y2 = beam.origin.y + dy * (i + 1);
           const alpha = pulseAlpha * wave * (1.0 - layer * 0.4);
-          const segWidth = beam.width * (1.0 + wave * 0.4) * pulseWidth * (layer === 0 ? 1.0 : 1.6);
-          
+          const segWidth =
+            beam.width *
+            (1.0 + wave * 0.4) *
+            pulseWidth *
+            (layer === 0 ? 1.0 : 1.6);
+
           const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
           gradient.addColorStop(0, this.hexToRgba(beam.color, alpha * 0.5));
           gradient.addColorStop(0.5, this.hexToRgba(beam.color, alpha));
           gradient.addColorStop(1, this.hexToRgba(beam.color, alpha * 0.8));
-          
+
           ctx.globalAlpha = 1.0;
           ctx.strokeStyle = gradient;
           ctx.lineWidth = segWidth;
@@ -550,12 +592,24 @@ export class LaserSystem {
     ctx.shadowBlur = beam.isCrit ? 15 : 8;
     ctx.shadowColor = beam.color;
     ctx.beginPath();
-    ctx.arc(beam.target.x, beam.target.y, (beam.isCrit ? 4 : 2.5) * endPulse, 0, Math.PI * 2);
+    ctx.arc(
+      beam.target.x,
+      beam.target.y,
+      (beam.isCrit ? 4 : 2.5) * endPulse,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
-    
+
     ctx.globalAlpha = pulseAlpha * endPulse * 0.5;
     ctx.beginPath();
-    ctx.arc(beam.target.x, beam.target.y, (beam.isCrit ? 6 : 4) * endPulse, 0, Math.PI * 2);
+    ctx.arc(
+      beam.target.x,
+      beam.target.y,
+      (beam.isCrit ? 6 : 4) * endPulse,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.restore();

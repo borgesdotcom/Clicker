@@ -34,12 +34,30 @@ export class AscensionModal {
               <li>✓ Statistics</li>
               <li>✓ Prestige Upgrades</li>
             </ul>
-            <p style="margin-top: 15px;"><strong>You will gain Prestige Points to unlock permanent bonuses!</strong></p>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 0, 255, 0.1); border: 2px solid rgba(255, 0, 255, 0.3); border-radius: 8px;">
+              <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 16px; color: #ff00ff; text-shadow: 0 0 5px rgba(255, 0, 255, 0.8);">🌟 How Prestige Points Work:</p>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>Base PP:</strong> You always earn Prestige Points for ascending past level 99!</p>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>Bonus PP:</strong> Earn extra valuable Prestige Points by surpassing your previous best level!</p>
+              <div style="margin-top: 10px; font-size: 13px;">
+                <p style="margin: 5px 0; color: #00ffff; font-weight: bold;">Current Level: <span id="current-level-display">0</span></p>
+                <p style="margin: 5px 0; color: #ffff00; font-weight: bold;">Previous Best Level: <span id="previous-best-level">0</span></p>
+              </div>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: rgba(255, 255, 0, 0.1); border: 2px solid rgba(255, 255, 0, 0.3); border-radius: 8px;">
+              <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 16px; color: #ffff00; text-shadow: 0 0 5px rgba(255, 255, 0, 0.8);">⚡ Unspent Prestige Points Bonus:</p>
+              <p style="margin: 5px 0; font-size: 14px;">Each <strong>unspent Prestige Point gives +0.25% income</strong> to all point sources!</p>
+              <p style="margin: 5px 0; font-size: 13px; color: #aaa;">This applies to clicks, kills, and passive generation.</p>
+              <p style="margin: 10px 0 0 0; font-size: 13px; color: #ffff00; font-weight: bold;">Current Income Bonus: <span id="unspent-pp-bonus">+0%</span></p>
+            </div>
           </div>
           <div class="ascension-rewards">
             <div class="prestige-points-display">
               <div class="prestige-current">Current: <span id="prestige-current">0</span> PP</div>
-              <div class="prestige-gain">Gain on Ascension: <span id="prestige-gain">0</span> PP</div>
+              <div class="prestige-gain">
+                <div style="margin-bottom: 5px;">Total Gain: <span id="prestige-gain">0</span> PP</div>
+                <div style="font-size: 13px; color: #aaa; margin-left: 10px;">Base: <span id="prestige-base">0</span> PP</div>
+                <div style="font-size: 13px; color: #ffff00; margin-left: 10px; font-weight: bold;">Bonus: <span id="prestige-bonus">0</span> PP</div>
+              </div>
             </div>
           </div>
         </div>
@@ -93,14 +111,48 @@ export class AscensionModal {
     // Update prestige points display
     const currentPP = document.getElementById('prestige-current');
     const gainPP = document.getElementById('prestige-gain');
+    const basePP = document.getElementById('prestige-base');
+    const bonusPP = document.getElementById('prestige-bonus');
+    const previousBestLevel = document.getElementById('previous-best-level');
+    const currentLevelDisplay = document.getElementById(
+      'current-level-display',
+    );
 
     if (currentPP) {
       currentPP.textContent = state.prestigePoints.toString();
     }
 
+    if (currentLevelDisplay) {
+      currentLevelDisplay.textContent = state.level.toString();
+    }
+
+    // Get breakdown of PP gain
+    const breakdown =
+      this.ascensionSystem.calculatePrestigePointsBreakdown(state);
+    const totalGain = breakdown.base + breakdown.bonus;
+
     if (gainPP) {
-      const willGain = this.ascensionSystem.calculatePrestigePoints(state);
-      gainPP.textContent = willGain.toString();
+      gainPP.textContent = totalGain.toString();
+    }
+
+    if (basePP) {
+      basePP.textContent = breakdown.base.toString();
+    }
+
+    if (bonusPP) {
+      bonusPP.textContent = breakdown.bonus.toString();
+    }
+
+    if (previousBestLevel) {
+      previousBestLevel.textContent = breakdown.previousBest.toString();
+    }
+
+    // Update unspent PP bonus display
+    const unspentPPBonus = document.getElementById('unspent-pp-bonus');
+    if (unspentPPBonus) {
+      const unspentPP = state.prestigePoints ?? 0;
+      const bonusPercent = (unspentPP * 0.25).toFixed(1);
+      unspentPPBonus.textContent = `+${bonusPercent}%`;
     }
 
     // Update prestige upgrades
@@ -111,8 +163,17 @@ export class AscensionModal {
     const ascendBtn = this.modal.querySelector('#ascend-btn');
     if (ascendBtn instanceof HTMLButtonElement) {
       if (canAscend) {
-        ascendBtn.disabled = false;
-        ascendBtn.textContent = 'ASCEND NOW';
+        // Warn if they'll get 0 or very low PP
+        if (totalGain === 0) {
+          ascendBtn.disabled = true;
+          ascendBtn.textContent = 'REACH LEVEL 100 TO ASCEND';
+        } else if (totalGain < 5) {
+          ascendBtn.disabled = false;
+          ascendBtn.textContent = `ASCEND NOW (Only ${totalGain} PP - Push higher for more!)`;
+        } else {
+          ascendBtn.disabled = false;
+          ascendBtn.textContent = 'ASCEND NOW';
+        }
       } else {
         ascendBtn.disabled = true;
         ascendBtn.textContent = `REACH LEVEL 100 TO ASCEND (Current: ${state.level.toString()})`;
@@ -137,10 +198,51 @@ export class AscensionModal {
   private updatePrestigeUpgrades(): void {
     const state = this.store.getState();
 
-    // Update current PP display
+    // Update current PP display and breakdown
     const currentPP = document.getElementById('prestige-current');
+    const gainPP = document.getElementById('prestige-gain');
+    const basePP = document.getElementById('prestige-base');
+    const bonusPP = document.getElementById('prestige-bonus');
+    const previousBestLevel = document.getElementById('previous-best-level');
+    const currentLevelDisplay = document.getElementById(
+      'current-level-display',
+    );
+
     if (currentPP) {
       currentPP.textContent = state.prestigePoints.toString();
+    }
+
+    if (currentLevelDisplay) {
+      currentLevelDisplay.textContent = state.level.toString();
+    }
+
+    // Update breakdown
+    const breakdown =
+      this.ascensionSystem.calculatePrestigePointsBreakdown(state);
+    const totalGain = breakdown.base + breakdown.bonus;
+
+    if (gainPP) {
+      gainPP.textContent = totalGain.toString();
+    }
+
+    if (basePP) {
+      basePP.textContent = breakdown.base.toString();
+    }
+
+    if (bonusPP) {
+      bonusPP.textContent = breakdown.bonus.toString();
+    }
+
+    if (previousBestLevel) {
+      previousBestLevel.textContent = breakdown.previousBest.toString();
+    }
+
+    // Update unspent PP bonus display
+    const unspentPPBonus = document.getElementById('unspent-pp-bonus');
+    if (unspentPPBonus) {
+      const unspentPP = state.prestigePoints ?? 0;
+      const bonusPercent = (unspentPP * 0.25).toFixed(1);
+      unspentPPBonus.textContent = `+${bonusPercent}%`;
     }
 
     const grid = this.modal.querySelector('#prestige-upgrades-grid');
@@ -151,7 +253,8 @@ export class AscensionModal {
 
     for (const upgrade of upgrades) {
       const currentLevel = upgrade.getCurrentLevel(state);
-      const canAfford = state.prestigePoints >= upgrade.cost;
+      const actualCost = this.ascensionSystem.getUpgradeCost(upgrade.id, state);
+      const canAfford = state.prestigePoints >= actualCost;
       const maxed = currentLevel >= upgrade.maxLevel;
 
       const card = document.createElement('div');
@@ -163,7 +266,7 @@ export class AscensionModal {
         <div class="prestige-upgrade-desc">${upgrade.description}</div>
         <div class="prestige-upgrade-effect">${upgrade.effect}</div>
         <div class="prestige-upgrade-cost">
-          ${maxed ? 'MAX' : `Cost: ${upgrade.cost.toString()} PP`}
+          ${maxed ? 'MAX' : `Cost: ${actualCost.toString()} PP${actualCost > upgrade.cost ? ` (base: ${upgrade.cost.toString()})` : ''}`}
         </div>
       `;
 

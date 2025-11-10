@@ -69,17 +69,17 @@ export class Ship {
   draw(drawer: Draw, state?: GameState): void {
     const ctx = drawer.getContext();
     const size = this.isMainShip ? 20 : 14; // Match increased sizes for 2D fallback
-    
+
     // Determine ship appearance - check for custom visuals first, then upgrades
     const customVisuals = (this as any).customVisuals;
     const visuals = customVisuals ?? this.getShipVisuals(state);
-    
+
     // Engine pulse animation
     const enginePulse = Math.sin(this.enginePulse) * 0.25 + 0.75;
 
     if (this.isMainShip) {
       // === MAIN SHIP - Classic streamlined design ===
-      
+
       // Subtle outer glow
       const glow = ctx.createRadialGradient(
         this.x,
@@ -96,28 +96,36 @@ export class Ship {
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 2, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Simple triangular ship shape - classic fighter design
       const tipX = this.x + Math.cos(this.angle + Math.PI) * size;
       const tipY = this.y + Math.sin(this.angle + Math.PI) * size;
       const leftX = this.x + Math.cos(this.angle + Math.PI * 0.75) * size * 0.6;
       const leftY = this.y + Math.sin(this.angle + Math.PI * 0.75) * size * 0.6;
-      const rightX = this.x + Math.cos(this.angle + Math.PI * 1.25) * size * 0.6;
-      const rightY = this.y + Math.sin(this.angle + Math.PI * 1.25) * size * 0.6;
-      
+      const rightX =
+        this.x + Math.cos(this.angle + Math.PI * 1.25) * size * 0.6;
+      const rightY =
+        this.y + Math.sin(this.angle + Math.PI * 1.25) * size * 0.6;
+
       // Engine exhaust (behind ship)
       const exhaustX = this.x + Math.cos(this.angle) * size * 0.3;
       const exhaustY = this.y + Math.sin(this.angle) * size * 0.3;
       const exhaustLength = size * 0.7 * enginePulse;
-      
+
       const exhaustGradient = ctx.createLinearGradient(
         this.x,
         this.y,
         exhaustX + Math.cos(this.angle) * exhaustLength,
         exhaustY + Math.sin(this.angle) * exhaustLength,
       );
-      exhaustGradient.addColorStop(0, this.hexToRgba(visuals.fillColor, 0.5 * enginePulse));
-      exhaustGradient.addColorStop(0.5, this.hexToRgba(visuals.fillColor, 0.2 * enginePulse));
+      exhaustGradient.addColorStop(
+        0,
+        this.hexToRgba(visuals.fillColor, 0.5 * enginePulse),
+      );
+      exhaustGradient.addColorStop(
+        0.5,
+        this.hexToRgba(visuals.fillColor, 0.2 * enginePulse),
+      );
       exhaustGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.strokeStyle = exhaustGradient;
       ctx.lineWidth = size * 0.35;
@@ -129,7 +137,7 @@ export class Ship {
         exhaustY + Math.sin(this.angle) * exhaustLength,
       );
       ctx.stroke();
-      
+
       // Main ship body - filled triangle
       ctx.save();
       ctx.beginPath();
@@ -137,19 +145,14 @@ export class Ship {
       ctx.lineTo(leftX, leftY);
       ctx.lineTo(rightX, rightY);
       ctx.closePath();
-      
+
       // Solid fill with slight gradient
-      const bodyGradient = ctx.createLinearGradient(
-        tipX,
-        tipY,
-        this.x,
-        this.y,
-      );
+      const bodyGradient = ctx.createLinearGradient(tipX, tipY, this.x, this.y);
       bodyGradient.addColorStop(0, visuals.fillColor);
       bodyGradient.addColorStop(1, this.lightenColor(visuals.fillColor, 0.15));
       ctx.fillStyle = bodyGradient;
       ctx.fill();
-      
+
       // Clean white outline
       ctx.shadowBlur = 6;
       ctx.shadowColor = visuals.fillColor;
@@ -157,16 +160,15 @@ export class Ship {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
-      
+
       // Small center highlight
       ctx.fillStyle = this.hexToRgba('#ffffff', 0.4);
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 0.2, 0, Math.PI * 2);
       ctx.fill();
-      
     } else {
       // === ALLY SHIPS - Simple triangular design ===
-      
+
       // Subtle glow
       const allyGlow = ctx.createRadialGradient(
         this.x,
@@ -182,20 +184,22 @@ export class Ship {
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 1.5, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Simple triangle shape
       const tipX = this.x + Math.cos(this.angle + Math.PI) * size;
       const tipY = this.y + Math.sin(this.angle + Math.PI) * size;
       const leftX = this.x + Math.cos(this.angle + Math.PI * 0.75) * size * 0.6;
       const leftY = this.y + Math.sin(this.angle + Math.PI * 0.75) * size * 0.6;
-      const rightX = this.x + Math.cos(this.angle + Math.PI * 1.25) * size * 0.6;
-      const rightY = this.y + Math.sin(this.angle + Math.PI * 1.25) * size * 0.6;
-      
+      const rightX =
+        this.x + Math.cos(this.angle + Math.PI * 1.25) * size * 0.6;
+      const rightY =
+        this.y + Math.sin(this.angle + Math.PI * 1.25) * size * 0.6;
+
       // Small engine trail
       const exhaustX = this.x + Math.cos(this.angle) * size * 0.25;
       const exhaustY = this.y + Math.sin(this.angle) * size * 0.25;
       const exhaustLength = size * 0.5 * enginePulse;
-      
+
       const lightColor = this.lightenColor(visuals.fillColor, 0.25);
       const exhaustGradient = ctx.createLinearGradient(
         this.x,
@@ -203,7 +207,10 @@ export class Ship {
         exhaustX + Math.cos(this.angle) * exhaustLength,
         exhaustY + Math.sin(this.angle) * exhaustLength,
       );
-      exhaustGradient.addColorStop(0, this.hexToRgba(lightColor, 0.4 * enginePulse));
+      exhaustGradient.addColorStop(
+        0,
+        this.hexToRgba(lightColor, 0.4 * enginePulse),
+      );
       exhaustGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.strokeStyle = exhaustGradient;
       ctx.lineWidth = size * 0.25;
@@ -215,7 +222,7 @@ export class Ship {
         exhaustY + Math.sin(this.angle) * exhaustLength,
       );
       ctx.stroke();
-      
+
       // Ship body
       ctx.save();
       ctx.beginPath();
@@ -223,10 +230,10 @@ export class Ship {
       ctx.lineTo(leftX, leftY);
       ctx.lineTo(rightX, rightY);
       ctx.closePath();
-      
+
       ctx.fillStyle = lightColor;
       ctx.fill();
-      
+
       // Outline
       ctx.shadowBlur = 4;
       ctx.shadowColor = lightColor;
@@ -234,7 +241,7 @@ export class Ship {
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.restore();
-      
+
       // Tiny center dot
       ctx.fillStyle = this.hexToRgba(lightColor, 0.5);
       ctx.beginPath();
@@ -314,5 +321,4 @@ export class Ship {
       ? `rgba(${rgb.r.toString()}, ${rgb.g.toString()}, ${rgb.b.toString()}, ${alpha.toString()})`
       : `rgba(0, 255, 255, ${alpha.toString()})`;
   }
-
 }

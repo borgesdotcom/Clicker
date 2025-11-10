@@ -40,7 +40,10 @@ export class Input {
     if (e.touches.length > 0) {
       const touch = e.touches[0];
       if (touch) {
-        this.touchStartPos = this.getCanvasPosition(touch.clientX, touch.clientY);
+        this.touchStartPos = this.getCanvasPosition(
+          touch.clientX,
+          touch.clientY,
+        );
       }
     }
   };
@@ -48,7 +51,7 @@ export class Input {
   private handleTouchEnd = (e: TouchEvent): void => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (e.changedTouches.length === 0) {
       this.resetTouchState();
       return;

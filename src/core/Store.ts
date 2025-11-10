@@ -16,7 +16,8 @@ export class Store {
       if (this.pendingNotify) {
         // Always notify if points changed significantly (>5% or when starting from 0)
         const pointDiff = Math.abs(this.state.points - this.lastNotifyPoints);
-        const threshold = this.lastNotifyPoints === 0 ? 0 : this.lastNotifyPoints * 0.05;
+        const threshold =
+          this.lastNotifyPoints === 0 ? 0 : this.lastNotifyPoints * 0.05;
         const shouldNotify = pointDiff > threshold;
 
         if (shouldNotify || this.pendingNotify) {

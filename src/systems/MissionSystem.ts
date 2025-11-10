@@ -44,9 +44,9 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Click Master',
     description: (target) => `Click ${target.toString()} times`,
     target: (level) => Math.max(100, level * 50),
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 500), 
-      xp: Math.floor(level * 15) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 500),
+      xp: Math.floor(level * 15),
     }),
     icon: '🖱️',
   },
@@ -55,9 +55,9 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Damage Dealer',
     description: (target) => `Deal ${target.toLocaleString()} damage`,
     target: (level) => Math.max(5000, level * 2000),
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 750), 
-      ships: Math.max(1, Math.floor(level / 10)) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 750),
+      ships: Math.max(1, Math.floor(level / 10)),
     }),
     icon: '⚔️',
   },
@@ -66,9 +66,9 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Alien Hunter',
     description: (target) => `Destroy ${target.toString()} aliens`,
     target: (level) => Math.max(10, level * 3),
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 400), 
-      xp: Math.floor(level * 12) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 400),
+      xp: Math.floor(level * 12),
     }),
     icon: '👾',
   },
@@ -77,9 +77,9 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Boss Slayer',
     description: (target) => `Defeat ${target.toString()} bosses`,
     target: () => 3,
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 2500), 
-      ships: Math.max(2, Math.floor(level / 5)) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 2500),
+      ships: Math.max(2, Math.floor(level / 5)),
     }),
     icon: '🏆',
   },
@@ -88,8 +88,8 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Tech Enthusiast',
     description: (target) => `Purchase ${target.toString()} upgrades`,
     target: (level) => Math.max(5, Math.floor(level / 2)),
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 600) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 600),
     }),
     icon: '🔧',
   },
@@ -98,9 +98,9 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Level Up',
     description: (target) => `Reach level ${target.toString()}`,
     target: (level) => level + 5,
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 1000), 
-      xp: Math.floor(level * 30) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 1000),
+      xp: Math.floor(level * 30),
     }),
     icon: '⭐',
   },
@@ -109,8 +109,8 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Fleet Commander',
     description: (target) => `Build a fleet of ${target.toString()} ships`,
     target: (level) => Math.max(5, Math.floor(level / 3)),
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 1500) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 1500),
     }),
     icon: '🚀',
   },
@@ -119,9 +119,9 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     title: 'Combo Master',
     description: (target) => `Achieve a ${target.toString()}x combo`,
     target: (level) => Math.max(10, level * 2),
-    reward: (level) => ({ 
-      points: Math.floor(level * level * 1250), 
-      xp: Math.floor(level * 25) 
+    reward: (level) => ({
+      points: Math.floor(level * level * 1250),
+      xp: Math.floor(level * 25),
     }),
     icon: '🔥',
   },
@@ -367,23 +367,21 @@ export class MissionSystem {
 
     const state = this.store.getState();
     const currentLevel = state.level;
-    
+
     // Recalculate reward based on current level for better scaling
     const template = MISSION_TEMPLATES.find((t) => t.type === mission.type);
-    const actualReward = template 
+    const actualReward = template
       ? template.reward(currentLevel)
       : mission.reward;
-    
+
     // For daily missions, double the points and XP
     const isDaily = mission.title.startsWith('[DAILY]');
     const finalReward = {
-      points: isDaily 
-        ? (actualReward.points || 0) * 2 
+      points: isDaily
+        ? (actualReward.points || 0) * 2
         : actualReward.points || 0,
       ships: actualReward.ships || 0,
-      xp: isDaily 
-        ? (actualReward.xp || 0) * 2 
-        : actualReward.xp || 0,
+      xp: isDaily ? (actualReward.xp || 0) * 2 : actualReward.xp || 0,
     };
 
     if (finalReward.points > 0) {

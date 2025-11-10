@@ -22,7 +22,7 @@ export class SettingsModal {
   constructor(soundManager: SoundManager) {
     this.soundManager = soundManager;
     this.createModal();
-    
+
     // Subscribe to language changes (subscription persists for modal lifetime)
     i18n.subscribe(() => {
       this.updateTranslations();
@@ -59,17 +59,23 @@ export class SettingsModal {
     damageNumbers: boolean,
   ): void {
     if (this.graphicsToggle) {
-      this.graphicsToggle.textContent = graphics ? t('common.on') : t('common.off');
+      this.graphicsToggle.textContent = graphics
+        ? t('common.on')
+        : t('common.off');
       this.graphicsToggle.style.backgroundColor = graphics ? '#0088ff' : '#666';
     }
     if (this.shipLasersToggle) {
-      this.shipLasersToggle.textContent = shipLasers ? t('common.on') : t('common.off');
+      this.shipLasersToggle.textContent = shipLasers
+        ? t('common.on')
+        : t('common.off');
       this.shipLasersToggle.style.backgroundColor = shipLasers
         ? '#0088ff'
         : '#666';
     }
     if (this.damageNumbersToggle) {
-      this.damageNumbersToggle.textContent = damageNumbers ? t('common.on') : t('common.off');
+      this.damageNumbersToggle.textContent = damageNumbers
+        ? t('common.on')
+        : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = damageNumbers
         ? '#0088ff'
         : '#666';
@@ -119,7 +125,9 @@ export class SettingsModal {
 
     const soundToggle = document.createElement('button');
     soundToggle.className = 'modal-button';
-    soundToggle.textContent = this.soundManager.isEnabled() ? t('common.on') : t('common.off');
+    soundToggle.textContent = this.soundManager.isEnabled()
+      ? t('common.on')
+      : t('common.off');
     soundToggle.style.width = '80px';
     soundToggle.addEventListener('click', () => {
       const newState = !this.soundManager.isEnabled();
@@ -167,15 +175,18 @@ export class SettingsModal {
       if (!this.soundtrackToggle) return;
       const newState = !this.soundManager.isSoundtrackEnabled();
       this.soundManager.setSoundtrackEnabled(newState);
-      this.soundtrackToggle.textContent = newState ? t('common.on') : t('common.off');
-      this.soundtrackToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
+      this.soundtrackToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
+      this.soundtrackToggle.style.backgroundColor = newState
+        ? '#4CAF50'
+        : '#666';
       if (this.soundtrackCallback) {
         this.soundtrackCallback(newState);
       }
     });
-    this.soundtrackToggle.style.backgroundColor = this.soundManager.isSoundtrackEnabled()
-      ? '#4CAF50'
-      : '#666';
+    this.soundtrackToggle.style.backgroundColor =
+      this.soundManager.isSoundtrackEnabled() ? '#4CAF50' : '#666';
 
     soundtrackToggleContainer.appendChild(soundtrackLabel);
     soundtrackToggleContainer.appendChild(this.soundtrackToggle);
@@ -265,7 +276,8 @@ export class SettingsModal {
     this.languageSelect = document.createElement('select');
     this.languageSelect.style.width = '200px';
     this.languageSelect.style.padding = '8px';
-    this.languageSelect.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 136, 255, 0.2))';
+    this.languageSelect.style.background =
+      'linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 136, 255, 0.2))';
     this.languageSelect.style.color = '#ffffff';
     this.languageSelect.style.border = '2px solid rgba(255, 0, 255, 0.5)';
     this.languageSelect.style.borderRadius = '4px';
@@ -274,8 +286,9 @@ export class SettingsModal {
     this.languageSelect.style.fontWeight = 'bold';
     this.languageSelect.style.cursor = 'pointer';
     this.languageSelect.style.outline = 'none';
-    this.languageSelect.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 5px rgba(255, 0, 255, 0.3)';
-    
+    this.languageSelect.style.boxShadow =
+      '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 5px rgba(255, 0, 255, 0.3)';
+
     const languages: { code: Language; name: string }[] = [
       { code: 'en', name: 'English' },
       { code: 'pt', name: 'Português' },
@@ -350,7 +363,9 @@ export class SettingsModal {
     this.graphicsToggle.addEventListener('click', () => {
       if (!this.graphicsToggle) return;
       const newState = this.graphicsToggle.textContent === t('common.off');
-      this.graphicsToggle.textContent = newState ? t('common.on') : t('common.off');
+      this.graphicsToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
       this.graphicsToggle.style.backgroundColor = newState ? '#4CAF50' : '#666';
       if (this.graphicsCallback) {
         this.graphicsCallback(newState);
@@ -388,7 +403,9 @@ export class SettingsModal {
     this.shipLasersToggle.addEventListener('click', () => {
       if (!this.shipLasersToggle) return;
       const newState = this.shipLasersToggle.textContent === t('common.off');
-      this.shipLasersToggle.textContent = newState ? t('common.on') : t('common.off');
+      this.shipLasersToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
       this.shipLasersToggle.style.backgroundColor = newState
         ? '#0088ff'
         : '#666';
@@ -429,7 +446,9 @@ export class SettingsModal {
     this.damageNumbersToggle.addEventListener('click', () => {
       if (!this.damageNumbersToggle) return;
       const newState = this.damageNumbersToggle.textContent === t('common.off');
-      this.damageNumbersToggle.textContent = newState ? t('common.on') : t('common.off');
+      this.damageNumbersToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = newState
         ? '#0088ff'
         : '#666';
@@ -484,7 +503,9 @@ export class SettingsModal {
       // Update soundtrack toggle when opening
       if (this.soundtrackToggle) {
         const soundtrackEnabled = this.soundManager.isSoundtrackEnabled();
-        this.soundtrackToggle.textContent = soundtrackEnabled ? t('common.on') : t('common.off');
+        this.soundtrackToggle.textContent = soundtrackEnabled
+          ? t('common.on')
+          : t('common.off');
         this.soundtrackToggle.style.backgroundColor = soundtrackEnabled
           ? '#0088ff'
           : '#666';
@@ -503,16 +524,16 @@ export class SettingsModal {
 
   private updateTranslations(): void {
     if (!this.modal) return;
-    
+
     // Store current state
     const wasVisible = this.modal.style.display !== 'none';
-    
+
     // Recreate modal content
     const content = this.modal.querySelector('.modal-content');
     if (content) {
       content.remove();
     }
-    
+
     // Recreate modal (this will reset all references, so we need to store callbacks)
     const soundCallback = this.soundCallback;
     const soundtrackCallback = this.soundtrackCallback;
@@ -520,17 +541,18 @@ export class SettingsModal {
     const graphicsCallback = this.graphicsCallback;
     const shipLasersCallback = this.shipLasersCallback;
     const damageNumbersCallback = this.damageNumbersCallback;
-    
+
     this.createModal();
-    
+
     // Restore callbacks
     if (soundCallback) this.soundCallback = soundCallback;
     if (soundtrackCallback) this.soundtrackCallback = soundtrackCallback;
     if (volumeCallback) this.volumeCallback = volumeCallback;
     if (graphicsCallback) this.graphicsCallback = graphicsCallback;
     if (shipLasersCallback) this.shipLasersCallback = shipLasersCallback;
-    if (damageNumbersCallback) this.damageNumbersCallback = damageNumbersCallback;
-    
+    if (damageNumbersCallback)
+      this.damageNumbersCallback = damageNumbersCallback;
+
     // Restore visibility
     if (wasVisible) {
       this.modal.style.display = 'flex';

@@ -86,6 +86,32 @@
     "mastery": "👑 Mastery",
     "secret": "🔒 Secret"
   },
+  "enemyTypes": {
+    "normal": {
+      "name": "🫧 Standard",
+      "effect": "Plain bubble"
+    },
+    "scout": {
+      "name": "⚡ Scout",
+      "effect": "Dodges ships"
+    },
+    "tank": {
+      "name": "🛡️ Tank",
+      "effect": "Giant armor"
+    },
+    "healer": {
+      "name": "✨ Healer",
+      "effect": "+5% HP"
+    },
+    "guardian": {
+      "name": "🌀 Guardian",
+      "effect": "Shielded core"
+    },
+    "hoarder": {
+      "name": "💰 Hoarder",
+      "effect": "Drops loot"
+    }
+  },
   "gameInfo": {
     "title": "📚 Game Information",
     "stats": "Statistics",
@@ -158,22 +184,18 @@
     "toggleHint": "Press Ctrl + D to toggle this panel"
   },
   "versionSplash": {
-    "welcome": "Welcome to the Alpha Test!",
-    "powerUpSystem": "Power-Up System",
-    "powerUpDesc": "Collect temporary power-ups from defeated enemies! Boost your damage, speed, crit chance, multishot, and points!",
-    "improvedHUD": "Improved HUD",
-    "hudDesc": "Enhanced heads-up display with real-time power-up buff timers, updated stats, and better visual feedback!",
-    "bugFixes": "Major Bug Fixes",
-    "bugFixesDesc": "Fixed shop display updates, power-up stacking, attack speed calculations, and multishot mechanics!",
-    "performance": "Performance Optimizations",
-    "performanceDesc": "Improved rendering efficiency, better memory management, and smoother gameplay experience!",
-    "soundtrack": "Soundtrack Added",
-    "soundtrackDesc": "Enjoy immersive background music while playing! Toggle it on/off in the settings menu.",
-    "debugPanel": "Debug Panel Updates",
-    "debugPanelDesc": "Added power-up controls to the admin panel for easier testing and debugging!",
-    "thankYou": "Thank you for playing! Collect power-ups to boost your performance and enjoy the improved experience!",
+    "welcome": "Version 1.10.0 Beta",
+    "enemyTypes": "New Enemy Archetypes",
+    "enemyTypesDesc": "Guardian deflects click damage while Hoarder guarantees loot. Emoji tags instantly show each perk.",
+    "combatBalance": "Combat Balance",
+    "combatBalanceDesc": "Ship shots now deal the same base damage as clicks, keeping every hit consistent.",
+    "rareLoot": "Rare Loot",
+    "rareLootDesc": "Hoarder spawn rate reduced 10× so guaranteed power-ups feel truly special.",
+    "uiOverlays": "Instant Info",
+    "uiOverlaysDesc": "Minimal badges and unique overlays make every special alien readable at a glance.",
+    "thankYou": "Thanks for testing! Let us know how the new enemy variety feels.",
     "startPlaying": "Start Playing!",
-    "majorUpdate": "MAJOR UPDATE"
+    "majorUpdate": "BETA UPDATE"
   },
   "upgrades": {
     "main": {
@@ -187,11 +209,11 @@
       },
       "pointMultiplier": {
         "name": "💎 Damage Amplifier",
-        "description": "Enhance laser power for maximum destruction per hit."
+        "description": "Boost all per-hit damage (clicks and ships deal the same amplified damage)."
       },
       "critChance": {
         "name": "✨ Critical Strike",
-        "description": "Master the perfect critical hit. Maximum destruction efficiency. Very satisfying."
+        "description": "Master the perfect critical hit. Only affects your clicks (fleet ships cannot crit). Maximum destruction efficiency. Very satisfying."
       },
       "resourceGen": {
         "name": "🏭 Passive Income",
@@ -200,14 +222,6 @@
       "xpBoost": {
         "name": "📚 Knowledge Core",
         "description": "Learn advanced alien elimination techniques. Knowledge is power. Especially when eliminating."
-      },
-      "weaponMastery": {
-        "name": "🔥 Weapon Mastery",
-        "description": "Master the art of destruction - increase main ship firepower"
-      },
-      "fleetCommand": {
-        "name": "🛸 Fleet Command",
-        "description": "Command your fleet with precision - boosts all ships' effectiveness and reduces ship upgrade costs"
       },
       "mutationEngine": {
         "name": "🧬 Mutation Engine",
@@ -229,7 +243,7 @@
     "special": {
       "death_pact": {
         "name": "Death Pact Agreement",
-        "description": "Ships gain +10% attack speed",
+        "description": "Ships gain about +3% attack speed",
         "flavor": "Signed contract guarantees \"hostile\" alien supply chain. Very convenient."
       },
       "laser_focusing": {
@@ -244,7 +258,7 @@
       },
       "quantum_targeting": {
         "name": "Quantum Targeting Array",
-        "description": "Ships fire 20% faster",
+        "description": "Ships fire about +7% faster",
         "flavor": "Precise targeting ensures maximum... elimination efficiency. The paperwork checks out."
       },
       "lucky_dice": {
@@ -294,17 +308,17 @@
       },
       "warp_core": {
         "name": "Experimental Warp Core",
-        "description": "Ships fire 50% faster",
+        "description": "Ships fire about +20% faster",
         "flavor": "Theoretical physics becomes practical firepower."
       },
       "disco_ball": {
         "name": "Hypnotic Disco Ball",
-        "description": "Aliens confused, +15% all stats",
+        "description": "Aliens confused, +15% all stats, +5% attack speed",
         "flavor": "The aliens can't resist the disco beat. They line up perfectly for... elimination."
       },
       "ai_optimizer": {
         "name": "AI Optimization Subroutines",
-        "description": "Ship fire cooldown reduced by 30%",
+        "description": "Ship fire cooldown reduced by ~14%",
         "flavor": "The AI promises it won't become self-aware. Probably."
       },
       "lucky_horseshoe": {
@@ -344,17 +358,17 @@
       },
       "plasma_matrix": {
         "name": "Plasma Energy Matrix",
-        "description": "All damage +25%, Attack speed +15%",
+        "description": "All damage +25%, Attack speed +5%",
         "flavor": "Harness the power of contained supernovas."
       },
       "holographic_decoys": {
         "name": "Holographic Decoy System",
-        "description": "Ships can attack twice as often",
+        "description": "Ships gain about +40% attack speed",
         "flavor": "One ship becomes many. Confusion intensifies."
       },
       "temporal_acceleration": {
         "name": "Temporal Acceleration Field",
-        "description": "All ships gain +100% attack speed",
+        "description": "All ships gain about +40% attack speed",
         "flavor": "Time is relative. Especially when you control it."
       },
       "quantum_entanglement": {
@@ -379,7 +393,7 @@
       },
       "dark_matter_engine": {
         "name": "Dark Matter Engine",
-        "description": "Passive generation x3, Ships +25% speed",
+        "description": "Passive generation x3, Ships gain about +14% attack speed",
         "flavor": "95% of the universe is dark matter. Now it's yours."
       },
       "antimatter_cascade": {
@@ -389,7 +403,7 @@
       },
       "infinity_gauntlet": {
         "name": "Infinity Gauntlet (Replica)",
-        "description": "All stats +40%",
+        "description": "All stats +40%, ships fire about +20% faster",
         "flavor": "Perfectly balanced, as all things should be. Also, not trademarked."
       },
       "nebula_harvester": {
@@ -414,7 +428,7 @@
       },
       "photon_amplifier": {
         "name": "Photon Wave Amplifier",
-        "description": "Ships fire 75% faster, Damage +30%",
+        "description": "Ships fire about +20% faster, Damage +30%",
         "flavor": "Light speed is too slow. We're going to ludicrous speed!"
       },
       "reality_anchor": {
@@ -471,11 +485,6 @@
         "name": "Master Clicker",
         "description": "Clicking gives +100% more points",
         "flavor": "Click with the power of a thousand suns. Or at least a few."
-      },
-      "rapid_fire": {
-        "name": "Rapid Fire Protocol",
-        "description": "Each click fires 2 additional lasers",
-        "flavor": "Why fire one laser when you can fire three? Science!"
       },
       "click_multiplier": {
         "name": "Click Multiplier Matrix",
@@ -552,106 +561,6 @@
         "description": "Ascend beyond ascension: Prestige points x10",
         "flavor": "You have become clicking itself."
       },
-      "scope_calibration": {
-        "name": "Scope Calibration",
-        "description": "+10% main ship damage",
-        "flavor": "Measure twice, destroy once."
-      },
-      "hair_trigger": {
-        "name": "Hair Trigger Mechanism",
-        "description": "+15% main ship damage, +5% click speed",
-        "flavor": "Accidents happen. A lot."
-      },
-      "hollow_point": {
-        "name": "Hollow Point Rounds",
-        "description": "+20% main ship damage, +10% crit damage",
-        "flavor": "They expand on impact. So does your damage."
-      },
-      "explosive_payload": {
-        "name": "Explosive Payload",
-        "description": "+30% main ship damage",
-        "flavor": "Sometimes subtlety is overrated."
-      },
-      "particle_accelerator": {
-        "name": "Particle Accelerator Cannon",
-        "description": "+50% main ship damage",
-        "flavor": "Accelerates particles. And destruction."
-      },
-      "singularity_cannon": {
-        "name": "Singularity Cannon",
-        "description": "+75% main ship damage, small AoE",
-        "flavor": "Contains a microscopic black hole. Totally safe."
-      },
-      "antimatter_warheads": {
-        "name": "Antimatter Warheads",
-        "description": "+100% main ship damage",
-        "flavor": "When matter meets antimatter, things get interesting."
-      },
-      "quark_disruptor": {
-        "name": "Quark Disruptor",
-        "description": "+150% main ship damage",
-        "flavor": "Disrupts quarks. And everything else."
-      },
-      "gamma_ray_burst": {
-        "name": "Gamma Ray Burst",
-        "description": "+200% main ship damage",
-        "flavor": "Harness the power of dying stars."
-      },
-      "planck_piercer": {
-        "name": "Planck Piercer",
-        "description": "+300% main ship damage, +15% critical hit chance",
-        "flavor": "Strikes at the fabric of reality itself."
-      },
-      "drill_sergeant": {
-        "name": "Drill Sergeant AI",
-        "description": "+12% auto-fire damage",
-        "flavor": "DROP AND GIVE ME TWENTY... MILLION DAMAGE!"
-      },
-      "formation_delta": {
-        "name": "Formation Delta",
-        "description": "+18% auto-fire damage, ships move in formation",
-        "flavor": "Unity is strength. And more damage."
-      },
-      "emergency_repairs": {
-        "name": "Emergency Repair Drones",
-        "description": "+22% auto-fire damage, ships self-repair",
-        "flavor": "Duct tape in space. It works!"
-      },
-      "fleet_tactics": {
-        "name": "Advanced Fleet Tactics",
-        "description": "+25% auto-fire damage per 10 ships",
-        "flavor": "Coordination makes the dream work."
-      },
-      "automated_repairs": {
-        "name": "Automated Repair System",
-        "description": "+35% auto-fire damage, reduced ship costs",
-        "flavor": "Ships that fix themselves. The future is now."
-      },
-      "ai_swarm": {
-        "name": "AI Swarm Intelligence",
-        "description": "+50% auto-fire damage, ships learn from each other",
-        "flavor": "The collective knows all. The collective destroys all."
-      },
-      "nanite_reconstruction": {
-        "name": "Nanite Reconstruction",
-        "description": "+70% auto-fire damage, ships rebuild instantly",
-        "flavor": "Nanomachines, son!"
-      },
-      "fleet_synchronization": {
-        "name": "Fleet Synchronization Matrix",
-        "description": "+100% auto-fire damage, perfect coordination",
-        "flavor": "One mind, infinite ships."
-      },
-      "quantum_coordination": {
-        "name": "Quantum Coordination",
-        "description": "+150% auto-fire damage, instant communication",
-        "flavor": "Entangled ships attack as one."
-      },
-      "universal_fleet": {
-        "name": "Universal Fleet Consciousness",
-        "description": "+200% auto-fire damage, ships share damage",
-        "flavor": "The fleet is eternal. The fleet is unstoppable."
-      },
       "adaptive_evolution": {
         "name": "Adaptive Evolution",
         "description": "+5% all damage, adapts to enemy types",
@@ -704,52 +613,52 @@
       },
       "fusion_reactor": {
         "name": "Fusion Reactor",
-        "description": "+5% attack speed, +100/sec passive",
+        "description": "About +2% attack speed, +100/sec passive",
         "flavor": "The power of the sun, in your hands."
       },
       "zero_point": {
         "name": "Zero Point Energy",
-        "description": "+8% attack speed, +250/sec passive",
+        "description": "About +3% attack speed, +250/sec passive",
         "flavor": "Harvest energy from the quantum foam."
       },
       "perpetual_motion": {
         "name": "Perpetual Motion Machine",
-        "description": "+12% attack speed, +500/sec passive",
+        "description": "About +6% attack speed, +500/sec passive",
         "flavor": "Physics professors hate this one trick!"
       },
       "tesla_coils": {
         "name": "Tesla Coils",
-        "description": "+15% attack speed, chain lightning",
+        "description": "About +9% attack speed, chain lightning",
         "flavor": "Unlimited power!"
       },
       "arc_reactor": {
         "name": "Arc Reactor",
-        "description": "+20% attack speed, +1000/sec passive",
+        "description": "About +11% attack speed, +1000/sec passive",
         "flavor": "Proof that you have a heart. A mechanical one."
       },
       "harvested_star": {
         "name": "Harvested Star",
-        "description": "+30% attack speed, +5000/sec passive",
+        "description": "About +18% attack speed, +5000/sec passive",
         "flavor": "You plucked a star from the sky. Now it works for you."
       },
       "vacuum_energy_tap": {
         "name": "Vacuum Energy Tap",
-        "description": "+40% attack speed, +10000/sec passive",
+        "description": "About +28% attack speed, +10000/sec passive",
         "flavor": "Siphon energy from the fabric of space."
       },
       "entropy_reversal_engine": {
         "name": "Entropy Reversal Engine",
-        "description": "+55% attack speed, time flows backward",
+        "description": "About +60% attack speed, time flows backward",
         "flavor": "Heat death? Not on your watch."
       },
       "big_crunch_generator": {
         "name": "Big Crunch Generator",
-        "description": "+75% attack speed, reverse the universe",
+        "description": "About +100% attack speed, reverse the universe",
         "flavor": "Contains a miniature universe collapse."
       },
       "multiversal_tap": {
         "name": "Multiversal Energy Tap",
-        "description": "+100% attack speed, infinite parallel power",
+        "description": "Attack speed x2.8 (~+185%), infinite parallel power",
         "flavor": "Draw power from infinite realities."
       },
       "ancient_texts": {
@@ -805,4 +714,3 @@
     }
   }
 }
-

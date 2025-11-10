@@ -39,12 +39,12 @@ export class BossProjectile {
     if (this.trailPositions.length > this.trailLength) {
       this.trailPositions.pop();
     }
-    
+
     // Fade trail
     for (let i = 0; i < this.trailPositions.length; i++) {
       const pos = this.trailPositions[i];
       if (pos) {
-        pos.alpha = 1 - (i / this.trailLength);
+        pos.alpha = 1 - i / this.trailLength;
       }
     }
 
@@ -73,7 +73,7 @@ export class BossProjectile {
 
         const trailAlpha = pos.alpha * alpha * 0.4;
         const trailWidth = this.radius * 0.6 * (1 - i / this.trailLength);
-        
+
         ctx.strokeStyle = `rgba(255, 100, 0, ${String(trailAlpha)})`;
         ctx.lineWidth = trailWidth;
         ctx.lineCap = 'round';
@@ -113,9 +113,15 @@ export class BossProjectile {
       this.y,
       this.radius,
     );
-    bodyGradient.addColorStop(0, `rgba(255, 255, 255, ${String(alpha * 0.95)})`);
+    bodyGradient.addColorStop(
+      0,
+      `rgba(255, 255, 255, ${String(alpha * 0.95)})`,
+    );
     bodyGradient.addColorStop(0.3, `rgba(255, 200, 0, ${String(alpha * 0.9)})`);
-    bodyGradient.addColorStop(0.6, `rgba(255, 100, 0, ${String(alpha * 0.85)})`);
+    bodyGradient.addColorStop(
+      0.6,
+      `rgba(255, 100, 0, ${String(alpha * 0.85)})`,
+    );
     bodyGradient.addColorStop(1, `rgba(255, 0, 68, ${String(alpha * 0.8)})`);
 
     ctx.fillStyle = bodyGradient;
@@ -136,7 +142,10 @@ export class BossProjectile {
       coreRadius,
     );
     coreGradient.addColorStop(0, `rgba(255, 255, 255, ${String(alpha)})`);
-    coreGradient.addColorStop(0.5, `rgba(255, 255, 150, ${String(alpha * 0.8)})`);
+    coreGradient.addColorStop(
+      0.5,
+      `rgba(255, 255, 150, ${String(alpha * 0.8)})`,
+    );
     coreGradient.addColorStop(1, `rgba(255, 200, 0, ${String(alpha * 0.6)})`);
 
     ctx.fillStyle = coreGradient;
@@ -153,7 +162,7 @@ export class BossProjectile {
     ctx.lineWidth = 2.5;
     ctx.shadowBlur = 4;
     ctx.shadowColor = 'rgba(255, 200, 0, 0.8)';
-    
+
     // More energy lines for better visual
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2;
@@ -163,7 +172,7 @@ export class BossProjectile {
       const y1 = Math.sin(angle) * startRadius;
       const x2 = Math.cos(angle) * endRadius;
       const y2 = Math.sin(angle) * endRadius;
-      
+
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);

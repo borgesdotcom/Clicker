@@ -21,7 +21,12 @@ export interface Theme {
 
 export class VisualCustomizationSystem {
   private themes: Theme[] = [];
-  private unlockedThemes: Set<string> = new Set(['default_ship', 'default_laser', 'default_particle', 'default_background']);
+  private unlockedThemes: Set<string> = new Set([
+    'default_ship',
+    'default_laser',
+    'default_particle',
+    'default_background',
+  ]);
   private selectedThemes: Record<ThemeCategory, string> = {
     ship: 'default_ship',
     laser: 'default_laser',
@@ -82,7 +87,8 @@ export class VisualCustomizationSystem {
     this.themes.push({
       id: 'cosmic_ship',
       name: 'Cosmic Fleet',
-      description: 'Mysterious purple ships with cosmic energy. Prestige level 3 required.',
+      description:
+        'Mysterious purple ships with cosmic energy. Prestige level 3 required.',
       category: 'ship',
       icon: '🌌',
       colors: {
@@ -97,7 +103,8 @@ export class VisualCustomizationSystem {
     this.themes.push({
       id: 'hologram_ship',
       name: 'Hologram Fleet',
-      description: 'Ghostly blue ships with holographic effects. Reach level 100.',
+      description:
+        'Ghostly blue ships with holographic effects. Reach level 100.',
       category: 'ship',
       icon: '👻',
       colors: {
@@ -279,15 +286,21 @@ export class VisualCustomizationSystem {
         case 'always':
           unlocked = true;
           break;
-      case 'level':
-        unlocked = state.level >= (typeof condition.value === 'number' ? condition.value : 0);
-        break;
-      case 'prestige':
-        unlocked = state.prestigeLevel >= (typeof condition.value === 'number' ? condition.value : 0);
-        break;
-      case 'bossesKilled':
-        unlocked = state.stats.bossesKilled >= (typeof condition.value === 'number' ? condition.value : 0);
-        break;
+        case 'level':
+          unlocked =
+            state.level >=
+            (typeof condition.value === 'number' ? condition.value : 0);
+          break;
+        case 'prestige':
+          unlocked =
+            state.prestigeLevel >=
+            (typeof condition.value === 'number' ? condition.value : 0);
+          break;
+        case 'bossesKilled':
+          unlocked =
+            state.stats.bossesKilled >=
+            (typeof condition.value === 'number' ? condition.value : 0);
+          break;
         case 'achievement':
           unlocked = state.achievements[condition.value as string] ?? false;
           break;
@@ -310,7 +323,9 @@ export class VisualCustomizationSystem {
    * Get unlocked themes for a category
    */
   getUnlockedThemesForCategory(category: ThemeCategory): Theme[] {
-    return this.getThemesForCategory(category).filter((t) => this.isUnlocked(t.id));
+    return this.getThemesForCategory(category).filter((t) =>
+      this.isUnlocked(t.id),
+    );
   }
 
   /**
@@ -323,7 +338,10 @@ export class VisualCustomizationSystem {
   /**
    * Get unlock progress for a theme
    */
-  getUnlockProgress(theme: Theme, state: GameState): { progress: number; max: number; description: string } {
+  getUnlockProgress(
+    theme: Theme,
+    state: GameState,
+  ): { progress: number; max: number; description: string } {
     const condition = theme.unlockCondition;
 
     switch (condition.type) {
@@ -362,7 +380,9 @@ export class VisualCustomizationSystem {
    * Select a theme for a category
    */
   selectTheme(category: ThemeCategory, themeId: string): boolean {
-    const theme = this.themes.find((t) => t.id === themeId && t.category === category);
+    const theme = this.themes.find(
+      (t) => t.id === themeId && t.category === category,
+    );
     if (!theme || !this.isUnlocked(themeId)) {
       return false;
     }
@@ -382,7 +402,12 @@ export class VisualCustomizationSystem {
   /**
    * Get ship color based on selected theme
    */
-  getShipColors(_state: GameState): { fillColor: string; outlineColor: string; glowColor: string; themeId?: string } {
+  getShipColors(_state: GameState): {
+    fillColor: string;
+    outlineColor: string;
+    glowColor: string;
+    themeId?: string;
+  } {
     const theme = this.getSelectedTheme('ship');
     if (!theme) {
       // Fallback to default colors
@@ -396,7 +421,9 @@ export class VisualCustomizationSystem {
 
     // Use theme colors ONLY - no upgrade overrides
     const fillColor = theme.colors.primary;
-    const glowColor = theme.colors.glow ?? `rgba(${this.hexToRgb(theme.colors.primary).join(', ')}, 0.4)`;
+    const glowColor =
+      theme.colors.glow ??
+      `rgba(${this.hexToRgb(theme.colors.primary).join(', ')}, 0.4)`;
 
     return {
       fillColor,
@@ -405,7 +432,7 @@ export class VisualCustomizationSystem {
       themeId: theme.id,
     };
   }
-  
+
   getLaserThemeId(): string {
     const theme = this.getSelectedTheme('laser');
     return theme?.id ?? 'default_laser';
@@ -429,11 +456,13 @@ export class VisualCustomizationSystem {
     return theme.colors.primary;
   }
 
-
   /**
    * Get particle style and colors
    */
-  getParticleStyle(): { style: string; colors: { primary: string; secondary?: string } } {
+  getParticleStyle(): {
+    style: string;
+    colors: { primary: string; secondary?: string };
+  } {
     const theme = this.getSelectedTheme('particle');
     if (!theme) {
       return {
@@ -483,7 +512,12 @@ export class VisualCustomizationSystem {
     if (!state) return;
 
     // Validate and load each category
-    for (const category of ['ship', 'laser', 'particle', 'background'] as ThemeCategory[]) {
+    for (const category of [
+      'ship',
+      'laser',
+      'particle',
+      'background',
+    ] as ThemeCategory[]) {
       const themeId = state[category];
       if (themeId && this.isUnlocked(themeId)) {
         this.selectedThemes[category] = themeId;
@@ -501,7 +535,11 @@ export class VisualCustomizationSystem {
   private hexToRgb(hex: string): number[] {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
-      ? [parseInt(result[1] ?? '0', 16), parseInt(result[2] ?? '0', 16), parseInt(result[3] ?? '0', 16)]
+      ? [
+          parseInt(result[1] ?? '0', 16),
+          parseInt(result[2] ?? '0', 16),
+          parseInt(result[3] ?? '0', 16),
+        ]
       : [255, 255, 255];
   }
 }

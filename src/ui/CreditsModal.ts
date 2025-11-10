@@ -53,7 +53,7 @@ export class CreditsModal {
     gameInfoSection.appendChild(gameDesc);
 
     const version = document.createElement('p');
-    version.textContent = 'Release Beta 1.0';
+    version.textContent = 'Release Beta 1.10.0';
     version.style.fontSize = '14px';
     version.style.color = '#888';
     gameInfoSection.appendChild(version);
@@ -438,7 +438,7 @@ export class CreditsModal {
           // Confirm before importing
           const confirmed = confirm(
             '⚠️ WARNING: This will replace your current save data!\n\n' +
-            'Are you sure you want to continue?',
+              'Are you sure you want to continue?',
           );
 
           if (confirmed) {
@@ -453,18 +453,25 @@ export class CreditsModal {
                   console.error('Failed to reload state after import:', e);
                 }
               }
-              
-              alert('✅ Save data imported successfully!\n\nThe page will reload now.');
+
+              alert(
+                '✅ Save data imported successfully!\n\nThe page will reload now.',
+              );
               // Force immediate reload - the imported data is already properly formatted in localStorage
               window.location.reload();
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-              alert(`❌ Failed to import save data!\n\n${errorMessage}\n\nPlease check that the file is valid.`);
+              const errorMessage =
+                error instanceof Error ? error.message : 'Unknown error';
+              alert(
+                `❌ Failed to import save data!\n\n${errorMessage}\n\nPlease check that the file is valid.`,
+              );
               console.error('Import error:', error);
             }
           }
         } catch (error) {
-          alert('❌ Error reading save file!\n\nPlease ensure it\'s a valid save file.');
+          alert(
+            "❌ Error reading save file!\n\nPlease ensure it's a valid save file.",
+          );
           console.error('Import error:', error);
         }
       };

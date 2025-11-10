@@ -191,7 +191,7 @@ export class PowerUpSystem {
       massiveGlow.addColorStop(0.3, `${config.color}20`);
       massiveGlow.addColorStop(0.6, `${config.color}10`);
       massiveGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      
+
       ctx.fillStyle = massiveGlow;
       ctx.beginPath();
       ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse * 4, 0, Math.PI * 2);
@@ -200,14 +200,21 @@ export class PowerUpSystem {
       // Outer glow ring (animated rotation)
       ctx.translate(powerUp.x, powerUp.y);
       ctx.rotate(rotation);
-      
+
       // Large outer glow
-      const outerGlowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, powerUp.radius * pulse * 3);
+      const outerGlowGradient = ctx.createRadialGradient(
+        0,
+        0,
+        0,
+        0,
+        0,
+        powerUp.radius * pulse * 3,
+      );
       outerGlowGradient.addColorStop(0, `${config.color}80`);
       outerGlowGradient.addColorStop(0.4, `${config.color}40`);
       outerGlowGradient.addColorStop(0.7, `${config.color}20`);
       outerGlowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      
+
       ctx.fillStyle = outerGlowGradient;
       ctx.beginPath();
       ctx.arc(0, 0, powerUp.radius * pulse * 3, 0, Math.PI * 2);
@@ -250,10 +257,16 @@ export class PowerUpSystem {
       mediumGlow.addColorStop(0.5, `${config.color}AA`);
       mediumGlow.addColorStop(0.8, `${config.color}66`);
       mediumGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      
+
       ctx.fillStyle = mediumGlow;
       ctx.beginPath();
-      ctx.arc(powerUp.x, powerUp.y, powerUp.radius * pulse * 2.2, 0, Math.PI * 2);
+      ctx.arc(
+        powerUp.x,
+        powerUp.y,
+        powerUp.radius * pulse * 2.2,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Main circle with enhanced gradient fill
@@ -312,7 +325,7 @@ export class PowerUpSystem {
         const sparkleX = powerUp.x + Math.cos(angle) * sparkleRadius;
         const sparkleY = powerUp.y + Math.sin(angle) * sparkleRadius;
         const sparkleAlpha = (Math.sin(sparklePhase * 2 + i) + 1) * 0.5;
-        
+
         ctx.globalAlpha = alpha * sparkleAlpha * 0.8;
         ctx.beginPath();
         ctx.moveTo(sparkleX - 3, sparkleY);
@@ -401,7 +414,7 @@ export class PowerUpSystem {
     let closestPowerUp: PowerUp | null = null;
     let closestDistance = Infinity;
     const MOBILE_TOUCH_RADIUS = 120; // Very generous touch radius for mobile
-    
+
     for (const powerUp of this.powerUps) {
       if (!powerUp.active) continue;
 
@@ -411,7 +424,10 @@ export class PowerUpSystem {
 
       // Much larger collision radius for mobile-friendly clicking
       // The visual radius is ~35px, so 120px gives a huge touch target
-      if (distance < powerUp.radius + MOBILE_TOUCH_RADIUS && distance < closestDistance) {
+      if (
+        distance < powerUp.radius + MOBILE_TOUCH_RADIUS &&
+        distance < closestDistance
+      ) {
         closestPowerUp = powerUp;
         closestDistance = distance;
       }
@@ -499,13 +515,14 @@ export class PowerUpSystem {
       'multishot',
       'critical',
     ];
-    
+
     const margin = 50;
     const powerUpX = Math.max(margin, Math.min(this.canvasWidth - margin, x));
     const powerUpY = Math.max(margin, Math.min(this.canvasHeight - margin, y));
-    
-    const powerUpType = type ?? types[Math.floor(Math.random() * types.length)] ?? 'damage';
-    
+
+    const powerUpType =
+      type ?? types[Math.floor(Math.random() * types.length)] ?? 'damage';
+
     this.powerUps.push({
       type: powerUpType,
       x: powerUpX,

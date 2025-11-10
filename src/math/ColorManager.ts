@@ -98,48 +98,54 @@ export class ColorManager {
   // New method: Get alien HP with proper scaling for level 1-1000
   // Rebalanced to prevent exponential explosion at high levels
   static getHp(level: number): number {
-    const baseHp = 100;
+    const baseHp = 120;
 
-    // Tier 1: Levels 1-100 - Moderate growth
+    // Tier 1: Levels 1-100 - Mildly faster growth to set the pace
     if (level <= 100) {
-      return Math.floor(baseHp * Math.pow(1.15, level - 1));
+      return Math.floor(baseHp * Math.pow(1.18, level - 1));
     }
 
-    // Tier 2: Levels 101-500 - Reduced growth (1.25 -> 1.12)
-    const tier1Hp = baseHp * Math.pow(1.15, 99);
-    if (level <= 500) {
-      return Math.floor(tier1Hp * Math.pow(1.12, level - 100));
+    // Tier 2: Levels 101-300 - Steeper ramp to slow mid-game snowballing
+    const tier1Hp = baseHp * Math.pow(1.18, 99);
+    if (level <= 300) {
+      return Math.floor(tier1Hp * Math.pow(1.16, level - 100));
     }
 
-    // Tier 3: Levels 501-1000 - Further reduced growth (1.35 -> 1.08)
-    const tier2Hp = tier1Hp * Math.pow(1.12, 400);
-    return Math.floor(tier2Hp * Math.pow(1.08, level - 500));
+    // Tier 3: Levels 301-600 - Continue increasing but slightly softer
+    const tier2Hp = tier1Hp * Math.pow(1.16, 200);
+    if (level <= 600) {
+      return Math.floor(tier2Hp * Math.pow(1.13, level - 300));
+    }
+
+    // Tier 4: 601+ - Still growing, but controlled to avoid impossible numbers
+    const tier3Hp = tier2Hp * Math.pow(1.13, 300);
+    return Math.floor(tier3Hp * Math.pow(1.1, level - 600));
   }
 
   static getBossHp(level: number): number {
-    // Boss HP: 15x normal alien HP (reduced from 20x) with balanced additional scaling
-    // Rebalanced to prevent exponential explosion at high levels
-    const baseHp = this.getHp(level) * 15;
+    // Boss HP: tougher multiplier plus additional scaling tiers
+    const baseHp = this.getHp(level) * 18;
 
-    // Early game bosses (< 30): Just 15x alien HP
-    if (level < 30) {
+    if (level < 50) {
       return Math.floor(baseHp);
     }
 
-    // Tier 1: Levels 30-99 - Moderate additional scaling (1.1 -> 1.05)
-    if (level < 100) {
-      return Math.floor(baseHp * Math.pow(1.05, level - 30));
+    if (level < 150) {
+      return Math.floor(baseHp * Math.pow(1.08, level - 50));
     }
 
-    // Tier 2: Levels 100-499 - Reduced additional scaling (1.15 -> 1.06)
-    const tier1Bonus = Math.pow(1.05, 70);
-    if (level < 500) {
-      return Math.floor(baseHp * tier1Bonus * Math.pow(1.06, level - 100));
+    const tier1Bonus = Math.pow(1.08, 100);
+    if (level < 300) {
+      return Math.floor(baseHp * tier1Bonus * Math.pow(1.1, level - 150));
     }
 
-    // Tier 3: Levels 500-1000 - Minimal additional scaling (1.2 -> 1.04)
-    const tier2Bonus = tier1Bonus * Math.pow(1.06, 400);
-    return Math.floor(baseHp * tier2Bonus * Math.pow(1.04, level - 500));
+    const tier2Bonus = tier1Bonus * Math.pow(1.1, 150);
+    if (level < 600) {
+      return Math.floor(baseHp * tier2Bonus * Math.pow(1.08, level - 300));
+    }
+
+    const tier3Bonus = tier2Bonus * Math.pow(1.08, 300);
+    return Math.floor(baseHp * tier3Bonus * Math.pow(1.06, level - 600));
   }
 
   // Get boss timer limit (scales with level)

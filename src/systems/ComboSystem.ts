@@ -7,7 +7,7 @@ import type { GameState } from '../types';
  *
  * Features:
  * - Linear multiplier: 1 + (combo × 0.001)
- * - 5-second decay timer (resets combo if no hits)
+ * - 10-second decay timer (resets combo if no hits)
  * - Visual timer bar showing remaining time
  * - Optional max combo cap (configurable, default: unlimited)
  */
@@ -15,10 +15,10 @@ import type { GameState } from '../types';
 // ===== CONFIGURATION CONSTANTS =====
 
 /** Base combo multiplier per hit */
-const BASE_COMBO_MULTIPLIER = 0.001;
+const BASE_COMBO_MULTIPLIER = 0.0005;
 
 /** Time in seconds before combo resets */
-const COMBO_TIMEOUT = 5.0;
+const COMBO_TIMEOUT = 10.0;
 
 /** Maximum combo count (null = unlimited) */
 const COMBO_MAX_MULTIPLIER: number | null = null; // Set to a number to cap, e.g., 3000 for max 4x
@@ -133,9 +133,9 @@ export class ComboSystem {
    * Multiplier affected by ascension upgrades
    * Examples:
    * - 0 hits: 1.000×
-   * - 100 hits: 1.100×
-   * - 500 hits: 1.500×
-   * - 1000 hits: 2.000×
+   * - 100 hits: 1.050×
+   * - 500 hits: 1.250×
+   * - 1000 hits: 1.500×
    */
   getMultiplier(state?: GameState): number {
     const multiplierPerHit =
@@ -254,11 +254,11 @@ export class ComboSystem {
   private getComboColor(): string {
     const mult = this.getMultiplier();
 
-    if (mult >= 3.0) return '#ff00ff'; // Magenta for insane combos (3000+)
-    if (mult >= 2.0) return '#ff0000'; // Red for high combos (1000+)
-    if (mult >= 1.5) return '#ffaa00'; // Orange for good combos (500+)
-    if (mult >= 1.2) return '#ffff00'; // Yellow for decent combos (200+)
-    if (mult >= 1.05) return '#00ff00'; // Green for building combos (50+)
+    if (mult >= 2.0) return '#ff00ff'; // Magenta for massive combos
+    if (mult >= 1.6) return '#ff0000'; // Red for high combos
+    if (mult >= 1.35) return '#ffaa00'; // Orange for good combos
+    if (mult >= 1.15) return '#ffff00'; // Yellow for decent combos
+    if (mult >= 1.03) return '#00ff00'; // Green for building combos
     return '#ffffff'; // White for low combos
   }
 

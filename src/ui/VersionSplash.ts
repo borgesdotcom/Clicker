@@ -6,7 +6,7 @@ export class VersionSplash {
   }
 
   private checkVersion(): void {
-    const currentVersion = '1.0.0';
+    const currentVersion = '1.10.0-beta';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -22,56 +22,40 @@ export class VersionSplash {
       <div class="version-splash-content">
         <div class="version-splash-header">
           <h1>🎮 Welcome to BOBBLE</h1>
-          <div class="version-badge">Release Beta 1.0</div>
+          <div class="version-badge">Release Beta 1.10.0</div>
         </div>
         <div class="version-splash-body">
-          <h2>🌌 The Invasion Begins...</h2>
-          <div class="lore-section" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 0, 255, 0.1); border: 2px solid rgba(255, 0, 255, 0.3); border-radius: 8px;">
-            <p style="font-size: 14px; line-height: 1.6; margin: 0; color: #fff;">
-              <strong>Commander,</strong> these bubblewrap aliens have invaded our profit margins! They're not actually dangerous - just... 
-              <em>economically inconvenient</em>. Your mission: pop every single one of them. Build your fleet, upgrade your arsenal, 
-              and turn this invasion into pure profit. The universe depends on your clicking skills! 🚀
-            </p>
+          <h2>🆕 What's New in 1.10.0 (Beta)</h2>
+          <div class="changelog-section">
+            <h3>👾 New Enemy Archetypes</h3>
+            <ul>
+              <li>🌀 <strong>Guardian</strong> – shielded core that shrugs off click damage.</li>
+              <li>💰 <strong>Hoarder</strong> – ultra-rare loot bubble that always drops a power-up.</li>
+              <li>All special aliens now show a mini badge above their HP bar so you can react instantly.</li>
+            </ul>
           </div>
-          
-          <h3 style="margin-top: 25px; margin-bottom: 15px; color: #ffffff; text-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(0, 136, 255, 0.3);">💡 How to Play</h3>
-          <div class="feature-grid">
-            <div class="feature-item">
-              <div class="feature-icon">👆</div>
-              <h3>Click to Attack</h3>
-              <p>Click or tap anywhere to fire lasers from your fleet. Each click deals damage to the alien bubblewrap targets!</p>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">🛒</div>
-              <h3>Buy Upgrades</h3>
-              <p>Purchase upgrades in the shop to increase damage, add ships, boost crit chance, and unlock powerful abilities!</p>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">⚔️</div>
-              <h3>Defeat Bosses</h3>
-              <p>Face massive bosses at regular intervals! Defeat them before time runs out to progress and unlock special rewards!</p>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">🌟</div>
-              <h3>Ascend for Power</h3>
-              <p>Reach level 100 to ascend! Reset your progress but gain Prestige Points to unlock permanent bonuses!</p>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">🎯</div>
-              <h3>Complete Missions</h3>
-              <p>Complete daily and weekly missions to earn bonus rewards. Check the Missions tab to see your objectives!</p>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">🎨</div>
-              <h3>Customize Your Fleet</h3>
-              <p>Unlock and customize visual themes for your ships, lasers, particles, and background as you progress!</p>
-            </div>
+
+          <div class="changelog-section">
+            <h3>⚙️ Gameplay Tweaks</h3>
+            <ul>
+              <li>Boss hold warning now explains the 90% XP slowdown while you rematch.</li>
+              <li>Scout, Tank, Healer, Guardian, and Hoarder stats retuned for clearer identities.</li>
+              <li>Hoarder spawn rate reduced 10× to keep guaranteed loot exciting.</li>
+            </ul>
           </div>
-          
+
+          <div class="changelog-section">
+            <h3>🎨 UI & Feedback</h3>
+            <ul>
+              <li>Enemy effect tags now use concise emoji labels in every language.</li>
+              <li>Simplified special-alien overlays to spotlight their mechanics.</li>
+              <li>Version badge and splash updated to highlight the new feature set.</li>
+            </ul>
+          </div>
+
           <div class="version-footer" style="margin-top: 25px; padding: 15px; background: rgba(255, 0, 255, 0.05); border-radius: 8px;">
             <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #aaa;">
-              <strong style="color: #ffffff; text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);">💡 Pro Tip:</strong> Use the buy quantity selector (1x, 5x, 10x, MAX) to purchase multiple upgrades at once! 
-              Auto-Buy can be unlocked in the Ascension Store for 50 Prestige Points. Good luck, Commander! 🚀
+              <strong style="color: #ffffff; text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);">💡 Tip:</strong> Watch the icon above an alien’s HP bar—pink sparkles mean free loot is guaranteed!
             </p>
           </div>
         </div>

@@ -24,7 +24,16 @@ export class MobileUI {
   }
 
   private detectMobile(): void {
-    this.isMobile = window.innerWidth <= 768;
+    // Better mobile detection: check both width and touch capability
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isSmallScreen = window.innerWidth <= 768;
+    const isMobileUserAgent =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+
+    // Consider it mobile if it has touch AND (small screen OR mobile user agent)
+    this.isMobile = hasTouch && (isSmallScreen || isMobileUserAgent);
   }
 
   private setupResizeHandler(): void {
@@ -68,19 +77,41 @@ export class MobileUI {
       const mobileShopClose = document.getElementById('mobile-shop-close');
 
       if (mobileShopToggle) {
-        mobileShopToggle.addEventListener('click', (e) => {
+        // Add both click and touchstart for better mobile compatibility
+        const handleShopToggle = (e: Event) => {
           e.stopPropagation();
           e.preventDefault();
           this.toggleShop();
+        };
+
+        mobileShopToggle.addEventListener('click', handleShopToggle);
+        mobileShopToggle.addEventListener('touchstart', handleShopToggle, {
+          passive: false,
         });
+
+        // Ensure button is visible and clickable
+        mobileShopToggle.style.pointerEvents = 'auto';
+        mobileShopToggle.style.touchAction = 'manipulation';
+        mobileShopToggle.style.zIndex = '2000';
       }
 
       if (mobileShopClose) {
-        mobileShopClose.addEventListener('click', (e) => {
+        // Add both click and touchstart for better mobile compatibility
+        const handleShopClose = (e: Event) => {
           e.stopPropagation();
           e.preventDefault();
           this.closeShop();
+        };
+
+        mobileShopClose.addEventListener('click', handleShopClose);
+        mobileShopClose.addEventListener('touchstart', handleShopClose, {
+          passive: false,
         });
+
+        // Ensure button is visible and clickable
+        mobileShopClose.style.pointerEvents = 'auto';
+        mobileShopClose.style.touchAction = 'manipulation';
+        mobileShopClose.style.zIndex = '2001';
       }
 
       // Close menus when clicking outside
@@ -105,6 +136,11 @@ export class MobileUI {
           this.isShopOpen = false;
         }
       }
+
+      // Force update UI after a short delay to ensure all elements are ready
+      setTimeout(() => {
+        this.updateUIForScreenSize();
+      }, 50);
     }, 100);
 
     // Also set initial state immediately
@@ -116,7 +152,20 @@ export class MobileUI {
       }
     }
 
+    // Initial UI update
     this.updateUIForScreenSize();
+
+    // Additional check: if touch device but not detected as mobile, show mobile controls anyway
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (hasTouch && !this.isMobile) {
+      // Re-check after a delay in case of timing issues
+      setTimeout(() => {
+        this.detectMobile();
+        if (this.isMobile) {
+          this.updateUIForScreenSize();
+        }
+      }, 200);
+    }
   }
 
   private updateUIForScreenSize(): void {
@@ -129,9 +178,21 @@ export class MobileUI {
 
     if (this.isMobile) {
       // Show mobile controls
-      if (mobileMenuToggle) mobileMenuToggle.style.display = 'flex';
-      if (mobileShopToggle) mobileShopToggle.style.display = 'flex';
-      if (mobileShopClose) mobileShopClose.style.display = 'flex';
+      if (mobileMenuToggle) {
+        mobileMenuToggle.style.display = 'flex';
+        mobileMenuToggle.style.pointerEvents = 'auto';
+        mobileMenuToggle.style.zIndex = '2000';
+      }
+      if (mobileShopToggle) {
+        mobileShopToggle.style.display = 'flex';
+        mobileShopToggle.style.pointerEvents = 'auto';
+        mobileShopToggle.style.zIndex = '2000';
+      }
+      if (mobileShopClose) {
+        mobileShopClose.style.display = 'flex';
+        mobileShopClose.style.pointerEvents = 'auto';
+        mobileShopClose.style.zIndex = '2001';
+      }
 
       // Hide desktop HUD buttons container on mobile
       if (hudButtonsContainer) hudButtonsContainer.style.display = 'none';
@@ -139,11 +200,14 @@ export class MobileUI {
       // Move buttons to mobile menu
       this.moveButtomnsToMobileMenu();
 
-      // Force hide shop on mobile
+      // Force hide shop on mobile (but keep it in DOM for animation)
       if (this.shopPanel) {
         this.shopPanel.classList.remove('mobile-open');
-        this.shopPanel.style.display = 'none';
-        this.isShopOpen = false;
+        // Don't set display: none immediately - let CSS handle it via transform
+        // This ensures the panel can animate in/out properly
+        if (!this.isShopOpen) {
+          this.shopPanel.style.display = 'none';
+        }
       }
     } else {
       // Hide mobile controls
@@ -274,13 +338,30 @@ export class MobileUI {
   private openShop(): void {
     const shopPanel = document.getElementById('shop-panel');
     if (shopPanel) {
-      // First make it visible
+      // Ensure proper z-index and visibility
+      shopPanel.style.zIndex = '1500';
+      shopPanel.style.position = 'fixed';
       shopPanel.style.display = 'block';
+      shopPanel.style.pointerEvents = 'auto';
+      shopPanel.style.visibility = 'visible';
+
+      // Force reflow to ensure display change is applied
+      void shopPanel.offsetHeight;
+
       // Small delay to allow display change to take effect before animation
-      setTimeout(() => {
-        shopPanel.classList.add('mobile-open');
-      }, 10);
-      this.isShopOpen = true;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (shopPanel) {
+            shopPanel.classList.add('mobile-open');
+            this.isShopOpen = true;
+
+            // Double-check it's visible
+            if (shopPanel.style.display !== 'block') {
+              shopPanel.style.display = 'block';
+            }
+          }
+        });
+      });
     }
   }
 

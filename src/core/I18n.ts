@@ -15,7 +15,11 @@ export class I18n {
   private constructor() {
     // Load saved language preference
     const savedLanguage = localStorage.getItem(LANGUAGE_KEY) as Language | null;
-    if (savedLanguage === 'en' || savedLanguage === 'pt' || savedLanguage === 'es') {
+    if (
+      savedLanguage === 'en' ||
+      savedLanguage === 'pt' ||
+      savedLanguage === 'es'
+    ) {
       this.currentLanguage = savedLanguage;
     } else {
       // Detect browser language
@@ -55,12 +59,12 @@ export class I18n {
   setLanguage(language: Language): void {
     this.currentLanguage = language;
     localStorage.setItem(LANGUAGE_KEY, language);
-    
+
     // Update HTML lang attribute
     document.documentElement.lang = language;
-    
+
     // Notify all listeners
-    this.listeners.forEach(listener => listener());
+    this.listeners.forEach((listener) => listener());
   }
 
   getLanguage(): Language {
@@ -76,7 +80,7 @@ export class I18n {
 
   t(key: string, params?: Record<string, string | number>): string {
     const translation = this.getTranslation(key);
-    
+
     if (!params) {
       return translation;
     }
@@ -84,16 +88,19 @@ export class I18n {
     // Replace parameters in the translation string
     let result = translation;
     for (const [paramKey, paramValue] of Object.entries(params)) {
-      result = result.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramValue));
+      result = result.replace(
+        new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'),
+        String(paramValue),
+      );
     }
-    
+
     return result;
   }
 
   private getTranslation(key: string): string {
     const keys = key.split('.');
     let current: any = this.translations.get(this.currentLanguage);
-    
+
     if (!current) {
       // Fallback to English if current language not loaded
       current = this.translations.get('en');
@@ -129,5 +136,5 @@ export class I18n {
 
 // Export singleton instance getter and convenience function
 export const i18n = I18n.getInstance();
-export const t = (key: string, params?: Record<string, string | number>) => i18n.t(key, params);
-
+export const t = (key: string, params?: Record<string, string | number>) =>
+  i18n.t(key, params);

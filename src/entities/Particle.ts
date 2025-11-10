@@ -98,7 +98,7 @@ export class Particle {
     const ctx = drawer.getContext();
     const now = Date.now();
     const age = (now - this.creationTime) * 0.001;
-    
+
     ctx.save();
 
     if (this.style === 'sparkle') {
@@ -109,7 +109,7 @@ export class Particle {
       ctx.fillStyle = this.color;
       ctx.shadowBlur = this.size * 5;
       ctx.shadowColor = this.color;
-      
+
       // Draw larger star shape
       ctx.beginPath();
       const points = 5;
@@ -125,7 +125,7 @@ export class Particle {
       }
       ctx.closePath();
       ctx.fill();
-      
+
       // Add bright center glow
       ctx.globalAlpha = sparkleAlpha * 0.8;
       ctx.fillStyle = '#ffffff';
@@ -133,52 +133,50 @@ export class Particle {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
       ctx.fill();
-      
     } else if (this.style === 'glow') {
       // Glow: enhanced glowing effect - more pronounced
       ctx.globalAlpha = Math.min(alpha * 0.8, 1.0);
       ctx.fillStyle = this.color;
       ctx.shadowBlur = this.size * 6;
       ctx.shadowColor = this.color;
-      
+
       // Outer glow - larger
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 2.0, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Middle glow
       ctx.globalAlpha = Math.min(alpha * 0.9, 1.0);
       ctx.shadowBlur = this.size * 4;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 1.2, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Inner bright core
       ctx.globalAlpha = Math.min(alpha * 1.0, 1.0);
       ctx.shadowBlur = this.size * 2;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 0.8, 0, Math.PI * 2);
       ctx.fill();
-      
     } else if (this.style === 'trail') {
       // Trail: elongated particle with fade - more visible
       ctx.globalAlpha = alpha;
       ctx.fillStyle = this.color;
       ctx.shadowBlur = this.size * 3;
       ctx.shadowColor = this.color;
-      
+
       // Draw elongated shape in direction of movement using rotated rectangle
       const angle = Math.atan2(this.vy, this.vx);
       const length = this.size * 4.0; // Longer trails
       const width = this.size * 1.2;
-      
+
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(angle);
-      
+
       // Draw elongated rectangle
       ctx.fillRect(-length / 2, -width / 2, length, width);
-      
+
       // Add rounded ends with circles
       ctx.beginPath();
       ctx.arc(-length / 2, 0, width / 2, 0, Math.PI * 2);
@@ -186,21 +184,20 @@ export class Particle {
       ctx.beginPath();
       ctx.arc(length / 2, 0, width / 2, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Add bright center
       ctx.globalAlpha = alpha * 0.9;
       ctx.shadowBlur = this.size * 2;
       ctx.beginPath();
       ctx.arc(0, 0, this.size * 0.7, 0, Math.PI * 2);
       ctx.fill();
-      
+
       ctx.restore();
-      
     } else {
       // Classic: simple circle
       ctx.globalAlpha = alpha;
       ctx.fillStyle = this.color;
-      
+
       if (this.glow) {
         ctx.shadowBlur = this.size * 2;
         ctx.shadowColor = this.color;
@@ -208,7 +205,7 @@ export class Particle {
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
       }
-      
+
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
       ctx.fill();
@@ -271,12 +268,12 @@ export class ParticleSystem {
       const angle = Math.random() * spread - spread / 2;
 
       const particle = this.particlePool.acquire();
-      
+
       // Style-specific adjustments - make styles more distinct
       let particleSize = size * (0.5 + Math.random());
       let particleLife = life;
       let particleSpeed = speed;
-      
+
       if (style === 'sparkle') {
         // Sparkles: larger, brighter, longer-lived
         particleSize = size * (1.2 + Math.random() * 0.6);
@@ -292,7 +289,7 @@ export class ParticleSystem {
         particleSize = size * (1.0 + Math.random() * 0.8);
         particleLife = life * 1.3;
       }
-      
+
       particle.init({
         x,
         y,
@@ -308,7 +305,13 @@ export class ParticleSystem {
     }
   }
 
-  spawnExplosion(x: number, y: number, color = '#ff0000', glow: boolean = true, style: 'classic' | 'glow' | 'sparkle' | 'trail' = 'classic'): void {
+  spawnExplosion(
+    x: number,
+    y: number,
+    color = '#ff0000',
+    glow: boolean = true,
+    style: 'classic' | 'glow' | 'sparkle' | 'trail' = 'classic',
+  ): void {
     this.spawnParticles({
       x,
       y,
@@ -323,7 +326,12 @@ export class ParticleSystem {
     });
   }
 
-  spawnTrail(x: number, y: number, color = '#ffffff', style: 'classic' | 'glow' | 'sparkle' | 'trail' = 'trail'): void {
+  spawnTrail(
+    x: number,
+    y: number,
+    color = '#ffffff',
+    style: 'classic' | 'glow' | 'sparkle' | 'trail' = 'trail',
+  ): void {
     this.spawnParticles({
       x,
       y,

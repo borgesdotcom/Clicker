@@ -12,7 +12,7 @@ export class SoundManager {
   private laserAudio: HTMLAudioElement | null = null;
   private popAudio: HTMLAudioElement | null = null;
   private soundtrackAudio: HTMLAudioElement | null = null;
-  private readonly soundtrackVolumeRatio = 0.40; // Soundtrack is 40% of main volume
+  private readonly soundtrackVolumeRatio = 0.4; // Soundtrack is 40% of main volume
 
   constructor() {
     try {
@@ -31,7 +31,7 @@ export class SoundManager {
       if (typeof laserSound === 'string') {
         this.laserAudio = new Audio(laserSound);
         this.laserAudio.preload = 'auto';
-        this.laserAudio.volume = this.volume * 0.70;
+        this.laserAudio.volume = this.volume * 0.7;
       }
 
       if (typeof popSound === 'string') {
@@ -94,7 +94,7 @@ export class SoundManager {
     this.volume = Math.max(0, Math.min(1, volume));
     // Update audio file volumes (clamp to [0, 1] to prevent IndexSizeError)
     if (this.laserAudio) {
-      this.laserAudio.volume = Math.max(0, Math.min(1, this.volume * 0.70));
+      this.laserAudio.volume = Math.max(0, Math.min(1, this.volume * 0.7));
     }
     if (this.popAudio) {
       // Pop sound uses 140% of main volume
@@ -102,7 +102,10 @@ export class SoundManager {
     }
     // Soundtrack uses a percentage of main volume based on ratio
     if (this.soundtrackAudio) {
-      this.soundtrackAudio.volume = Math.max(0, Math.min(1, this.volume * this.soundtrackVolumeRatio));
+      this.soundtrackAudio.volume = Math.max(
+        0,
+        Math.min(1, this.volume * this.soundtrackVolumeRatio),
+      );
     }
   }
 

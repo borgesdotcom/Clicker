@@ -134,32 +134,45 @@ export class AscensionSystem {
   }
 
   calculatePrestigePoints(state: GameState): number {
-    // Enhanced prestige point formula for levels 100-1000+
-    // IMPORTANT: Only award points for NEW levels beyond previous highest
+    const breakdown = this.calculatePrestigePointsBreakdown(state);
+    return breakdown.base + breakdown.bonus;
+  }
 
-    if (state.level < 100) return 0;
+  calculatePrestigePointsBreakdown(state: GameState): {
+    base: number;
+    bonus: number;
+    previousBest: number;
+  } {
+    // Always give base PP for ascending past level 99
+    // Bonus PP for surpassing previous best level
+    if (state.level < 100) {
+      return {
+        base: 0,
+        bonus: 0,
+        previousBest: state.highestLevelReached ?? 0,
+      };
+    }
 
-    // For players who have never ascended (prestigeLevel === 0):
-    // - If highestLevelReached is undefined: give points from level 100 to current level (first ascension)
-    // - If highestLevelReached is set: it means they reached that level before the bug fix,
-    //   so give them points from level 100 to current level (migration case)
-    // For players who have ascended before (prestigeLevel > 0):
-    // - Only give points for NEW levels beyond highestLevelReached
     const isFirstAscension = state.prestigeLevel === 0;
-    const previousHighest = state.highestLevelReached;
+    const previousHighest = state.highestLevelReached ?? 0;
 
-    // For first ascension: always give points from level 100 to current level
-    // This ensures players who played before the bug fix still get their points
+    // For first ascension: all points are "base" (no previous best to beat)
     if (isFirstAscension) {
-      // Give points for all levels from 100 to current level
-      let totalPoints = 0;
-      for (let level = 100; level <= state.level; level++) {
-        const levelPast100 = level - 100;
-        const levelPoints = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
-        totalPoints += levelPoints;
+      let basePoints = 0;
+
+      // Minimal PP for early ascension attempts (levels 101-110)
+      const earlyLevels = Math.min(state.level, 110);
+      if (earlyLevels > 100) {
+        basePoints += Math.floor((earlyLevels - 100) / 2);
       }
 
-      // Milestone bonuses: award all milestones they've reached
+      for (let level = 111; level <= state.level; level++) {
+        const scaledLevel = level - 110;
+        const levelPoints = Math.floor(3 + Math.pow(scaledLevel / 22, 1.35));
+        basePoints += levelPoints;
+      }
+
+      // Milestone bonuses
       const milestones = [
         { level: 1000, bonus: 200 },
         { level: 750, bonus: 100 },
@@ -169,58 +182,78 @@ export class AscensionSystem {
 
       for (const milestone of milestones) {
         if (state.level >= milestone.level) {
-          totalPoints += milestone.bonus;
+          basePoints += milestone.bonus;
         }
       }
 
       // Achievement bonus
       const achievementBonus = this.calculateAchievementBonus(state);
-      totalPoints += achievementBonus;
+      basePoints += achievementBonus;
 
-      return Math.max(0, totalPoints);
+      return {
+        base: Math.max(0, basePoints),
+        bonus: 0,
+        previousBest: 0,
+      };
     }
 
-    // For subsequent ascensions: only give points for NEW levels
-    if (!previousHighest || state.level <= previousHighest) {
-      return 0;
+    // For subsequent ascensions:
+    // Base PP: Always given for levels past 99 (scaled by current level)
+    // Bonus PP: Extra for surpassing previous best
+    let basePoints = 0;
+    let bonusPoints = 0;
+
+    // Base PP: Calculate for all levels from 100 to current
+    // This ensures players always get something for ascending past 99
+    for (let level = 100; level <= state.level; level++) {
+      if (level <= 110) continue; // No base PP for minimal pushes
+      const scaledLevel = level - 110;
+      const baseLevelPoints = Math.floor(1 + Math.pow(scaledLevel / 30, 1.25));
+      basePoints += baseLevelPoints;
     }
 
-    // Calculate points only for the NEW levels (previousHighest + 1 to current level)
-    let totalPoints = 0;
-    for (
-      let level = Math.max(100, previousHighest + 1);
-      level <= state.level;
-      level++
-    ) {
-      const levelPast100 = level - 100;
-      const levelPoints = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
-      totalPoints += levelPoints;
-    }
+    // Bonus PP: Only for NEW levels beyond previous best
+    // If previousHighest is 0 or undefined, treat it as if they haven't set a record yet
+    // (This handles edge cases where highestLevelReached wasn't saved properly)
+    const effectivePreviousBest = previousHighest > 0 ? previousHighest : 0;
 
-    // Milestone bonuses: only award if we're crossing the milestone for the first time
-    const milestones = [
-      { level: 1000, bonus: 200 },
-      { level: 750, bonus: 100 },
-      { level: 500, bonus: 50 },
-      { level: 250, bonus: 20 },
-    ];
+    if (state.level > effectivePreviousBest) {
+      // Calculate bonus for levels beyond previous best
+      const startLevel = Math.max(100, effectivePreviousBest + 1);
+      for (let level = startLevel; level <= state.level; level++) {
+        if (level <= 110) continue;
+        const progress = level - Math.max(110, effectivePreviousBest);
+        const bonusLevelPoints = Math.floor(4 + Math.pow(progress / 6, 1.35));
+        bonusPoints += bonusLevelPoints;
+      }
 
-    for (const milestone of milestones) {
-      // Award milestone bonus if we just crossed it (prev < milestone <= current)
-      if (previousHighest < milestone.level && state.level >= milestone.level) {
-        totalPoints += milestone.bonus;
+      // Milestone bonuses: only award if we're crossing the milestone for the first time
+      const milestones = [
+        { level: 1000, bonus: 200 },
+        { level: 750, bonus: 100 },
+        { level: 500, bonus: 50 },
+        { level: 250, bonus: 20 },
+      ];
+
+      for (const milestone of milestones) {
+        if (
+          effectivePreviousBest < milestone.level &&
+          state.level >= milestone.level
+        ) {
+          bonusPoints += milestone.bonus;
+        }
       }
     }
 
-    // Boss bonus: only count NEW bosses killed since last ascension
-    // This is tracked separately, so we skip it for now to keep it simple
-    // (bosses killed is cumulative and doesn't reset on ascension)
-
-    // Achievement bonus: certain achievements grant extra PP (one-time bonuses)
+    // Achievement bonus goes to base (always available)
     const achievementBonus = this.calculateAchievementBonus(state);
-    totalPoints += achievementBonus;
+    basePoints += achievementBonus;
 
-    return Math.max(0, totalPoints);
+    return {
+      base: Math.max(0, basePoints),
+      bonus: Math.max(0, bonusPoints),
+      previousBest: effectivePreviousBest,
+    };
   }
 
   private calculateAchievementBonus(state: GameState): number {
@@ -288,12 +321,27 @@ export class AscensionSystem {
   getComboBoostMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_combo_boost ?? 0;
     // Adds extra combo multiplier rate
-    return 0.001 + level * 0.0005;
+    return 0.0005 + level * 0.00035;
   }
 
   isAutoBuyUnlocked(state: GameState): boolean {
     const level = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
     return level >= 1;
+  }
+
+  getUpgradeCost(upgradeId: string, state: GameState): number {
+    const upgrade = this.ascensionUpgrades.find((u) => u.id === upgradeId);
+    if (!upgrade) return Infinity;
+
+    const currentLevel = upgrade.getCurrentLevel(state);
+    if (currentLevel >= upgrade.maxLevel) return Infinity;
+
+    // Scale cost based on current level: baseCost * (1.15 ^ currentLevel)
+    // This makes each level progressively more expensive
+    const baseCost = upgrade.cost;
+    const scaledCost = Math.floor(baseCost * Math.pow(1.15, currentLevel));
+
+    return scaledCost;
   }
 
   buyPrestigeUpgrade(state: GameState, upgradeId: string): boolean {
@@ -303,7 +351,7 @@ export class AscensionSystem {
     const currentLevel = upgrade.getCurrentLevel(state);
     if (currentLevel >= upgrade.maxLevel) return false;
 
-    const cost = upgrade.cost;
+    const cost = this.getUpgradeCost(upgradeId, state);
     if (state.prestigePoints < cost) return false;
 
     // Initialize prestigeUpgrades if needed
@@ -320,5 +368,15 @@ export class AscensionSystem {
     }
 
     return true;
+  }
+
+  /**
+   * Get income multiplier from unspent prestige points
+   * Each unspent PP gives +1% to all income (points from clicks, kills, and passive generation)
+   */
+  getUnspentPPMultiplier(state: GameState): number {
+    const unspentPP = state.prestigePoints ?? 0;
+    // 0.25% per point: 1 + (unspentPP * 0.0025)
+    return 1 + unspentPP * 0.0025;
   }
 }

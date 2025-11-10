@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlienBall } from './entities/AlienBall';
-import {
-  EnhancedAlienBall,
-  selectEnemyType,
-} from './entities/EnemyTypes';
+import { EnhancedAlienBall, selectEnemyType } from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
 import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
@@ -205,11 +202,15 @@ export class Game {
         this.performAscension();
       },
     );
-    this.missionsModal = new MissionsModal(this.missionSystem, this.store, () => {
-      const state = this.store.getState();
-      this.hud.update(state.points);
-      this.store.setState({ ...state });
-    });
+    this.missionsModal = new MissionsModal(
+      this.missionSystem,
+      this.store,
+      () => {
+        const state = this.store.getState();
+        this.hud.update(state.points);
+        this.store.setState({ ...state });
+      },
+    );
     this.artifactsModal = new ArtifactsModal(this.artifactSystem, this.store);
     this.statsPanel = new StatsPanel(this.upgradeSystem);
     this.settingsModal = new SettingsModal(this.soundManager);
@@ -271,20 +272,23 @@ export class Game {
 
     // Initialize visual customization system
     this.customizationSystem = new VisualCustomizationSystem();
-    
+
     // Load saved themes
     const initialState = this.store.getState();
     if (initialState.selectedThemes) {
-      this.customizationSystem.loadState(initialState.selectedThemes as Record<ThemeCategory, string>);
+      this.customizationSystem.loadState(
+        initialState.selectedThemes as Record<ThemeCategory, string>,
+      );
     }
     this.customizationSystem.updateUnlocks(initialState);
-    
+
     // Set initial background theme (before first render)
     const bgColors = this.customizationSystem.getBackgroundColors();
-    const initialBgTheme = this.customizationSystem.getSelectedTheme('background');
+    const initialBgTheme =
+      this.customizationSystem.getSelectedTheme('background');
     const initialThemeId: string = initialBgTheme?.id ?? 'default_background';
     this.background.setThemeColors(bgColors, initialThemeId);
-    
+
     // Initialize customization modal
     this.customizationModal = new CustomizationModal(this.customizationSystem);
     this.customizationModal.updateState(initialState);
@@ -297,11 +301,12 @@ export class Game {
       currentState.selectedThemes[category] = themeId;
       this.store.setState(currentState);
       Save.save(currentState);
-      
+
       // Update background immediately if background theme changed
       if (category === 'background') {
         const newBgColors = this.customizationSystem.getBackgroundColors();
-        const newBgTheme = this.customizationSystem.getSelectedTheme('background');
+        const newBgTheme =
+          this.customizationSystem.getSelectedTheme('background');
         const newThemeId: string = newBgTheme?.id ?? 'default_background';
         this.background.setThemeColors(newBgColors, newThemeId);
       }
@@ -385,7 +390,7 @@ export class Game {
     this.hud = new Hud();
     // Configure UpgradeSystem to access game state for discounts
     this.upgradeSystem.setGameStateGetter(() => this.store.getState());
-    
+
     this.shop = new Shop(this.store, this.upgradeSystem);
     this.shop.setSoundManager(this.soundManager);
     this.shop.setMissionSystem(this.missionSystem);
@@ -426,9 +431,15 @@ export class Game {
           }
         }
         // Advance autosave timer safely to trigger on next tick
-        this.saveTimer = Math.min(this.saveTimer + elapsedSeconds, this.saveInterval);
+        this.saveTimer = Math.min(
+          this.saveTimer + elapsedSeconds,
+          this.saveInterval,
+        );
         // Advance auto-buy timer similarly
-        this.autoBuyTimer = Math.min(this.autoBuyTimer + elapsedSeconds, this.autoBuyInterval);
+        this.autoBuyTimer = Math.min(
+          this.autoBuyTimer + elapsedSeconds,
+          this.autoBuyInterval,
+        );
       },
     );
 
@@ -458,7 +469,6 @@ export class Game {
     });
   }
 
-
   private setupBossDialog(): void {
     const startBtn = document.getElementById('boss-start-btn');
     if (startBtn) {
@@ -486,14 +496,16 @@ export class Game {
       this.bossRetryButton.setAttribute('data-icon', '⚔️');
       this.bossRetryButton.setAttribute('data-text', 'Retry Boss');
       this.bossRetryButton.setAttribute('aria-label', 'Retry Boss Fight');
-      this.bossRetryButton.innerHTML = '<span class="hud-button-icon">⚔️</span><span class="hud-button-text">Retry Boss</span>';
+      this.bossRetryButton.innerHTML =
+        '<span class="hud-button-icon">⚔️</span><span class="hud-button-text">Retry Boss</span>';
       this.bossRetryButton.style.display = 'none';
       this.bossRetryButton.style.pointerEvents = 'auto';
 
       // Add tooltip AFTER setting innerHTML
       const tooltip = document.createElement('div');
       tooltip.className = 'boss-retry-tooltip';
-      tooltip.textContent = 'Retry the boss fight. Shows the boss dialog again to restart the encounter.';
+      tooltip.textContent =
+        'Retry the boss fight. Shows the boss dialog again to restart the encounter.';
       this.bossRetryButton.appendChild(tooltip);
 
       this.bossRetryButton.addEventListener('click', () => {
@@ -528,7 +540,7 @@ export class Game {
 
   private updateBossTimer(dt: number): void {
     if (this.mode !== 'boss') return;
-    
+
     // Don't update if timeout already handled
     if (this.bossTimeoutHandled) return;
 
@@ -568,7 +580,10 @@ export class Game {
       }
 
       // Update bar width with smooth transition
-      const percent = Math.max(0, (this.bossTimeRemaining / this.bossTimeLimit) * 100);
+      const percent = Math.max(
+        0,
+        (this.bossTimeRemaining / this.bossTimeLimit) * 100,
+      );
       timerBar.style.width = `${String(percent)}%`;
 
       // Update bar classes for visual state
@@ -593,7 +608,7 @@ export class Game {
     if (this.bossTimeoutHandled) {
       return;
     }
-    
+
     // Set flag immediately to prevent race conditions
     this.bossTimeoutHandled = true;
 
@@ -609,7 +624,6 @@ export class Game {
     // Block progression until boss is defeated
     this.blockedOnBossLevel = state.level;
     state.blockedOnBossLevel = state.level; // Save to state for persistence
-
     this.store.setState(state);
 
     // Clean up boss battle state first
@@ -622,17 +636,17 @@ export class Game {
     if (timeoutModal) {
       // Ensure modal is hidden first
       timeoutModal.style.display = 'none';
-      
+
       // Remove any existing event listeners by cloning the button
       const closeBtn = document.getElementById('boss-timeout-close');
       if (closeBtn && closeBtn.parentNode) {
         const newCloseBtn = closeBtn.cloneNode(true) as HTMLElement;
         newCloseBtn.id = 'boss-timeout-close'; // Restore ID after cloning
-        
+
         // Setup close button handler BEFORE replacing
         newCloseBtn.addEventListener('click', () => {
           timeoutModal.style.display = 'none';
-          
+
           // Show retry button
           if (this.bossRetryButton) {
             this.bossRetryButton.style.display = 'flex';
@@ -642,17 +656,22 @@ export class Game {
             this.startTransitionToNormal();
           }, 500);
         });
-        
+
         // Replace the button
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
       }
-      
+
       // Show modal after setting up handler
+      const subMessage = timeoutModal.querySelector('.timeout-submessage');
+      if (subMessage) {
+        subMessage.textContent =
+          'You must defeat it to progress. XP gains are reduced by 90% until victory.';
+      }
       timeoutModal.style.display = 'flex';
     } else {
       // Fallback to message if modal doesn't exist
       this.hud.showMessage(
-        "⏱️ TIME'S UP! The boss escaped! You must defeat it to progress.",
+        "⏱️ TIME'S UP! The boss escaped! XP gains reduced by 90% until the boss is defeated.",
         '#ff0000',
         4000,
       );
@@ -710,18 +729,21 @@ export class Game {
 
     if (passiveGenPerSecond > 0) {
       // Calculate offline rewards (50% efficiency - encourages active play)
-      const offlineReward = Math.floor(passiveGenPerSecond * cappedSeconds * 0.5);
-      
+      const offlineReward = Math.floor(
+        passiveGenPerSecond * cappedSeconds * 0.5,
+      );
+
       if (offlineReward > 0) {
         this.store.addPoints(offlineReward);
-        
+
         // Show offline reward message
         let timeText = '';
         if (hoursAway >= 1) {
           const remainingMinutes = minutesAway % 60;
-          timeText = remainingMinutes > 0 
-            ? `${hoursAway.toString()}h ${remainingMinutes.toString()}m`
-            : `${hoursAway.toString()}h`;
+          timeText =
+            remainingMinutes > 0
+              ? `${hoursAway.toString()}h ${remainingMinutes.toString()}m`
+              : `${hoursAway.toString()}h`;
         } else {
           timeText = `${minutesAway.toString()}m`;
         }
@@ -769,7 +791,8 @@ export class Game {
       ascensionBtn.setAttribute('data-text', 'Ascend');
       ascensionBtn.setAttribute('aria-label', 'Open Prestige/Ascension');
       ascensionBtn.setAttribute('aria-keyshortcuts', 'P');
-      ascensionBtn.innerHTML = '<span class="hud-button-icon">🌟</span><span class="hud-button-text">Ascend</span>';
+      ascensionBtn.innerHTML =
+        '<span class="hud-button-icon">🌟</span><span class="hud-button-text">Ascend</span>';
       ascensionBtn.addEventListener('click', () => {
         this.ascensionModal.show();
       });
@@ -799,14 +822,14 @@ export class Game {
       settingsBtn.setAttribute('data-text', 'Settings');
       settingsBtn.setAttribute('aria-label', 'Open Settings');
       settingsBtn.setAttribute('aria-keyshortcuts', 'S');
-      settingsBtn.innerHTML = '<span class="hud-button-icon">⚙️</span><span class="hud-button-text">Settings</span>';
+      settingsBtn.innerHTML =
+        '<span class="hud-button-icon">⚙️</span><span class="hud-button-text">Settings</span>';
       settingsBtn.addEventListener('click', () => {
         this.settingsModal.show();
       });
       buttonsContainer.appendChild(settingsBtn);
     }
   }
-
 
   private setupMissionsButton(): void {
     const buttonsContainer = document.getElementById('hud-buttons-container');
@@ -818,7 +841,8 @@ export class Game {
       missionsBtn.setAttribute('data-text', 'Missions');
       missionsBtn.setAttribute('aria-label', 'Open Missions');
       missionsBtn.setAttribute('aria-keyshortcuts', 'M');
-      missionsBtn.innerHTML = '<span class="hud-button-icon">🎯</span><span class="hud-button-text">Missions</span>';
+      missionsBtn.innerHTML =
+        '<span class="hud-button-icon">🎯</span><span class="hud-button-text">Missions</span>';
       missionsBtn.addEventListener('click', () => {
         this.missionsModal.show();
       });
@@ -834,7 +858,8 @@ export class Game {
       artifactsBtn.className = 'hud-button';
       artifactsBtn.setAttribute('data-icon', '✨');
       artifactsBtn.setAttribute('data-text', 'Artifacts');
-      artifactsBtn.innerHTML = '<span class="hud-button-icon">✨</span><span class="hud-button-text">Artifacts</span>';
+      artifactsBtn.innerHTML =
+        '<span class="hud-button-icon">✨</span><span class="hud-button-text">Artifacts</span>';
       artifactsBtn.addEventListener('click', () => {
         this.artifactsModal.show();
       });
@@ -895,7 +920,8 @@ export class Game {
       infoBtn.className = 'hud-button';
       infoBtn.setAttribute('data-icon', '📖');
       infoBtn.setAttribute('data-text', 'Game Info');
-      infoBtn.innerHTML = '<span class="hud-button-icon">📖</span><span class="hud-button-text">Game Info</span>';
+      infoBtn.innerHTML =
+        '<span class="hud-button-icon">📖</span><span class="hud-button-text">Game Info</span>';
       infoBtn.addEventListener('click', () => {
         this.gameInfoModal.show();
       });
@@ -913,7 +939,8 @@ export class Game {
       customizeBtn.setAttribute('data-text', 'Customize');
       customizeBtn.setAttribute('aria-label', 'Open Visual Customization');
       customizeBtn.setAttribute('aria-keyshortcuts', 'C');
-      customizeBtn.innerHTML = '<span class="hud-button-icon">🎨</span><span class="hud-button-text">Customize</span>';
+      customizeBtn.innerHTML =
+        '<span class="hud-button-icon">🎨</span><span class="hud-button-text">Customize</span>';
       customizeBtn.addEventListener('click', () => {
         const state = this.store.getState();
         this.customizationModal.updateState(state);
@@ -980,8 +1007,6 @@ export class Game {
       prestigeUpgrades: keepPrestigeUpgrades, // Keep prestige upgrades
       blockedOnBossLevel: null, // Reset boss block on ascension
       // v3.0: New upgrades (reset on ascension)
-      weaponMasteryLevel: 0,
-      fleetCommandLevel: 0,
       mutationEngineLevel: 0,
       energyCoreLevel: 0,
       cosmicKnowledgeLevel: 0,
@@ -1018,10 +1043,14 @@ export class Game {
   private setupKeyboard(): void {
     window.addEventListener('keydown', (event) => {
       this.keys.add(event.key.toLowerCase());
-      
+
       // Keyboard shortcuts (only when not typing in input fields)
       const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
         return; // Don't trigger shortcuts when typing
       }
 
@@ -1045,7 +1074,9 @@ export class Game {
           this.store.setState(state);
           // Show notification
           this.notificationSystem.show(
-            state.autoBuyEnabled ? '🤖 Auto-Buy Enabled' : '🤖 Auto-Buy Disabled',
+            state.autoBuyEnabled
+              ? '🤖 Auto-Buy Enabled'
+              : '🤖 Auto-Buy Disabled',
             'info',
             2000,
           );
@@ -1254,23 +1285,24 @@ export class Game {
         critical: '💥',
       };
       const powerUpIcon = iconMap[collectedPowerUp] ?? '⚡';
-      
+
       // Show notification using the notification system (same as missions and powerup spawns)
-      const notificationMessage: string = powerUpIcon + ' ' + config + ' Activated!';
-      this.notificationSystem.show(
-        notificationMessage,
-        'success',
-        3000,
-      );
-      
+      const notificationMessage: string =
+        powerUpIcon + ' ' + config + ' Activated!';
+      this.notificationSystem.show(notificationMessage, 'success', 3000);
+
       // Spawn collection particles
       if (this.userSettings.highGraphics) {
         // Apply particle theme if available
         const particleTheme = this.customizationSystem.getParticleStyle();
-        const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
+        const particleStyle = particleTheme.style as
+          | 'classic'
+          | 'glow'
+          | 'sparkle'
+          | 'trail';
         const particleColor = particleTheme.colors.primary;
         const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle';
-        
+
         this.particleSystem.spawnParticles({
           x: pos.x,
           y: pos.y,
@@ -1284,15 +1316,15 @@ export class Game {
           style: particleStyle,
         });
       }
-      
+
       // Refresh shop immediately when power-up is collected (to show updated stats)
       this.shop.forceRefresh();
-      
+
       const activeBuffs = this.powerUpSystem.getActiveBuffs();
       this.lastPowerUpCount = activeBuffs.length;
-      this.lastHadSpeedBuff = activeBuffs.some(b => b.type === 'speed');
-      this.lastHadDamageBuff = activeBuffs.some(b => b.type === 'damage');
-      
+      this.lastHadSpeedBuff = activeBuffs.some((b) => b.type === 'speed');
+      this.lastHadDamageBuff = activeBuffs.some((b) => b.type === 'damage');
+
       return; // Don't fire when collecting power-up - power-ups have highest priority
     }
 
@@ -1319,7 +1351,8 @@ export class Game {
     // Calculate auto-fire damage for all ships (excluding main ship)
     // Main ship doesn't use beams - it fires regular projectiles for click feedback
     let autoFireDamage = this.upgradeSystem.getAutoFireDamage(state);
-    autoFireDamage *= 1 + this.artifactSystem.getDamageBonus() * 0.5;
+    // Same artifact bonus as clicks for 1:1 damage
+    autoFireDamage *= 1 + this.artifactSystem.getDamageBonus();
 
     if (this.mode === 'boss') {
       const prestigeBossLevel =
@@ -1343,7 +1376,8 @@ export class Game {
 
     // Main ship always fires regular projectiles (even in beam mode)
     // This provides click feedback and visual variety
-    let damage = this.upgradeSystem.getMainShipDamage(state);
+    // Use getPointsPerHit to ensure clicks and ships deal the same base damage
+    let damage = this.upgradeSystem.getPointsPerHit(state);
 
     // v2.0: Apply artifact bonuses
     damage *= 1 + this.artifactSystem.getDamageBonus();
@@ -1368,42 +1402,41 @@ export class Game {
       return; // No target to shoot at
     }
 
-    const target = { x: targetEntity.x, y: targetEntity.y };
+    const targetCenter = { x: targetEntity.x, y: targetEntity.y };
+    const targetRadius =
+      'radius' in targetEntity && typeof targetEntity.radius === 'number'
+        ? targetEntity.radius
+        : 0;
     const laserVisuals = this.getLaserVisuals(state);
 
     // Only fire from the main ship (index 0) when clicking
     if (this.ships[0]) {
       // Calculate base shot count
       let shotCount = 1; // Main ship always fires 1
-      
-      // Rapid fire upgrade: adds 2 additional shots
-      if (state.subUpgrades['rapid_fire']) {
-        shotCount += 2;
-      }
-      
-      // Multishot power-up: doubles all shots (stacks with rapid_fire)
+
+      // Multishot power-up: doubles all shots
       if (this.powerUpSystem.hasMultishot()) {
         shotCount *= 2;
       }
-      
+
       // Fire the calculated number of shots
       const shipsToUse: Ship[] = [this.ships[0]]; // Start with main ship
       if (this.ships.length > 1) {
         // Add other ships to the pool
         shipsToUse.push(...this.ships.slice(1));
       }
-      
+
       // Fire shots, cycling through available ships
       for (let i = 0; i < shotCount; i++) {
         const shipIndex = i % shipsToUse.length;
         const ship = shipsToUse[shipIndex];
         if (ship) {
-          this.laserSystem.spawnLaser(
-            ship.getFrontPosition(),
-            target,
-            damage,
-            laserVisuals,
-          );
+          const origin = ship.getFrontPosition();
+          const hitPoint =
+            targetRadius > 0
+              ? this.calculateHitPoint(origin, targetCenter, targetRadius)
+              : targetCenter;
+          this.laserSystem.spawnLaser(origin, hitPoint, damage, laserVisuals);
         }
       }
     }
@@ -1435,11 +1468,11 @@ export class Game {
 
     // Regular projectile mode
     const state = this.store.getState();
-    // Use auto-fire damage (weaker but scales with ship count)
+    // Use auto-fire damage - now same as clicks (1:1 damage)
     let damage = this.upgradeSystem.getAutoFireDamage(state);
 
-    // v2.0: Apply artifact bonuses (at reduced rate for auto-fire)
-    damage *= 1 + this.artifactSystem.getDamageBonus() * 0.5;
+    // v2.0: Apply artifact bonuses (same as clicks for 1:1 damage)
+    damage *= 1 + this.artifactSystem.getDamageBonus();
 
     // Apply power-up damage multiplier
     damage *= this.powerUpSystem.getDamageMultiplier();
@@ -1463,16 +1496,21 @@ export class Game {
 
     const origin = ship.getFrontPosition();
     const center = { x: targetEntity.x, y: targetEntity.y };
-    const hitPoint = this.calculateHitPoint(origin, center, targetEntity.radius);
-    
+    const hitPoint = this.calculateHitPoint(
+      origin,
+      center,
+      targetEntity.radius,
+    );
+
     // Small ships (shipIndex > 0) cannot crit - use non-crit visuals only
-    const laserVisuals = shipIndex > 0 
-      ? this.getLaserVisualsNoCrit(state)
-      : this.getLaserVisuals(state);
-    
+    const laserVisuals =
+      shipIndex > 0
+        ? this.getLaserVisualsNoCrit(state)
+        : this.getLaserVisuals(state);
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const laserThemeId = this.customizationSystem.getLaserThemeId();
-    
+
     // Store theme ID for laser rendering
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.laserSystem.lastBeamThemeId = laserThemeId;
@@ -1490,14 +1528,14 @@ export class Game {
     const dx = center.x - origin.x;
     const dy = center.y - origin.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     if (distance <= radius) {
       return center;
     }
-    
+
     const nx = dx / distance;
     const ny = dy / distance;
-    
+
     return {
       x: center.x - nx * radius,
       y: center.y - ny * radius,
@@ -1567,6 +1605,15 @@ export class Game {
     const comboMult = this.comboSystem.getMultiplier(this.store.getState());
     finalDamage *= comboMult;
 
+    // Scout enemies evade ship fire - reduce auto-fire damage significantly
+    if (this.ball instanceof EnhancedAlienBall && !isBeam) {
+      if (isFromShip && this.ball.enemyType === 'scout') {
+        finalDamage *= 0.5;
+      } else if (!isFromShip && this.ball.enemyType === 'guardian') {
+        finalDamage *= 0.5;
+      }
+    }
+
     // Record damage for DPS calculation
     this.hud.recordDamage(finalDamage);
 
@@ -1618,16 +1665,21 @@ export class Game {
     this.damageBatch.hitDirection = undefined;
     this.damageBatch.isBeam = false;
 
-      if (this.mode === 'normal' && this.ball && this.ball.currentHp > 0) {
+    if (this.mode === 'normal' && this.ball && this.ball.currentHp > 0) {
       // Get current combo for deformation scaling
       const currentCombo = this.comboSystem.getCombo();
       // Check if this batch is from a beam (stored in batch state)
-      const broken = this.ball.takeDamage(finalDamage, hitDirection, currentCombo, isBeam);
-      
+      const broken = this.ball.takeDamage(
+        finalDamage,
+        hitDirection,
+        currentCombo,
+        isBeam,
+      );
+
       // Apply points multiplier for enhanced aliens
       let pointsEarned = finalDamage;
       if (this.ball instanceof EnhancedAlienBall) {
-        pointsEarned = this.ball.getPointsReward(finalDamage);
+        pointsEarned = this.ball.getPointsReward(pointsEarned);
       }
       // Apply power-up points multiplier
       pointsEarned *= this.powerUpSystem.getPointsMultiplier();
@@ -1647,23 +1699,34 @@ export class Game {
         // Spawn particles if there's click damage, or if this is purely click damage (not from auto-fire ships)
         const hasClickDamage = clickDamage > 0;
         const shouldSpawnParticles = hasClickDamage || !isFromShip;
-        
+
         if (shouldSpawnParticles) {
           // Apply particle theme
           const particleTheme = this.customizationSystem.getParticleStyle();
-          const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
-          const themeParticleColor = particleStyle === 'sparkle' 
-            ? particleTheme.colors.secondary ?? particleTheme.colors.primary
-            : particleTheme.colors.primary;
-          const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle' || this.ball instanceof EnhancedAlienBall;
-          
+          const particleStyle = particleTheme.style as
+            | 'classic'
+            | 'glow'
+            | 'sparkle'
+            | 'trail';
+          const themeParticleColor =
+            particleStyle === 'sparkle'
+              ? (particleTheme.colors.secondary ?? particleTheme.colors.primary)
+              : particleTheme.colors.primary;
+          const useGlow =
+            particleStyle === 'glow' ||
+            particleStyle === 'sparkle' ||
+            this.ball instanceof EnhancedAlienBall;
+
           // Use click damage if available, otherwise use total damage
           // Spawn more particles for clicks, fewer for pure auto-fire
           const damageForParticles = hasClickDamage ? clickDamage : finalDamage;
           const baseCount = hasClickDamage ? 8 : 3; // More for clicks
           const damageCount = Math.floor(damageForParticles / 50); // Lower threshold
-          const particleCount = Math.max(baseCount, Math.min(25, baseCount + damageCount));
-          
+          const particleCount = Math.max(
+            baseCount,
+            Math.min(25, baseCount + damageCount),
+          );
+
           this.particleSystem.spawnParticles({
             x: this.ball.x,
             y: this.ball.y,
@@ -1679,15 +1742,36 @@ export class Game {
       }
 
       if (broken) {
+        let killReward = this.ball.maxHp;
+        if (this.ball instanceof EnhancedAlienBall) {
+          killReward = this.ball.getPointsReward(killReward);
+        }
+        killReward *= this.powerUpSystem.getPointsMultiplier();
+        const roundedReward = Math.max(1, Math.floor(killReward));
+        this.store.addPoints(roundedReward);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.hud.showPointsGain(roundedReward);
+
         // Chance to spawn power-up (1% chance - very rare, like Cookie Clicker golden cookies)
-        if (Math.random() < 0.01) {
+        let spawnPowerUp = Math.random() < 0.01;
+        if (
+          this.ball instanceof EnhancedAlienBall &&
+          this.ball.enemyType === 'hoarder'
+        ) {
+          spawnPowerUp = true;
+        }
+        if (spawnPowerUp) {
           const powerUpX = this.ball.x + (Math.random() - 0.5) * 100;
           const powerUpY = this.ball.y + (Math.random() - 0.5) * 100;
           this.spawnPowerUp(powerUpX, powerUpY);
         }
         this.onBallDestroyed();
       }
-    } else if (this.mode === 'boss' && this.bossBall && this.bossBall.currentHp > 0) {
+    } else if (
+      this.mode === 'boss' &&
+      this.bossBall &&
+      this.bossBall.currentHp > 0
+    ) {
       const broken = this.bossBall.takeDamage(finalDamage);
       const state = this.store.getState();
       const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
@@ -1710,12 +1794,18 @@ export class Game {
         if (this.userSettings.highGraphics && Math.random() < 0.3) {
           // Apply particle theme
           const particleTheme = this.customizationSystem.getParticleStyle();
-          const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
-          const themeParticleColor = isCrit && particleStyle === 'sparkle'
-            ? particleTheme.colors.secondary ?? particleTheme.colors.primary
-            : particleTheme.colors.primary;
-          const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle';
-          
+          const particleStyle = particleTheme.style as
+            | 'classic'
+            | 'glow'
+            | 'sparkle'
+            | 'trail';
+          const themeParticleColor =
+            isCrit && particleStyle === 'sparkle'
+              ? (particleTheme.colors.secondary ?? particleTheme.colors.primary)
+              : particleTheme.colors.primary;
+          const useGlow =
+            particleStyle === 'glow' || particleStyle === 'sparkle';
+
           this.particleSystem.spawnParticles({
             x: bossPos.x + (Math.random() - 0.5) * this.bossBall.radius,
             y: bossPos.y + (Math.random() - 0.5) * this.bossBall.radius,
@@ -1764,8 +1854,11 @@ export class Game {
     const artifactBonus = this.artifactSystem.getXPBonus();
 
     let bonusXP = upgradeBonus * baseXP;
-
     bonusXP *= 1 + artifactBonus;
+
+    if (this.blockedOnBossLevel !== null) {
+      bonusXP *= 0.1;
+    }
 
     state.experience += bonusXP;
 
@@ -1789,8 +1882,8 @@ export class Game {
       this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
-          this.ball = null;
-          this.showBossDialog();
+        this.ball = null;
+        this.showBossDialog();
       } else {
         // Instant respawn for better late-game flow
         setTimeout(() => {
@@ -1842,7 +1935,7 @@ export class Game {
     if (Math.random() < 0.5) {
       this.artifactSystem.generateArtifact();
       artifactFound = true;
-      
+
       // Show artifacts modal first, then victory message when it closes
       this.artifactsModal.setOnCloseCallback(() => {
         setTimeout(() => {
@@ -1888,14 +1981,31 @@ export class Game {
       const centerY = this.canvas.getCenterY();
       // Apply particle theme for explosions
       const particleTheme = this.customizationSystem.getParticleStyle();
-      const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
+      const particleStyle = particleTheme.style as
+        | 'classic'
+        | 'glow'
+        | 'sparkle'
+        | 'trail';
       const explosionColor1 = particleTheme.colors.primary;
-      const explosionColor2 = particleTheme.colors.secondary ?? particleTheme.colors.primary;
+      const explosionColor2 =
+        particleTheme.colors.secondary ?? particleTheme.colors.primary;
       const useGlow = particleStyle === 'glow' || particleStyle === 'sparkle';
-      
-      this.particleSystem.spawnExplosion(centerX, centerY, explosionColor1, useGlow, particleStyle);
+
+      this.particleSystem.spawnExplosion(
+        centerX,
+        centerY,
+        explosionColor1,
+        useGlow,
+        particleStyle,
+      );
       setTimeout(() => {
-        this.particleSystem.spawnExplosion(centerX, centerY, explosionColor2, useGlow, particleStyle);
+        this.particleSystem.spawnExplosion(
+          centerX,
+          centerY,
+          explosionColor2,
+          useGlow,
+          particleStyle,
+        );
       }, 200);
     }
 
@@ -1908,7 +2018,7 @@ export class Game {
   private showBossDialog(): void {
     // Close artifacts modal if open to prevent interference
     this.artifactsModal.hide();
-    
+
     const dialog = document.getElementById('boss-dialog');
     if (dialog) {
       dialog.style.display = 'flex';
@@ -1926,13 +2036,13 @@ export class Game {
     this.ball = null;
     // Pause combo instead of resetting it - will resume after boss fight
     this.comboSystem.pause();
-    
+
     // Hide timeout modal if visible
     const timeoutModal = document.getElementById('boss-timeout-modal');
     if (timeoutModal) {
       timeoutModal.style.display = 'none';
     }
-    
+
     // Reset timeout flag
     this.bossTimeoutHandled = false;
 
@@ -1976,7 +2086,7 @@ export class Game {
     this.laserSystem.clear();
     this.particleSystem.clear();
     this.damageNumberSystem.clear();
-    
+
     // Reset damage batch (reuse object, just clear values)
     this.damageBatch.damage = 0;
     this.damageBatch.isCrit = false;
@@ -1990,7 +2100,7 @@ export class Game {
   private update(dt: number): void {
     dt = dt * this.gameSpeed;
     this.frameCount++;
-    
+
     // Update WebGL renderer time for animations
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const webglRenderer = this.canvas.getWebGLRenderer();
@@ -2006,7 +2116,7 @@ export class Game {
       // Always update internal timer for accurate timeout checking
       const oldTime = this.bossTimeRemaining;
       this.bossTimeRemaining -= dt;
-      
+
       // Check timeout immediately (critical)
       if (this.bossTimeRemaining <= 0 && oldTime > 0) {
         this.handleBossTimeout();
@@ -2040,22 +2150,22 @@ export class Game {
         const critChance = this.upgradeSystem.getCritChance(state);
         const critBonus = this.powerUpSystem.getCritChanceBonus() * 100; // Convert to percentage
         this.hud.updateStats(dps, passiveGen, critChance, critBonus);
-        
+
         // Update power-up buffs display
         const activeBuffs = this.powerUpSystem.getActiveBuffs();
         this.hud.updatePowerUpBuffs(activeBuffs);
-        
+
         // Refresh shop if power-up buffs changed (to update shop display with ⚡ and ⚔️ icons)
         const currentPowerUpCount = activeBuffs.length;
-        const hasSpeedBuff = activeBuffs.some(b => b.type === 'speed');
-        const hasDamageBuff = activeBuffs.some(b => b.type === 'damage');
-        
+        const hasSpeedBuff = activeBuffs.some((b) => b.type === 'speed');
+        const hasDamageBuff = activeBuffs.some((b) => b.type === 'damage');
+
         // Check if any power-up state changed (count, speed, or damage)
-        const powerUpStateChanged = 
+        const powerUpStateChanged =
           currentPowerUpCount !== this.lastPowerUpCount ||
           hasSpeedBuff !== this.lastHadSpeedBuff ||
           hasDamageBuff !== this.lastHadDamageBuff;
-        
+
         if (powerUpStateChanged) {
           this.lastPowerUpCount = currentPowerUpCount;
           this.lastHadSpeedBuff = hasSpeedBuff;
@@ -2092,7 +2202,8 @@ export class Game {
     // Apply power-up speed multiplier (divide cooldown by multiplier = faster firing)
     // Calculate once and reuse for both beam check and auto-fire
     const speedMultiplier = this.powerUpSystem.getSpeedMultiplier();
-    const cooldown = this.upgradeSystem.getFireCooldown(state) / speedMultiplier;
+    const cooldown =
+      this.upgradeSystem.getFireCooldown(state) / speedMultiplier;
     const shouldUseBeam = this.laserSystem.shouldUseBeamMode(cooldown);
     const wasInBeamMode = this.laserSystem.isBeamMode();
 
@@ -2116,15 +2227,25 @@ export class Game {
       this.laserSystem.clearBeams();
     }
 
-    this.laserSystem.update(dt, (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2) => {
-      this.handleDamage(damage, isCrit, isFromShip, hitDirection);
-    });
+    this.laserSystem.update(
+      dt,
+      (
+        damage: number,
+        isCrit: boolean,
+        isFromShip: boolean,
+        hitDirection?: Vec2,
+      ) => {
+        this.handleDamage(damage, isCrit, isFromShip, hitDirection);
+      },
+    );
 
     // Process beam damage if in beam mode (respects attack speed)
     if (shouldUseBeam) {
       const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
-      const targetCenter = targetEntity ? { x: targetEntity.x, y: targetEntity.y } : undefined;
-      
+      const targetCenter = targetEntity
+        ? { x: targetEntity.x, y: targetEntity.y }
+        : undefined;
+
       // Get beam origin from first ship or use canvas center as fallback
       let beamOrigin: Vec2 | undefined;
       if (this.ships.length > 0 && this.ships[0]) {
@@ -2132,12 +2253,21 @@ export class Game {
         beamOrigin = shipPos;
       } else {
         // Fallback to canvas center if no ships
-        beamOrigin = { x: this.canvas.getCenterX(), y: this.canvas.getCenterY() };
+        beamOrigin = {
+          x: this.canvas.getCenterX(),
+          y: this.canvas.getCenterY(),
+        };
       }
-      
+
       this.laserSystem.processBeamDamage(
         cooldown,
-        (damage: number, isCrit: boolean, isFromShip: boolean, hitDirection?: Vec2, isBeam?: boolean) => {
+        (
+          damage: number,
+          isCrit: boolean,
+          isFromShip: boolean,
+          hitDirection?: Vec2,
+          isBeam?: boolean,
+        ) => {
           this.handleDamage(damage, isCrit, isFromShip, hitDirection, isBeam);
         },
         targetCenter,
@@ -2169,15 +2299,22 @@ export class Game {
 
       // Apply particle theme for trails
       const particleTheme = this.customizationSystem.getParticleStyle();
-      const particleStyle = particleTheme.style as 'classic' | 'glow' | 'sparkle' | 'trail';
-      const trailThemeColor = particleStyle === 'trail' 
-        ? particleTheme.colors.primary
-        : trailColor;
-      const trailStyle = particleStyle === 'trail' 
-        ? 'trail' as const
-        : 'classic' as const;
-      
-      this.particleSystem.spawnTrail(bossPos.x, bossPos.y, trailThemeColor, trailStyle);
+      const particleStyle = particleTheme.style as
+        | 'classic'
+        | 'glow'
+        | 'sparkle'
+        | 'trail';
+      const trailThemeColor =
+        particleStyle === 'trail' ? particleTheme.colors.primary : trailColor;
+      const trailStyle =
+        particleStyle === 'trail' ? ('trail' as const) : ('classic' as const);
+
+      this.particleSystem.spawnTrail(
+        bossPos.x,
+        bossPos.y,
+        trailThemeColor,
+        trailStyle,
+      );
     }
 
     for (const ship of this.ships) {
@@ -2202,12 +2339,16 @@ export class Game {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         const beamThemeId = this.customizationSystem.getLaserThemeId();
         const beamWidth = 2;
-        
+
         for (let i = 1; i < this.ships.length; i++) {
           const ship = this.ships[i];
           if (ship) {
             const origin = ship.getFrontPosition();
-            const shipHitPoint = this.calculateHitPoint(origin, target, targetEntity.radius);
+            const shipHitPoint = this.calculateHitPoint(
+              origin,
+              target,
+              targetEntity.radius,
+            );
             // Update positions and colors every frame (colors from theme)
             this.laserSystem.updateShipBeamTarget(
               i,
@@ -2277,20 +2418,26 @@ export class Game {
     this.powerUpSystem.spawnAt(x, y);
   }
 
-  private debugActivatePowerUp(type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical'): void {
+  private debugActivatePowerUp(
+    type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical',
+  ): void {
     // Directly activate the buff by using the PowerUpSystem's internal activateBuff method
     // We'll use the canvas class methods to get dimensions
     const centerX = this.canvas.getWidth() / 2;
     const centerY = this.canvas.getHeight() / 2;
-    
+
     // Spawn at center and immediately activate
     this.powerUpSystem.spawnAt(centerX, centerY, type);
     const collected = this.powerUpSystem.checkCollision(centerX, centerY);
     if (collected) {
       this.shop.forceRefresh();
       this.lastPowerUpCount = this.powerUpSystem.getActiveBuffs().length;
-      this.lastHadSpeedBuff = this.powerUpSystem.getActiveBuffs().some(b => b.type === 'speed');
-      this.lastHadDamageBuff = this.powerUpSystem.getActiveBuffs().some(b => b.type === 'damage');
+      this.lastHadSpeedBuff = this.powerUpSystem
+        .getActiveBuffs()
+        .some((b) => b.type === 'speed');
+      this.lastHadDamageBuff = this.powerUpSystem
+        .getActiveBuffs()
+        .some((b) => b.type === 'damage');
     }
   }
 
@@ -2314,10 +2461,11 @@ export class Game {
   private render(): void {
     // Apply background theme (only update if changed)
     const bgColors = this.customizationSystem.getBackgroundColors();
-    const currentBgTheme = this.customizationSystem.getSelectedTheme('background');
+    const currentBgTheme =
+      this.customizationSystem.getSelectedTheme('background');
     const themeId: string = currentBgTheme?.id ?? 'default_background';
     this.background.setThemeColors(bgColors, themeId);
-    
+
     // Clear canvas (WebGL or 2D)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const webglRenderer: WebGLRenderer | null = this.canvas.getWebGLRenderer();
@@ -2330,7 +2478,7 @@ export class Game {
     } else {
       this.canvas.clear(bgColors.primary);
     }
-    
+
     const ctx = this.canvas.getContext();
 
     // Early exit if nothing to render (shouldn't happen, but safety check)
@@ -2366,7 +2514,7 @@ export class Game {
     this.renderGameEntities(ctx);
 
     ctx.restore();
-    
+
     // Flush WebGL batches at end of frame (critical for performance)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     this.draw.flush();
@@ -2379,7 +2527,9 @@ export class Game {
     // Early exit checks
     const hasBall = this.ball && this.ball.currentHp > 0;
     const hasBoss = this.bossBall && this.bossBall.currentHp > 0;
-    const hasParticles = this.userSettings.highGraphics && this.particleSystem.getParticleCount() > 0;
+    const hasParticles =
+      this.userSettings.highGraphics &&
+      this.particleSystem.getParticleCount() > 0;
     const hasDamageNumbers = this.damageNumberSystem.getCount() > 0;
     const hasCombo = this.comboSystem.getCombo() > 0;
     const hasPowerUps = this.powerUpSystem.getPowerUps().length > 0;
@@ -2406,12 +2556,11 @@ export class Game {
     const webglRenderer = this.canvas.getWebGLRenderer();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const useWebGL = this.canvas.isWebGLEnabled() && webglRenderer !== null;
-    
+
     if (useWebGL) {
       // Use WebGL instanced rendering for ships (MUCH faster - single draw call for all ships)
       const visuals = this.customizationSystem.getShipColors(state);
-    
-      
+
       for (const ship of this.ships) {
         // Make ships bigger and more visible
         const size = ship.isMainShip ? 20 : 14; // Increased from 13/8 to 20/14
@@ -2419,7 +2568,15 @@ export class Game {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const themeId = visuals.themeId;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.draw.addShip(ship.x, ship.y, ship.angle, size, shipColor, ship.isMainShip, themeId);
+        this.draw.addShip(
+          ship.x,
+          ship.y,
+          ship.angle,
+          size,
+          shipColor,
+          ship.isMainShip,
+          themeId,
+        );
       }
     } else {
       // Fallback to 2D canvas rendering

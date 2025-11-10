@@ -12,7 +12,9 @@ export class CustomizationModal {
     this.createModal();
   }
 
-  setOnThemeChange(callback: (category: ThemeCategory, themeId: string) => void): void {
+  setOnThemeChange(
+    callback: (category: ThemeCategory, themeId: string) => void,
+  ): void {
     this.onThemeChange = callback;
   }
 
@@ -119,7 +121,8 @@ export class CustomizationModal {
 
   private render(): void {
     const currentTab = this.modal?.querySelector('.customization-tab.active');
-    const category = (currentTab as HTMLElement)?.dataset.category as ThemeCategory;
+    const category = (currentTab as HTMLElement)?.dataset
+      .category as ThemeCategory;
     if (category) {
       this.renderCategory(category);
     }
@@ -141,11 +144,14 @@ export class CustomizationModal {
         ? this.customizationSystem.getUnlockProgress(theme, this.currentState)
         : { progress: 0, max: 1, description: '' };
 
-      const progressPercent = unlockProgress.max > 0 ? (unlockProgress.progress / unlockProgress.max) * 100 : 0;
+      const progressPercent =
+        unlockProgress.max > 0
+          ? (unlockProgress.progress / unlockProgress.max) * 100
+          : 0;
 
       const themeCard = document.createElement('div');
       themeCard.className = `theme-card ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}`;
-      
+
       if (unlocked && isSelected) {
         themeCard.classList.add('active');
       }
@@ -159,14 +165,18 @@ export class CustomizationModal {
         <div class="theme-info">
           <h3 class="theme-name">${theme.name}</h3>
           <p class="theme-description">${theme.description}</p>
-          ${!unlocked ? `
+          ${
+            !unlocked
+              ? `
             <div class="theme-unlock-progress">
               <div class="progress-bar">
                 <div class="progress-fill" style="width: ${Math.min(100, progressPercent)}%"></div>
               </div>
               <span class="progress-text">${unlockProgress.description}</span>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       `;
 
@@ -181,7 +191,8 @@ export class CustomizationModal {
     });
 
     if (themes.length === 0) {
-      container.innerHTML = '<p class="no-themes">No themes available for this category.</p>';
+      container.innerHTML =
+        '<p class="no-themes">No themes available for this category.</p>';
     }
   }
 

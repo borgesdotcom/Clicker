@@ -56,7 +56,7 @@ export class BossBall {
     const wasAlive = this.currentHp > 0;
     const oldPhase = this.phase;
     this.currentHp = Math.max(0, this.currentHp - amount);
-    
+
     // Check for phase transition
     const hpPercent = this.currentHp / this.maxHp;
     if (hpPercent < 0.33) {
@@ -64,12 +64,12 @@ export class BossBall {
     } else if (hpPercent < 0.66) {
       this.phase = 2;
     }
-    
+
     // Trigger phase transition animation
     if (oldPhase !== this.phase) {
       this.phaseTransitionTime = 1;
     }
-    
+
     // Only flash on significant damage (>2% of max HP) or if not already flashing
     if (this.flashTime <= 0 || amount > this.maxHp * 0.02) {
       this.triggerFlash();
@@ -134,7 +134,9 @@ export class BossBall {
       const wave = this.tentacleWaves[i];
       if (currentAngle !== undefined && wave !== undefined) {
         // Rotate tentacles
-        this.tentacleAngles[i] = currentAngle + dt * 0.4 * (i % 2 === 0 ? 1 : -1) * phaseSpeedMultiplier;
+        this.tentacleAngles[i] =
+          currentAngle +
+          dt * 0.4 * (i % 2 === 0 ? 1 : -1) * phaseSpeedMultiplier;
         // Update wave offset
         this.tentacleWaves[i] = wave + dt * 2 * phaseSpeedMultiplier;
       }
@@ -193,11 +195,11 @@ export class BossBall {
       for (let layer = 0; layer < 3; layer++) {
         const layerProgress = Math.min(1, progress * 1.5 - layer * 0.3);
         if (layerProgress <= 0) continue;
-        
+
         const layerAlpha = alpha * (1 - layer * 0.3) * layerProgress;
         const layerRadius = this.radius * (0.8 + layer * 0.3);
         const colors = ['#ff0000', '#ff6600', '#ffff00'];
-        
+
         drawer.setAlpha(layerAlpha);
         drawer.setGlow(colors[layer] ?? '#ff0000', 30 + layer * 10);
         drawer.setFill(colors[layer] ?? '#ff0000');
@@ -211,7 +213,8 @@ export class BossBall {
     }
 
     // Entrance animation scale
-    const entranceScale = this.entranceTime > 0 ? 1 - this.entranceTime * 0.3 : 1;
+    const entranceScale =
+      this.entranceTime > 0 ? 1 - this.entranceTime * 0.3 : 1;
     const currentRadius = this.radius * entranceScale;
 
     // Phase-based colors - Lordakia-inspired gel but more menacing
@@ -219,7 +222,7 @@ export class BossBall {
     let accentColor = '#00d4ff';
     let eyeColor = '#ff0066';
     let innerCoreColor = '#004488';
-    
+
     if (this.phase === 3) {
       bodyColor = '#5a0000';
       accentColor = '#ff0044';
@@ -233,7 +236,10 @@ export class BossBall {
     }
 
     // Phase transition flash
-    const phaseFlash = this.phaseTransitionTime > 0 ? Math.sin(this.phaseTransitionTime * Math.PI * 10) * 0.5 + 0.5 : 0;
+    const phaseFlash =
+      this.phaseTransitionTime > 0
+        ? Math.sin(this.phaseTransitionTime * Math.PI * 10) * 0.5 + 0.5
+        : 0;
 
     // Extract RGB values for gradients
     const parseColor = (hex: string) => {
@@ -251,7 +257,8 @@ export class BossBall {
     const shieldLayers = 3;
     for (let layer = 0; layer < shieldLayers; layer++) {
       const layerRadius = currentRadius * (1.35 + layer * 0.15);
-      const layerAlpha = (0.15 - layer * 0.04) + shieldPulse * (0.1 - layer * 0.02);
+      const layerAlpha =
+        0.15 - layer * 0.04 + shieldPulse * (0.1 - layer * 0.02);
       const layerGlow = ctx.createRadialGradient(
         this.x,
         this.y,
@@ -260,10 +267,19 @@ export class BossBall {
         this.y,
         layerRadius,
       );
-      layerGlow.addColorStop(0, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha)})`);
-      layerGlow.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha * 0.5)})`);
-      layerGlow.addColorStop(1, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`);
-      
+      layerGlow.addColorStop(
+        0,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha)})`,
+      );
+      layerGlow.addColorStop(
+        0.5,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha * 0.5)})`,
+      );
+      layerGlow.addColorStop(
+        1,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`,
+      );
+
       ctx.fillStyle = layerGlow;
       ctx.beginPath();
       ctx.arc(this.x, this.y, layerRadius, 0, Math.PI * 2);
@@ -276,7 +292,8 @@ export class BossBall {
       const angle = this.tentacleAngles[i];
       const length = this.tentacleLengths[i];
       const wave = this.tentacleWaves[i];
-      if (angle === undefined || length === undefined || wave === undefined) continue;
+      if (angle === undefined || length === undefined || wave === undefined)
+        continue;
 
       const waveAmount = Math.sin(wave) * 12;
       const waveAmount2 = Math.sin(wave * 1.5) * 8;
@@ -289,11 +306,13 @@ export class BossBall {
       const segments = 8;
       ctx.beginPath();
       ctx.moveTo(currentRadius * 0.85, 0);
-      
+
       for (let seg = 1; seg <= segments; seg++) {
         const t = seg / segments;
-        const segWave = Math.sin(wave + t * Math.PI * 2) * waveAmount * (1 - t * 0.5);
-        const segWave2 = Math.sin(wave * 1.5 + t * Math.PI * 3) * waveAmount2 * (1 - t * 0.7);
+        const segWave =
+          Math.sin(wave + t * Math.PI * 2) * waveAmount * (1 - t * 0.5);
+        const segWave2 =
+          Math.sin(wave * 1.5 + t * Math.PI * 3) * waveAmount2 * (1 - t * 0.7);
         const x = currentRadius * 0.85 + (currentRadius * 0.15 + length * t);
         const y = segWave + segWave2;
         ctx.lineTo(x, y);
@@ -306,11 +325,21 @@ export class BossBall {
         currentRadius * 0.85 + length,
         waveAmount,
       );
-      const tentacleWidth = currentRadius * 0.12 * (1 - 0.5 * (Math.sin(wave) * 0.5 + 0.5));
-      
-      tentacleGradient.addColorStop(0, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.8)`);
-      tentacleGradient.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.7)`);
-      tentacleGradient.addColorStop(1, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`);
+      const tentacleWidth =
+        currentRadius * 0.12 * (1 - 0.5 * (Math.sin(wave) * 0.5 + 0.5));
+
+      tentacleGradient.addColorStop(
+        0,
+        `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.8)`,
+      );
+      tentacleGradient.addColorStop(
+        0.5,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.7)`,
+      );
+      tentacleGradient.addColorStop(
+        1,
+        `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`,
+      );
 
       ctx.strokeStyle = tentacleGradient;
       ctx.lineWidth = tentacleWidth;
@@ -322,12 +351,29 @@ export class BossBall {
 
       // Tentacle tip glow
       const tipX = currentRadius * 0.85 + length;
-      const tipY = Math.sin(wave) * waveAmount + Math.sin(wave * 1.5) * waveAmount2;
-      const tipGlow = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, tentacleWidth * 1.5);
-      tipGlow.addColorStop(0, `rgba(${String(accentRgb.r + 60)}, ${String(accentRgb.g + 60)}, ${String(accentRgb.b + 60)}, 0.9)`);
-      tipGlow.addColorStop(0.5, `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, 0.6)`);
-      tipGlow.addColorStop(1, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`);
-      
+      const tipY =
+        Math.sin(wave) * waveAmount + Math.sin(wave * 1.5) * waveAmount2;
+      const tipGlow = ctx.createRadialGradient(
+        tipX,
+        tipY,
+        0,
+        tipX,
+        tipY,
+        tentacleWidth * 1.5,
+      );
+      tipGlow.addColorStop(
+        0,
+        `rgba(${String(accentRgb.r + 60)}, ${String(accentRgb.g + 60)}, ${String(accentRgb.b + 60)}, 0.9)`,
+      );
+      tipGlow.addColorStop(
+        0.5,
+        `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, 0.6)`,
+      );
+      tipGlow.addColorStop(
+        1,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`,
+      );
+
       ctx.fillStyle = tipGlow;
       ctx.beginPath();
       ctx.arc(tipX, tipY, tentacleWidth * 1.2, 0, Math.PI * 2);
@@ -351,11 +397,26 @@ export class BossBall {
       this.y,
       bodyRadius,
     );
-    outerGradient.addColorStop(0, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.5)`);
-    outerGradient.addColorStop(0.3, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.7)`);
-    outerGradient.addColorStop(0.6, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.75)`);
-    outerGradient.addColorStop(0.85, `rgba(${String(bodyRgb.r - 20)}, ${String(bodyRgb.g - 20)}, ${String(bodyRgb.b - 20)}, 0.8)`);
-    outerGradient.addColorStop(1, `rgba(${String(bodyRgb.r - 30)}, ${String(bodyRgb.g - 30)}, ${String(bodyRgb.b - 30)}, 0.7)`);
+    outerGradient.addColorStop(
+      0,
+      `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.5)`,
+    );
+    outerGradient.addColorStop(
+      0.3,
+      `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.7)`,
+    );
+    outerGradient.addColorStop(
+      0.6,
+      `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.75)`,
+    );
+    outerGradient.addColorStop(
+      0.85,
+      `rgba(${String(bodyRgb.r - 20)}, ${String(bodyRgb.g - 20)}, ${String(bodyRgb.b - 20)}, 0.8)`,
+    );
+    outerGradient.addColorStop(
+      1,
+      `rgba(${String(bodyRgb.r - 30)}, ${String(bodyRgb.g - 30)}, ${String(bodyRgb.b - 30)}, 0.7)`,
+    );
 
     ctx.fillStyle = outerGradient;
     ctx.beginPath();
@@ -366,7 +427,7 @@ export class BossBall {
     const corePulse = Math.sin(this.pulseTime * 1.5) * 0.1 + 0.9;
     const coreRadius = bodyRadius * 0.4 * corePulse;
     const innerRgb = parseColor(innerCoreColor);
-    
+
     const innerGradient = ctx.createRadialGradient(
       this.x - coreRadius * 0.3,
       this.y - coreRadius * 0.3,
@@ -376,9 +437,18 @@ export class BossBall {
       coreRadius,
     );
     innerGradient.addColorStop(0, `rgba(255, 255, 255, 0.8)`);
-    innerGradient.addColorStop(0.3, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`);
-    innerGradient.addColorStop(0.6, `rgba(${String(innerRgb.r)}, ${String(innerRgb.g)}, ${String(innerRgb.b)}, 0.5)`);
-    innerGradient.addColorStop(1, `rgba(${String(innerRgb.r)}, ${String(innerRgb.b)}, ${String(innerRgb.b)}, 0.3)`);
+    innerGradient.addColorStop(
+      0.3,
+      `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`,
+    );
+    innerGradient.addColorStop(
+      0.6,
+      `rgba(${String(innerRgb.r)}, ${String(innerRgb.g)}, ${String(innerRgb.b)}, 0.5)`,
+    );
+    innerGradient.addColorStop(
+      1,
+      `rgba(${String(innerRgb.r)}, ${String(innerRgb.b)}, ${String(innerRgb.b)}, 0.3)`,
+    );
 
     ctx.fillStyle = innerGradient;
     ctx.beginPath();
@@ -389,20 +459,38 @@ export class BossBall {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.innerOrgansRotation);
-    
+
     for (let i = 0; i < 4; i++) {
       const angle = (i / 4) * Math.PI * 2;
-      const orgRadius = bodyRadius * (0.5 + Math.sin(this.pulseTime * 2 + i) * 0.1);
+      const orgRadius =
+        bodyRadius * (0.5 + Math.sin(this.pulseTime * 2 + i) * 0.1);
       const orgX = Math.cos(angle) * orgRadius;
       const orgY = Math.sin(angle) * orgRadius;
-      const orgSize = bodyRadius * (0.1 + Math.sin(this.pulseTime * 3 + i) * 0.03);
+      const orgSize =
+        bodyRadius * (0.1 + Math.sin(this.pulseTime * 3 + i) * 0.03);
       const orgAlpha = 0.3 + Math.sin(this.pulseTime * 2.5 + i) * 0.2;
-      
-      const orgGradient = ctx.createRadialGradient(orgX, orgY, 0, orgX, orgY, orgSize);
-      orgGradient.addColorStop(0, `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, ${String(orgAlpha)})`);
-      orgGradient.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(orgAlpha * 0.6)})`);
-      orgGradient.addColorStop(1, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`);
-      
+
+      const orgGradient = ctx.createRadialGradient(
+        orgX,
+        orgY,
+        0,
+        orgX,
+        orgY,
+        orgSize,
+      );
+      orgGradient.addColorStop(
+        0,
+        `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, ${String(orgAlpha)})`,
+      );
+      orgGradient.addColorStop(
+        0.5,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(orgAlpha * 0.6)})`,
+      );
+      orgGradient.addColorStop(
+        1,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`,
+      );
+
       ctx.fillStyle = orgGradient;
       ctx.beginPath();
       ctx.arc(orgX, orgY, orgSize, 0, Math.PI * 2);
@@ -414,15 +502,15 @@ export class BossBall {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.pulseTime * 0.3);
-    
+
     const spikeCount = 12;
     const spikeIntensity = 0.15 + (this.phase - 1) * 0.1;
-    
+
     for (let i = 0; i < spikeCount; i++) {
       const angle = (i / spikeCount) * Math.PI * 2;
       const spikeLength = bodyRadius * spikeIntensity;
       const spikePulse = Math.sin(this.pulseTime * 2 + i) * 0.3 + 0.7;
-      
+
       const x1 = Math.cos(angle) * bodyRadius;
       const y1 = Math.sin(angle) * bodyRadius;
       const x2 = Math.cos(angle) * (bodyRadius + spikeLength * spikePulse);
@@ -432,9 +520,18 @@ export class BossBall {
 
       // Spike gradient
       const spikeGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-      spikeGradient.addColorStop(0, `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.9)`);
-      spikeGradient.addColorStop(0.5, `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.8)`);
-      spikeGradient.addColorStop(1, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.9)`);
+      spikeGradient.addColorStop(
+        0,
+        `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.9)`,
+      );
+      spikeGradient.addColorStop(
+        0.5,
+        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.8)`,
+      );
+      spikeGradient.addColorStop(
+        1,
+        `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.9)`,
+      );
 
       ctx.fillStyle = spikeGradient;
       ctx.beginPath();
@@ -462,7 +559,7 @@ export class BossBall {
     ];
 
     const eyeRgb = parseColor(eyeColor);
-    
+
     for (const pos of eyePositions) {
       const eyeX = this.x + pos.x * bodyRadius;
       const eyeY = this.y + pos.y * bodyRadius;
@@ -470,7 +567,14 @@ export class BossBall {
       const eyePulse = Math.sin(this.pulseTime * 3) * 0.1 + 0.9;
 
       // Eye socket glow
-      const socketGlow = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, eyeSize * 1.5);
+      const socketGlow = ctx.createRadialGradient(
+        eyeX,
+        eyeY,
+        0,
+        eyeX,
+        eyeY,
+        eyeSize * 1.5,
+      );
       socketGlow.addColorStop(0, `rgba(0, 0, 0, 0.8)`);
       socketGlow.addColorStop(0.5, `rgba(0, 0, 0, 0.6)`);
       socketGlow.addColorStop(1, `rgba(0, 0, 0, 0)`);
@@ -486,12 +590,31 @@ export class BossBall {
       ctx.fill();
 
       // Iris with glow
-      const irisSize = this.eyeBlink > 0 ? eyeSize * (1 - this.eyeBlink) * 0.65 : eyeSize * 0.65 * eyePulse;
-      const irisGlow = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, irisSize * 2);
-      irisGlow.addColorStop(0, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.9)`);
-      irisGlow.addColorStop(0.3, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.7)`);
-      irisGlow.addColorStop(1, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`);
-      
+      const irisSize =
+        this.eyeBlink > 0
+          ? eyeSize * (1 - this.eyeBlink) * 0.65
+          : eyeSize * 0.65 * eyePulse;
+      const irisGlow = ctx.createRadialGradient(
+        eyeX,
+        eyeY,
+        0,
+        eyeX,
+        eyeY,
+        irisSize * 2,
+      );
+      irisGlow.addColorStop(
+        0,
+        `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.9)`,
+      );
+      irisGlow.addColorStop(
+        0.3,
+        `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.7)`,
+      );
+      irisGlow.addColorStop(
+        1,
+        `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`,
+      );
+
       ctx.fillStyle = irisGlow;
       ctx.beginPath();
       ctx.arc(eyeX, eyeY, irisSize * 2, 0, Math.PI * 2);
@@ -512,18 +635,35 @@ export class BossBall {
     // Menacing maw/mouth - opens more in later phases
     const mouthY = this.y + bodyRadius * 0.4;
     const mouthWidth = bodyRadius * 0.65;
-    const mouthOpen = (this.phase * 0.2 + Math.sin(this.pulseTime) * 0.05) * pulse;
+    const mouthOpen =
+      (this.phase * 0.2 + Math.sin(this.pulseTime) * 0.05) * pulse;
     const mouthHeight = bodyRadius * mouthOpen;
 
     ctx.save();
     ctx.translate(this.x, mouthY);
-    
+
     // Mouth glow
-    const mouthGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(mouthWidth, mouthHeight));
-    mouthGlow.addColorStop(0, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`);
-    mouthGlow.addColorStop(0.5, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.3)`);
-    mouthGlow.addColorStop(1, `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`);
-    
+    const mouthGlow = ctx.createRadialGradient(
+      0,
+      0,
+      0,
+      0,
+      0,
+      Math.max(mouthWidth, mouthHeight),
+    );
+    mouthGlow.addColorStop(
+      0,
+      `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`,
+    );
+    mouthGlow.addColorStop(
+      0.5,
+      `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.3)`,
+    );
+    mouthGlow.addColorStop(
+      1,
+      `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`,
+    );
+
     ctx.fillStyle = mouthGlow;
     ctx.beginPath();
     ctx.ellipse(0, 0, mouthWidth * 1.2, mouthHeight * 1.2, 0, 0, Math.PI * 2);
@@ -535,12 +675,12 @@ export class BossBall {
     ctx.lineWidth = 3;
     ctx.shadowBlur = 6;
     ctx.shadowColor = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`;
-    
+
     ctx.beginPath();
     ctx.ellipse(0, 0, mouthWidth, mouthHeight, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    
+
     ctx.shadowBlur = 0;
     ctx.restore();
 
@@ -558,16 +698,17 @@ export class BossBall {
     if (this.chargeTime > 0) {
       const chargeAlpha = Math.min(this.chargeTime, 1) * 0.6;
       const chargePulse = Math.sin(this.chargeTime * Math.PI * 10) * 0.2 + 0.8;
-      
+
       drawer.setAlpha(chargeAlpha);
       drawer.setGlow(accentColor, 40);
       drawer.setStroke(accentColor, 5);
-      
+
       for (let ring = 0; ring < 3; ring++) {
-        const ringRadius = bodyRadius * (1.1 + ring * 0.2 + this.chargeTime * 0.3 * chargePulse);
+        const ringRadius =
+          bodyRadius * (1.1 + ring * 0.2 + this.chargeTime * 0.3 * chargePulse);
         drawer.circle(this.x, this.y, ringRadius, false);
       }
-      
+
       drawer.clearGlow();
       drawer.resetAlpha();
     }
@@ -596,11 +737,19 @@ export class BossBall {
         hpBarY + 2,
       );
       hpGradient.addColorStop(0, accentColor);
-      hpGradient.addColorStop(0.5, `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 1)`);
+      hpGradient.addColorStop(
+        0.5,
+        `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 1)`,
+      );
       hpGradient.addColorStop(1, accentColor);
-      
+
       ctx.fillStyle = hpGradient;
-      ctx.fillRect(this.x - hpBarWidth / 2 + 2, hpBarY + 2, hpFillWidth, hpBarHeight - 4);
+      ctx.fillRect(
+        this.x - hpBarWidth / 2 + 2,
+        hpBarY + 2,
+        hpFillWidth,
+        hpBarHeight - 4,
+      );
     }
 
     // Phase indicator text
@@ -616,7 +765,7 @@ export class BossBall {
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
       const flashPulse = Math.sin(flashAlpha * Math.PI * 20) * 0.3 + 0.7;
-      
+
       drawer.setAlpha(flashAlpha * 0.7 * flashPulse);
       drawer.setGlow('#ffffff', 40);
       drawer.setStroke('#ffffff', 10);
@@ -624,7 +773,8 @@ export class BossBall {
 
       // Impact shockwaves
       for (let i = 0; i < 4; i++) {
-        const waveRadius = bodyRadius * (1.25 + i * 0.25 + (1 - flashAlpha) * 0.6);
+        const waveRadius =
+          bodyRadius * (1.25 + i * 0.25 + (1 - flashAlpha) * 0.6);
         const waveAlpha = flashAlpha * (0.5 - i * 0.1);
         drawer.setAlpha(waveAlpha);
         drawer.circle(this.x, this.y, waveRadius, false);

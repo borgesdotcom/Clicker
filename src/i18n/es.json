@@ -86,6 +86,32 @@
     "mastery": "👑 Maestría",
     "secret": "🔒 Secreto"
   },
+  "enemyTypes": {
+    "normal": {
+      "name": "🫧 Estándar",
+      "effect": "Burbuja simple"
+    },
+    "scout": {
+      "name": "⚡ Explorador",
+      "effect": "Esquiva naves"
+    },
+    "tank": {
+      "name": "🛡️ Tanque",
+      "effect": "Gigante blindado"
+    },
+    "healer": {
+      "name": "✨ Sanador",
+      "effect": "+5% HP"
+    },
+    "guardian": {
+      "name": "🌀 Guardián",
+      "effect": "Núcleo protegido"
+    },
+    "hoarder": {
+      "name": "💰 Acaparador",
+      "effect": "Suelta botín"
+    }
+  },
   "gameInfo": {
     "title": "📚 Información del Juego",
     "stats": "Estadísticas",
@@ -158,22 +184,18 @@
     "toggleHint": "Presiona Ctrl + D para alternar este panel"
   },
   "versionSplash": {
-    "welcome": "¡Bienvenido a la Prueba Alfa!",
-    "powerUpSystem": "Sistema de Power-Ups",
-    "powerUpDesc": "¡Recoge power-ups temporales de enemigos derrotados! ¡Aumenta tu daño, velocidad, probabilidad de crítico, disparo múltiple y puntos!",
-    "improvedHUD": "HUD Mejorado",
-    "hudDesc": "¡Pantalla mejorada con temporizadores de buffs de power-up en tiempo real, estadísticas actualizadas y mejor retroalimentación visual!",
-    "bugFixes": "Correcciones Importantes de Bugs",
-    "bugFixesDesc": "¡Corregidas actualizaciones de visualización de la tienda, apilamiento de power-ups, cálculos de velocidad de ataque y mecánicas de disparo múltiple!",
-    "performance": "Optimizaciones de Rendimiento",
-    "performanceDesc": "¡Eficiencia de renderizado mejorada, mejor gestión de memoria y experiencia de juego más suave!",
-    "soundtrack": "Banda Sonora Añadida",
-    "soundtrackDesc": "¡Disfruta de música de fondo inmersiva mientras juegas! Actívala/desactívala en el menú de configuración.",
-    "debugPanel": "Actualizaciones del Panel de Debug",
-    "debugPanelDesc": "¡Añadidos controles de power-up al panel admin para facilitar pruebas y depuración!",
-    "thankYou": "¡Gracias por jugar! ¡Recoge power-ups para aumentar tu rendimiento y disfruta de la experiencia mejorada!",
+    "welcome": "Versión 1.10.0 Beta",
+    "enemyTypes": "Nuevos Arquetipos",
+    "enemyTypesDesc": "El Guardián desvía tus clics y el Acaparador entrega botín seguro. Los emojis sobre la vida cuentan la historia.",
+    "combatBalance": "Balance de Combate",
+    "combatBalanceDesc": "Disparos de naves ahora infligen el mismo daño base que los clics para un ritmo consistente.",
+    "rareLoot": "Botín Raro",
+    "rareLootDesc": "El Acaparador es 10× más escaso, manteniendo especial su power-up garantizado.",
+    "uiOverlays": "Info Instantánea",
+    "uiOverlaysDesc": "Badges simples y overlays únicos hacen que cada enemigo especial se entienda de un vistazo.",
+    "thankYou": "¡Gracias por probar! Cuéntanos qué tal la nueva variedad de enemigos.",
     "startPlaying": "¡Comenzar a Jugar!",
-    "majorUpdate": "ACTUALIZACIÓN MAJOR"
+    "majorUpdate": "ACTUALIZACIÓN BETA"
   },
   "upgrades": {
     "main": {
@@ -187,11 +209,11 @@
       },
       "pointMultiplier": {
         "name": "💎 Amplificador de Daño",
-        "description": "Mejora el poder del láser para máxima destrucción por impacto."
+        "description": "Amplifica por igual el daño por impacto de clics y naves."
       },
       "critChance": {
         "name": "✨ Golpe Crítico",
-        "description": "Domina el impacto crítico perfecto. Máxima eficiencia de destrucción. Muy satisfactorio."
+        "description": "Domina el impacto crítico perfecto. Solo afecta tus clics (las naves de la flota no pueden hacer críticos). Máxima eficiencia de destrucción. Muy satisfactorio."
       },
       "resourceGen": {
         "name": "🏭 Ingresos Pasivos",
@@ -200,14 +222,6 @@
       "xpBoost": {
         "name": "📚 Núcleo de Conocimiento",
         "description": "Aprende técnicas avanzadas de eliminación alienígena. El conocimiento es poder. Especialmente al eliminar."
-      },
-      "weaponMastery": {
-        "name": "🔥 Maestría en Armas",
-        "description": "Domina el arte de la destrucción - aumenta el poder de fuego de la nave principal"
-      },
-      "fleetCommand": {
-        "name": "🛸 Comando de Flota",
-        "description": "Comanda tu flota con precisión - aumenta la efectividad de todas las naves"
       },
       "mutationEngine": {
         "name": "🧬 Motor de Mutación",
@@ -229,7 +243,7 @@
     "special": {
       "death_pact": {
         "name": "Acuerdo de Pacto de Muerte",
-        "description": "Las naves ganan +10% de velocidad de ataque",
+        "description": "Las naves obtienen aproximadamente +3% de velocidad de ataque",
         "flavor": "Contrato firmado garantiza cadena de suministro alienígena \"hostil\". Muy conveniente."
       },
       "laser_focusing": {
@@ -244,7 +258,7 @@
       },
       "quantum_targeting": {
         "name": "Matriz de Puntería Cuántica",
-        "description": "Las naves disparan 20% más rápido",
+        "description": "Las naves disparan aproximadamente +7% más rápido",
         "flavor": "La puntería precisa asegura máxima... eficiencia de eliminación. El papeleo está en orden."
       },
       "lucky_dice": {
@@ -294,17 +308,17 @@
       },
       "warp_core": {
         "name": "Núcleo de Curvatura Experimental",
-        "description": "Las naves disparan 50% más rápido",
+        "description": "Las naves disparan aproximadamente +20% más rápido",
         "flavor": "La física teórica se convierte en poder de fuego práctico."
       },
       "disco_ball": {
         "name": "Bola de Discoteca Hipnótica",
-        "description": "Alienígenas confundidos, +15% todas las estadísticas",
+        "description": "Alienígenas confundidos, +15% todas las estadísticas, +5% velocidad de ataque",
         "flavor": "Los alienígenas no pueden resistir el ritmo del disco. Se alinean perfectamente para... eliminación."
       },
       "ai_optimizer": {
         "name": "Subrutinas de Optimización de IA",
-        "description": "Tiempo de recarga de disparo de las naves reducido en 30%",
+        "description": "Tiempo de recarga de disparo reducido en ~14%",
         "flavor": "La IA promete que no se volverá autoconsciente. Probablemente."
       },
       "lucky_horseshoe": {
@@ -344,17 +358,17 @@
       },
       "plasma_matrix": {
         "name": "Matriz de Energía de Plasma",
-        "description": "Todo el daño +25%, Velocidad de ataque +15%",
+        "description": "Todo el daño +25%, Velocidad de ataque +5%",
         "flavor": "Aprovecha el poder de supernovas contenidas."
       },
       "holographic_decoys": {
         "name": "Sistema de Señuelos Holográficos",
-        "description": "Las naves pueden atacar dos veces más frecuentemente",
+        "description": "Las naves obtienen aproximadamente +40% de velocidad de ataque",
         "flavor": "Una nave se convierte en muchas. La confusión se intensifica."
       },
       "temporal_acceleration": {
         "name": "Campo de Aceleración Temporal",
-        "description": "Todas las naves ganan +100% de velocidad de ataque",
+        "description": "Todas las naves obtienen aproximadamente +40% de velocidad de ataque",
         "flavor": "El tiempo es relativo. Especialmente cuando lo controlas."
       },
       "quantum_entanglement": {
@@ -379,7 +393,7 @@
       },
       "dark_matter_engine": {
         "name": "Motor de Materia Oscura",
-        "description": "Generación pasiva x3, Naves +25% velocidad",
+        "description": "Generación pasiva x3, naves obtienen aproximadamente +14% de velocidad de ataque",
         "flavor": "95% del universo es materia oscura. Ahora es tuyo."
       },
       "antimatter_cascade": {
@@ -389,7 +403,7 @@
       },
       "infinity_gauntlet": {
         "name": "Guantelete del Infinito (Réplica)",
-        "description": "Todas las estadísticas +40%",
+        "description": "Todas las estadísticas +40%, las naves disparan aproximadamente +20% más rápido",
         "flavor": "Perfectamente equilibrado, como todas las cosas deben ser. También, no es marca registrada."
       },
       "nebula_harvester": {
@@ -414,7 +428,7 @@
       },
       "photon_amplifier": {
         "name": "Amplificador de Onda de Fotones",
-        "description": "Las naves disparan 75% más rápido, Daño +30%",
+        "description": "Las naves disparan aproximadamente +20% más rápido, Daño +30%",
         "flavor": "La velocidad de la luz es demasiado lenta. ¡Vamos a velocidad absurda!"
       },
       "reality_anchor": {
@@ -471,11 +485,6 @@
         "name": "Maestro del Clic",
         "description": "Hacer clic da +100% más puntos",
         "flavor": "Haz clic con el poder de mil soles. O al menos algunos."
-      },
-      "rapid_fire": {
-        "name": "Protocolo de Disparo Rápido",
-        "description": "Cada clic dispara 2 láseres adicionales",
-        "flavor": "¿Por qué disparar un láser cuando puedes disparar tres? ¡Ciencia!"
       },
       "click_multiplier": {
         "name": "Matriz Multiplicadora de Clics",
@@ -552,106 +561,6 @@
         "description": "Asciende más allá de la ascensión: Puntos de prestigio x10",
         "flavor": "Te has convertido en el clic mismo."
       },
-      "scope_calibration": {
-        "name": "Calibración de Mira",
-        "description": "+10% daño de la nave principal",
-        "flavor": "Mide dos veces, destruye una vez."
-      },
-      "hair_trigger": {
-        "name": "Mecanismo de Gatillo Ligero",
-        "description": "+15% daño de la nave principal, +5% velocidad de clic",
-        "flavor": "Los accidentes ocurren. Mucho."
-      },
-      "hollow_point": {
-        "name": "Munición de Punta Hueca",
-        "description": "+20% daño de la nave principal, +10% daño crítico",
-        "flavor": "Se expanden al impactar. Así como tu daño."
-      },
-      "explosive_payload": {
-        "name": "Carga Explosiva",
-        "description": "+30% daño de la nave principal",
-        "flavor": "A veces la sutileza está sobrevalorada."
-      },
-      "particle_accelerator": {
-        "name": "Cañón de Acelerador de Partículas",
-        "description": "+50% daño de la nave principal",
-        "flavor": "Acelera partículas. Y destrucción."
-      },
-      "singularity_cannon": {
-        "name": "Cañón de Singularidad",
-        "description": "+75% daño de la nave principal, área pequeña",
-        "flavor": "Contiene un agujero negro microscópico. Totalmente seguro."
-      },
-      "antimatter_warheads": {
-        "name": "Ojivas de Antimateria",
-        "description": "+100% daño de la nave principal",
-        "flavor": "Cuando la materia se encuentra con la antimateria, las cosas se ponen interesantes."
-      },
-      "quark_disruptor": {
-        "name": "Disruptor de Quarks",
-        "description": "+150% daño de la nave principal",
-        "flavor": "Interrumpe quarks. Y todo lo demás."
-      },
-      "gamma_ray_burst": {
-        "name": "Explosión de Rayos Gamma",
-        "description": "+200% daño de la nave principal",
-        "flavor": "Aprovecha el poder de estrellas moribundas."
-      },
-      "planck_piercer": {
-        "name": "Perforador de Planck",
-        "description": "+300% daño de la nave principal, +15% probabilidad de impacto crítico",
-        "flavor": "Ataca el mismo tejido de la realidad."
-      },
-      "drill_sergeant": {
-        "name": "IA de Sargento Instructor",
-        "description": "+8% daño de auto-disparo",
-        "flavor": "¡HÁGASE FLEXIÓN Y DÉME VEINTE... MILLONES DE DAÑO!"
-      },
-      "formation_delta": {
-        "name": "Formación Delta",
-        "description": "+12% daño de auto-disparo, las naves se mueven en formación",
-        "flavor": "La unidad es fuerza. Y más daño."
-      },
-      "emergency_repairs": {
-        "name": "Drones de Reparación de Emergencia",
-        "description": "+15% daño de auto-disparo, las naves se auto-reparan",
-        "flavor": "Cinta adhesiva en el espacio. ¡Funciona!"
-      },
-      "fleet_tactics": {
-        "name": "Tácticas Avanzadas de Flota",
-        "description": "+20% daño de auto-disparo por 10 naves",
-        "flavor": "La coordinación hace que el sueño funcione."
-      },
-      "automated_repairs": {
-        "name": "Sistema de Reparación Automatizado",
-        "description": "+25% daño de auto-disparo, costos de naves reducidos",
-        "flavor": "Naves que se reparan solas. El futuro es ahora."
-      },
-      "ai_swarm": {
-        "name": "Inteligencia de Enjambre de IA",
-        "description": "+35% daño de auto-disparo, las naves aprenden unas de otras",
-        "flavor": "El colectivo lo sabe todo. El colectivo lo destruye todo."
-      },
-      "nanite_reconstruction": {
-        "name": "Reconstrucción de Nanitas",
-        "description": "+50% daño de auto-disparo, las naves se reconstruyen instantáneamente",
-        "flavor": "¡Nanomáquinas, hijo!"
-      },
-      "fleet_synchronization": {
-        "name": "Matriz de Sincronización de Flota",
-        "description": "+75% daño de auto-disparo, coordinación perfecta",
-        "flavor": "Una mente, infinitas naves."
-      },
-      "quantum_coordination": {
-        "name": "Coordinación Cuántica",
-        "description": "+100% daño de auto-disparo, comunicación instantánea",
-        "flavor": "Naves entrelazadas atacan como una."
-      },
-      "universal_fleet": {
-        "name": "Conciencia Universal de la Flota",
-        "description": "+150% daño de auto-disparo, las naves comparten daño",
-        "flavor": "La flota es eterna. La flota es imparable."
-      },
       "adaptive_evolution": {
         "name": "Evolución Adaptativa",
         "description": "+5% todo el daño, se adapta a tipos de enemigos",
@@ -704,52 +613,52 @@
       },
       "fusion_reactor": {
         "name": "Reactor de Fusión",
-        "description": "+5% velocidad de ataque, +100/seg pasivo",
+        "description": "Aproximadamente +2% de velocidad de ataque, +100/seg pasivo",
         "flavor": "El poder del sol, en tus manos."
       },
       "zero_point": {
         "name": "Energía de Punto Cero",
-        "description": "+8% velocidad de ataque, +250/seg pasivo",
+        "description": "Aproximadamente +3% de velocidad de ataque, +250/seg pasivo",
         "flavor": "Cosecha energía de la espuma cuántica."
       },
       "perpetual_motion": {
         "name": "Máquina de Movimiento Perpetuo",
-        "description": "+12% velocidad de ataque, +500/seg pasivo",
+        "description": "Aproximadamente +6% de velocidad de ataque, +500/seg pasivo",
         "flavor": "¡Los profesores de física odian este truco!"
       },
       "tesla_coils": {
         "name": "Bobinas de Tesla",
-        "description": "+15% velocidad de ataque, rayo en cadena",
+        "description": "Aproximadamente +9% de velocidad de ataque, rayo en cadena",
         "flavor": "¡Poder ilimitado!"
       },
       "arc_reactor": {
         "name": "Reactor Arc",
-        "description": "+20% velocidad de ataque, +1000/seg pasivo",
+        "description": "Aproximadamente +11% de velocidad de ataque, +1000/seg pasivo",
         "flavor": "Prueba de que tienes un corazón. Uno mecánico."
       },
       "harvested_star": {
         "name": "Estrella Cosechada",
-        "description": "+30% velocidad de ataque, +5000/seg pasivo",
+        "description": "Aproximadamente +18% de velocidad de ataque, +5000/seg pasivo",
         "flavor": "Arrancaste una estrella del cielo. Ahora trabaja para ti."
       },
       "vacuum_energy_tap": {
         "name": "Grifo de Energía del Vacío",
-        "description": "+40% velocidad de ataque, +10000/seg pasivo",
+        "description": "Aproximadamente +28% de velocidad de ataque, +10000/seg pasivo",
         "flavor": "Extrae energía del tejido mismo del espacio."
       },
       "entropy_reversal_engine": {
         "name": "Motor de Reversión de Entropía",
-        "description": "+55% velocidad de ataque, el tiempo fluye hacia atrás",
+        "description": "Aproximadamente +60% de velocidad de ataque, el tiempo fluye hacia atrás",
         "flavor": "¿Muerte térmica? No en tu reloj."
       },
       "big_crunch_generator": {
         "name": "Generador del Gran Colapso",
-        "description": "+75% velocidad de ataque, revierte el universo",
+        "description": "Aproximadamente +100% de velocidad de ataque, revierte el universo",
         "flavor": "Contiene un colapso de universo en miniatura."
       },
       "multiversal_tap": {
         "name": "Grifo de Energía Multiversal",
-        "description": "+100% velocidad de ataque, poder paralelo infinito",
+        "description": "Velocidad de ataque x2.8 (~+185%), poder paralelo infinito",
         "flavor": "Extrae poder de realidades infinitas."
       },
       "ancient_texts": {
@@ -805,4 +714,3 @@
     }
   }
 }
-

@@ -9,7 +9,9 @@ export class DebugPanel {
   private onReset: () => void;
   private onSetSpeed: (speed: number) => void;
   private onToggleGodMode: () => void;
-  private onSpawnPowerUp: ((type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => void) | null = null;
+  private onSpawnPowerUp:
+    | ((type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => void)
+    | null = null;
   private onClearPowerUps: (() => void) | null = null;
   private godModeActive = false;
 
@@ -19,7 +21,9 @@ export class DebugPanel {
     onReset: () => void,
     onSetSpeed: (speed: number) => void,
     onToggleGodMode: () => void,
-    onSpawnPowerUp?: (type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => void,
+    onSpawnPowerUp?: (
+      type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical',
+    ) => void,
     onClearPowerUps?: () => void,
   ) {
     this.store = store;
@@ -309,47 +313,59 @@ export class DebugPanel {
     });
 
     // Power-up controls
-    document.getElementById('debug-powerup-damage')?.addEventListener('click', () => {
-      if (this.onSpawnPowerUp) {
-        this.onSpawnPowerUp('damage');
-        this.showNotification('Damage Boost activated!');
-      }
-    });
+    document
+      .getElementById('debug-powerup-damage')
+      ?.addEventListener('click', () => {
+        if (this.onSpawnPowerUp) {
+          this.onSpawnPowerUp('damage');
+          this.showNotification('Damage Boost activated!');
+        }
+      });
 
-    document.getElementById('debug-powerup-speed')?.addEventListener('click', () => {
-      if (this.onSpawnPowerUp) {
-        this.onSpawnPowerUp('speed');
-        this.showNotification('Speed Boost activated!');
-      }
-    });
+    document
+      .getElementById('debug-powerup-speed')
+      ?.addEventListener('click', () => {
+        if (this.onSpawnPowerUp) {
+          this.onSpawnPowerUp('speed');
+          this.showNotification('Speed Boost activated!');
+        }
+      });
 
-    document.getElementById('debug-powerup-points')?.addEventListener('click', () => {
-      if (this.onSpawnPowerUp) {
-        this.onSpawnPowerUp('points');
-        this.showNotification('Points Boost activated!');
-      }
-    });
+    document
+      .getElementById('debug-powerup-points')
+      ?.addEventListener('click', () => {
+        if (this.onSpawnPowerUp) {
+          this.onSpawnPowerUp('points');
+          this.showNotification('Points Boost activated!');
+        }
+      });
 
-    document.getElementById('debug-powerup-multishot')?.addEventListener('click', () => {
-      if (this.onSpawnPowerUp) {
-        this.onSpawnPowerUp('multishot');
-        this.showNotification('Multishot activated!');
-      }
-    });
+    document
+      .getElementById('debug-powerup-multishot')
+      ?.addEventListener('click', () => {
+        if (this.onSpawnPowerUp) {
+          this.onSpawnPowerUp('multishot');
+          this.showNotification('Multishot activated!');
+        }
+      });
 
-    document.getElementById('debug-powerup-crit')?.addEventListener('click', () => {
-      if (this.onSpawnPowerUp) {
-        this.onSpawnPowerUp('critical');
-        this.showNotification('Critical Surge activated!');
-      }
-    });
+    document
+      .getElementById('debug-powerup-crit')
+      ?.addEventListener('click', () => {
+        if (this.onSpawnPowerUp) {
+          this.onSpawnPowerUp('critical');
+          this.showNotification('Critical Surge activated!');
+        }
+      });
 
-    document.getElementById('debug-clear-powerups')?.addEventListener('click', () => {
-      if (this.onClearPowerUps) {
-        this.onClearPowerUps();
-        this.showNotification('All power-ups cleared!');
-      }
-    });
+    document
+      .getElementById('debug-clear-powerups')
+      ?.addEventListener('click', () => {
+        if (this.onClearPowerUps) {
+          this.onClearPowerUps();
+          this.showNotification('All power-ups cleared!');
+        }
+      });
   }
 
   private addPoints(amount: number): void {
@@ -426,7 +442,6 @@ export class DebugPanel {
       'antimatter_rounds',
       'warp_core',
       'master_clicker',
-      'rapid_fire',
       'click_multiplier',
     ];
 

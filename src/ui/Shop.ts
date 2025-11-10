@@ -17,7 +17,9 @@ export class Shop {
   private buttonCache: Map<string, HTMLButtonElement> = new Map();
   private soundManager: { playPurchase: () => void } | null = null;
   private missionSystem: { trackUpgrade: () => void } | null = null;
-  private ascensionSystem: { isAutoBuyUnlocked: (state: GameState) => boolean } | null = null;
+  private ascensionSystem: {
+    isAutoBuyUnlocked: (state: GameState) => boolean;
+  } | null = null;
   private lastUpdateTime = 0;
   private updateThrottle = 30; // Update at most every 30ms (much more responsive)
   private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
@@ -63,7 +65,9 @@ export class Shop {
     this.missionSystem = missionSystem;
   }
 
-  setAscensionSystem(ascensionSystem: { isAutoBuyUnlocked: (state: GameState) => boolean }): void {
+  setAscensionSystem(ascensionSystem: {
+    isAutoBuyUnlocked: (state: GameState) => boolean;
+  }): void {
     this.ascensionSystem = ascensionSystem;
     // Trigger button state update when ascension system is set
     // This ensures the button is properly enabled if the upgrade is unlocked
@@ -110,11 +114,15 @@ export class Shop {
       btn.textContent = qty === 'max' ? 'MAX' : `x${qty}`;
       btn.className = 'buy-quantity-btn';
       if (this.buyQuantity === qty) {
-        btn.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-        btn.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+        btn.style.background =
+          'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+        btn.style.borderImage =
+          'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
         btn.style.color = '#ffffff';
-        btn.style.textShadow = '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
-        btn.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+        btn.style.textShadow =
+          '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
+        btn.style.boxShadow =
+          '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
       }
       btn.addEventListener('click', () => {
         this.buyQuantity = qty;
@@ -123,16 +131,23 @@ export class Shop {
           const button = quantityContainer.children[i + 1] as HTMLElement;
           if (button) {
             if (q === qty) {
-              button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-              button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+              button.style.background =
+                'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+              button.style.borderImage =
+                'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
               button.style.color = '#ffffff';
-              button.style.textShadow = '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
-              button.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+              button.style.textShadow =
+                '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
+              button.style.boxShadow =
+                '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
             } else {
-              button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
-              button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+              button.style.background =
+                'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
+              button.style.borderImage =
+                'linear-gradient(135deg, #ff00ff, #0088ff) 1';
               button.style.color = '#ffffff';
-              button.style.textShadow = '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
+              button.style.textShadow =
+                '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
               button.style.boxShadow = '0 0 8px rgba(255, 0, 255, 0.3)';
             }
           }
@@ -153,7 +168,8 @@ export class Shop {
     const autoBuyBtn = document.createElement('button');
     autoBuyBtn.className = 'buy-quantity-btn auto-buy-toggle';
     autoBuyBtn.innerHTML = '🤖 Auto-Buy';
-    autoBuyBtn.title = 'Automatically purchase affordable upgrades every 0.5 seconds when enabled';
+    autoBuyBtn.title =
+      'Automatically purchase affordable upgrades every 0.5 seconds when enabled';
     autoBuyBtn.setAttribute('aria-label', 'Toggle Auto-Buy');
     autoBuyBtn.setAttribute('aria-keyshortcuts', 'A');
     autoBuyBtn.setAttribute('role', 'switch');
@@ -183,7 +199,8 @@ export class Shop {
       text-shadow: 0 1px 0 #000;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     `;
-    tooltip.textContent = 'Automatically purchase affordable upgrades every 0.5 seconds';
+    tooltip.textContent =
+      'Automatically purchase affordable upgrades every 0.5 seconds';
     container.appendChild(tooltip);
 
     // Create info text for locked state
@@ -205,9 +222,10 @@ export class Shop {
       // Check if upgrade is unlocked - if ascensionSystem is not set yet, default to false
       // But also check the state directly as a fallback
       const autoBuyLevel = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
-      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? (autoBuyLevel >= 1);
+      const isUnlocked =
+        this.ascensionSystem?.isAutoBuyUnlocked(state) ?? autoBuyLevel >= 1;
       const isEnabled = state.autoBuyEnabled ?? false;
-      
+
       if (!isUnlocked) {
         // Disabled - not unlocked
         autoBuyBtn.disabled = true;
@@ -217,7 +235,8 @@ export class Shop {
         autoBuyBtn.style.cursor = 'not-allowed';
         autoBuyBtn.style.opacity = '0.6';
         autoBuyBtn.setAttribute('aria-checked', 'false');
-        tooltip.textContent = 'Auto-Buy: LOCKED - Purchase in Ascension Store for 50 Ascension Points';
+        tooltip.textContent =
+          'Auto-Buy: LOCKED - Purchase in Ascension Store for 50 Ascension Points';
         infoText.style.display = 'block';
       } else {
         // Unlocked - can toggle (button should be ENABLED/ACTIVE, not disabled)
@@ -227,19 +246,26 @@ export class Shop {
         autoBuyBtn.setAttribute('aria-checked', isEnabled.toString());
         infoText.style.display = 'none';
         if (isEnabled) {
-          autoBuyBtn.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-          autoBuyBtn.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
-          autoBuyBtn.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
-          tooltip.textContent = 'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
+          autoBuyBtn.style.background =
+            'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+          autoBuyBtn.style.borderImage =
+            'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+          autoBuyBtn.style.boxShadow =
+            '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+          tooltip.textContent =
+            'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
         } else {
-          autoBuyBtn.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
-          autoBuyBtn.style.borderImage = 'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+          autoBuyBtn.style.background =
+            'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
+          autoBuyBtn.style.borderImage =
+            'linear-gradient(135deg, #ff00ff, #0088ff) 1';
           autoBuyBtn.style.boxShadow = 'none';
-          tooltip.textContent = 'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
+          tooltip.textContent =
+            'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
         }
       }
     };
-    
+
     // Store the callback so it can be called when ascensionSystem is set
     this.updateAutoBuyButtonCallback = updateAutoBuyButton;
 
@@ -256,7 +282,8 @@ export class Shop {
       const state = this.store.getState();
       // Use same fallback logic as updateAutoBuyButton
       const autoBuyLevel = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
-      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? (autoBuyLevel >= 1);
+      const isUnlocked =
+        this.ascensionSystem?.isAutoBuyUnlocked(state) ?? autoBuyLevel >= 1;
       if (!isUnlocked) {
         // Show info about needing to unlock
         return;
@@ -267,10 +294,10 @@ export class Shop {
     });
 
     container.appendChild(autoBuyBtn);
-    
+
     // Initial update
     updateAutoBuyButton();
-    
+
     // Also update after a short delay to catch any initialization timing issues
     setTimeout(() => {
       updateAutoBuyButton();
@@ -330,7 +357,7 @@ export class Shop {
       this.renderTimeout = null;
     }
     this.lastUpdateTime = 0; // Reset throttle
-    
+
     // Use requestAnimationFrame to ensure it happens in the next frame
     // but bypass all throttling checks
     requestAnimationFrame(() => {
@@ -344,7 +371,7 @@ export class Shop {
     this.buyQuantity = 1;
     this.lastAffordability.clear();
     this.buttonCache.clear();
-    
+
     // Reset tab UI
     const availableTab = document.getElementById('tab-available');
     const ownedTab = document.getElementById('tab-owned');
@@ -354,29 +381,37 @@ export class Shop {
     if (ownedTab) {
       ownedTab.classList.remove('active');
     }
-    
+
     // Reset buy quantity buttons
     const quantityContainer = document.querySelector('.buy-quantity-selector');
     if (quantityContainer) {
       const buttons = quantityContainer.querySelectorAll('.buy-quantity-btn');
       buttons.forEach((btn, index) => {
         const button = btn as HTMLElement;
-        if (index === 0) { // First button is x1
-          button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-          button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+        if (index === 0) {
+          // First button is x1
+          button.style.background =
+            'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
+          button.style.borderImage =
+            'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
           button.style.color = '#ffffff';
-          button.style.textShadow = '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
-          button.style.boxShadow = '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+          button.style.textShadow =
+            '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
+          button.style.boxShadow =
+            '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
         } else {
-          button.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
-          button.style.borderImage = 'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+          button.style.background =
+            'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
+          button.style.borderImage =
+            'linear-gradient(135deg, #ff00ff, #0088ff) 1';
           button.style.color = '#ffffff';
-          button.style.textShadow = '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
+          button.style.textShadow =
+            '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
           button.style.boxShadow = '0 0 8px rgba(255, 0, 255, 0.3)';
         }
       });
     }
-    
+
     // Force a refresh to show the reset state
     this.forceRefresh();
   }
@@ -511,7 +546,10 @@ export class Shop {
     return false;
   }
 
-  private calculateBulkAffordability(upgrade: UpgradeConfig, state: GameState): boolean {
+  private calculateBulkAffordability(
+    upgrade: UpgradeConfig,
+    state: GameState,
+  ): boolean {
     // Calculate if player can afford the requested quantity based on buyQuantity setting
     // This MUST match the exact logic in renderAvailableTab (lines 736-760) to ensure consistency
     if (this.buyQuantity === 'max') {
@@ -532,29 +570,27 @@ export class Shop {
       const currentLevel = upgrade.getLevel(state);
       const requestedQty = this.buyQuantity;
       const upgradeId = upgrade.id;
-      const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
-      
+      const affectsSelfCost = upgradeId === 'cosmicKnowledge';
+
       // Create temporary state for self-affecting upgrades (same as renderAvailableTab)
       const tempState = { ...state };
       let tempLevel = currentLevel;
       let totalCost = 0;
-      
+
       // Calculate cost for EXACT requested quantity (matches renderAvailableTab logic exactly)
       for (let i = 0; i < requestedQty; i++) {
         const cost = upgrade.getCost(tempLevel);
         totalCost += cost;
         tempLevel++;
-        
+
         // Update temp state for self-affecting upgrades (same as renderAvailableTab)
         if (affectsSelfCost) {
           if (upgradeId === 'cosmicKnowledge') {
             tempState.cosmicKnowledgeLevel = tempLevel;
-          } else if (upgradeId === 'fleetCommand') {
-            tempState.fleetCommandLevel = tempLevel;
           }
         }
       }
-      
+
       // Check if player can afford the exact requested quantity (matches renderAvailableTab)
       return state.points >= totalCost;
     }
@@ -712,16 +748,16 @@ export class Shop {
 
       // Calculate cost for the exact requested quantity
       const requestedQty = this.buyQuantity === 'max' ? 0 : this.buyQuantity;
-      
+
       let displayCost = 0;
       let displayQuantity = 1;
       let canAffordExact = false;
-      
+
       if (this.buyQuantity === 'max') {
         // For MAX: calculate affordable quantity and cost
         const currentLevel = upgrade.getLevel(state);
         const firstUpgradeCost = upgrade.getCost(currentLevel);
-        
+
         // First check if we can afford at least one upgrade
         if (state.points < firstUpgradeCost) {
           // Can't afford even one - show cost of one but disable button
@@ -730,7 +766,10 @@ export class Shop {
           canAffordExact = false;
         } else {
           // Can afford at least one - calculate how many
-          const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
+          const { totalCost, quantity } = this.calculateBulkCost(
+            upgrade,
+            state,
+          );
           displayCost = totalCost;
           displayQuantity = quantity;
           // Verify we can actually afford the calculated cost
@@ -741,26 +780,24 @@ export class Shop {
         const currentLevel = upgrade.getLevel(state);
         let tempLevel = currentLevel;
         const upgradeId = upgrade.id;
-        const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
-        
+        const affectsSelfCost = upgradeId === 'cosmicKnowledge';
+
         // Create temporary state for self-affecting upgrades
         const tempState = { ...state };
-        
+
         for (let i = 0; i < requestedQty; i++) {
           const cost = upgrade.getCost(tempLevel);
           displayCost += cost;
           tempLevel++;
-          
+
           // Update temp state for self-affecting upgrades
           if (affectsSelfCost) {
             if (upgradeId === 'cosmicKnowledge') {
               tempState.cosmicKnowledgeLevel = tempLevel;
-            } else if (upgradeId === 'fleetCommand') {
-              tempState.fleetCommandLevel = tempLevel;
             }
           }
         }
-        
+
         displayQuantity = requestedQty;
         canAffordExact = state.points >= displayCost;
       }
@@ -773,20 +810,21 @@ export class Shop {
       cost.textContent = costText;
 
       // Show requested quantity in button text
-      const buttonText = this.buyQuantity === 'max' 
-        ? (displayQuantity > 1 ? `${t('common.buy')} x${displayQuantity}` : t('common.buy'))
-        : (displayQuantity > 1 ? `${t('common.buy')} x${displayQuantity}` : t('common.buy'));
-      
-      const button = new Button(
-        buttonText,
-        () => {
-          // Buy exactly the requested quantity (or max affordable for MAX mode)
-          const qtyToBuy = this.buyQuantity === 'max' 
-            ? displayQuantity 
-            : displayQuantity;
-          this.buyUpgrade(upgrade, qtyToBuy);
-        },
-      );
+      const buttonText =
+        this.buyQuantity === 'max'
+          ? displayQuantity > 1
+            ? `${t('common.buy')} x${displayQuantity}`
+            : t('common.buy')
+          : displayQuantity > 1
+            ? `${t('common.buy')} x${displayQuantity}`
+            : t('common.buy');
+
+      const button = new Button(buttonText, () => {
+        // Buy exactly the requested quantity (or max affordable for MAX mode)
+        const qtyToBuy =
+          this.buyQuantity === 'max' ? displayQuantity : displayQuantity;
+        this.buyUpgrade(upgrade, qtyToBuy);
+      });
       button.setEnabled(canAffordExact);
 
       // Cache the button element for quick updates
@@ -860,7 +898,9 @@ export class Shop {
     const tooltip = document.createElement('div');
     tooltip.className = 'sub-upgrade-tooltip';
     const upgradeName = t(`upgrades.special.${subUpgrade.id}.name`);
-    const upgradeDescription = t(`upgrades.special.${subUpgrade.id}.description`);
+    const upgradeDescription = t(
+      `upgrades.special.${subUpgrade.id}.description`,
+    );
     const upgradeFlavor = t(`upgrades.special.${subUpgrade.id}.flavor`);
     tooltip.innerHTML = `<strong>${upgradeName}</strong><br>${upgradeDescription}<br><em style="color: #888; font-size: 10px;">${upgradeFlavor}</em>`;
     card.appendChild(tooltip);
@@ -926,7 +966,6 @@ export class Shop {
       meaning_of_life: '🔮',
       // Click-focused upgrades
       master_clicker: '👆',
-      rapid_fire: '⚡',
       click_multiplier: '✨',
       super_clicker: '💪',
     };
@@ -944,8 +983,7 @@ export class Shop {
     // Create a temporary state copy for upgrades that affect their own costs
     const tempState = { ...state };
     const upgradeId = upgrade.id;
-    const affectsSelfCost =
-      upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
+    const affectsSelfCost = upgradeId === 'cosmicKnowledge';
 
     if (this.buyQuantity === 'max') {
       // Calculate max affordable quantity
@@ -963,8 +1001,6 @@ export class Shop {
         if (affectsSelfCost) {
           if (upgradeId === 'cosmicKnowledge') {
             tempState.cosmicKnowledgeLevel = tempLevel;
-          } else if (upgradeId === 'fleetCommand') {
-            tempState.fleetCommandLevel = tempLevel;
           }
         }
 
@@ -994,8 +1030,6 @@ export class Shop {
           if (affectsSelfCost) {
             if (upgradeId === 'cosmicKnowledge') {
               tempState.cosmicKnowledgeLevel = tempLevel;
-            } else if (upgradeId === 'fleetCommand') {
-              tempState.fleetCommandLevel = tempLevel;
             }
           }
         } else {
@@ -1030,8 +1064,8 @@ export class Shop {
     let actualQuantity = 0;
     const currentLevel = upgrade.getLevel(state);
     const upgradeId = upgrade.id;
-    const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
-    
+    const affectsSelfCost = upgradeId === 'cosmicKnowledge';
+
     // Create temporary state for self-affecting upgrades
     const tempState = { ...state };
     let tempLevel = currentLevel;
@@ -1042,13 +1076,11 @@ export class Shop {
         totalCost += cost;
         actualQuantity++;
         tempLevel++;
-        
+
         // Update temp state for self-affecting upgrades
         if (affectsSelfCost) {
           if (upgradeId === 'cosmicKnowledge') {
             tempState.cosmicKnowledgeLevel = tempLevel;
-          } else if (upgradeId === 'fleetCommand') {
-            tempState.fleetCommandLevel = tempLevel;
           }
         }
       } else {
@@ -1063,9 +1095,9 @@ export class Shop {
 
     // For non-MAX mode: only buy if we can afford the exact quantity
     // For MAX mode: buy as many as affordable
-    const canBuy = isMaxMode 
-      ? (actualQuantity > 0 && state.points >= totalCost)
-      : (actualQuantity === quantity && state.points >= totalCost);
+    const canBuy = isMaxMode
+      ? actualQuantity > 0 && state.points >= totalCost
+      : actualQuantity === quantity && state.points >= totalCost;
 
     if (canBuy) {
       state.points -= totalCost;
@@ -1093,11 +1125,12 @@ export class Shop {
         const originalTransition = button.style.transition;
         const originalTransform = button.style.transform;
         const originalBoxShadow = button.style.boxShadow;
-        
+
         button.style.transition = 'all 0.3s ease';
         button.style.transform = 'scale(1.05)';
-        button.style.boxShadow = '0 0 20px rgba(255, 0, 255, 0.8), 0 0 30px rgba(0, 136, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)';
-        
+        button.style.boxShadow =
+          '0 0 20px rgba(255, 0, 255, 0.8), 0 0 30px rgba(0, 136, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)';
+
         setTimeout(() => {
           button.style.transform = originalTransform;
           button.style.boxShadow = originalBoxShadow;
@@ -1161,9 +1194,12 @@ export class Shop {
     // Check main upgrades (skip misc category)
     for (const upgrade of upgrades) {
       if (upgrade.id === 'misc') continue;
-      
+
       // Only buy discovered upgrades
-      if (!state.discoveredUpgrades?.[upgrade.id] && upgrade.getLevel(state) === 0) {
+      if (
+        !state.discoveredUpgrades?.[upgrade.id] &&
+        upgrade.getLevel(state) === 0
+      ) {
         continue;
       }
 
@@ -1181,7 +1217,7 @@ export class Shop {
       const subUpgrades = this.upgradeSystem.getSubUpgrades();
       for (const subUpgrade of subUpgrades) {
         if (!subUpgrade.isVisible(state) || subUpgrade.owned) continue;
-        
+
         const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
         if (state.points >= cost) {
           this.buySubUpgrade(subUpgrade);

@@ -95,7 +95,7 @@ export class DamageNumberSystem {
       ctx.globalAlpha = alpha;
 
       const fontSize = num.isCrit ? 18 : 14;
-      
+
       // Only set font if it changed
       if (fontSize !== currentFontSize) {
         ctx.font = `bold ${fontSize}px monospace`;

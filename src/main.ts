@@ -32,10 +32,10 @@ document.addEventListener('dragover', (e) => {
 async function init(): Promise<void> {
   // Load translations first
   await i18n.loadTranslations();
-  
+
   // Set HTML lang attribute
   document.documentElement.lang = i18n.getLanguage();
-  
+
   const game = new Game();
   const mobileUI = new MobileUI();
   game.start();

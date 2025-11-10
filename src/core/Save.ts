@@ -29,8 +29,6 @@ export class Save {
       prestigeUpgrades: state.prestigeUpgrades,
       blockedOnBossLevel: state.blockedOnBossLevel,
       // v3.0: New upgrades
-      weaponMasteryLevel: state.weaponMasteryLevel,
-      fleetCommandLevel: state.fleetCommandLevel,
       mutationEngineLevel: state.mutationEngineLevel,
       energyCoreLevel: state.energyCoreLevel,
       cosmicKnowledgeLevel: state.cosmicKnowledgeLevel,
@@ -74,18 +72,21 @@ export class Save {
       if (saved) {
         const data = JSON.parse(saved) as SaveData;
         const validatedState = Save.validate(data);
-        
+
         // If migration changed the state (points, auto-buy, or prestigeUpgrades), save immediately
-        const pointsChanged = validatedState.prestigePoints !== (data.prestigePoints ?? 0);
-        const autoBuyChanged = validatedState.autoBuyEnabled !== (data.autoBuyEnabled ?? false);
+        const pointsChanged =
+          validatedState.prestigePoints !== (data.prestigePoints ?? 0);
+        const autoBuyChanged =
+          validatedState.autoBuyEnabled !== (data.autoBuyEnabled ?? false);
         // Check if prestigeUpgrades changed (e.g., auto_buy_unlock was fixed)
-        const prestigeUpgradesChanged = JSON.stringify(validatedState.prestigeUpgrades ?? {}) !== 
+        const prestigeUpgradesChanged =
+          JSON.stringify(validatedState.prestigeUpgrades ?? {}) !==
           JSON.stringify(data.prestigeUpgrades ?? {});
         if (pointsChanged || autoBuyChanged || prestigeUpgradesChanged) {
           // Save the migrated state immediately
           Save.save(validatedState);
         }
-        
+
         return validatedState;
       }
     } catch (error) {
@@ -135,7 +136,7 @@ export class Save {
       const data = JSON.parse(saveDataString) as SaveData;
       // Validate the data (this converts SaveData to GameState)
       const validatedState = Save.validate(data);
-      
+
       // Convert validated GameState back to SaveData format for storage
       // This ensures all fields are properly formatted and no data is lost
       const saveData: SaveData = {
@@ -157,8 +158,6 @@ export class Save {
         prestigeUpgrades: validatedState.prestigeUpgrades,
         blockedOnBossLevel: validatedState.blockedOnBossLevel,
         // v3.0: New upgrades
-        weaponMasteryLevel: validatedState.weaponMasteryLevel,
-        fleetCommandLevel: validatedState.fleetCommandLevel,
         mutationEngineLevel: validatedState.mutationEngineLevel,
         energyCoreLevel: validatedState.energyCoreLevel,
         cosmicKnowledgeLevel: validatedState.cosmicKnowledgeLevel,
@@ -172,28 +171,40 @@ export class Save {
         // Preserve lastPlayTime from imported data if it exists, otherwise use current time
         lastPlayTime: data.lastPlayTime ?? Date.now(),
       };
-      
+
       // Save the properly formatted data
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
       } catch (storageError) {
-        throw new Error('Failed to save imported data. Your browser may have storage restrictions.');
+        throw new Error(
+          'Failed to save imported data. Your browser may have storage restrictions.',
+        );
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to import save:', error);
-      
+
       // Provide more specific error messages
       if (errorMessage.includes('JSON') || errorMessage.includes('parse')) {
-        throw new Error('Invalid save file format. Please ensure the file is a valid JSON file.');
+        throw new Error(
+          'Invalid save file format. Please ensure the file is a valid JSON file.',
+        );
       }
-      if (errorMessage.includes('localStorage') || errorMessage.includes('storage')) {
-        throw new Error('Failed to save imported data. Please check your browser storage settings.');
+      if (
+        errorMessage.includes('localStorage') ||
+        errorMessage.includes('storage')
+      ) {
+        throw new Error(
+          'Failed to save imported data. Please check your browser storage settings.',
+        );
       }
       if (error instanceof Error) {
         throw error; // Re-throw the original error if it's already an Error
       }
-      throw new Error('Failed to import save data. Please check that the file is valid.');
+      throw new Error(
+        'Failed to import save data. Please check that the file is valid.',
+      );
     }
   }
 
@@ -211,21 +222,26 @@ export class Save {
     const prestigePoints = clamp(data.prestigePoints ?? 0, 0, 1e15);
     // Ensure prestigeUpgrades is properly initialized as an object
     // Deep clone to avoid mutation issues and preserve all upgrade levels
-    const prestigeUpgrades: Record<string, number> = data.prestigeUpgrades ? { ...data.prestigeUpgrades } : {};
+    const prestigeUpgrades: Record<string, number> = data.prestigeUpgrades
+      ? { ...data.prestigeUpgrades }
+      : {};
     const highestLevelReached = data.highestLevelReached;
-    
+
     // Migration: Fix auto-buy unlock state
     // Ensure auto_buy_unlock level is properly validated and preserved
     let autoBuyEnabled = data.autoBuyEnabled ?? false;
-    
+
     // Get and validate auto_buy_unlock level
     // Important: Preserve the value from save data if it exists
     const savedAutoBuyLevel = data.prestigeUpgrades?.auto_buy_unlock;
     let autoBuyUnlockLevel: number;
-    
+
     if (savedAutoBuyLevel !== undefined && savedAutoBuyLevel !== null) {
       // Value exists in save - validate it's a number between 0 and 1
-      autoBuyUnlockLevel = Math.max(0, Math.min(1, Number(savedAutoBuyLevel) || 0));
+      autoBuyUnlockLevel = Math.max(
+        0,
+        Math.min(1, Number(savedAutoBuyLevel) || 0),
+      );
       prestigeUpgrades.auto_buy_unlock = autoBuyUnlockLevel;
     } else {
       // Not in save data - default to 0 (not purchased)
@@ -235,7 +251,7 @@ export class Save {
         prestigeUpgrades.auto_buy_unlock = 0;
       }
     }
-    
+
     // If upgrade is purchased (level >= 1), ensure auto-buy feature is unlocked
     // The button unlock state is determined by isAutoBuyUnlocked() which checks level >= 1
     if (autoBuyUnlockLevel >= 1) {
@@ -245,7 +261,7 @@ export class Save {
         autoBuyEnabled = true;
       }
     }
-    
+
     const state: GameState = {
       points: clamp(data.points ?? 0, 0, 1e15),
       shipsCount: clamp(data.shipsCount ?? 1, 1, 1000),
@@ -271,8 +287,6 @@ export class Save {
       prestigeUpgrades: { ...prestigeUpgrades }, // Ensure it's a new object reference
       blockedOnBossLevel: data.blockedOnBossLevel ?? null,
       // v3.0: New upgrades
-      weaponMasteryLevel: data.weaponMasteryLevel ?? 0,
-      fleetCommandLevel: data.fleetCommandLevel ?? 0,
       mutationEngineLevel: data.mutationEngineLevel ?? 0,
       energyCoreLevel: data.energyCoreLevel ?? 0,
       cosmicKnowledgeLevel: data.cosmicKnowledgeLevel ?? 0,
@@ -284,23 +298,31 @@ export class Save {
       autoBuyEnabled,
       selectedThemes: data.selectedThemes,
     };
-    
+
     // Migration: Fix missing ascension points
     // If player has ascended but has 0 or very few points, and has purchased upgrades,
     // calculate what they should have received and give them the missing points
-    if (prestigeLevel > 0 && highestLevelReached && highestLevelReached >= 100) {
+    if (
+      prestigeLevel > 0 &&
+      highestLevelReached &&
+      highestLevelReached >= 100
+    ) {
       // Check if they have prestige upgrades purchased (indicating they should have had points)
-      const hasPurchasedUpgrades = Object.keys(prestigeUpgrades).length > 0 && 
+      const hasPurchasedUpgrades =
+        Object.keys(prestigeUpgrades).length > 0 &&
         Object.values(prestigeUpgrades).some((level) => (level as number) > 0);
-      
+
       // Estimate minimum points they should have (at least enough to buy one upgrade)
       // If they have upgrades purchased, they definitely should have had points
       // If they have 0 points but have upgrades, they got 0 points on ascension (bug)
       const estimatedMinPoints = hasPurchasedUpgrades ? 50 : 0; // At least 50 to buy auto-buy
-      
+
       // If they have very few points relative to their level, they might be missing points
       // Calculate what they should have received for their highest level
-      if (prestigePoints < estimatedMinPoints || (hasPurchasedUpgrades && prestigePoints === 0)) {
+      if (
+        prestigePoints < estimatedMinPoints ||
+        (hasPurchasedUpgrades && prestigePoints === 0)
+      ) {
         // Calculate points they should have received for levels 100 to highestLevelReached
         let expectedPoints = 0;
         for (let level = 100; level <= highestLevelReached; level++) {
@@ -308,7 +330,7 @@ export class Save {
           const levelPoints = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
           expectedPoints += levelPoints;
         }
-        
+
         // Add milestone bonuses
         const milestones = [
           { level: 1000, bonus: 200 },
@@ -321,14 +343,14 @@ export class Save {
             expectedPoints += milestone.bonus;
           }
         }
-        
+
         // Add achievement bonus (estimate based on current achievements from data)
         const achievements = data.achievements ?? {};
         const achievementCount = Object.values(achievements).filter(
           (unlocked) => unlocked,
         ).length;
         expectedPoints += Math.floor(achievementCount / 10);
-        
+
         // Calculate what they spent on upgrades
         let spentOnUpgrades = 0;
         const upgradeCosts: Record<string, number> = {
@@ -344,28 +366,36 @@ export class Save {
           prestige_boss_power: 5,
           prestige_combo_boost: 3,
         };
-        
+
         for (const [upgradeId, cost] of Object.entries(upgradeCosts)) {
           const level = prestigeUpgrades[upgradeId] ?? 0;
           if (level > 0) {
             spentOnUpgrades += cost * level;
           }
         }
-        
+
         // Calculate missing points
         // If they have upgrades purchased, they must have had at least enough points to buy them
         // So they should have: max(expected points, points spent on upgrades)
-        const minimumPointsTheyShouldHave = Math.max(expectedPoints, spentOnUpgrades);
-        const missingPoints = Math.max(0, minimumPointsTheyShouldHave - spentOnUpgrades - prestigePoints);
-        
+        const minimumPointsTheyShouldHave = Math.max(
+          expectedPoints,
+          spentOnUpgrades,
+        );
+        const missingPoints = Math.max(
+          0,
+          minimumPointsTheyShouldHave - spentOnUpgrades - prestigePoints,
+        );
+
         if (missingPoints > 0) {
           // Give them the missing points
           state.prestigePoints = clamp(prestigePoints + missingPoints, 0, 1e15);
-          console.log(`[Migration] Awarded ${missingPoints} missing prestige points (had ${prestigePoints}, expected ~${expectedPoints}, spent ~${spentOnUpgrades}, should have at least ${minimumPointsTheyShouldHave})`);
+          console.log(
+            `[Migration] Awarded ${missingPoints} missing prestige points (had ${prestigePoints}, expected ~${expectedPoints}, spent ~${spentOnUpgrades}, should have at least ${minimumPointsTheyShouldHave})`,
+          );
         }
       }
     }
-    
+
     return state;
   }
 
@@ -389,8 +419,6 @@ export class Save {
       prestigeUpgrades: {},
       blockedOnBossLevel: null,
       // v3.0: New upgrades
-      weaponMasteryLevel: 0,
-      fleetCommandLevel: 0,
       mutationEngineLevel: 0,
       energyCoreLevel: 0,
       cosmicKnowledgeLevel: 0,

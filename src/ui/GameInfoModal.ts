@@ -116,6 +116,13 @@ export class GameInfoModal {
     const critChance = this.upgradeSystem.getCritChance(state);
     const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
 
+    const clickDamageDisplay = this.formatDamageValue(clickDamage);
+    const shipDamageDisplay = this.formatDamageValue(shipDamage);
+    const totalShipDPSDisplay = this.formatDamageValue(totalShipDPS);
+    const critDamageDisplay = this.formatDamageValue(
+      clickDamage * critMultiplier,
+    );
+
     // Artifact bonuses
     const artifactDamageBonus = this.artifactSystem
       ? this.artifactSystem.getDamageBonus()
@@ -139,15 +146,15 @@ export class GameInfoModal {
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Click Damage (Main Ship):</span>
-            <span class="info-value">${NumberFormatter.format(clickDamage)}</span>
+            <span class="info-value">${clickDamageDisplay}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Damage Per Ship:</span>
-            <span class="info-value">${NumberFormatter.format(shipDamage)}</span>
+            <span class="info-label">Damage Per Ship (same as clicks):</span>
+            <span class="info-value">${shipDamageDisplay}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Total Fleet DPS:</span>
-            <span class="info-value">${NumberFormatter.format(totalShipDPS)} (${state.shipsCount.toString()} ships)</span>
+            <span class="info-value">${totalShipDPSDisplay} (${state.shipsCount.toString()} ships)</span>
           </div>
           <div class="info-item">
             <span class="info-label">Fleet Attack Speed:</span>
@@ -169,17 +176,17 @@ export class GameInfoModal {
           </div>
           <div class="info-item">
             <span class="info-label">Crit Damage (Main Ship):</span>
-            <span class="info-value">${NumberFormatter.format(clickDamage * critMultiplier)}</span>
+            <span class="info-value">${critDamageDisplay}</span>
           </div>
         </div>
-        <p class="info-note">💡 Critical hits work on both your clicks AND your fleet's automatic shots!</p>
+        <p class="info-note">💡 Critical hits only work on your clicks - fleet ships cannot crit!</p>
       </div>
 
       <div class="info-section">
         <h3>🎯 Accuracy Info</h3>
-        <p>• <strong>Main Ship (Clicks):</strong> Your clicks always hit and deal ${NumberFormatter.format(clickDamage)} damage</p>
-        <p>• <strong>Fleet Ships:</strong> Each ship fires ${attackSpeed.toFixed(2)} times per second, dealing ${NumberFormatter.format(shipDamage)} per hit</p>
-        <p>• <strong>Critical Hits:</strong> Both click and fleet damage can crit for ${critMultiplier.toFixed(1)}x damage</p>
+        <p>• <strong>Main Ship (Clicks):</strong> Your clicks always hit and deal ${clickDamageDisplay} damage (can crit for ${critMultiplier.toFixed(1)}x)</p>
+        <p>• <strong>Fleet Ships:</strong> Each ship fires ${attackSpeed.toFixed(2)} times per second, dealing ${shipDamageDisplay} per hit (same damage as clicks, but cannot crit)</p>
+        <p>• <strong>Critical Hits:</strong> Only clicks can crit - fleet ships deal consistent damage</p>
       </div>
 
       ${
@@ -317,38 +324,36 @@ export class GameInfoModal {
 
   private renderMechanicsTab(state: GameState): string {
     const cosmicDiscount = state.cosmicKnowledgeLevel * 0.5;
-    const fleetDiscount = state.fleetCommandLevel * 1.0;
 
     return `
       <div class="info-section">
         <h3>💎 Cost Reduction Systems</h3>
         <p><strong>🌌 Cosmic Knowledge:</strong> -${cosmicDiscount.toFixed(1)}% to ALL costs</p>
-        <p><strong>🚀 Fleet Command:</strong> -${fleetDiscount.toFixed(1)}% to SHIP upgrade costs only</p>
-        <p class="info-note">💡 These stack multiplicatively with Special Upgrade discounts!</p>
+        <p class="info-note">💡 Stacks multiplicatively with Special Upgrade discounts!</p>
       </div>
 
       <div class="info-section">
         <h3>🔄 Combo System</h3>
         <p>• Build combo by hitting enemies without a 5-second gap</p>
-        <p>• Damage multiplier: <strong>1 + (combo × 0.001)</strong></p>
-        <p>• Example: 100 combo = 1.1x damage, 1000 combo = 2x damage</p>
+        <p>• Damage multiplier: <strong>1 + (combo × 0.0005)</strong></p>
+        <p>• Example: 100 combo = 1.05x damage, 500 combo = 1.25x damage</p>
         <p>• Combo resets if you don't hit anything for 5 seconds</p>
       </div>
 
       <div class="info-section">
         <h3>👾 Enemy Types</h3>
-        <p><strong>🟢 Normal (60%):</strong> Standard HP, standard rewards</p>
-        <p><strong>🟡 Scout (20%, Lv 10+):</strong> 50% HP, 2x speed, 70% size, 1.5x points</p>
-        <p><strong>🔴 Tank (15%, Lv 20+):</strong> 3x HP, 0.5x speed, 140% size, 2.5x points</p>
-        <p><strong>🟢 Healer (5%, Lv 30+):</strong> 80% HP, 80% speed, regenerates, 3x points</p>
+        <p><strong>🟢 Normal (≈60%):</strong> Standard HP and rewards</p>
+        <p><strong>🟡 Scout (≈20%):</strong> 50% HP, 2× speed, 70% size, 1.5× points</p>
+        <p><strong>🔴 Tank (≈15%):</strong> 3× HP, 0.5× speed, 140% size, 2.5× points</p>
+        <p><strong>🟢 Healer (≈5%):</strong> 80% HP, 80% speed, regenerates, 3× points</p>
       </div>
 
       <div class="info-section">
         <h3>⚙️ How Upgrades Affect You</h3>
         <p><strong>Attack Speed:</strong> How fast your fleet fires (does NOT affect your clicks)</p>
-        <p><strong>Damage:</strong> Increases both click AND fleet damage</p>
-        <p><strong>Crit Chance:</strong> Affects both clicks and fleet shots</p>
-        <p><strong>Ships:</strong> Each ship adds to your total DPS</p>
+        <p><strong>Damage:</strong> Increases both click AND fleet damage equally (1:1 ratio)</p>
+        <p><strong>Crit Chance:</strong> Only affects clicks - fleet ships cannot crit</p>
+        <p><strong>Ships:</strong> Each ship adds to your total DPS (same damage per hit as clicks)</p>
         <p><strong>Energy Reactor:</strong> Passive points per second (offline progress)</p>
         <p><strong>Knowledge Core:</strong> XP gain multiplier for faster leveling</p>
       </div>
@@ -370,7 +375,7 @@ export class GameInfoModal {
         <h3>🎯 Early Game (Levels 1-30)</h3>
         <p>• Focus on <strong>Ships</strong> and <strong>Attack Speed</strong> for consistent DPS</p>
         <p>• Upgrade <strong>Damage</strong> to scale both clicks and fleet power</p>
-        <p>• Don't neglect <strong>Crit Chance</strong> - it affects everything!</p>
+        <p>• Don't neglect <strong>Crit Chance</strong> - it makes your clicks even more powerful!</p>
         <p>• <strong>Knowledge Core</strong> (XP) helps you level faster</p>
       </div>
 
@@ -384,9 +389,9 @@ export class GameInfoModal {
 
       <div class="info-section">
         <h3>⭐ Late Game (100+)</h3>
-        <p>• Ascend at level 100+ to gain <strong>Prestige Points</strong></p>
-        <p>• Prestige upgrades provide permanent multiplicative bonuses</p>
-        <p>• Push for higher levels before ascending for more PP</p>
+        <p>• Ascend at level 120+ to gain meaningful <strong>Prestige Points</strong></p>
+        <p>• Prestige upgrades provide strong, permanent bonuses—plan your runs</p>
+        <p>• Push for higher levels before ascending for bonus PP</p>
         <p>• Collect all Special Upgrades for maximum power</p>
       </div>
 
@@ -396,7 +401,7 @@ export class GameInfoModal {
         <p>• <strong>Boss Prep:</strong> Upgrade before boss fights (every 25+ levels)</p>
         <p>• <strong>Bulk Buy:</strong> Use the buy quantity selector (1, 5, 10, MAX)</p>
         <p>• <strong>Idle Strategy:</strong> Max out Energy Reactor for offline gains</p>
-        <p>• <strong>Active Strategy:</strong> Focus on click damage and crit chance</p>
+        <p>• <strong>Active Strategy:</strong> Focus on clicking for combo scaling and crit damage</p>
       </div>
 
       <div class="info-section">
@@ -412,5 +417,12 @@ export class GameInfoModal {
         <p>• <strong>Ctrl + M:</strong> Toggle Performance Monitor</p>
       </div>
     `;
+  }
+
+  private formatDamageValue(value: number): string {
+    if (value >= 1000) return NumberFormatter.format(value);
+    if (value >= 10) return value.toFixed(1);
+    if (value >= 1) return value.toFixed(2);
+    return value.toFixed(3);
   }
 }

@@ -56,7 +56,7 @@ export class Hud {
 
     const buffsContainer = document.createElement('div');
     buffsContainer.id = 'powerup-buffs-container';
-    
+
     // Position it absolutely above the level-bar-container
     // We'll update the position after the container is inserted to get accurate measurements
     buffsContainer.style.cssText = `
@@ -78,29 +78,33 @@ export class Hud {
       const rect = levelBarContainer.getBoundingClientRect();
       const containerRect = gameContainer.getBoundingClientRect();
       const bottomOffset = containerRect.bottom - rect.top;
-      
+
       buffsContainer.style.bottom = `${bottomOffset + 8}px`;
       buffsContainer.style.left = '50%';
       buffsContainer.style.transform = 'translateX(-50%)';
     };
-    
+
     setTimeout(updatePosition, 0);
-    
+
     // Update position on window resize
     window.addEventListener('resize', updatePosition);
   }
 
   private lastBuffKeys: string[] = [];
 
-  public updatePowerUpBuffs(activeBuffs: Array<{ type: string; duration: number; maxDuration: number }>): void {
+  public updatePowerUpBuffs(
+    activeBuffs: Array<{ type: string; duration: number; maxDuration: number }>,
+  ): void {
     const container = document.getElementById('powerup-buffs-container');
     if (!container) return;
 
     // Generate keys for current buffs to detect changes
-    const currentBuffKeys = activeBuffs.map(b => `${b.type}-${b.maxDuration}`).sort();
+    const currentBuffKeys = activeBuffs
+      .map((b) => `${b.type}-${b.maxDuration}`)
+      .sort();
 
     // Check if buffs changed (new buffs added/removed)
-    const buffsChanged = 
+    const buffsChanged =
       currentBuffKeys.length !== this.lastBuffKeys.length ||
       currentBuffKeys.some((key, i) => key !== this.lastBuffKeys[i]);
 
@@ -111,7 +115,7 @@ export class Hud {
     }
 
     container.style.display = 'flex';
-    
+
     // Ensure position is correct (in case of resize)
     const levelBarContainer = document.getElementById('level-bar-container');
     const gameContainer = document.getElementById('game-container');
@@ -163,11 +167,11 @@ export class Hud {
         buffEl.className = 'powerup-buff-card powerup-buff-new';
         buffEl.setAttribute('data-type', buff.type);
         buffEl.setAttribute('data-percent', percent.toString());
-        
+
         // Ensure card is visible
         buffEl.style.opacity = '1';
         buffEl.style.visibility = 'visible';
-        
+
         if (isLow) {
           buffEl.classList.add('powerup-buff-low');
         }
@@ -214,7 +218,9 @@ export class Hud {
         }
 
         // Update progress bar
-        const barFill = buffEl.querySelector('.powerup-buff-bar-fill') as HTMLElement;
+        const barFill = buffEl.querySelector(
+          '.powerup-buff-bar-fill',
+        ) as HTMLElement;
         if (barFill) {
           barFill.style.width = `${percent}%`;
         }
@@ -306,7 +312,7 @@ export class Hud {
     const hudElement = document.getElementById('hud');
     if (hudElement) {
       hudElement.appendChild(statsContainer);
-      
+
       // Move buttons container to be after stats display
       const buttonsContainer = document.getElementById('hud-buttons-container');
       if (buttonsContainer && buttonsContainer.parentElement === hudElement) {
@@ -343,7 +349,10 @@ export class Hud {
       if (pointsDisplay && pointsDisplay.parentNode === hudElement) {
         // Insert after points display
         if (pointsDisplay.nextSibling) {
-          hudElement.insertBefore(this.totalIncomeDisplay, pointsDisplay.nextSibling);
+          hudElement.insertBefore(
+            this.totalIncomeDisplay,
+            pointsDisplay.nextSibling,
+          );
         } else {
           hudElement.appendChild(this.totalIncomeDisplay);
         }
@@ -359,15 +368,51 @@ export class Hud {
     }
   }
 
-  updateStats(dps: number, passive: number, critChance: number, critBonus: number = 0): void {
+  showPointsGain(amount: number): void {
+    const hudElement = document.getElementById('hud');
+    if (!hudElement) return;
+
+    const gainElement = document.createElement('div');
+    gainElement.className = 'points-gain';
+    gainElement.textContent = `+${NumberFormatter.format(amount)}`;
+
+    const pointsRect = this.pointsDisplay.getBoundingClientRect();
+    const hudRect = hudElement.getBoundingClientRect();
+
+    const offsetX = pointsRect.left - hudRect.left + pointsRect.width / 2;
+    const offsetY = pointsRect.top - hudRect.top;
+
+    gainElement.style.left = `${offsetX}px`;
+    gainElement.style.top = `${offsetY}px`;
+
+    hudElement.appendChild(gainElement);
+
+    requestAnimationFrame(() => {
+      gainElement.style.transform = 'translate(-50%, -40px)';
+      gainElement.style.opacity = '0';
+    });
+
+    window.setTimeout(() => {
+      if (gainElement.parentElement === hudElement) {
+        hudElement.removeChild(gainElement);
+      }
+    }, 600);
+  }
+
+  updateStats(
+    dps: number,
+    passive: number,
+    critChance: number,
+    critBonus: number = 0,
+  ): void {
     const dpsText = `⚔️ ${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
     const passiveText = `🏭 ${t('hud.passive')}: ${NumberFormatter.format(passive)}${t('hud.perSec')}`;
-    
+
     // Calculate total income (passive + active combat income)
     // DPS represents active income from combat since damage = points
     const totalIncome = passive + dps;
     const totalIncomeText = `💰 Total Income: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
-    
+
     // Show crit chance with power-up bonus if active
     const totalCritChance = critChance + critBonus;
     let critText = `✨ ${t('hud.crit')}: ${NumberFormatter.formatDecimal(totalCritChance, 1)}%`;
@@ -383,7 +428,10 @@ export class Hud {
       this.passiveDisplay.textContent = passiveText;
       this.lastStatsText.passive = passiveText;
     }
-    if (this.totalIncomeDisplay && totalIncomeText !== this.lastStatsText.totalIncome) {
+    if (
+      this.totalIncomeDisplay &&
+      totalIncomeText !== this.lastStatsText.totalIncome
+    ) {
       this.totalIncomeDisplay.textContent = totalIncomeText;
       this.lastStatsText.totalIncome = totalIncomeText;
     }
@@ -396,7 +444,8 @@ export class Hud {
         this.critDisplay.style.textShadow = '0 0 8px #ffff00';
       } else {
         this.critDisplay.style.color = '#fff';
-        this.critDisplay.style.textShadow = '0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000';
+        this.critDisplay.style.textShadow =
+          '0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000';
       }
     }
   }
@@ -426,11 +475,11 @@ export class Hud {
 
     const now = Date.now();
     const windowStart = now - this.DPS_WINDOW;
-    
+
     // Single pass: find first valid entry and calculate total
     let totalDamage = 0;
     let firstValidIndex = -1;
-    
+
     for (let i = 0; i < this.damageHistory.length; i++) {
       const entry = this.damageHistory[i];
       if (entry && entry.time >= windowStart) {
@@ -470,10 +519,12 @@ export class Hud {
     // Add visual feedback for milestone levels - White text with minimal shadow
     if (level % 10 === 0 && level > 0) {
       this.levelText.style.color = '#fff';
-      this.levelText.style.textShadow = '0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000';
+      this.levelText.style.textShadow =
+        '0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000';
     } else if (level % 5 === 0) {
       this.levelText.style.color = '#fff';
-      this.levelText.style.textShadow = '0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000';
+      this.levelText.style.textShadow =
+        '0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000';
     } else {
       this.levelText.style.color = '#fff';
       this.levelText.style.textShadow = '0 1px 0 #000, 0 -1px 0 #000';

@@ -117,10 +117,10 @@ export class WebGLRenderer {
   private currentFillColor: string = '#ffffff';
   private currentStrokeColor: string = '#ffffff';
   private currentLineWidth: number = 1;
-  
+
   // Time for animations
   private time: number = 0;
-  
+
   // Frame count for debugging
   private frameCount: number = 0;
 
@@ -146,10 +146,10 @@ export class WebGLRenderer {
     // Enable blending for transparency
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    
+
     // Disable depth testing (2D rendering)
     gl.disable(gl.DEPTH_TEST);
-    
+
     // Optimize for performance
     gl.disable(gl.DITHER);
     gl.disable(gl.POLYGON_OFFSET_FILL);
@@ -635,7 +635,7 @@ export class WebGLRenderer {
     this.triangleProgram = this.createProgram(triangleVS, triangleFS);
     this.shipProgram = this.createProgram(shipVS, shipFS);
     // Beams use line renderer for maximum performance (no custom shader needed)
-    
+
     // Debug: Check if ship program compiled
     if (!this.shipProgram) {
       console.error('CRITICAL: Ship shader program failed to compile!');
@@ -653,10 +653,7 @@ export class WebGLRenderer {
         this.lineProgram,
         'u_resolution',
       );
-      this.lineTimeLoc = this.gl.getUniformLocation(
-        this.lineProgram,
-        'u_time',
-      );
+      this.lineTimeLoc = this.gl.getUniformLocation(this.lineProgram, 'u_time');
     }
     if (this.triangleProgram) {
       this.triangleResolutionLoc = this.gl.getUniformLocation(
@@ -669,11 +666,8 @@ export class WebGLRenderer {
         this.shipProgram,
         'u_resolution',
       );
-      this.shipTimeLoc = this.gl.getUniformLocation(
-        this.shipProgram,
-        'u_time',
-      );
-      
+      this.shipTimeLoc = this.gl.getUniformLocation(this.shipProgram, 'u_time');
+
       // Cache ship attribute locations
       this.shipAttribs = {
         pos: this.gl.getAttribLocation(this.shipProgram, 'a_position'),
@@ -686,7 +680,7 @@ export class WebGLRenderer {
         themeType: this.gl.getAttribLocation(this.shipProgram, 'a_themeType'),
       };
     }
-    
+
     if (this.circleProgram) {
       // Cache circle attribute locations
       this.circleAttribs = {
@@ -706,10 +700,7 @@ export class WebGLRenderer {
     this.gl.compileShader(shader);
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      console.error(
-        'Shader compile error:',
-        this.gl.getShaderInfoLog(shader),
-      );
+      console.error('Shader compile error:', this.gl.getShaderInfoLog(shader));
       this.gl.deleteShader(shader);
       return null;
     }
@@ -721,14 +712,8 @@ export class WebGLRenderer {
     vsSource: string,
     fsSource: string,
   ): WebGLProgram | null {
-    const vertexShader = this.createShader(
-      this.gl.VERTEX_SHADER,
-      vsSource,
-    );
-    const fragmentShader = this.createShader(
-      this.gl.FRAGMENT_SHADER,
-      fsSource,
-    );
+    const vertexShader = this.createShader(this.gl.VERTEX_SHADER, vsSource);
+    const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, fsSource);
 
     if (!vertexShader || !fragmentShader) return null;
 
@@ -739,10 +724,7 @@ export class WebGLRenderer {
     this.gl.linkProgram(program);
 
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-      console.error(
-        'Program link error:',
-        this.gl.getProgramInfoLog(program),
-      );
+      console.error('Program link error:', this.gl.getProgramInfoLog(program));
       console.error('Vertex shader:', vsSource.substring(0, 200));
       console.error('Fragment shader:', fsSource.substring(0, 200));
       this.gl.deleteProgram(program);
@@ -756,12 +738,10 @@ export class WebGLRenderer {
     // Circle vertex buffer (unit quad, will be instanced)
     this.circleVBO = this.gl.createBuffer();
     // Pre-upload the quad vertices (static, never changes)
-    const quadVertices = new Float32Array([
-      -1, -1, 1, -1, -1, 1, 1, 1,
-    ]);
+    const quadVertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.circleVBO);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, quadVertices, this.gl.STATIC_DRAW);
-    
+
     // Circle instance buffer (will be updated each frame)
     this.circleInstanceVBO = this.gl.createBuffer();
 
@@ -775,10 +755,14 @@ export class WebGLRenderer {
     // Quad covers area from -3 to 3 to include ship + glow + exhaust
     // Triangle strip: (-3,-3), (3,-3), (-3,3), (3,3)
     const shipVertices = new Float32Array([
-      -3.0, -3.0,  // Bottom-left
-       3.0, -3.0,  // Bottom-right
-      -3.0,  3.0,  // Top-left
-       3.0,  3.0,  // Top-right
+      -3.0,
+      -3.0, // Bottom-left
+      3.0,
+      -3.0, // Bottom-right
+      -3.0,
+      3.0, // Top-left
+      3.0,
+      3.0, // Top-right
     ]);
     this.shipVBO = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.shipVBO);
@@ -804,15 +788,36 @@ export class WebGLRenderer {
       // Setup instance attributes (will update buffer data each frame, but pointers stay the same)
       gl.bindBuffer(gl.ARRAY_BUFFER, this.circleInstanceVBO);
       gl.enableVertexAttribArray(this.circleAttribs.center);
-      gl.vertexAttribPointer(this.circleAttribs.center, 2, gl.FLOAT, false, 7 * 4, 0);
+      gl.vertexAttribPointer(
+        this.circleAttribs.center,
+        2,
+        gl.FLOAT,
+        false,
+        7 * 4,
+        0,
+      );
       gl.vertexAttribDivisor(this.circleAttribs.center, 1);
 
       gl.enableVertexAttribArray(this.circleAttribs.radius);
-      gl.vertexAttribPointer(this.circleAttribs.radius, 1, gl.FLOAT, false, 7 * 4, 2 * 4);
+      gl.vertexAttribPointer(
+        this.circleAttribs.radius,
+        1,
+        gl.FLOAT,
+        false,
+        7 * 4,
+        2 * 4,
+      );
       gl.vertexAttribDivisor(this.circleAttribs.radius, 1);
 
       gl.enableVertexAttribArray(this.circleAttribs.color);
-      gl.vertexAttribPointer(this.circleAttribs.color, 4, gl.FLOAT, false, 7 * 4, 3 * 4);
+      gl.vertexAttribPointer(
+        this.circleAttribs.color,
+        4,
+        gl.FLOAT,
+        false,
+        7 * 4,
+        3 * 4,
+      );
       gl.vertexAttribDivisor(this.circleAttribs.color, 1);
 
       gl.bindVertexArray(null);
@@ -830,38 +835,90 @@ export class WebGLRenderer {
 
       // Instance attributes (10 floats per instance: x, y, angle, size, r, g, b, alpha, isMain, themeType)
       const stride = 10 * 4; // 10 floats * 4 bytes
-      
+
       // Note: Instance buffer will be bound in render method, but setup attributes here
       gl.bindBuffer(gl.ARRAY_BUFFER, this.shipInstanceVBO);
-      
+
       gl.enableVertexAttribArray(this.shipAttribs.shipPos);
-      gl.vertexAttribPointer(this.shipAttribs.shipPos, 2, gl.FLOAT, false, stride, 0);
+      gl.vertexAttribPointer(
+        this.shipAttribs.shipPos,
+        2,
+        gl.FLOAT,
+        false,
+        stride,
+        0,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.shipPos, 1);
 
       gl.enableVertexAttribArray(this.shipAttribs.angle);
-      gl.vertexAttribPointer(this.shipAttribs.angle, 1, gl.FLOAT, false, stride, 2 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.angle,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        2 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.angle, 1);
 
       gl.enableVertexAttribArray(this.shipAttribs.size);
-      gl.vertexAttribPointer(this.shipAttribs.size, 1, gl.FLOAT, false, stride, 3 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.size,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        3 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.size, 1);
 
       gl.enableVertexAttribArray(this.shipAttribs.color);
-      gl.vertexAttribPointer(this.shipAttribs.color, 3, gl.FLOAT, false, stride, 4 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.color,
+        3,
+        gl.FLOAT,
+        false,
+        stride,
+        4 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.color, 1);
 
       gl.enableVertexAttribArray(this.shipAttribs.alpha);
-      gl.vertexAttribPointer(this.shipAttribs.alpha, 1, gl.FLOAT, false, stride, 7 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.alpha,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        7 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.alpha, 1);
 
       gl.enableVertexAttribArray(this.shipAttribs.isMainShip);
-      gl.vertexAttribPointer(this.shipAttribs.isMainShip, 1, gl.FLOAT, false, stride, 8 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.isMainShip,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        8 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.isMainShip, 1);
-      
+
       // Add themeType attribute
-      if (this.shipAttribs.themeType !== undefined && this.shipAttribs.themeType >= 0) {
+      if (
+        this.shipAttribs.themeType !== undefined &&
+        this.shipAttribs.themeType >= 0
+      ) {
         gl.enableVertexAttribArray(this.shipAttribs.themeType);
-        gl.vertexAttribPointer(this.shipAttribs.themeType, 1, gl.FLOAT, false, stride, 9 * 4);
+        gl.vertexAttribPointer(
+          this.shipAttribs.themeType,
+          1,
+          gl.FLOAT,
+          false,
+          stride,
+          9 * 4,
+        );
         gl.vertexAttribDivisor(this.shipAttribs.themeType, 1);
       }
 
@@ -1008,7 +1065,7 @@ export class WebGLRenderer {
     else if (themeId === 'fire_ship') themeType = 2;
     else if (themeId === 'cosmic_ship') themeType = 3;
     else if (themeId === 'hologram_ship') themeType = 4;
-    
+
     this.shipInstances.push({
       x: x * this.dpr,
       y: y * this.dpr,
@@ -1041,43 +1098,56 @@ export class WebGLRenderer {
     const oldStroke = this.currentStrokeColor;
     const oldWidth = this.currentLineWidth;
     const oldAlpha = this.currentAlpha;
-    
+
     const pulse = Math.sin(this.time * 8.0) * 0.15 + 0.85;
     const wavePhase = this.time * 12.0;
     const baseAlpha = 0.8 * pulse;
-    
+
     if (themeId === 'rainbow_laser') {
       const colors = [
-        '#ff0000', '#ff8800', '#ffff00', '#00ff00',
-        '#0088ff', '#0000ff', '#8800ff', '#ff00ff'
+        '#ff0000',
+        '#ff8800',
+        '#ffff00',
+        '#00ff00',
+        '#0088ff',
+        '#0000ff',
+        '#8800ff',
+        '#ff00ff',
       ];
       const segmentCount = 12;
       const dx = (x2 - x1) / segmentCount;
       const dy = (y2 - y1) / segmentCount;
-      
+
       for (let i = 0; i < segmentCount; i++) {
         const segX1 = x1 + dx * i;
         const segY1 = y1 + dy * i;
         const segX2 = x1 + dx * (i + 1);
         const segY2 = y1 + dy * (i + 1);
         const wave = Math.sin(wavePhase + i * 0.8) * 0.2 + 0.8;
-        const segColor = colors[Math.floor((i + Math.floor(wavePhase * 2)) % colors.length)] ?? colors[0] ?? '#ffffff';
+        const segColor =
+          colors[Math.floor((i + Math.floor(wavePhase * 2)) % colors.length)] ??
+          colors[0] ??
+          '#ffffff';
         const segWidth = width * (1.3 + wave * 0.3);
         this.setAlpha(baseAlpha * wave);
         this.setStroke(segColor, segWidth);
         this.line(segX1, segY1, segX2, segY2);
       }
-      
+
       for (let layer = 0; layer < 2; layer++) {
         const offset = layer * 0.3;
         for (let i = 0; i < segmentCount; i++) {
-          const wave = Math.sin(wavePhase * 1.5 + i * 1.2 + offset) * 0.15 + 0.85;
+          const wave =
+            Math.sin(wavePhase * 1.5 + i * 1.2 + offset) * 0.15 + 0.85;
           const segX1 = x1 + dx * i;
           const segY1 = y1 + dy * i;
           const segX2 = x1 + dx * (i + 1);
           const segY2 = y1 + dy * (i + 1);
           this.setAlpha(baseAlpha * wave * 0.4);
-          this.setStroke(colors[i % colors.length] ?? colors[0] ?? '#ffffff', width * 0.6);
+          this.setStroke(
+            colors[i % colors.length] ?? colors[0] ?? '#ffffff',
+            width * 0.6,
+          );
           this.line(segX1, segY1, segX2, segY2);
         }
       }
@@ -1085,17 +1155,27 @@ export class WebGLRenderer {
       const segments = 8;
       const dx = (x2 - x1) / segments;
       const dy = (y2 - y1) / segments;
-      const plasmaColors = ['#ff4400', '#ff6600', '#ff8800', '#ff4400', '#ff0044'];
-      
+      const plasmaColors = [
+        '#ff4400',
+        '#ff6600',
+        '#ff8800',
+        '#ff4400',
+        '#ff0044',
+      ];
+
       for (let layer = 0; layer < 3; layer++) {
         const layerOffset = layer * 0.4;
         for (let i = 0; i < segments; i++) {
-          const wave = Math.sin(wavePhase + i * 1.5 + layerOffset) * 0.25 + 0.75;
+          const wave =
+            Math.sin(wavePhase + i * 1.5 + layerOffset) * 0.25 + 0.75;
           const segX1 = x1 + dx * i;
           const segY1 = y1 + dy * i;
           const segX2 = x1 + dx * (i + 1);
           const segY2 = y1 + dy * (i + 1);
-          const segColor = plasmaColors[(i + Math.floor(wavePhase)) % plasmaColors.length] ?? plasmaColors[0] ?? '#ff4400';
+          const segColor =
+            plasmaColors[(i + Math.floor(wavePhase)) % plasmaColors.length] ??
+            plasmaColors[0] ??
+            '#ff4400';
           const segWidth = width * (1.2 + wave * 0.4) * (1.0 - layer * 0.3);
           this.setAlpha(baseAlpha * wave * (1.0 - layer * 0.25));
           this.setStroke(segColor, segWidth);
@@ -1105,15 +1185,15 @@ export class WebGLRenderer {
     } else if (themeId === 'void_laser') {
       const pulse2 = Math.sin(this.time * 10.0) * 0.2 + 0.8;
       const pulse3 = Math.sin(this.time * 14.0) * 0.15 + 0.85;
-      
+
       this.setAlpha(baseAlpha * 0.6);
       this.setStroke('#4400aa', width * (1.4 + pulse2 * 0.3));
       this.line(x1, y1, x2, y2);
-      
+
       this.setAlpha(baseAlpha * pulse2);
       this.setStroke('#8800ff', width * (0.9 + pulse3 * 0.2));
       this.line(x1, y1, x2, y2);
-      
+
       this.setAlpha(baseAlpha * pulse3);
       this.setStroke('#ff00ff', width * (0.6 + pulse2 * 0.15));
       this.line(x1, y1, x2, y2);
@@ -1121,11 +1201,11 @@ export class WebGLRenderer {
       const segments = 6;
       const dx = (x2 - x1) / segments;
       const dy = (y2 - y1) / segments;
-      
+
       for (let layer = 0; layer < 2; layer++) {
         const layerAlpha = layer === 0 ? baseAlpha : baseAlpha * 0.5;
         const layerWidth = layer === 0 ? width : width * 1.4;
-        
+
         for (let i = 0; i < segments; i++) {
           const wave = Math.sin(wavePhase + i * 1.2 + layer * 0.5) * 0.2 + 0.8;
           const segX1 = x1 + dx * i;
@@ -1138,14 +1218,14 @@ export class WebGLRenderer {
         }
       }
     }
-    
+
     const endPulse = Math.sin(this.time * 15.0) * 0.2 + 0.8;
     this.setFill(color);
     this.setAlpha(baseAlpha * endPulse);
     this.circle(x2, y2, (isCrit ? 4 : 2.5) * endPulse, true);
     this.setAlpha(baseAlpha * endPulse * 0.5);
     this.circle(x2, y2, (isCrit ? 6 : 4) * endPulse, true);
-    
+
     this.currentStrokeColor = oldStroke;
     this.currentLineWidth = oldWidth;
     this.currentAlpha = oldAlpha;
@@ -1168,98 +1248,117 @@ export class WebGLRenderer {
     const pulse = Math.sin(this.time * 10.0 + progress * 20.0) * 0.05 + 0.95;
     const fadeInAlpha = Math.min(1, progress * 3.0);
     const baseAlpha = this.currentAlpha * fadeInAlpha * pulse * 1.5;
-    
+
     const boltDx = x2 - x1;
     const boltDy = y2 - y1;
     const boltLen = Math.sqrt(boltDx * boltDx + boltDy * boltDy);
-    
+
     if (boltLen < 0.1) {
       return;
     }
-    
+
     const angle = Math.atan2(boltDy, boltDx);
-    const boltLength = Math.max(Math.min(boltLen * 0.35, 20 * this.dpr), 6 * this.dpr);
+    const boltLength = Math.max(
+      Math.min(boltLen * 0.35, 20 * this.dpr),
+      6 * this.dpr,
+    );
     const boltStartX = x2 - Math.cos(angle) * boltLength;
     const boltStartY = y2 - Math.sin(angle) * boltLength;
-    
+
     const boltPulse = Math.sin(this.time * 12.0) * 0.05 + 0.95;
     const coreWidth = width * 0.5;
     const glowWidth = width * 2.0;
-    
+
     if (themeId === 'rainbow_laser') {
       const colors = [
-        '#ff0000', '#ff8800', '#ffff00', '#00ff00',
-        '#0088ff', '#0000ff', '#8800ff', '#ff00ff'
+        '#ff0000',
+        '#ff8800',
+        '#ffff00',
+        '#00ff00',
+        '#0088ff',
+        '#0000ff',
+        '#8800ff',
+        '#ff00ff',
       ];
-      const colorOffset = Math.floor(this.time * 8.0 + progress * 20.0) % colors.length;
+      const colorOffset =
+        Math.floor(this.time * 8.0 + progress * 20.0) % colors.length;
       const boltColor: string = colors[colorOffset % colors.length] ?? color;
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.6, 0.25));
       this.setStroke(boltColor, glowWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.85, 0.45));
       this.setStroke(boltColor, width * 1.2);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse, 0.7));
       this.setStroke('#ffffff', coreWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       const boltTipSize = width * 1.3 * boltPulse;
       this.setFill('#ffffff');
       this.setAlpha(Math.max(baseAlpha * boltPulse, 0.8));
       this.circle(x2, y2, boltTipSize, true);
-      
+
       this.setFill(boltColor);
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.75, 0.6));
       this.circle(x2, y2, boltTipSize * 0.7, true);
     } else if (themeId === 'plasma_laser') {
-      const plasmaColorIndex = Math.floor(this.time * 10.0 + progress * 25.0) % 5;
-      const plasmaColors = ['#ff4400', '#ff6600', '#ff8800', '#ff4400', '#ff0044'];
+      const plasmaColorIndex =
+        Math.floor(this.time * 10.0 + progress * 25.0) % 5;
+      const plasmaColors = [
+        '#ff4400',
+        '#ff6600',
+        '#ff8800',
+        '#ff4400',
+        '#ff0044',
+      ];
       const boltColor: string = plasmaColors[plasmaColorIndex] ?? color;
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.7, 0.3));
       this.setStroke(boltColor, glowWidth * 1.2);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.9, 0.5));
       this.setStroke(boltColor, width * 1.3);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse, 0.75));
       this.setStroke('#ffffff', coreWidth * 1.1);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       const boltTipSize = width * 1.4 * boltPulse;
       this.setFill('#ffffff');
       this.setAlpha(Math.max(baseAlpha * boltPulse, 0.85));
       this.circle(x2, y2, boltTipSize, true);
-      
+
       this.setFill(boltColor);
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.8, 0.65));
       this.circle(x2, y2, boltTipSize * 0.75, true);
     } else if (themeId === 'void_laser') {
-      const voidPulse = Math.sin(this.time * 12.0 + progress * 25.0) * 0.15 + 0.85;
-      const voidPulse2 = Math.sin(this.time * 16.0 + progress * 35.0) * 0.1 + 0.9;
-      
+      const voidPulse =
+        Math.sin(this.time * 12.0 + progress * 25.0) * 0.15 + 0.85;
+      const voidPulse2 =
+        Math.sin(this.time * 16.0 + progress * 35.0) * 0.1 + 0.9;
+
       this.setAlpha(Math.max(baseAlpha * voidPulse * 0.5, 0.25));
       this.setStroke('#4400aa', glowWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * voidPulse2 * 0.7, 0.4));
       this.setStroke('#8800ff', width * 1.1);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * voidPulse, 0.65));
       this.setStroke('#ff00ff', coreWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       const boltTipSize = width * 1.3 * voidPulse;
       this.setFill('#ff00ff');
       this.setAlpha(Math.max(baseAlpha * voidPulse, 0.75));
       this.circle(x2, y2, boltTipSize, true);
-      
+
       this.setFill('#8800ff');
       this.setAlpha(Math.max(baseAlpha * voidPulse2 * 0.6, 0.5));
       this.circle(x2, y2, boltTipSize * 0.7, true);
@@ -1267,78 +1366,89 @@ export class WebGLRenderer {
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.6, 0.25));
       this.setStroke(color, glowWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.85, 0.45));
       this.setStroke(color, width * 1.2);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       this.setAlpha(Math.max(baseAlpha * boltPulse, 0.7));
       this.setStroke('#ffffff', coreWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-      
+
       const boltTipSize = width * 1.3 * boltPulse;
       this.setFill('#ffffff');
       this.setAlpha(Math.max(baseAlpha * boltPulse, 0.8));
       this.circle(x2, y2, boltTipSize, true);
-      
+
       this.setFill(color);
       this.setAlpha(Math.max(baseAlpha * boltPulse * 0.75, 0.6));
       this.circle(x2, y2, boltTipSize * 0.7, true);
     }
-    
+
     if (isCrit) {
       const critPulse = Math.sin(this.time * 18.0) * 0.15 + 0.85;
-      
+
       if (themeId === 'rainbow_laser') {
         const colors = [
-          '#ffff00', '#ff8800', '#ff0000', '#ff0088',
-          '#ff00ff', '#8800ff', '#0000ff', '#0088ff'
+          '#ffff00',
+          '#ff8800',
+          '#ff0000',
+          '#ff0088',
+          '#ff00ff',
+          '#8800ff',
+          '#0000ff',
+          '#0088ff',
         ];
-        const critColorOffset = Math.floor(this.time * 12.0 + progress * 30.0) % colors.length;
-        const critColor: string = colors[critColorOffset % colors.length] ?? '#ffff00';
-        
+        const critColorOffset =
+          Math.floor(this.time * 12.0 + progress * 30.0) % colors.length;
+        const critColor: string =
+          colors[critColorOffset % colors.length] ?? '#ffff00';
+
         this.setAlpha(Math.max(baseAlpha * critPulse * 0.5, 0.4));
         this.setStroke(critColor, width * 3.0);
         this.line(boltStartX, boltStartY, x2, y2);
-        
+
         this.setFill(critColor);
         this.setAlpha(Math.max(baseAlpha * critPulse, 0.85));
         this.circle(x2, y2, width * 2.0 * critPulse, true);
-        
+
         this.setFill('#ffffff');
         this.setAlpha(Math.max(baseAlpha * critPulse * 0.7, 0.6));
         this.circle(x2, y2, width * 1.5 * critPulse, true);
       } else if (themeId === 'plasma_laser') {
         const plasmaCritColors = ['#ffaa00', '#ff6600', '#ff4400'];
-        const critColorIndex = Math.floor(this.time * 15.0 + progress * 35.0) % plasmaCritColors.length;
+        const critColorIndex =
+          Math.floor(this.time * 15.0 + progress * 35.0) %
+          plasmaCritColors.length;
         const critColor: string = plasmaCritColors[critColorIndex] ?? '#ff8800';
-        
+
         this.setAlpha(Math.max(baseAlpha * critPulse * 0.6, 0.45));
         this.setStroke(critColor, width * 3.2);
         this.line(boltStartX, boltStartY, x2, y2);
-        
+
         this.setFill(critColor);
         this.setAlpha(Math.max(baseAlpha * critPulse, 0.9));
         this.circle(x2, y2, width * 2.2 * critPulse, true);
-        
+
         this.setFill('#ffffff');
         this.setAlpha(Math.max(baseAlpha * critPulse * 0.75, 0.65));
         this.circle(x2, y2, width * 1.6 * critPulse, true);
       } else if (themeId === 'void_laser') {
-        const voidCritPulse = Math.sin(this.time * 20.0 + progress * 40.0) * 0.2 + 0.8;
-        
+        const voidCritPulse =
+          Math.sin(this.time * 20.0 + progress * 40.0) * 0.2 + 0.8;
+
         this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.5, 0.4));
         this.setStroke('#ff00ff', width * 3.0);
         this.line(boltStartX, boltStartY, x2, y2);
-        
+
         this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.4, 0.35));
         this.setStroke('#8800ff', width * 3.5);
         this.line(boltStartX, boltStartY, x2, y2);
-        
+
         this.setFill('#ff00ff');
         this.setAlpha(Math.max(baseAlpha * voidCritPulse, 0.85));
         this.circle(x2, y2, width * 2.1 * voidCritPulse, true);
-        
+
         this.setFill('#8800ff');
         this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.7, 0.6));
         this.circle(x2, y2, width * 1.6 * voidCritPulse, true);
@@ -1346,7 +1456,7 @@ export class WebGLRenderer {
         this.setAlpha(Math.max(baseAlpha * critPulse * 0.4, 0.35));
         this.setStroke('#ffff00', width * 2.5);
         this.line(boltStartX, boltStartY, x2, y2);
-        
+
         this.setFill('#ffff00');
         this.setAlpha(Math.max(baseAlpha * critPulse, 0.8));
         this.circle(x2, y2, width * 1.8 * critPulse, true);
@@ -1356,12 +1466,12 @@ export class WebGLRenderer {
 
   flush(): void {
     this.frameCount++;
-    
+
     // Render other geometry first (background elements)
     this.renderCircles();
     this.renderLines();
     this.renderTriangles();
-    
+
     // Render ships last (on top, instanced, most efficient)
     this.renderShips();
 
@@ -1375,21 +1485,24 @@ export class WebGLRenderer {
 
   private renderShips(): void {
     if (this.shipInstances.length === 0) return;
-    
+
     // Fallback: If instanced rendering isn't available, render as regular triangles
     if (!this.shipProgram || !this.shipVAO || !this.shipAttribs) {
-      console.warn('Ships: Falling back to regular triangle rendering (instanced not available):', {
-        hasProgram: !!this.shipProgram,
-        hasVAO: !!this.shipVAO,
-        hasAttribs: !!this.shipAttribs,
-        shipCount: this.shipInstances.length,
-      });
-      
+      console.warn(
+        'Ships: Falling back to regular triangle rendering (instanced not available):',
+        {
+          hasProgram: !!this.shipProgram,
+          hasVAO: !!this.shipVAO,
+          hasAttribs: !!this.shipAttribs,
+          shipCount: this.shipInstances.length,
+        },
+      );
+
       // Fallback: render ships as regular triangles
       this.renderShipsAsTriangles();
       return;
     }
-    
+
     // Debug logging removed for production
 
     const gl = this.gl;
@@ -1415,55 +1528,107 @@ export class WebGLRenderer {
 
     // Bind VAO first (restores base triangle vertex setup)
     gl.bindVertexArray(this.shipVAO);
-    
+
     // Update instance buffer (must be done after VAO is bound)
     gl.bindBuffer(gl.ARRAY_BUFFER, this.shipInstanceVBO);
     gl.bufferData(gl.ARRAY_BUFFER, instanceData, gl.DYNAMIC_DRAW);
-    
+
     // IMPORTANT: After updating buffer, we must rebind instance attributes
     // VAOs remember attribute locations but not the current buffer binding
     const stride = 10 * 4;
-    
+
     // Update instance attribute pointers (VAO remembers which attributes, but buffer binding changes)
     if (this.shipAttribs.shipPos >= 0) {
       gl.enableVertexAttribArray(this.shipAttribs.shipPos);
-      gl.vertexAttribPointer(this.shipAttribs.shipPos, 2, gl.FLOAT, false, stride, 0);
+      gl.vertexAttribPointer(
+        this.shipAttribs.shipPos,
+        2,
+        gl.FLOAT,
+        false,
+        stride,
+        0,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.shipPos, 1);
     }
 
     if (this.shipAttribs.angle >= 0) {
       gl.enableVertexAttribArray(this.shipAttribs.angle);
-      gl.vertexAttribPointer(this.shipAttribs.angle, 1, gl.FLOAT, false, stride, 2 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.angle,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        2 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.angle, 1);
     }
 
     if (this.shipAttribs.size >= 0) {
       gl.enableVertexAttribArray(this.shipAttribs.size);
-      gl.vertexAttribPointer(this.shipAttribs.size, 1, gl.FLOAT, false, stride, 3 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.size,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        3 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.size, 1);
     }
 
     if (this.shipAttribs.color >= 0) {
       gl.enableVertexAttribArray(this.shipAttribs.color);
-      gl.vertexAttribPointer(this.shipAttribs.color, 3, gl.FLOAT, false, stride, 4 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.color,
+        3,
+        gl.FLOAT,
+        false,
+        stride,
+        4 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.color, 1);
     }
 
     if (this.shipAttribs.alpha >= 0) {
       gl.enableVertexAttribArray(this.shipAttribs.alpha);
-      gl.vertexAttribPointer(this.shipAttribs.alpha, 1, gl.FLOAT, false, stride, 7 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.alpha,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        7 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.alpha, 1);
     }
 
     if (this.shipAttribs.isMainShip >= 0) {
       gl.enableVertexAttribArray(this.shipAttribs.isMainShip);
-      gl.vertexAttribPointer(this.shipAttribs.isMainShip, 1, gl.FLOAT, false, stride, 8 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.isMainShip,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        8 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.isMainShip, 1);
     }
-    
-    if (this.shipAttribs.themeType !== undefined && this.shipAttribs.themeType >= 0) {
+
+    if (
+      this.shipAttribs.themeType !== undefined &&
+      this.shipAttribs.themeType >= 0
+    ) {
       gl.enableVertexAttribArray(this.shipAttribs.themeType);
-      gl.vertexAttribPointer(this.shipAttribs.themeType, 1, gl.FLOAT, false, stride, 9 * 4);
+      gl.vertexAttribPointer(
+        this.shipAttribs.themeType,
+        1,
+        gl.FLOAT,
+        false,
+        stride,
+        9 * 4,
+      );
       gl.vertexAttribDivisor(this.shipAttribs.themeType, 1);
     }
 
@@ -1477,9 +1642,9 @@ export class WebGLRenderer {
 
     // Draw all ships in a single instanced draw call! (MAJOR performance boost)
     const instanceCount = this.shipInstances.length;
-    
+
     // Debug logging removed for production
-    
+
     // Draw quad using TRIANGLE_STRIP (4 vertices form a quad)
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, instanceCount);
 
@@ -1493,9 +1658,13 @@ export class WebGLRenderer {
         1285: 'OUT_OF_MEMORY',
         1286: 'INVALID_FRAMEBUFFER_OPERATION',
       };
-      console.error('WebGL error after drawArraysInstanced:', error, errorNames[error] || 'UNKNOWN');
+      console.error(
+        'WebGL error after drawArraysInstanced:',
+        error,
+        errorNames[error] || 'UNKNOWN',
+      );
     }
-    
+
     // Verify attributes are valid
     error = gl.getError();
     if (error !== gl.NO_ERROR) {
@@ -1508,25 +1677,25 @@ export class WebGLRenderer {
   // Fallback: Render ships as regular triangles (slower but works)
   private renderShipsAsTriangles(): void {
     if (!this.triangleProgram) return;
-    
+
     const gl = this.gl;
     gl.useProgram(this.triangleProgram);
-    
+
     for (const ship of this.shipInstances) {
       const scale = ship.size * (ship.isMainShip > 0.5 ? 1.0 : 0.61538461538);
-      
+
       // Calculate triangle vertices matching original 2D code
       const tipAngle = ship.angle + Math.PI;
       const leftAngle = ship.angle + Math.PI * 0.75;
       const rightAngle = ship.angle + Math.PI * 1.25;
-      
+
       const tipX = ship.x + Math.cos(tipAngle) * scale;
       const tipY = ship.y + Math.sin(tipAngle) * scale;
       const leftX = ship.x + Math.cos(leftAngle) * scale * 0.6;
       const leftY = ship.y + Math.sin(leftAngle) * scale * 0.6;
       const rightX = ship.x + Math.cos(rightAngle) * scale * 0.6;
       const rightY = ship.y + Math.sin(rightAngle) * scale * 0.6;
-      
+
       // Add to triangle batch
       this.triangleBatches.push({
         x1: tipX,
@@ -1541,12 +1710,17 @@ export class WebGLRenderer {
         a: ship.a,
       });
     }
-    
+
     // Render triangles (will be flushed in renderTriangles)
   }
 
   private renderCircles(): void {
-    if (this.circleBatches.length === 0 || !this.circleProgram || !this.circleAttribs) return;
+    if (
+      this.circleBatches.length === 0 ||
+      !this.circleProgram ||
+      !this.circleAttribs
+    )
+      return;
 
     const gl = this.gl;
     gl.useProgram(this.circleProgram);
@@ -1581,15 +1755,36 @@ export class WebGLRenderer {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.circleInstanceVBO);
       gl.bufferData(gl.ARRAY_BUFFER, instanceData, gl.DYNAMIC_DRAW);
       gl.enableVertexAttribArray(this.circleAttribs.center);
-      gl.vertexAttribPointer(this.circleAttribs.center, 2, gl.FLOAT, false, 7 * 4, 0);
+      gl.vertexAttribPointer(
+        this.circleAttribs.center,
+        2,
+        gl.FLOAT,
+        false,
+        7 * 4,
+        0,
+      );
       gl.vertexAttribDivisor(this.circleAttribs.center, 1);
 
       gl.enableVertexAttribArray(this.circleAttribs.radius);
-      gl.vertexAttribPointer(this.circleAttribs.radius, 1, gl.FLOAT, false, 7 * 4, 2 * 4);
+      gl.vertexAttribPointer(
+        this.circleAttribs.radius,
+        1,
+        gl.FLOAT,
+        false,
+        7 * 4,
+        2 * 4,
+      );
       gl.vertexAttribDivisor(this.circleAttribs.radius, 1);
 
       gl.enableVertexAttribArray(this.circleAttribs.color);
-      gl.vertexAttribPointer(this.circleAttribs.color, 4, gl.FLOAT, false, 7 * 4, 3 * 4);
+      gl.vertexAttribPointer(
+        this.circleAttribs.color,
+        4,
+        gl.FLOAT,
+        false,
+        7 * 4,
+        3 * 4,
+      );
       gl.vertexAttribDivisor(this.circleAttribs.color, 1);
     }
 
@@ -1615,12 +1810,12 @@ export class WebGLRenderer {
       const dy = batch.y2 - batch.y1;
       const len = Math.sqrt(dx * dx + dy * dy);
       const halfWidth = batch.width * 0.5;
-      
+
       if (len < 0.001) continue;
-      
+
       const nx = -dy / len;
       const ny = dx / len;
-      
+
       const x1 = batch.x1 + nx * halfWidth;
       const y1 = batch.y1 + ny * halfWidth;
       const x2 = batch.x1 - nx * halfWidth;
@@ -1629,11 +1824,11 @@ export class WebGLRenderer {
       const y3 = batch.y2 - ny * halfWidth;
       const x4 = batch.x2 + nx * halfWidth;
       const y4 = batch.y2 + ny * halfWidth;
-      
+
       vertices.push(x1, y1, batch.r, batch.g, batch.b, batch.a);
       vertices.push(x2, y2, batch.r, batch.g, batch.b, batch.a);
       vertices.push(x3, y3, batch.r, batch.g, batch.b, batch.a);
-      
+
       vertices.push(x1, y1, batch.r, batch.g, batch.b, batch.a);
       vertices.push(x3, y3, batch.r, batch.g, batch.b, batch.a);
       vertices.push(x4, y4, batch.r, batch.g, batch.b, batch.a);
@@ -1733,4 +1928,3 @@ export class WebGLRenderer {
     if (this.shipProgram) this.gl.deleteProgram(this.shipProgram);
   }
 }
-
