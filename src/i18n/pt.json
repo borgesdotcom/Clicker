@@ -279,7 +279,7 @@
       },
       "rubber_duck": {
         "name": "Pato de Borracha de Depuração",
-        "description": "+3% de multiplicador de dano crítico",
+        "description": "+1% de multiplicador de dano crítico",
         "flavor": "Explica seus problemas de volta para você. Muito terapêutico."
       },
       "antimatter_rounds": {
@@ -309,7 +309,7 @@
       },
       "lucky_horseshoe": {
         "name": "Ferradura da Sorte",
-        "description": "Acertos críticos causam 50% mais dano",
+        "description": "Acertos críticos causam 3% mais dano",
         "flavor": "Quem precisa de cavalos no espaço? Aparentemente, a sorte precisa."
       },
       "perfect_precision": {
@@ -419,7 +419,7 @@
       },
       "reality_anchor": {
         "name": "Âncora da Realidade",
-        "description": "Dano crítico x2, Todos os ganhos +25%",
+        "description": "Dano crítico +10%, Todos os ganhos +25%",
         "flavor": "Mantenha a realidade sob controle. Ou quebre-a. Sua escolha."
       },
       "cosmic_battery": {
@@ -439,7 +439,7 @@
       },
       "dragon_egg": {
         "name": "Ovo de Dragão",
-        "description": "Chance de acerto crítico +5%, Dano crítico +50%",
+        "description": "Chance de acerto crítico +5%, Dano crítico +3%",
         "flavor": "É um ovo de dragão ou uma galinha espacial muito brava."
       },
       "universe_map": {
@@ -509,7 +509,7 @@
       },
       "dimensional_collapse": {
         "name": "Arma de Colapso Dimensional",
-        "description": "Dano crítico x3, Velocidade de ataque +100%",
+        "description": "Dano crítico +15%, Velocidade de ataque +100%",
         "flavor": "Colapse dimensões. Quebre a realidade. Ganhe o jogo."
       },
       "reality_compiler": {
@@ -604,52 +604,52 @@
       },
       "drill_sergeant": {
         "name": "IA de Sargento Instrutor",
-        "description": "+8% dano de auto-tiro",
+        "description": "+12% dano de auto-tiro",
         "flavor": "FAÇA FLEXÃO E ME DE VINTE... MILHÕES DE DANO!"
       },
       "formation_delta": {
         "name": "Formação Delta",
-        "description": "+12% dano de auto-tiro, naves se movem em formação",
+        "description": "+18% dano de auto-tiro, naves se movem em formação",
         "flavor": "Unidade é força. E mais dano."
       },
       "emergency_repairs": {
         "name": "Drones de Reparo de Emergência",
-        "description": "+15% dano de auto-tiro, naves se auto-reparam",
+        "description": "+22% dano de auto-tiro, naves se auto-reparam",
         "flavor": "Fita adesiva no espaço. Funciona!"
       },
       "fleet_tactics": {
         "name": "Táticas Avançadas de Frota",
-        "description": "+20% dano de auto-tiro por 10 naves",
+        "description": "+25% dano de auto-tiro por 10 naves",
         "flavor": "Coordenação faz o sonho funcionar."
       },
       "automated_repairs": {
         "name": "Sistema de Reparo Automatizado",
-        "description": "+25% dano de auto-tiro, custos de naves reduzidos",
+        "description": "+35% dano de auto-tiro, custos de naves reduzidos",
         "flavor": "Naves que se consertam sozinhas. O futuro é agora."
       },
       "ai_swarm": {
         "name": "Inteligência de Enxame de IA",
-        "description": "+35% dano de auto-tiro, naves aprendem umas com as outras",
+        "description": "+50% dano de auto-tiro, naves aprendem umas com as outras",
         "flavor": "O coletivo sabe tudo. O coletivo destrói tudo."
       },
       "nanite_reconstruction": {
         "name": "Reconstrução de Nanitas",
-        "description": "+50% dano de auto-tiro, naves se reconstroem instantaneamente",
+        "description": "+70% dano de auto-tiro, naves se reconstroem instantaneamente",
         "flavor": "Nanomáquinas, filho!"
       },
       "fleet_synchronization": {
         "name": "Matriz de Sincronização de Frota",
-        "description": "+75% dano de auto-tiro, coordenação perfeita",
+        "description": "+100% dano de auto-tiro, coordenação perfeita",
         "flavor": "Uma mente, infinitas naves."
       },
       "quantum_coordination": {
         "name": "Coordenação Quântica",
-        "description": "+100% dano de auto-tiro, comunicação instantânea",
+        "description": "+150% dano de auto-tiro, comunicação instantânea",
         "flavor": "Naves entrelaçadas atacam como uma."
       },
       "universal_fleet": {
         "name": "Consciência Universal da Frota",
-        "description": "+150% dano de auto-tiro, naves compartilham dano",
+        "description": "+200% dano de auto-tiro, naves compartilham dano",
         "flavor": "A frota é eterna. A frota é imparável."
       },
       "adaptive_evolution": {

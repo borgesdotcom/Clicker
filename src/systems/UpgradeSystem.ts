@@ -1062,7 +1062,7 @@ export class UpgradeSystem {
       {
         id: 'drill_sergeant',
         name: 'Drill Sergeant AI',
-        description: '+8% auto-fire damage',
+        description: '+12% auto-fire damage',
         flavor: 'DROP AND GIVE ME TWENTY... MILLION DAMAGE!',
         cost: 75000,
         owned: false,
@@ -1075,7 +1075,7 @@ export class UpgradeSystem {
       {
         id: 'formation_delta',
         name: 'Formation Delta',
-        description: '+12% auto-fire damage, ships move in formation',
+        description: '+18% auto-fire damage, ships move in formation',
         flavor: 'Unity is strength. And more damage.',
         cost: 150000,
         owned: false,
@@ -1088,7 +1088,7 @@ export class UpgradeSystem {
       {
         id: 'emergency_repairs',
         name: 'Emergency Repair Drones',
-        description: '+15% auto-fire damage, ships self-repair',
+        description: '+22% auto-fire damage, ships self-repair',
         flavor: 'Duct tape in space. It works!',
         cost: 300000,
         owned: false,
@@ -1101,7 +1101,7 @@ export class UpgradeSystem {
       {
         id: 'fleet_tactics',
         name: 'Advanced Fleet Tactics',
-        description: '+20% auto-fire damage per 10 ships',
+        description: '+25% auto-fire damage per 10 ships',
         flavor: 'Coordination makes the dream work.',
         cost: 600000,
         owned: false,
@@ -1114,7 +1114,7 @@ export class UpgradeSystem {
       {
         id: 'automated_repairs',
         name: 'Automated Repair System',
-        description: '+25% auto-fire damage, reduced ship costs',
+        description: '+35% auto-fire damage, reduced ship costs',
         flavor: 'Ships that fix themselves. The future is now.',
         cost: 1200000,
         owned: false,
@@ -1127,7 +1127,7 @@ export class UpgradeSystem {
       {
         id: 'ai_swarm',
         name: 'AI Swarm Intelligence',
-        description: '+35% auto-fire damage, ships learn from each other',
+        description: '+50% auto-fire damage, ships learn from each other',
         flavor: 'The collective knows all. The collective destroys all.',
         cost: 3000000,
         owned: false,
@@ -1140,7 +1140,7 @@ export class UpgradeSystem {
       {
         id: 'nanite_reconstruction',
         name: 'Nanite Reconstruction',
-        description: '+50% auto-fire damage, ships rebuild instantly',
+        description: '+70% auto-fire damage, ships rebuild instantly',
         flavor: 'Nanomachines, son!',
         cost: 6000000,
         owned: false,
@@ -1153,7 +1153,7 @@ export class UpgradeSystem {
       {
         id: 'fleet_synchronization',
         name: 'Fleet Synchronization Matrix',
-        description: '+75% auto-fire damage, perfect coordination',
+        description: '+100% auto-fire damage, perfect coordination',
         flavor: 'One mind, infinite ships.',
         cost: 12000000,
         owned: false,
@@ -1166,7 +1166,7 @@ export class UpgradeSystem {
       {
         id: 'quantum_coordination',
         name: 'Quantum Coordination',
-        description: '+100% auto-fire damage, instant communication',
+        description: '+150% auto-fire damage, instant communication',
         flavor: 'Entangled ships attack as one.',
         cost: 30000000,
         owned: false,
@@ -1179,7 +1179,7 @@ export class UpgradeSystem {
       {
         id: 'universal_fleet',
         name: 'Universal Fleet Consciousness',
-        description: '+150% auto-fire damage, ships share damage',
+        description: '+200% auto-fire damage, ships share damage',
         flavor: 'The fleet is eternal. The fleet is unstoppable.',
         cost: 120000000,
         owned: false,
@@ -2113,7 +2113,7 @@ export class UpgradeSystem {
 
     // Helper to check if sub-upgrade is owned (from state if available, otherwise from this.subUpgrades)
     const hasSubUpgrade = (id: string): boolean => {
-      if (state && state.subUpgrades) {
+      if (state?.subUpgrades) {
         return state.subUpgrades[id] ?? false;
       }
       return this.subUpgrades.find((u) => u.id === id)?.owned ?? false;
@@ -2391,48 +2391,50 @@ export class UpgradeSystem {
 
   getCritMultiplier(state: GameState): number {
     this.updateSubUpgradesFromState(state);
-    // Base multiplier is always 2.0x (critical hits deal 2x damage)
-    let multiplier = 2.0;
+    // Base multiplier reduced to 1.15x to prevent excessive damage
+    let multiplier = 1.15;
 
     // Artifact bonus: Apply multiplicatively with strong diminishing returns
     // Use square root scaling to prevent exponential growth
+    // NOTE: Artifact bonuses can be very high, so we need very aggressive scaling
     if (this.artifactSystem) {
       const artifactBonus = this.artifactSystem.getCritBonus();
       // artifactBonus is already in decimal form (e.g., 20.0 for 2000%)
-      // Apply square root scaling with reduced factor to keep multipliers reasonable
+      // Apply square root scaling with extremely reduced factor to keep multipliers reasonable
       if (artifactBonus > 0) {
-        const artifactMultiplier = 1 + Math.sqrt(artifactBonus) * 0.15; // Further reduced scaling factor
+        // Use cube root instead of square root for even more aggressive scaling
+        const artifactMultiplier = 1 + Math.pow(artifactBonus, 1/3) * 0.02; // Cube root scaling with very low factor
         multiplier *= artifactMultiplier;
       }
     }
 
-    // Rubber duck: +3%
+    // Rubber duck: +1%
     if (state.subUpgrades['rubber_duck']) {
+      multiplier *= 1.01;
+    }
+
+    // Lucky horseshoe: +3%
+    if (state.subUpgrades['lucky_horseshoe']) {
       multiplier *= 1.03;
     }
 
-    // Lucky horseshoe: +20% (reduced from 50%)
-    if (state.subUpgrades['lucky_horseshoe']) {
-      multiplier *= 1.2;
-    }
-
-    // Dragon egg: +20% (reduced from 50%)
+    // Dragon egg: +3%
     if (state.subUpgrades['dragon_egg']) {
-      multiplier *= 1.2;
+      multiplier *= 1.03;
     }
 
-    // Reality anchor: +50% (reduced from x2)
+    // Reality anchor: +10%
     if (state.subUpgrades['reality_anchor']) {
-      multiplier *= 1.5;
+      multiplier *= 1.1;
     }
 
-    // Dimensional collapse: +80% (reduced from x3)
+    // Dimensional collapse: +15%
     if (state.subUpgrades['dimensional_collapse']) {
-      multiplier *= 1.8;
+      multiplier *= 1.15;
     }
 
-    // Cap the multiplier to prevent excessive damage (max 30x)
-    return Math.min(multiplier, 30.0);
+    // Cap the multiplier to prevent excessive damage (max 2x - very strict cap)
+    return Math.min(multiplier, 2.0);
   }
 
   getPassiveGen(state: GameState): number {
@@ -2924,16 +2926,17 @@ export class UpgradeSystem {
     return multiplier;
   }
 
-  // New method: Get auto-fire ship damage (weaker but scales with ship count)
+  // New method: Get auto-fire ship damage (buffed to compensate for no crits)
   getAutoFireDamage(state: GameState): number {
     this.updateSubUpgradesFromState(state);
 
-    // Base: 1 damage + 0.05 per level (starts at 1 for better early game feel)
-    let multiplier = this.basePoints * (1 + 0.05 * state.pointMultiplierLevel);
+    // Base: 1 damage + 0.1 per level (increased from 0.05 to match main ship base, since they can't crit)
+    // This compensates for the crit nerf by making auto-fire ships deal more base damage
+    let multiplier = this.basePoints * (1 + 0.1 * state.pointMultiplierLevel);
 
-    // v3.0: Fleet Command bonus (+5% auto-fire damage per level)
+    // v3.0: Fleet Command bonus (+8% auto-fire damage per level, increased from 5% to compensate for crit nerf)
     if (state.fleetCommandLevel > 0) {
-      multiplier *= 1 + state.fleetCommandLevel * 0.05;
+      multiplier *= 1 + state.fleetCommandLevel * 0.08;
     }
 
     // v3.0: Mutation Engine bonus (+1% all damage per level, reduced from 2%)
@@ -2941,53 +2944,54 @@ export class UpgradeSystem {
       multiplier *= 1 + state.mutationEngineLevel * 0.01;
     }
 
-    // v3.0: FLEET COMMAND SUBUPGRADES
-    if (state.subUpgrades['drill_sergeant']) multiplier *= 1.08;
-    if (state.subUpgrades['formation_delta']) multiplier *= 1.12;
-    if (state.subUpgrades['emergency_repairs']) multiplier *= 1.15;
+    // v3.0: FLEET COMMAND SUBUPGRADES (buffed to compensate for crit nerf)
+    if (state.subUpgrades['drill_sergeant']) multiplier *= 1.12; // +12% (increased from 8%)
+    if (state.subUpgrades['formation_delta']) multiplier *= 1.18; // +18% (increased from 12%)
+    if (state.subUpgrades['emergency_repairs']) multiplier *= 1.22; // +22% (increased from 15%)
     if (state.subUpgrades['fleet_tactics'])
-      multiplier *= 1 + Math.floor(state.shipsCount / 10) * 0.2;
-    if (state.subUpgrades['automated_repairs']) multiplier *= 1.25;
-    if (state.subUpgrades['ai_swarm']) multiplier *= 1.35;
-    if (state.subUpgrades['nanite_reconstruction']) multiplier *= 1.5;
-    if (state.subUpgrades['fleet_synchronization']) multiplier *= 1.75;
-    if (state.subUpgrades['quantum_coordination']) multiplier *= 2.0;
-    if (state.subUpgrades['universal_fleet']) multiplier *= 2.5;
+      multiplier *= 1 + Math.floor(state.shipsCount / 10) * 0.25; // +25% per 10 ships (increased from 20%)
+    if (state.subUpgrades['automated_repairs']) multiplier *= 1.35; // +35% (increased from 25%)
+    if (state.subUpgrades['ai_swarm']) multiplier *= 1.5; // +50% (increased from 35%)
+    if (state.subUpgrades['nanite_reconstruction']) multiplier *= 1.7; // +70% (increased from 50%)
+    if (state.subUpgrades['fleet_synchronization']) multiplier *= 2.0; // +100% (increased from 75%)
+    if (state.subUpgrades['quantum_coordination']) multiplier *= 2.5; // +150% (increased from 100%)
+    if (state.subUpgrades['universal_fleet']) multiplier *= 3.0; // +200% (increased from 150%)
 
-    // v3.0: MUTATION ENGINE SUBUPGRADES (same as main ship)
-    if (state.subUpgrades['adaptive_evolution']) multiplier *= 1.05;
-    if (state.subUpgrades['symbiotic_weapons']) multiplier *= 1.08;
-    if (state.subUpgrades['regenerative_hull']) multiplier *= 1.12;
-    if (state.subUpgrades['hive_mind']) multiplier *= 1.18;
-    if (state.subUpgrades['perfect_organism']) multiplier *= 1.25;
-    if (state.subUpgrades['eldritch_evolution']) multiplier *= 1.35;
-    if (state.subUpgrades['cosmic_horror']) multiplier *= 1.5;
-    if (state.subUpgrades['transcendent_form']) multiplier *= 1.75;
-    if (state.subUpgrades['living_weapon']) multiplier *= 2.0;
-    if (state.subUpgrades['apex_predator']) multiplier *= 2.5;
+    // v3.0: MUTATION ENGINE SUBUPGRADES (buffed for auto-fire ships to compensate for no crits)
+    if (state.subUpgrades['adaptive_evolution']) multiplier *= 1.08; // +8% (increased from 5%)
+    if (state.subUpgrades['symbiotic_weapons']) multiplier *= 1.12; // +12% (increased from 8%)
+    if (state.subUpgrades['regenerative_hull']) multiplier *= 1.18; // +18% (increased from 12%)
+    if (state.subUpgrades['hive_mind']) multiplier *= 1.25; // +25% (increased from 18%)
+    if (state.subUpgrades['perfect_organism']) multiplier *= 1.35; // +35% (increased from 25%)
+    if (state.subUpgrades['eldritch_evolution']) multiplier *= 1.5; // +50% (increased from 35%)
+    if (state.subUpgrades['cosmic_horror']) multiplier *= 1.75; // +75% (increased from 50%)
+    if (state.subUpgrades['transcendent_form']) multiplier *= 2.0; // +100% (increased from 75%)
+    if (state.subUpgrades['living_weapon']) multiplier *= 2.5; // +150% (increased from 100%)
+    if (state.subUpgrades['apex_predator']) multiplier *= 3.0; // +200% (increased from 150%)
 
     // Ship swarm: +20% (auto-fire specific)
     if (state.subUpgrades['ship_swarm']) {
       multiplier *= 1.2;
     }
 
-    // Scale with ship count (diminishing returns)
-    const shipScaling = Math.log10(state.shipsCount + 1) * 0.5;
+    // Scale with ship count (diminishing returns) - buffed to compensate for crit nerf
+    const shipScaling = Math.log10(state.shipsCount + 1) * 0.7; // Increased from 0.5 to 0.7
     multiplier *= 1 + shipScaling;
 
     // Some general damage upgrades affect auto-fire but at reduced effectiveness
+    // Buffed to compensate for crit nerf
     if (state.subUpgrades['laser_focusing']) {
-      multiplier *= 1.05; // Reduced from 1.15
+      multiplier *= 1.08; // Increased from 1.05 (buffed to compensate for crit nerf)
     }
 
     if (state.subUpgrades['antimatter_rounds']) {
-      multiplier *= 1.25; // Reduced from 2x
+      multiplier *= 1.35; // Increased from 1.25 (buffed to compensate for crit nerf)
     }
 
-    // Apply ascension bonuses at reduced rate
+    // Apply ascension bonuses at increased rate (buffed to compensate for no crits)
     if (this.ascensionSystem) {
       const damageBonus = this.ascensionSystem.getDamageMultiplier(state);
-      const reducedBonus = 1 + (damageBonus - 1) * 0.3; // 30% effectiveness
+      const reducedBonus = 1 + (damageBonus - 1) * 0.5; // 50% effectiveness (increased from 30% to compensate for crit nerf)
       multiplier *= reducedBonus;
     }
 

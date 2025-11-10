@@ -279,7 +279,7 @@
       },
       "rubber_duck": {
         "name": "Debugging Rubber Duck",
-        "description": "+3% critical damage multiplier",
+        "description": "+1% critical damage multiplier",
         "flavor": "Explains your problems back to you. Very therapeutic."
       },
       "antimatter_rounds": {
@@ -309,7 +309,7 @@
       },
       "lucky_horseshoe": {
         "name": "Lucky Horseshoe",
-        "description": "Critical hits deal 20% more damage",
+        "description": "Critical hits deal 3% more damage",
         "flavor": "Who needs horses in space? Apparently, luck does."
       },
       "perfect_precision": {
@@ -419,7 +419,7 @@
       },
       "reality_anchor": {
         "name": "Reality Anchor",
-        "description": "Critical damage +50%, All gains +25%",
+        "description": "Critical damage +10%, All gains +25%",
         "flavor": "Keep reality in check. Or break it. Your choice."
       },
       "cosmic_battery": {
@@ -439,7 +439,7 @@
       },
       "dragon_egg": {
         "name": "Dragon Egg",
-        "description": "Critical hit chance +5%, Critical damage +20%",
+        "description": "Critical hit chance +5%, Critical damage +3%",
         "flavor": "It's either a dragon egg or a really angry space chicken."
       },
       "universe_map": {
@@ -509,7 +509,7 @@
       },
       "dimensional_collapse": {
         "name": "Dimensional Collapse Weapon",
-        "description": "Critical damage +80%, Attack speed +100%",
+        "description": "Critical damage +15%, Attack speed +100%",
         "flavor": "Collapse dimensions. Break reality. Win game."
       },
       "reality_compiler": {
@@ -604,52 +604,52 @@
       },
       "drill_sergeant": {
         "name": "Drill Sergeant AI",
-        "description": "+8% auto-fire damage",
+        "description": "+12% auto-fire damage",
         "flavor": "DROP AND GIVE ME TWENTY... MILLION DAMAGE!"
       },
       "formation_delta": {
         "name": "Formation Delta",
-        "description": "+12% auto-fire damage, ships move in formation",
+        "description": "+18% auto-fire damage, ships move in formation",
         "flavor": "Unity is strength. And more damage."
       },
       "emergency_repairs": {
         "name": "Emergency Repair Drones",
-        "description": "+15% auto-fire damage, ships self-repair",
+        "description": "+22% auto-fire damage, ships self-repair",
         "flavor": "Duct tape in space. It works!"
       },
       "fleet_tactics": {
         "name": "Advanced Fleet Tactics",
-        "description": "+20% auto-fire damage per 10 ships",
+        "description": "+25% auto-fire damage per 10 ships",
         "flavor": "Coordination makes the dream work."
       },
       "automated_repairs": {
         "name": "Automated Repair System",
-        "description": "+25% auto-fire damage, reduced ship costs",
+        "description": "+35% auto-fire damage, reduced ship costs",
         "flavor": "Ships that fix themselves. The future is now."
       },
       "ai_swarm": {
         "name": "AI Swarm Intelligence",
-        "description": "+35% auto-fire damage, ships learn from each other",
+        "description": "+50% auto-fire damage, ships learn from each other",
         "flavor": "The collective knows all. The collective destroys all."
       },
       "nanite_reconstruction": {
         "name": "Nanite Reconstruction",
-        "description": "+50% auto-fire damage, ships rebuild instantly",
+        "description": "+70% auto-fire damage, ships rebuild instantly",
         "flavor": "Nanomachines, son!"
       },
       "fleet_synchronization": {
         "name": "Fleet Synchronization Matrix",
-        "description": "+75% auto-fire damage, perfect coordination",
+        "description": "+100% auto-fire damage, perfect coordination",
         "flavor": "One mind, infinite ships."
       },
       "quantum_coordination": {
         "name": "Quantum Coordination",
-        "description": "+100% auto-fire damage, instant communication",
+        "description": "+150% auto-fire damage, instant communication",
         "flavor": "Entangled ships attack as one."
       },
       "universal_fleet": {
         "name": "Universal Fleet Consciousness",
-        "description": "+150% auto-fire damage, ships share damage",
+        "description": "+200% auto-fire damage, ships share damage",
         "flavor": "The fleet is eternal. The fleet is unstoppable."
       },
       "adaptive_evolution": {

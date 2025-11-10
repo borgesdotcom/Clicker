@@ -263,9 +263,18 @@ export class SettingsModal {
     languageLabel.style.fontSize = '16px';
 
     this.languageSelect = document.createElement('select');
-    this.languageSelect.className = 'modal-button';
     this.languageSelect.style.width = '200px';
     this.languageSelect.style.padding = '8px';
+    this.languageSelect.style.background = 'linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 136, 255, 0.2))';
+    this.languageSelect.style.color = '#ffffff';
+    this.languageSelect.style.border = '2px solid rgba(255, 0, 255, 0.5)';
+    this.languageSelect.style.borderRadius = '4px';
+    this.languageSelect.style.fontFamily = "'Courier New', monospace";
+    this.languageSelect.style.fontSize = '14px';
+    this.languageSelect.style.fontWeight = 'bold';
+    this.languageSelect.style.cursor = 'pointer';
+    this.languageSelect.style.outline = 'none';
+    this.languageSelect.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 5px rgba(255, 0, 255, 0.3)';
     
     const languages: { code: Language; name: string }[] = [
       { code: 'en', name: 'English' },
@@ -277,8 +286,13 @@ export class SettingsModal {
       const option = document.createElement('option');
       option.value = lang.code;
       option.textContent = lang.name;
+      // Style options for better readability - dark text on light background
+      option.style.backgroundColor = '#ffffff';
+      option.style.color = '#000000';
       if (i18n.getLanguage() === lang.code) {
         option.selected = true;
+        option.style.backgroundColor = '#0066cc';
+        option.style.color = '#ffffff';
       }
       if (this.languageSelect) {
         this.languageSelect.appendChild(option);

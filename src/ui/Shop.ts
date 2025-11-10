@@ -22,6 +22,7 @@ export class Shop {
   private updateThrottle = 30; // Update at most every 30ms (much more responsive)
   private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
   private isDesktopCollapsed = false; // Desktop shop collapsed state
+  private updateAutoBuyButtonCallback: (() => void) | null = null;
 
   constructor(
     private store: Store,
@@ -64,6 +65,11 @@ export class Shop {
 
   setAscensionSystem(ascensionSystem: { isAutoBuyUnlocked: (state: GameState) => boolean }): void {
     this.ascensionSystem = ascensionSystem;
+    // Trigger button state update when ascension system is set
+    // This ensures the button is properly enabled if the upgrade is unlocked
+    if (this.updateAutoBuyButtonCallback) {
+      this.updateAutoBuyButtonCallback();
+    }
   }
 
   private setupTabs(): void {
@@ -196,7 +202,10 @@ export class Shop {
 
     const updateAutoBuyButton = () => {
       const state = this.store.getState();
-      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? false;
+      // Check if upgrade is unlocked - if ascensionSystem is not set yet, default to false
+      // But also check the state directly as a fallback
+      const autoBuyLevel = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
+      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? (autoBuyLevel >= 1);
       const isEnabled = state.autoBuyEnabled ?? false;
       
       if (!isUnlocked) {
@@ -211,7 +220,7 @@ export class Shop {
         tooltip.textContent = 'Auto-Buy: LOCKED - Purchase in Ascension Store for 50 Ascension Points';
         infoText.style.display = 'block';
       } else {
-        // Unlocked - can toggle
+        // Unlocked - can toggle (button should be ENABLED/ACTIVE, not disabled)
         autoBuyBtn.disabled = false;
         autoBuyBtn.style.cursor = 'pointer';
         autoBuyBtn.style.opacity = '1';
@@ -230,6 +239,9 @@ export class Shop {
         }
       }
     };
+    
+    // Store the callback so it can be called when ascensionSystem is set
+    this.updateAutoBuyButtonCallback = updateAutoBuyButton;
 
     // Show tooltip on hover
     autoBuyBtn.addEventListener('mouseenter', () => {
@@ -242,7 +254,9 @@ export class Shop {
 
     autoBuyBtn.addEventListener('click', () => {
       const state = this.store.getState();
-      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? false;
+      // Use same fallback logic as updateAutoBuyButton
+      const autoBuyLevel = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
+      const isUnlocked = this.ascensionSystem?.isAutoBuyUnlocked(state) ?? (autoBuyLevel >= 1);
       if (!isUnlocked) {
         // Show info about needing to unlock
         return;
@@ -253,7 +267,14 @@ export class Shop {
     });
 
     container.appendChild(autoBuyBtn);
+    
+    // Initial update
     updateAutoBuyButton();
+    
+    // Also update after a short delay to catch any initialization timing issues
+    setTimeout(() => {
+      updateAutoBuyButton();
+    }, 100);
 
     // Update button state when store changes
     this.store.subscribe(() => {
@@ -394,10 +415,10 @@ export class Shop {
       cancelAnimationFrame(this.renderTimeout);
     }
     this.renderTimeout = requestAnimationFrame(() => {
-      // Check if affordability changed before updating
-      if (this.hasAffordabilityChanged()) {
-        this.updateButtonStates();
-      }
+      // Always update button states to ensure they reflect current affordability
+      // This is especially important for quantity modes (x5, x10, MAX) where
+      // affordability depends on bulk costs, not just single purchase costs
+      this.updateButtonStates();
       this.renderTimeout = null;
     });
   }
@@ -490,40 +511,53 @@ export class Shop {
     return false;
   }
 
-  private hasAffordabilityChanged(): boolean {
-    const state = this.store.getState();
-    const upgrades = this.upgradeSystem.getUpgrades();
-
-    let changed = false;
-
-    // Check main upgrades
-    for (const upgrade of upgrades) {
-      const key = upgrade.id;
-      const canAfford = upgrade.canBuy(state);
-      const wasAffordable = this.lastAffordability.get(key);
-
-      if (wasAffordable !== canAfford) {
-        changed = true;
-        this.lastAffordability.set(key, canAfford);
+  private calculateBulkAffordability(upgrade: UpgradeConfig, state: GameState): boolean {
+    // Calculate if player can afford the requested quantity based on buyQuantity setting
+    // This MUST match the exact logic in renderAvailableTab (lines 736-760) to ensure consistency
+    if (this.buyQuantity === 'max') {
+      // For MAX: check if player can afford at least 1 upgrade
+      // Don't rely on calculateBulkCost because it returns quantity: 1 even when unaffordable
+      const currentLevel = upgrade.getLevel(state);
+      const firstUpgradeCost = upgrade.getCost(currentLevel);
+      if (state.points < firstUpgradeCost) {
+        return false; // Can't afford even one
       }
-    }
-
-    // Always check sub-upgrades (they're important for user experience)
-    const subUpgrades = this.upgradeSystem.getSubUpgrades();
-    for (const upgrade of subUpgrades) {
-      if (!upgrade.isVisible(state)) continue;
-      const key = `sub_${upgrade.id}`;
-      const cost = this.upgradeSystem.getSubUpgradeCost(upgrade);
-      const canAfford = !upgrade.owned && state.points >= cost;
-      const wasAffordable = this.lastAffordability.get(key);
-
-      if (wasAffordable !== canAfford) {
-        changed = true;
-        this.lastAffordability.set(key, canAfford);
+      // Check if player can actually afford at least one (use same logic as calculateBulkCost)
+      const { quantity, totalCost } = this.calculateBulkCost(upgrade, state);
+      // Only return true if we can afford the calculated total cost AND quantity is actually > 0
+      return quantity > 0 && state.points >= totalCost;
+    } else {
+      // For specific quantity (x5, x10): calculate cost for EXACT requested quantity
+      // This matches the logic in renderAvailableTab exactly (lines 743-760)
+      const currentLevel = upgrade.getLevel(state);
+      const requestedQty = this.buyQuantity;
+      const upgradeId = upgrade.id;
+      const affectsSelfCost = upgradeId === 'cosmicKnowledge' || upgradeId === 'fleetCommand';
+      
+      // Create temporary state for self-affecting upgrades (same as renderAvailableTab)
+      const tempState = { ...state };
+      let tempLevel = currentLevel;
+      let totalCost = 0;
+      
+      // Calculate cost for EXACT requested quantity (matches renderAvailableTab logic exactly)
+      for (let i = 0; i < requestedQty; i++) {
+        const cost = upgrade.getCost(tempLevel);
+        totalCost += cost;
+        tempLevel++;
+        
+        // Update temp state for self-affecting upgrades (same as renderAvailableTab)
+        if (affectsSelfCost) {
+          if (upgradeId === 'cosmicKnowledge') {
+            tempState.cosmicKnowledgeLevel = tempLevel;
+          } else if (upgradeId === 'fleetCommand') {
+            tempState.fleetCommandLevel = tempLevel;
+          }
+        }
       }
+      
+      // Check if player can afford the exact requested quantity (matches renderAvailableTab)
+      return state.points >= totalCost;
     }
-
-    return changed;
   }
 
   private updateButtonStates(): void {
@@ -531,24 +565,22 @@ export class Shop {
 
     // Use requestAnimationFrame for smoother updates
     requestAnimationFrame(() => {
-      // Update main upgrade buttons
+      // Update main upgrade buttons - must account for buyQuantity setting
       const upgrades = this.upgradeSystem.getUpgrades();
       for (const upgrade of upgrades) {
         const button = this.buttonCache.get(upgrade.id);
         if (button) {
-          const canAfford = upgrade.canBuy(state);
+          // Calculate affordability based on current buyQuantity setting
+          const canAfford = this.calculateBulkAffordability(upgrade, state);
 
-          // Only update if state changed
-          const wasDisabled = button.disabled;
-          if (wasDisabled === canAfford) {
-            button.disabled = !canAfford;
+          // Always update button state to ensure it reflects current affordability
+          button.disabled = !canAfford;
 
-            // Use CSS classes instead of inline styles (faster)
-            if (canAfford) {
-              button.classList.remove('disabled');
-            } else {
-              button.classList.add('disabled');
-            }
+          // Use CSS classes instead of inline styles (faster)
+          if (canAfford) {
+            button.classList.remove('disabled');
+          } else {
+            button.classList.add('disabled');
           }
         }
       }
@@ -687,10 +719,23 @@ export class Shop {
       
       if (this.buyQuantity === 'max') {
         // For MAX: calculate affordable quantity and cost
-        const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
-        displayCost = totalCost;
-        displayQuantity = quantity;
-        canAffordExact = state.points >= totalCost && quantity > 0;
+        const currentLevel = upgrade.getLevel(state);
+        const firstUpgradeCost = upgrade.getCost(currentLevel);
+        
+        // First check if we can afford at least one upgrade
+        if (state.points < firstUpgradeCost) {
+          // Can't afford even one - show cost of one but disable button
+          displayCost = firstUpgradeCost;
+          displayQuantity = 1;
+          canAffordExact = false;
+        } else {
+          // Can afford at least one - calculate how many
+          const { totalCost, quantity } = this.calculateBulkCost(upgrade, state);
+          displayCost = totalCost;
+          displayQuantity = quantity;
+          // Verify we can actually afford the calculated cost
+          canAffordExact = quantity > 0 && state.points >= totalCost;
+        }
       } else {
         // For specific quantity: calculate cost for EXACT requested quantity
         const currentLevel = upgrade.getLevel(state);

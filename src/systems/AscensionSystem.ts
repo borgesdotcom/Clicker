@@ -314,6 +314,11 @@ export class AscensionSystem {
     state.prestigePoints -= cost;
     state.prestigeUpgrades[upgradeId] = currentLevel + 1;
 
+    // Auto-enable auto-buy when the upgrade is purchased
+    if (upgradeId === 'auto_buy_unlock' && currentLevel === 0) {
+      state.autoBuyEnabled = true;
+    }
+
     return true;
   }
 }

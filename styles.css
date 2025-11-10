@@ -2764,6 +2764,38 @@ body {
   box-shadow: none;
 }
 
+/* Select dropdown styling in modals */
+.modal select {
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 136, 255, 0.2)) !important;
+  color: #ffffff !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Option elements - ensure dark text for readability */
+.modal select option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  padding: 8px 12px !important;
+}
+
+/* Force dark text on options - important for cross-browser compatibility */
+.modal select option:not(:checked) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.modal select option:checked {
+  background-color: #0066cc !important;
+  color: #ffffff !important;
+}
+
+.modal select option:hover {
+  background-color: #e0e0e0 !important;
+  color: #000000 !important;
+}
+
 /* Debug Panel */
 #debug-panel {
   position: fixed;
