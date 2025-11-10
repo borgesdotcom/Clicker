@@ -225,8 +225,10 @@ export class Save {
       energyCoreLevel: data.energyCoreLevel ?? 0,
       cosmicKnowledgeLevel: data.cosmicKnowledgeLevel ?? 0,
       discoveredUpgrades: data.discoveredUpgrades ?? { ship: true }, // Ship is always visible
-      // Initialize highestLevelReached to current level if undefined (for new players)
-      highestLevelReached: data.highestLevelReached ?? (data.level && data.level >= 100 ? data.level : undefined),
+      // highestLevelReached should ONLY be set during ascension
+      // For players who haven't ascended yet (prestigeLevel === 0), it should be undefined
+      // This allows the calculation to give them points from level 100 to their current level
+      highestLevelReached: data.highestLevelReached,
       autoBuyEnabled: data.autoBuyEnabled ?? false,
       selectedThemes: data.selectedThemes,
     };

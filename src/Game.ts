@@ -1777,11 +1777,9 @@ export class Game {
         state.level++;
         this.store.updateMaxLevel();
 
-        // Update highest level reached for ascension tracking
-        state.highestLevelReached = Math.max(
-          state.level,
-          state.highestLevelReached ?? 0,
-        );
+        // Note: highestLevelReached is NOT updated here - it only tracks the highest level
+        // from PREVIOUS ascensions, not the current run. It's updated in performAscension()
+        // after calculating prestige points.
 
         leveledUp = true;
       }
@@ -1860,11 +1858,9 @@ export class Game {
       state.level++;
       this.store.updateMaxLevel();
 
-      // Update highest level reached for ascension tracking
-      state.highestLevelReached = Math.max(
-        state.level,
-        state.highestLevelReached ?? 0,
-      );
+      // Note: highestLevelReached is NOT updated here - it only tracks the highest level
+      // from PREVIOUS ascensions, not the current run. It's updated in performAscension()
+      // after calculating prestige points.
     }
 
     this.store.setState(state);

@@ -139,18 +139,54 @@ export class AscensionSystem {
 
     if (state.level < 100) return 0;
 
-    // Get the highest level previously reached (default to 99 if first ascension)
-    const previousHighest = state.highestLevelReached ?? 99;
+    // For players who have never ascended (prestigeLevel === 0):
+    // - If highestLevelReached is undefined: give points from level 100 to current level (first ascension)
+    // - If highestLevelReached is set: it means they reached that level before the bug fix,
+    //   so give them points from level 100 to current level (migration case)
+    // For players who have ascended before (prestigeLevel > 0):
+    // - Only give points for NEW levels beyond highestLevelReached
+    const isFirstAscension = state.prestigeLevel === 0;
+    const previousHighest = state.highestLevelReached;
 
-    // If current level doesn't exceed previous highest, no points awarded
-    if (state.level <= previousHighest) {
+    // For first ascension: always give points from level 100 to current level
+    // This ensures players who played before the bug fix still get their points
+    if (isFirstAscension) {
+      // Give points for all levels from 100 to current level
+      let totalPoints = 0;
+      for (let level = 100; level <= state.level; level++) {
+        const levelPast100 = level - 100;
+        const levelPoints = Math.floor(5 + Math.pow(levelPast100 / 12, 1.45));
+        totalPoints += levelPoints;
+      }
+
+      // Milestone bonuses: award all milestones they've reached
+      const milestones = [
+        { level: 1000, bonus: 200 },
+        { level: 750, bonus: 100 },
+        { level: 500, bonus: 50 },
+        { level: 250, bonus: 20 },
+      ];
+
+      for (const milestone of milestones) {
+        if (state.level >= milestone.level) {
+          totalPoints += milestone.bonus;
+        }
+      }
+
+      // Achievement bonus
+      const achievementBonus = this.calculateAchievementBonus(state);
+      totalPoints += achievementBonus;
+
+      return Math.max(0, totalPoints);
+    }
+
+    // For subsequent ascensions: only give points for NEW levels
+    if (!previousHighest || state.level <= previousHighest) {
       return 0;
     }
 
     // Calculate points only for the NEW levels (previousHighest + 1 to current level)
     let totalPoints = 0;
-
-    // Add points for each new level reached
     for (
       let level = Math.max(100, previousHighest + 1);
       level <= state.level;
