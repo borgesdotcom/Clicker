@@ -45,6 +45,7 @@ import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
 import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
 import { CustomizationModal } from './ui/CustomizationModal';
+import { NumberFormatter } from './utils/NumberFormatter';
 import type { Vec2, GameMode, ThemeCategory } from './types';
 import type { UserSettings } from './core/Settings';
 
@@ -112,6 +113,37 @@ export class Game {
   // Debug controls
   private gameSpeed = 1.0;
   private godMode = false;
+  private godModeAgent: {
+    clickTimer: number;
+    clickIntervalRange: { min: number; max: number };
+    burstChance: number;
+    burstShotsRemaining: number;
+    burstCooldownTimer: number;
+    burstCooldownRange: { min: number; max: number };
+    jitterRadius: number;
+    upgradeTimer: number;
+    upgradeIntervalRange: { min: number; max: number };
+    powerUpTimer: number;
+    powerUpReactionRange: { min: number; max: number };
+    metricsTimer: number;
+    metricsInterval: number;
+    startTimestamp: number;
+    baseline: {
+      points: number;
+      clicks: number;
+      aliens: number;
+      bosses: number;
+      upgrades: number;
+      subUpgrades: number;
+    };
+    overlay: HTMLElement | null;
+    lastAction: string;
+    logTimer: number;
+    idleTimer: number;
+    nextBreakIn: number;
+    breakTimer: number;
+    breakDurationRange: { min: number; max: number };
+  } | null = null;
 
   // Boss retry system
   private bossRetryButton: HTMLElement | null = null;
@@ -1772,6 +1804,9 @@ export class Game {
       this.bossBall &&
       this.bossBall.currentHp > 0
     ) {
+      if (this.bossTimeoutHandled) {
+        return;
+      }
       const broken = this.bossBall.takeDamage(finalDamage);
       const state = this.store.getState();
       const bossBonus = state.subUpgrades['alien_cookbook'] ? 2 : 1;
@@ -2110,6 +2145,10 @@ export class Game {
     }
 
     const state = this.store.getState();
+
+    if (this.godMode) {
+      this.updateGodMode(dt);
+    }
 
     // Throttle boss timer updates (expensive DOM updates)
     if (this.mode === 'boss') {
@@ -2674,6 +2713,441 @@ export class Game {
 
   private toggleGodMode(): void {
     this.godMode = !this.godMode;
+    if (this.godMode) {
+      this.enableGodMode();
+    } else {
+      this.disableGodMode();
+    }
+  }
+
+  private enableGodMode(): void {
+    const state = this.store.getState();
+    const overlay = this.createGodModeOverlay();
+    this.godModeAgent = {
+      clickTimer: this.getRandomInRange(0.08, 0.2),
+      clickIntervalRange: { min: 0.08, max: 0.22 },
+      burstChance: 0.18,
+      burstShotsRemaining: 0,
+      burstCooldownTimer: 0,
+      burstCooldownRange: { min: 4.2, max: 7.5 },
+      jitterRadius: 28,
+      upgradeTimer: this.getRandomInRange(0.9, 1.6),
+      upgradeIntervalRange: { min: 0.8, max: 1.8 },
+      powerUpTimer: this.getRandomInRange(0.4, 0.9),
+      powerUpReactionRange: { min: 0.12, max: 0.35 },
+      metricsTimer: 0,
+      metricsInterval: 1,
+      startTimestamp: performance.now(),
+      baseline: {
+        points: state.points,
+        clicks: state.stats.totalClicks,
+        aliens: state.stats.aliensKilled,
+        bosses: state.stats.bossesKilled,
+        upgrades: state.stats.totalUpgrades,
+        subUpgrades: state.stats.totalSubUpgrades,
+      },
+      overlay,
+      lastAction: 'Autopilot engaged',
+      logTimer: 12,
+      idleTimer: 0,
+      nextBreakIn: this.getRandomInRange(25, 45),
+      breakTimer: 0,
+      breakDurationRange: { min: 1.4, max: 3.3 },
+    };
+    this.notificationSystem.show(
+      'God Mode autopilot engaged.',
+      'info',
+      2400,
+    );
+  }
+
+  private disableGodMode(): void {
+    if (this.godModeAgent?.overlay) {
+      this.godModeAgent.overlay.remove();
+    }
+    this.godModeAgent = null;
+    this.notificationSystem.show('God Mode disengaged.', 'warning', 2000);
+  }
+
+  private createGodModeOverlay(): HTMLElement | null {
+    if (typeof document === 'undefined') return null;
+    const existing = document.getElementById('god-mode-overlay');
+    if (existing) {
+      existing.remove();
+    }
+    const overlay = document.createElement('div');
+    overlay.id = 'god-mode-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '16px';
+    overlay.style.right = '16px';
+    overlay.style.zIndex = '2147483646';
+    overlay.style.padding = '14px 18px';
+    overlay.style.width = '220px';
+    overlay.style.background =
+      'linear-gradient(135deg, rgba(20,20,35,0.92), rgba(40,15,60,0.95))';
+    overlay.style.border = '1px solid rgba(255, 215, 0, 0.35)';
+    overlay.style.boxShadow =
+      '0 8px 24px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 215, 0, 0.3)';
+    overlay.style.borderRadius = '10px';
+    overlay.style.backdropFilter = 'blur(6px)';
+    overlay.style.color = '#f5f5f5';
+    overlay.style.fontFamily = '"Courier New", monospace';
+    overlay.style.pointerEvents = 'none';
+    overlay.innerHTML = `
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px;letter-spacing:0.04em;display:flex;align-items:center;gap:6px;">
+        <span>🛡️</span>GOD MODE AUTOPILOT
+      </div>
+      <div class="metric" data-metric="elapsed">Elapsed: 0s</div>
+      <div class="metric" data-metric="points">Points/min: 0</div>
+      <div class="metric" data-metric="clicks">Clicks/min: 0</div>
+      <div class="metric" data-metric="bosses">Bosses/hr: 0</div>
+      <div class="metric" data-metric="upgrades">Upgrades/min: 0</div>
+      <div class="metric" data-metric="last-action" style="margin-top:8px;font-size:11px;color:#ddd;">
+        Last action: —
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  private updateGodMode(dt: number): void {
+    if (!this.godModeAgent) return;
+    const agent = this.godModeAgent;
+
+    agent.clickTimer -= dt;
+    agent.upgradeTimer -= dt;
+    agent.powerUpTimer -= dt;
+    agent.metricsTimer -= dt;
+    agent.logTimer -= dt;
+    agent.burstCooldownTimer = Math.max(0, agent.burstCooldownTimer - dt);
+
+    if (agent.breakTimer > 0) {
+      agent.breakTimer = Math.max(0, agent.breakTimer - dt);
+      if (agent.breakTimer === 0) {
+        agent.lastAction = 'Back from short break';
+        agent.clickTimer = this.getRandomInRange(
+          agent.clickIntervalRange.min,
+          agent.clickIntervalRange.max,
+        );
+      }
+    } else {
+      agent.idleTimer += dt;
+      if (agent.idleTimer >= agent.nextBreakIn) {
+        agent.breakTimer = this.getRandomInRange(
+          agent.breakDurationRange.min,
+          agent.breakDurationRange.max,
+        );
+        agent.idleTimer = 0;
+        agent.nextBreakIn = this.getRandomInRange(20, 45);
+        agent.lastAction = 'Taking a short break';
+      }
+    }
+
+    const powerUpClicked = this.runGodModePowerUps(agent);
+    if (!powerUpClicked && agent.breakTimer <= 0) {
+      this.runGodModeClicking(agent);
+    }
+
+    if (agent.upgradeTimer <= 0) {
+      this.runGodModeUpgrades(agent);
+    }
+
+    if (agent.metricsTimer <= 0) {
+      this.updateGodModeMetrics(agent);
+    }
+
+    if (agent.logTimer <= 0) {
+      this.logGodModeSnapshot(agent);
+      agent.logTimer = this.getRandomInRange(14, 22);
+    }
+  }
+
+  private runGodModePowerUps(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): boolean {
+    const available = this.powerUpSystem
+      .getPowerUps()
+      .filter((powerUp) => powerUp.active);
+
+    if (available.length === 0) {
+      if (agent.powerUpTimer <= 0) {
+        agent.powerUpTimer = this.getRandomInRange(0.6, 1.4);
+      }
+      return false;
+    }
+
+    if (agent.powerUpTimer > 0) {
+      return false;
+    }
+
+    const target =
+      available[Math.floor(Math.random() * available.length)] ??
+      available[0];
+    if (!target) return false;
+
+    const clickPos = this.withJitter({ x: target.x, y: target.y }, 12);
+    this.handleClick(clickPos);
+    agent.lastAction = `Collected ${this.powerUpSystem.getBuffName(
+      target.type,
+    )}`;
+    agent.powerUpTimer = this.getRandomInRange(
+      agent.powerUpReactionRange.min,
+      agent.powerUpReactionRange.max,
+    );
+    agent.clickTimer = this.getRandomInRange(0.05, 0.12);
+    return true;
+  }
+
+  private runGodModeClicking(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): void {
+    if (this.mode === 'transition') return;
+    if (agent.breakTimer > 0) return;
+
+    const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+    if (!targetEntity || targetEntity.currentHp <= 0) return;
+
+    if (agent.clickTimer > 0) return;
+
+    const jitterScale = this.mode === 'boss' ? 0.7 : 1;
+    const clickPos = this.withJitter(
+      { x: targetEntity.x, y: targetEntity.y },
+      agent.jitterRadius * jitterScale,
+    );
+    this.handleClick(clickPos);
+
+    if (agent.burstShotsRemaining > 0) {
+      agent.burstShotsRemaining--;
+      agent.clickTimer = agent.burstShotsRemaining
+        ? this.getRandomInRange(0.05, 0.1)
+        : this.getRandomInRange(
+            agent.clickIntervalRange.min,
+            agent.clickIntervalRange.max,
+          );
+    } else if (
+      agent.burstCooldownTimer <= 0 &&
+      Math.random() < agent.burstChance
+    ) {
+      agent.burstShotsRemaining = Math.floor(this.getRandomInRange(2, 5));
+      agent.clickTimer = this.getRandomInRange(0.05, 0.1);
+      agent.burstCooldownTimer = this.getRandomInRange(
+        agent.burstCooldownRange.min,
+        agent.burstCooldownRange.max,
+      );
+      agent.lastAction = 'Executed rapid click burst';
+    } else {
+      agent.clickTimer = this.getRandomInRange(
+        agent.clickIntervalRange.min,
+        agent.clickIntervalRange.max,
+      );
+    }
+  }
+
+  private runGodModeUpgrades(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): void {
+    const beforeState = this.store.getState();
+    const beforeUpgrades = beforeState.stats.totalUpgrades;
+    const beforeSubUpgrades = beforeState.stats.totalSubUpgrades;
+
+    this.shop.checkAndBuyAffordableUpgrades(true);
+
+    const afterState = this.store.getState();
+    if (afterState.stats.totalUpgrades > beforeUpgrades) {
+      const diff = afterState.stats.totalUpgrades - beforeUpgrades;
+      agent.lastAction =
+        diff > 1 ? `Bought ${String(diff)} upgrades` : 'Bought upgrade';
+    } else if (afterState.stats.totalSubUpgrades > beforeSubUpgrades) {
+      agent.lastAction = 'Unlocked special upgrade';
+    }
+
+    agent.upgradeTimer = this.getRandomInRange(
+      agent.upgradeIntervalRange.min,
+      agent.upgradeIntervalRange.max,
+    );
+  }
+
+  private updateGodModeMetrics(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): void {
+    agent.metricsTimer = agent.metricsInterval;
+    const state = this.store.getState();
+    const elapsedSeconds = Math.max(
+      0.1,
+      (performance.now() - agent.startTimestamp) / 1000,
+    );
+
+    const deltaPoints = Math.max(0, state.points - agent.baseline.points);
+    const deltaClicks = Math.max(
+      0,
+      state.stats.totalClicks - agent.baseline.clicks,
+    );
+    const deltaBosses = Math.max(
+      0,
+      state.stats.bossesKilled - agent.baseline.bosses,
+    );
+    const deltaUpgrades =
+      Math.max(0, state.stats.totalUpgrades - agent.baseline.upgrades) +
+      Math.max(0, state.stats.totalSubUpgrades - agent.baseline.subUpgrades);
+
+    const pointsPerMinute = (deltaPoints / elapsedSeconds) * 60;
+    const clicksPerMinute = (deltaClicks / elapsedSeconds) * 60;
+    const bossesPerHour = (deltaBosses / elapsedSeconds) * 3600;
+    const upgradesPerMinute = (deltaUpgrades / elapsedSeconds) * 60;
+
+    this.updateGodModeOverlay(agent, {
+      elapsedSeconds,
+      pointsPerMinute,
+      clicksPerMinute,
+      bossesPerHour,
+      upgradesPerMinute,
+      lastAction: agent.lastAction,
+    });
+  }
+
+  private updateGodModeOverlay(
+    agent: NonNullable<typeof this.godModeAgent>,
+    metrics: {
+      elapsedSeconds: number;
+      pointsPerMinute: number;
+      clicksPerMinute: number;
+      bossesPerHour: number;
+      upgradesPerMinute: number;
+      lastAction: string;
+    },
+  ): void {
+    if (!agent.overlay) return;
+    const overlay = agent.overlay;
+
+    const elapsedEl = overlay.querySelector('[data-metric="elapsed"]');
+    if (elapsedEl) {
+      elapsedEl.textContent = `Elapsed: ${this.formatDuration(
+        metrics.elapsedSeconds,
+      )}`;
+    }
+
+    const formatValue = (value: number, fractionDigits = 1): string => {
+      if (!isFinite(value) || value <= 0) return '0';
+      if (value >= 1000) {
+        return NumberFormatter.format(value);
+      }
+      return value.toFixed(fractionDigits);
+    };
+
+    const pointsEl = overlay.querySelector('[data-metric="points"]');
+    if (pointsEl) {
+      pointsEl.textContent = `Points/min: ${formatValue(
+        metrics.pointsPerMinute,
+        1,
+      )}`;
+    }
+
+    const clicksEl = overlay.querySelector('[data-metric="clicks"]');
+    if (clicksEl) {
+      clicksEl.textContent = `Clicks/min: ${formatValue(
+        metrics.clicksPerMinute,
+        1,
+      )}`;
+    }
+
+    const bossesEl = overlay.querySelector('[data-metric="bosses"]');
+    if (bossesEl) {
+      bossesEl.textContent = `Bosses/hr: ${formatValue(
+        metrics.bossesPerHour,
+        2,
+      )}`;
+    }
+
+    const upgradesEl = overlay.querySelector('[data-metric="upgrades"]');
+    if (upgradesEl) {
+      upgradesEl.textContent = `Upgrades/min: ${formatValue(
+        metrics.upgradesPerMinute,
+        2,
+      )}`;
+    }
+
+    const actionEl = overlay.querySelector('[data-metric="last-action"]');
+    if (actionEl) {
+      actionEl.textContent = `Last action: ${
+        metrics.lastAction ? metrics.lastAction : '—'
+      }`;
+    }
+  }
+
+  private logGodModeSnapshot(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): void {
+    if (typeof console === 'undefined') return;
+    const state = this.store.getState();
+    const elapsedSeconds = Math.max(
+      0.1,
+      (performance.now() - agent.startTimestamp) / 1000,
+    );
+
+    const deltaPoints = state.points - agent.baseline.points;
+    const deltaClicks = state.stats.totalClicks - agent.baseline.clicks;
+    const deltaBosses = state.stats.bossesKilled - agent.baseline.bosses;
+    const deltaUpgrades =
+      state.stats.totalUpgrades - agent.baseline.upgrades;
+    const deltaSubUpgrades =
+      state.stats.totalSubUpgrades - agent.baseline.subUpgrades;
+
+    const pointsPerMinute = (Math.max(0, deltaPoints) / elapsedSeconds) * 60;
+    const clicksPerMinute = (Math.max(0, deltaClicks) / elapsedSeconds) * 60;
+    const bossesPerHour = (Math.max(0, deltaBosses) / elapsedSeconds) * 3600;
+    const upgradesPerMinute =
+      ((Math.max(0, deltaUpgrades) + Math.max(0, deltaSubUpgrades)) /
+        elapsedSeconds) *
+      60;
+
+    console.table({
+      'Elapsed (m)': Number((elapsedSeconds / 60).toFixed(2)),
+      'Points gained': Math.max(0, deltaPoints),
+      'Points/min': Number(pointsPerMinute.toFixed(1)),
+      'Clicks/min': Number(clicksPerMinute.toFixed(1)),
+      'Bosses/hr': Number(bossesPerHour.toFixed(2)),
+      'Upgrades/min': Number(upgradesPerMinute.toFixed(2)),
+      'Last action': agent.lastAction,
+    });
+  }
+
+  private formatDuration(seconds: number): string {
+    const totalSeconds = Math.max(0, Math.floor(seconds));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${String(hours)}h ${String(minutes)}m`;
+    }
+    if (minutes > 0) {
+      return `${String(minutes)}m ${secs.toString().padStart(2, '0')}s`;
+    }
+    return `${String(secs)}s`;
+  }
+
+  private withJitter(base: Vec2, radius: number): Vec2 {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * radius;
+    const pos = {
+      x: base.x + Math.cos(angle) * distance,
+      y: base.y + Math.sin(angle) * distance,
+    };
+    return this.clampToCanvas(pos);
+  }
+
+  private clampToCanvas(pos: Vec2): Vec2 {
+    const width = this.canvas.getWidth();
+    const height = this.canvas.getHeight();
+    return {
+      x: Math.min(Math.max(pos.x, 0), width),
+      y: Math.min(Math.max(pos.y, 0), height),
+    };
+  }
+
+  private getRandomInRange(min: number, max: number): number {
+    if (max <= min) return min;
+    return Math.random() * (max - min) + min;
   }
 
   public getGameSpeed(): number {

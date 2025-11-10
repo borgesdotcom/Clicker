@@ -1183,9 +1183,9 @@ export class Shop {
    * Auto-buy affordable upgrades
    * Called periodically when auto-buy is enabled
    */
-  public checkAndBuyAffordableUpgrades(): void {
+  public checkAndBuyAffordableUpgrades(force = false): void {
     const state = this.store.getState();
-    if (!(state.autoBuyEnabled ?? false)) return;
+    if (!force && !(state.autoBuyEnabled ?? false)) return;
     if (this.isProcessingPurchase) return; // Prevent concurrent purchases
 
     const upgrades = this.upgradeSystem.getUpgrades();

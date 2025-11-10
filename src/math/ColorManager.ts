@@ -125,27 +125,36 @@ export class ColorManager {
   static getBossHp(level: number): number {
     // Boss HP: tougher multiplier plus additional scaling tiers
     const baseHp = this.getHp(level) * 18;
+    const nerfFactor = 0.80;
 
     if (level < 50) {
-      return Math.floor(baseHp);
+      return Math.floor(baseHp * nerfFactor);
     }
 
     if (level < 150) {
-      return Math.floor(baseHp * Math.pow(1.08, level - 50));
+      return Math.floor(
+        baseHp * Math.pow(1.08, level - 50) * nerfFactor,
+      );
     }
 
     const tier1Bonus = Math.pow(1.08, 100);
     if (level < 300) {
-      return Math.floor(baseHp * tier1Bonus * Math.pow(1.1, level - 150));
+      return Math.floor(
+        baseHp * tier1Bonus * Math.pow(1.1, level - 150) * nerfFactor,
+      );
     }
 
     const tier2Bonus = tier1Bonus * Math.pow(1.1, 150);
     if (level < 600) {
-      return Math.floor(baseHp * tier2Bonus * Math.pow(1.08, level - 300));
+      return Math.floor(
+        baseHp * tier2Bonus * Math.pow(1.08, level - 300) * nerfFactor,
+      );
     }
 
     const tier3Bonus = tier2Bonus * Math.pow(1.08, 300);
-    return Math.floor(baseHp * tier3Bonus * Math.pow(1.06, level - 600));
+    return Math.floor(
+      baseHp * tier3Bonus * Math.pow(1.06, level - 600) * nerfFactor,
+    );
   }
 
   // Get boss timer limit (scales with level)
