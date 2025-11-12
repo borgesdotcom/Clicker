@@ -1504,6 +1504,7 @@ export class Game {
     // Main ship always fires regular projectiles (even in beam mode)
     // This provides click feedback and visual variety
     // Use getPointsPerHit to ensure clicks and ships deal the same base damage
+    // Note: Perfect Precision is now handled in handleDamage() to ensure it's checked once per hit
     let damage = this.upgradeSystem.getPointsPerHit(state);
 
     // v2.0: Apply artifact bonuses
@@ -1688,15 +1689,10 @@ export class Game {
       return { isCrit, color, width };
     }
 
-    if (state.subUpgrades['perfect_precision']) {
-      if (Math.random() < 0.05) {
-        isCrit = true;
-        color = '#ffff00';
-        width = 4.0;
-        this.store.getState().stats.criticalHits++;
-        return { isCrit, color, width };
-      }
-    }
+    // Perfect precision visual effect is now handled in handleDamage()
+    // The visual check here is kept for consistency, but actual damage multiplier
+    // is applied in handleDamage() to ensure it's only checked once per hit
+    // Note: Perfect Precision will show as a crit visually when it triggers
 
     return { isCrit, color, width };
   }
@@ -1720,10 +1716,21 @@ export class Game {
     isBeam?: boolean,
   ): void {
     let finalDamage = damage;
+    const state = this.store.getState();
 
-    // Apply critical damage multiplier
-    if (isCrit) {
-      const state = this.store.getState();
+    // Perfect precision: 5% chance for 10x damage (only for main ship clicks, not auto-fire)
+    // Check once per actual hit here, not in getPointsPerHit which is called multiple times
+    let perfectPrecisionTriggered = false;
+    if (!isFromShip && state.subUpgrades['perfect_precision']) {
+      if (Math.random() < 0.05) {
+        finalDamage *= 10;
+        perfectPrecisionTriggered = true;
+        isCrit = true; // Mark as crit for visual effects
+      }
+    }
+
+    // Apply critical damage multiplier (only if not from Perfect Precision, which already gives 10x)
+    if (isCrit && !perfectPrecisionTriggered) {
       const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
       finalDamage = damage * critMultiplier;
     }
@@ -2052,6 +2059,11 @@ export class Game {
     const bonusMultiplier = 1 + this.comboSystem.getCombo() * 0.01;
     let bossReward = Math.floor(baseReward * bonusMultiplier);
 
+    // Alien cookbook: +100% boss kill rewards
+    if (state.subUpgrades['alien_cookbook']) {
+      bossReward *= 2;
+    }
+
     bossReward *= 1 + this.artifactSystem.getPointsBonus();
     // Apply power-up points multiplier
     bossReward *= this.powerUpSystem.getPointsMultiplier();
@@ -2065,6 +2077,11 @@ export class Game {
     let bossXP = Math.floor(state.level * 50);
     bossXP *= 1 + artifactXPBonus;
     bossXP *= this.getEnemyXpScaling(state.level);
+    
+    // Apply XP multiplier upgrades (same as regular enemies)
+    const upgradeBonus = this.upgradeSystem.getBonusXP(state);
+    bossXP *= upgradeBonus;
+    
     bossXP = Math.max(1, Math.floor(bossXP));
 
     state.experience += bossXP;

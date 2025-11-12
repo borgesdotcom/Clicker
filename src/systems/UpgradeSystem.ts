@@ -1955,11 +1955,36 @@ export class UpgradeSystem {
       multiplier *= 5;
     }
 
-    // Perfect precision: 5% chance for 10x (handled in Game.ts)
-    if (state.subUpgrades['perfect_precision']) {
-      if (Math.random() < 0.05) {
-        multiplier *= 10;
-      }
+    // Mutation Engine sub-upgrades (transformative abilities)
+    if (state.subUpgrades['adaptive_evolution']) {
+      multiplier *= 1.05; // +5%
+    }
+    if (state.subUpgrades['symbiotic_weapons']) {
+      multiplier *= 1.08; // +8%
+    }
+    if (state.subUpgrades['regenerative_hull']) {
+      multiplier *= 1.12; // +12%
+    }
+    if (state.subUpgrades['hive_mind']) {
+      multiplier *= 1.18; // +18%
+    }
+    if (state.subUpgrades['perfect_organism']) {
+      multiplier *= 1.25; // +25%
+    }
+    if (state.subUpgrades['eldritch_evolution']) {
+      multiplier *= 1.35; // +35%
+    }
+    if (state.subUpgrades['cosmic_horror']) {
+      multiplier *= 1.5; // +50%
+    }
+    if (state.subUpgrades['transcendent_form']) {
+      multiplier *= 1.75; // +75%
+    }
+    if (state.subUpgrades['living_weapon']) {
+      multiplier *= 2.0; // +100%
+    }
+    if (state.subUpgrades['apex_predator']) {
+      multiplier *= 2.5; // +150%
     }
 
     // Late-game upgrades

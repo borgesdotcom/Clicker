@@ -135,7 +135,14 @@ export class AscensionSystem {
 
   calculatePrestigePoints(state: GameState): number {
     const breakdown = this.calculatePrestigePointsBreakdown(state);
-    return breakdown.base + breakdown.bonus;
+    let total = breakdown.base + breakdown.bonus;
+    
+    // Transcendence upgrade: x10 prestige points
+    if (state.subUpgrades?.['transcendence']) {
+      total *= 10;
+    }
+    
+    return total;
   }
 
   calculatePrestigePointsBreakdown(state: GameState): {
@@ -190,8 +197,12 @@ export class AscensionSystem {
       const achievementBonus = this.calculateAchievementBonus(state);
       basePoints += achievementBonus;
 
+      // Apply Transcendence multiplier to breakdown for display
+      // (The actual multiplier is applied in calculatePrestigePoints)
+      const transcendenceMultiplier = state.subUpgrades?.['transcendence'] ? 10 : 1;
+
       return {
-        base: Math.max(0, basePoints),
+        base: Math.max(0, basePoints) * transcendenceMultiplier,
         bonus: 0,
         previousBest: 0,
       };
@@ -249,9 +260,13 @@ export class AscensionSystem {
     const achievementBonus = this.calculateAchievementBonus(state);
     basePoints += achievementBonus;
 
+    // Apply Transcendence multiplier to breakdown for display
+    // (The actual multiplier is applied in calculatePrestigePoints)
+    const transcendenceMultiplier = state.subUpgrades?.['transcendence'] ? 10 : 1;
+
     return {
-      base: Math.max(0, basePoints),
-      bonus: Math.max(0, bonusPoints),
+      base: Math.max(0, basePoints) * transcendenceMultiplier,
+      bonus: Math.max(0, bonusPoints) * transcendenceMultiplier,
       previousBest: effectivePreviousBest,
     };
   }
