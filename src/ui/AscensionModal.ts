@@ -97,10 +97,42 @@ export class AscensionModal {
       }
     });
 
-    // Subscribe to store updates to refresh prestige upgrades
+    // Use event delegation for upgrade cards to prevent issues with re-rendering
+    const grid = this.modal.querySelector('#prestige-upgrades-grid');
+    if (grid) {
+      grid.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const card = target.closest('.prestige-upgrade-card') as HTMLElement;
+        if (card && !card.classList.contains('maxed')) {
+          const upgradeId = card.getAttribute('data-upgrade-id');
+          if (upgradeId) {
+            e.stopPropagation();
+            const state = this.store.getState();
+            if (this.ascensionSystem.buyPrestigeUpgrade(state, upgradeId)) {
+              this.store.setState(state);
+              this.updatePrestigeUpgrades();
+              // Update combo pause button if the upgrade was purchased
+              if (upgradeId === 'combo_pause_unlock' && window.game) {
+                (window.game as any).updateComboPauseButton?.();
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Subscribe to store updates to refresh prestige upgrades (throttled)
+    let updateTimeout: number | null = null;
     this.store.subscribe(() => {
       if (this.modal.style.display !== 'none') {
-        this.updatePrestigeUpgrades();
+        // Throttle updates to prevent flickering
+        if (updateTimeout !== null) {
+          clearTimeout(updateTimeout);
+        }
+        updateTimeout = window.setTimeout(() => {
+          this.updatePrestigeUpgrades();
+          updateTimeout = null;
+        }, 50); // 50ms throttle
       }
     });
   }
@@ -155,7 +187,11 @@ export class AscensionModal {
       unspentPPBonus.textContent = `+${bonusPercent}%`;
     }
 
-    // Update prestige upgrades
+    // Clear and update prestige upgrades
+    const grid = this.modal.querySelector('#prestige-upgrades-grid');
+    if (grid) {
+      grid.innerHTML = ''; // Clear on show to ensure clean state
+    }
     this.updatePrestigeUpgrades();
 
     // Check if can ascend
@@ -248,7 +284,6 @@ export class AscensionModal {
     const grid = this.modal.querySelector('#prestige-upgrades-grid');
     if (!grid) return;
 
-    grid.innerHTML = '';
     const upgrades = this.ascensionSystem.getUpgrades();
 
     for (const upgrade of upgrades) {
@@ -257,33 +292,58 @@ export class AscensionModal {
       const canAfford = state.prestigePoints >= actualCost;
       const maxed = currentLevel >= upgrade.maxLevel;
 
-      const card = document.createElement('div');
-      card.className = `prestige-upgrade-card ${maxed ? 'maxed' : ''} ${!canAfford && !maxed ? 'locked' : ''}`;
-
-      card.innerHTML = `
-        <div class="prestige-upgrade-name">${upgrade.name}</div>
-        <div class="prestige-upgrade-level">Level: ${currentLevel.toString()} / ${upgrade.maxLevel.toString()}</div>
-        <div class="prestige-upgrade-desc">${upgrade.description}</div>
-        <div class="prestige-upgrade-effect">${upgrade.effect}</div>
-        <div class="prestige-upgrade-cost">
-          ${maxed ? 'MAX' : `Cost: ${actualCost.toString()} PP${actualCost > upgrade.cost ? ` (base: ${upgrade.cost.toString()})` : ''}`}
-        </div>
-      `;
-
-      if (!maxed) {
-        card.addEventListener('click', () => {
-          if (this.ascensionSystem.buyPrestigeUpgrade(state, upgrade.id)) {
-            this.store.setState(state);
-            this.updatePrestigeUpgrades();
-            // Update combo pause button if the upgrade was purchased
-            if (upgrade.id === 'combo_pause_unlock' && window.game) {
-              (window.game as any).updateComboPauseButton?.();
-            }
-          }
-        });
+      // Try to find existing card to update instead of recreating
+      let card = grid.querySelector(`[data-upgrade-id="${upgrade.id}"]`) as HTMLElement;
+      
+      if (!card) {
+        // Create new card if it doesn't exist
+        card = document.createElement('div');
+        card.setAttribute('data-upgrade-id', upgrade.id);
+        grid.appendChild(card);
       }
 
-      grid.appendChild(card);
+      // Update classes
+      card.className = `prestige-upgrade-card ${maxed ? 'maxed' : ''} ${!canAfford && !maxed ? 'locked' : ''}`;
+
+      // Update content only if it changed (to prevent flickering)
+      const nameEl = card.querySelector('.prestige-upgrade-name');
+      const levelEl = card.querySelector('.prestige-upgrade-level');
+      const costEl = card.querySelector('.prestige-upgrade-cost');
+
+      if (!nameEl || !levelEl || !costEl) {
+        // First time rendering - set innerHTML
+        card.innerHTML = `
+          <div class="prestige-upgrade-name">${upgrade.name}</div>
+          <div class="prestige-upgrade-level">Level: ${currentLevel.toString()} / ${upgrade.maxLevel.toString()}</div>
+          <div class="prestige-upgrade-desc">${upgrade.description}</div>
+          <div class="prestige-upgrade-effect">${upgrade.effect}</div>
+          <div class="prestige-upgrade-cost">
+            ${maxed ? 'MAX' : `Cost: ${actualCost.toString()} PP${actualCost > upgrade.cost ? ` (base: ${upgrade.cost.toString()})` : ''}`}
+          </div>
+        `;
+      } else {
+        // Update only changed content
+        if (nameEl.textContent !== upgrade.name) {
+          nameEl.textContent = upgrade.name;
+        }
+        const levelText = `Level: ${currentLevel.toString()} / ${upgrade.maxLevel.toString()}`;
+        if (levelEl.textContent !== levelText) {
+          levelEl.textContent = levelText;
+        }
+        const costText = maxed ? 'MAX' : `Cost: ${actualCost.toString()} PP${actualCost > upgrade.cost ? ` (base: ${upgrade.cost.toString()})` : ''}`;
+        if (costEl.textContent !== costText) {
+          costEl.textContent = costText;
+        }
+      }
     }
+
+    // Remove any cards that no longer exist (cleanup)
+    const existingCards = grid.querySelectorAll('.prestige-upgrade-card');
+    existingCards.forEach((card) => {
+      const upgradeId = card.getAttribute('data-upgrade-id');
+      if (!upgrades.find((u) => u.id === upgradeId)) {
+        card.remove();
+      }
+    });
   }
 }
