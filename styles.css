@@ -607,6 +607,7 @@ body {
   animation: special-box-glow 3s ease-in-out infinite;
   position: relative;
   overflow: visible;
+  z-index: 101;
 }
 
 .special-upgrades-effect-wrapper {
