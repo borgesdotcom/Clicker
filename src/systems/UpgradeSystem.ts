@@ -220,6 +220,20 @@ export class UpgradeSystem {
         },
       },
       {
+        id: 'falafel_rollo_special',
+        name: 'Falafel Rollo Special',
+        description: '+10% damage',
+        flavor:
+          'The aliens can\'t resist the delicious smell. The secret ingredient is... well, we\'re not entirely sure, but it works! Warning: may cause space indigestion.',
+        cost: 40000,
+        owned: false,
+        requires: (state) => state.subUpgrades['space_pizza'] === true,
+        isVisible: (state) => state.subUpgrades['space_pizza'] === true,
+        buy: (state) => {
+          state.subUpgrades['falafel_rollo_special'] = true;
+        },
+      },
+      {
         id: 'antimatter_rounds',
         name: 'Antimatter Ammunition',
         description: 'Double all point gains',
@@ -1377,6 +1391,7 @@ export class UpgradeSystem {
         'master_clicker',
         'click_multiplier',
         'super_clicker',
+        'falafel_rollo_special',
         'plasma_matrix',
         'quantum_entanglement',
         'stellar_forge',
@@ -1430,7 +1445,7 @@ export class UpgradeSystem {
 
     // General/misc sub-upgrades
     const miscSubUpgrades = this.subUpgrades.filter((u) =>
-      ['energy_recycling', 'cheat_codes', 'alien_cookbook'].includes(u.id),
+      ['energy_recycling', 'cheat_codes', 'alien_cookbook', 'falafel_rollo_special'].includes(u.id),
     );
 
     const shipUpgrade: UpgradeConfig = {
@@ -1905,6 +1920,11 @@ export class UpgradeSystem {
     // Disco ball: +15%
     if (state.subUpgrades['disco_ball']) {
       multiplier *= 1.15;
+    }
+
+    // Falafel Rollo Special: +10% damage (aliens distracted by delicious smell)
+    if (state.subUpgrades['falafel_rollo_special']) {
+      multiplier *= 1.10;
     }
 
     // Chaos emeralds: +35%

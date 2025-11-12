@@ -296,6 +296,11 @@
         "description": "+1% critical damage multiplier",
         "flavor": "Explains your problems back to you. Very therapeutic."
       },
+      "falafel_rollo_special": {
+        "name": "Falafel Rollo Special",
+        "description": "+30% damage",
+        "flavor": "The aliens can't resist the delicious smell, making them pause mid-attack. The secret ingredient is... well, we're not entirely sure, but it works! Warning: may cause space indigestion."
+      },
       "antimatter_rounds": {
         "name": "Antimatter Ammunition",
         "description": "Double all point gains",

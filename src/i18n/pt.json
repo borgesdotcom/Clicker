@@ -296,6 +296,11 @@
         "description": "+1% de multiplicador de dano crítico",
         "flavor": "Explica seus problemas de volta para você. Muito terapêutico."
       },
+      "falafel_rollo_special": {
+        "name": "Falafel Rollo Especial",
+        "description": "+30% de dano",
+        "flavor": "Os alienígenas não conseguem resistir ao cheiro delicioso, fazendo-os pausar no meio do ataque. O ingrediente secreto é... bem, não temos certeza total, mas funciona! Aviso: pode causar indigestão espacial."
+      },
       "antimatter_rounds": {
         "name": "Munição de Antimatéria",
         "description": "Dobra todos os ganhos de pontos",

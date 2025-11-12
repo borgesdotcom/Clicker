@@ -947,6 +947,7 @@ export class Shop {
       lucky_dice: '🎲',
       space_pizza: '🍕',
       rubber_duck: '🦆',
+      falafel_rollo_special: '🥙',
       motivational_posters: '📋',
       disco_ball: '🪩',
       lucky_horseshoe: '🍀',
