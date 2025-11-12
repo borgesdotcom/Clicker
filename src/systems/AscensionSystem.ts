@@ -117,6 +117,16 @@ export class AscensionSystem {
         effect: '+0.0005× combo per level (total +0.001×)',
       },
       {
+        id: 'prestige_combo_duration',
+        name: 'Combo Persistence',
+        description: 'Increase combo duration before it resets',
+        cost: 4,
+        maxLevel: 25,
+        getCurrentLevel: (state) =>
+          state.prestigeUpgrades?.prestige_combo_duration ?? 0,
+        effect: '+1 second duration per level',
+      },
+      {
         id: 'auto_buy_unlock',
         name: 'Auto-Buy Protocol',
         description: 'Unlock automatic purchase of affordable upgrades',
@@ -125,6 +135,16 @@ export class AscensionSystem {
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.auto_buy_unlock ?? 0,
         effect: 'Unlocks Auto-Buy feature',
+      },
+      {
+        id: 'combo_pause_unlock',
+        name: 'Combo Freeze',
+        description: 'Unlock ability to pause combo timer for 15 minutes',
+        cost: 30,
+        maxLevel: 1,
+        getCurrentLevel: (state) =>
+          state.prestigeUpgrades?.combo_pause_unlock ?? 0,
+        effect: 'Unlocks Combo Pause skill (15min duration, 1hr cooldown)',
       },
     ];
   }
@@ -339,8 +359,19 @@ export class AscensionSystem {
     return 0.0005 + level * 0.00035;
   }
 
+  getComboDurationBonus(state: GameState): number {
+    const level = state.prestigeUpgrades?.prestige_combo_duration ?? 0;
+    // Adds +1 second per level to base combo duration
+    return level * 1.0;
+  }
+
   isAutoBuyUnlocked(state: GameState): boolean {
     const level = state.prestigeUpgrades?.auto_buy_unlock ?? 0;
+    return level >= 1;
+  }
+
+  isComboPauseUnlocked(state: GameState): boolean {
+    const level = state.prestigeUpgrades?.combo_pause_unlock ?? 0;
     return level >= 1;
   }
 

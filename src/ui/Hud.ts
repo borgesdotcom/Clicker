@@ -133,6 +133,7 @@ export class Hud {
       speed: '⚡',
       multishot: '✨',
       critical: '💥',
+      combo_pause: '⏸️',
     };
 
     const POWERUP_COLORS: Record<string, string> = {
@@ -141,6 +142,7 @@ export class Hud {
       speed: '#ffff00',
       multishot: '#ff00ff',
       critical: '#ff8800',
+      combo_pause: '#00aaff',
     };
 
     const POWERUP_NAMES: Record<string, string> = {
@@ -149,6 +151,7 @@ export class Hud {
       speed: 'Speed',
       multishot: 'Multi',
       critical: 'Crit',
+      combo_pause: 'Combo Pause',
     };
 
     // If buffs changed, recreate elements

@@ -275,6 +275,10 @@ export class AscensionModal {
           if (this.ascensionSystem.buyPrestigeUpgrade(state, upgrade.id)) {
             this.store.setState(state);
             this.updatePrestigeUpgrades();
+            // Update combo pause button if the upgrade was purchased
+            if (upgrade.id === 'combo_pause_unlock' && window.game) {
+              (window.game as any).updateComboPauseButton?.();
+            }
           }
         });
       }

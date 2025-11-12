@@ -358,4 +358,54 @@ export class ArtifactSystem {
   public getRarityColor(rarity: ArtifactRarity): string {
     return RARITY_COLORS[rarity];
   }
+
+  public sellArtifact(artifactId: string): number {
+    const artifact = this.artifacts.find((a) => a.id === artifactId);
+    if (!artifact) return 0;
+
+    // Calculate sell value based on rarity, level, and upgrade costs invested
+    const baseValue = {
+      common: 1000,
+      rare: 5000,
+      epic: 25000,
+      legendary: 100000,
+    }[artifact.rarity];
+
+    // Add value for each level (represents invested upgrade costs)
+    let totalUpgradeCost = 0;
+    for (let level = 1; level < artifact.level; level++) {
+      const cost = Math.floor(baseValue * Math.pow(1.5, level - 1));
+      totalUpgradeCost += cost;
+    }
+
+    // Sell value is 50% of base + 30% of invested upgrade costs
+    const sellValue = Math.floor(baseValue * 0.5 + totalUpgradeCost * 0.3);
+
+    // Remove artifact from list
+    this.artifacts = this.artifacts.filter((a) => a.id !== artifactId);
+    this.equippedArtifacts = this.artifacts.filter((a) => a.equipped);
+    this.save();
+
+    return sellValue;
+  }
+
+  public getSellValue(artifactId: string): number {
+    const artifact = this.artifacts.find((a) => a.id === artifactId);
+    if (!artifact) return 0;
+
+    const baseValue = {
+      common: 1000,
+      rare: 5000,
+      epic: 25000,
+      legendary: 100000,
+    }[artifact.rarity];
+
+    let totalUpgradeCost = 0;
+    for (let level = 1; level < artifact.level; level++) {
+      const cost = Math.floor(baseValue * Math.pow(1.5, level - 1));
+      totalUpgradeCost += cost;
+    }
+
+    return Math.floor(baseValue * 0.5 + totalUpgradeCost * 0.3);
+  }
 }

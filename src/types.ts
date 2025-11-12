@@ -34,6 +34,10 @@ export interface SaveData {
   lastPlayTime?: number;
   // Visual customization
   selectedThemes?: Record<string, string>; // ThemeCategory -> themeId
+  // Combo pause skill state
+  comboPauseActive?: boolean;
+  comboPauseEndTime?: number; // Timestamp when active duration ends (0 if not active)
+  comboPauseCooldownEndTime?: number; // Timestamp when cooldown ends (0 if not on cooldown)
 }
 
 export interface GameStats {
@@ -80,6 +84,10 @@ export interface GameState {
   autoBuyEnabled?: boolean;
   // Visual customization
   selectedThemes?: Record<string, string>; // ThemeCategory -> themeId
+  // Combo pause skill state
+  comboPauseActive?: boolean;
+  comboPauseEndTime?: number; // Timestamp when active duration ends (0 if not active)
+  comboPauseCooldownEndTime?: number; // Timestamp when cooldown ends (0 if not on cooldown)
 }
 
 export interface UpgradeConfig {

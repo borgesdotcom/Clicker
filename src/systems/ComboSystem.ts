@@ -42,10 +42,22 @@ export class ComboSystem {
   }
 
   /**
+   * Get combo timeout duration (base + prestige bonus)
+   */
+  private getComboTimeout(state?: GameState): number {
+    let timeout = COMBO_TIMEOUT;
+    if (this.ascensionSystem && state) {
+      const durationBonus = this.ascensionSystem.getComboDurationBonus(state);
+      timeout += durationBonus;
+    }
+    return timeout;
+  }
+
+  /**
    * Register a hit (click or QTE success)
    * Increments combo and resets decay timer
    */
-  hit(): void {
+  hit(state?: GameState): void {
     this.combo++;
 
     // Apply cap if configured
@@ -54,7 +66,7 @@ export class ComboSystem {
       this.combo = Math.min(this.combo, maxCombo);
     }
 
-    this.comboTimer = COMBO_TIMEOUT;
+    this.comboTimer = this.getComboTimeout(state);
     this.comboAnimationTime = 0.3;
 
     if (this.combo > this.maxCombo) {
@@ -93,11 +105,12 @@ export class ComboSystem {
   }
 
   /**
-   * Pause the combo timer (e.g., during boss transitions)
+   * Pause the combo timer (e.g., during boss transitions or combo pause skill)
    * Saves the current timer value so it can be resumed later
+   * @param force - If true, pause even if combo is 0 (for combo pause skill)
    */
-  pause(): void {
-    if (this.combo > 0 && this.comboTimer > 0) {
+  pause(force: boolean = false): void {
+    if (force || (this.combo > 0 && this.comboTimer > 0)) {
       this.isPaused = true;
       this.pausedTimerValue = this.comboTimer;
     }
@@ -155,8 +168,9 @@ export class ComboSystem {
   /**
    * Get time remaining as percentage (0-1)
    */
-  getTimePercent(): number {
-    return this.comboTimer / COMBO_TIMEOUT;
+  getTimePercent(state?: GameState): number {
+    const timeout = this.getComboTimeout(state);
+    return this.comboTimer / timeout;
   }
 
   /**
@@ -216,7 +230,7 @@ export class ComboSystem {
     ctx.fillText(`${this.combo.toString()} COMBO`, x, y + 15);
 
     // Timer bar (shows remaining time before reset)
-    const timePercent = this.getTimePercent();
+    const timePercent = this.getTimePercent(state);
     const barWidth = 120;
     const barHeight = 4;
     const barX = x - barWidth / 2;

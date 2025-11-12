@@ -159,6 +159,14 @@ export class Game {
   private bossRetryButton: HTMLElement | null = null;
   private blockedOnBossLevel: number | null = null;
 
+  // Combo pause skill system
+  private comboPauseButton: HTMLElement | null = null;
+  private comboPauseActive = false;
+  private comboPauseDuration = 0; // Remaining duration in seconds
+  private comboPauseCooldown = 0; // Remaining cooldown in seconds
+  private readonly COMBO_PAUSE_DURATION = 15 * 60; // 15 minutes in seconds
+  private readonly COMBO_PAUSE_COOLDOWN = 60 * 60; // 1 hour in seconds
+
   // Damage batching for performance - use pre-allocated object to reduce GC
   private damageBatch: {
     damage: number;
@@ -506,6 +514,7 @@ export class Game {
     this.setupDiscordButton();
     this.setupGameInfoButton();
     this.setupCustomizationButton();
+    this.setupComboPauseButton();
     Layout.setupResetButton(() => {
       this.resetGame();
     });
@@ -670,8 +679,10 @@ export class Game {
 
     // Clean up boss battle state first
     this.hideBossTimer();
-    // Pause combo to preserve it during transition back to normal
-    this.comboSystem.pause();
+    // Pause combo to preserve it during transition back to normal (unless combo pause skill is active)
+    if (!this.comboPauseActive) {
+      this.comboSystem.pause();
+    }
 
     // Show epic timeout modal
     const timeoutModal = document.getElementById('boss-timeout-modal');
@@ -968,6 +979,200 @@ export class Game {
         this.gameInfoModal.show();
       });
       hudElement.appendChild(infoBtn);
+    }
+  }
+
+  private setupComboPauseButton(): void {
+    // Create skills container in game-container (not in HUD)
+    const gameContainer = document.getElementById('game-container');
+    if (!gameContainer) return;
+
+    // Create skills container
+    let skillsContainer = document.getElementById('skills-container');
+    if (!skillsContainer) {
+      skillsContainer = document.createElement('div');
+      skillsContainer.id = 'skills-container';
+      skillsContainer.style.cssText = `
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
+      `;
+      gameContainer.appendChild(skillsContainer);
+    }
+
+    // Create skill button
+    this.comboPauseButton = document.createElement('button');
+    this.comboPauseButton.id = 'combo-pause-skill';
+    this.comboPauseButton.className = 'skill-button';
+    this.comboPauseButton.style.display = 'none';
+    this.comboPauseButton.style.pointerEvents = 'auto';
+
+    // Create skill button structure
+    this.comboPauseButton.innerHTML = `
+      <div class="skill-icon">⏸️</div>
+      <div class="skill-cooldown-ring"></div>
+      <div class="skill-timer">0:00</div>
+      <div class="skill-tooltip">
+        <div class="skill-tooltip-title">Combo Freeze</div>
+        <div class="skill-tooltip-desc">Pause combo timer for 15 minutes</div>
+        <div class="skill-tooltip-cooldown">Cooldown: 1 hour</div>
+      </div>
+    `;
+
+    this.comboPauseButton.addEventListener('click', () => {
+      this.activateComboPause();
+    });
+
+    skillsContainer.appendChild(this.comboPauseButton);
+    this.updateComboPauseButton();
+  }
+
+  private restoreComboPauseState(): void {
+    const state = this.store.getState();
+    const now = Date.now();
+
+    // Restore active state
+    if (state.comboPauseActive && state.comboPauseEndTime && state.comboPauseEndTime > 0) {
+      const remainingMs = state.comboPauseEndTime - now;
+      if (remainingMs > 0) {
+        // Still active - restore duration
+        this.comboPauseActive = true;
+        this.comboPauseDuration = remainingMs / 1000; // Convert to seconds
+        this.comboSystem.pause(true); // Force pause
+      } else {
+        // Duration expired - start cooldown
+        this.comboPauseActive = false;
+        this.comboPauseDuration = 0;
+        // Check if cooldown was already set
+        if (state.comboPauseCooldownEndTime && state.comboPauseCooldownEndTime > 0) {
+          const cooldownRemainingMs = state.comboPauseCooldownEndTime - now;
+          this.comboPauseCooldown = Math.max(0, cooldownRemainingMs / 1000);
+        } else {
+          // Start new cooldown
+          this.comboPauseCooldown = this.COMBO_PAUSE_COOLDOWN;
+          state.comboPauseCooldownEndTime = now + this.COMBO_PAUSE_COOLDOWN * 1000;
+        }
+        state.comboPauseActive = false;
+        state.comboPauseEndTime = 0;
+        this.comboSystem.resume();
+      }
+    } else if (state.comboPauseCooldownEndTime && state.comboPauseCooldownEndTime > 0) {
+      // Restore cooldown state
+      const cooldownRemainingMs = state.comboPauseCooldownEndTime - now;
+      if (cooldownRemainingMs > 0) {
+        this.comboPauseCooldown = cooldownRemainingMs / 1000;
+      } else {
+        // Cooldown expired
+        this.comboPauseCooldown = 0;
+        state.comboPauseCooldownEndTime = 0;
+      }
+      this.comboPauseActive = false;
+      this.comboPauseDuration = 0;
+    }
+
+    // Save updated state
+    this.store.setState({ ...state });
+    this.updateComboPauseButton();
+  }
+
+  private activateComboPause(): void {
+    const state = this.store.getState();
+    if (!this.ascensionSystem.isComboPauseUnlocked(state)) {
+      return;
+    }
+
+    if (this.comboPauseCooldown > 0) {
+      // Still on cooldown
+      return;
+    }
+
+    if (this.comboPauseActive) {
+      // Already active
+      return;
+    }
+
+    // Activate the skill
+    const now = Date.now();
+    this.comboPauseActive = true;
+    this.comboPauseDuration = this.COMBO_PAUSE_DURATION;
+    this.comboSystem.pause(true); // Force pause even if no combo
+
+    // Save end time to state
+    state.comboPauseActive = true;
+    state.comboPauseEndTime = now + this.COMBO_PAUSE_DURATION * 1000;
+    state.comboPauseCooldownEndTime = 0; // Clear cooldown end time
+    this.store.setState({ ...state });
+
+    this.updateComboPauseButton();
+    this.soundManager.playClick();
+  }
+
+  private updateComboPauseButton(): void {
+    if (!this.comboPauseButton) return;
+
+    const state = this.store.getState();
+    const isUnlocked = this.ascensionSystem.isComboPauseUnlocked(state);
+
+    if (!isUnlocked) {
+      this.comboPauseButton.style.display = 'none';
+      return;
+    }
+
+    this.comboPauseButton.style.display = 'block';
+
+    const iconEl = this.comboPauseButton.querySelector('.skill-icon') as HTMLElement;
+    const cooldownRing = this.comboPauseButton.querySelector('.skill-cooldown-ring') as HTMLElement;
+    const timerEl = this.comboPauseButton.querySelector('.skill-timer') as HTMLElement;
+
+    if (!iconEl || !cooldownRing || !timerEl) return;
+
+    if (this.comboPauseActive) {
+      // Active - show remaining duration
+      const minutes = Math.floor(this.comboPauseDuration / 60);
+      const seconds = Math.floor(this.comboPauseDuration % 60);
+      timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      timerEl.style.display = 'block';
+      
+      const percent = (this.comboPauseDuration / this.COMBO_PAUSE_DURATION) * 100;
+      cooldownRing.style.background = `conic-gradient(
+        rgba(0, 170, 255, 0.3) ${percent}%,
+        transparent ${percent}%
+      )`;
+      cooldownRing.style.display = 'block';
+      
+      this.comboPauseButton.classList.add('skill-active');
+      this.comboPauseButton.classList.remove('skill-cooldown', 'skill-ready');
+      this.comboPauseButton.style.cursor = 'default';
+    } else if (this.comboPauseCooldown > 0) {
+      // On cooldown - show cooldown time
+      const minutes = Math.floor(this.comboPauseCooldown / 60);
+      const seconds = Math.floor(this.comboPauseCooldown % 60);
+      timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      timerEl.style.display = 'block';
+      
+      const percent = (this.comboPauseCooldown / this.COMBO_PAUSE_COOLDOWN) * 100;
+      cooldownRing.style.background = `conic-gradient(
+        rgba(100, 100, 100, 0.5) ${percent}%,
+        transparent ${percent}%
+      )`;
+      cooldownRing.style.display = 'block';
+      
+      this.comboPauseButton.classList.add('skill-cooldown');
+      this.comboPauseButton.classList.remove('skill-active', 'skill-ready');
+      this.comboPauseButton.style.cursor = 'not-allowed';
+    } else {
+      // Ready to use
+      timerEl.style.display = 'none';
+      cooldownRing.style.display = 'none';
+      
+      this.comboPauseButton.classList.add('skill-ready');
+      this.comboPauseButton.classList.remove('skill-active', 'skill-cooldown');
+      this.comboPauseButton.style.cursor = 'pointer';
     }
   }
 
@@ -1296,6 +1501,9 @@ export class Game {
       state.experience,
       ColorManager.getExpRequired(state.level),
     );
+
+    // Restore combo pause skill state
+    this.restoreComboPauseState();
   }
 
   private createBall(): void {
@@ -1443,10 +1651,11 @@ export class Game {
     }
 
     // Click anywhere to shoot - much better for mobile!
+    const state = this.store.getState();
     if (this.mode === 'normal' && this.ball && this.ball.currentHp > 0) {
       this.store.incrementClick();
       this.soundManager.playClick();
-      this.comboSystem.hit();
+      this.comboSystem.hit(state);
       this.fireVolley();
     } else if (
       this.mode === 'boss' &&
@@ -1455,7 +1664,7 @@ export class Game {
     ) {
       this.store.incrementClick();
       this.soundManager.playClick();
-      this.comboSystem.hit();
+      this.comboSystem.hit(state);
       // Boss mode now uses same firing as normal mode
       this.fireVolley();
     }
@@ -1732,7 +1941,7 @@ export class Game {
     // Apply critical damage multiplier (only if not from Perfect Precision, which already gives 10x)
     if (isCrit && !perfectPrecisionTriggered) {
       const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
-      finalDamage = damage * critMultiplier;
+      finalDamage *= critMultiplier;
     }
 
     // Apply combo multiplier (works in all modes now!)
@@ -2115,8 +2324,10 @@ export class Game {
     this.store.setState(state);
 
     this.soundManager.playBossDefeat();
-    // Pause combo to preserve it during transition back to normal
-    this.comboSystem.pause();
+    // Pause combo to preserve it during transition back to normal (unless combo pause skill is active)
+    if (!this.comboPauseActive) {
+      this.comboSystem.pause();
+    }
     this.hideBossTimer();
 
     this.blockedOnBossLevel = null;
@@ -2199,8 +2410,10 @@ export class Game {
     this.mode = 'transition';
     this.transitionTime = 0;
     this.ball = null;
-    // Pause combo instead of resetting it - will resume after boss fight
-    this.comboSystem.pause();
+    // Pause combo instead of resetting it - will resume after boss fight (unless combo pause skill is active)
+    if (!this.comboPauseActive) {
+      this.comboSystem.pause();
+    }
 
     // Hide timeout modal if visible
     const timeoutModal = document.getElementById('boss-timeout-modal');
@@ -2216,8 +2429,10 @@ export class Game {
         this.createBoss();
         this.mode = 'boss';
         this.startBossTimer();
-        // Resume combo when boss fight actually starts (not during transition)
-        this.comboSystem.resume();
+        // Resume combo when boss fight actually starts (not during transition, unless combo pause is active)
+        if (!this.comboPauseActive) {
+          this.comboSystem.resume();
+        }
       }
     }, this.transitionDuration * 500);
   }
@@ -2235,8 +2450,10 @@ export class Game {
       if (this.mode === 'transition') {
         this.mode = 'normal';
         this.createBall();
-        // Resume combo when returning to normal gameplay
-        this.comboSystem.resume();
+        // Resume combo when returning to normal gameplay (unless combo pause is active)
+        if (!this.comboPauseActive) {
+          this.comboSystem.resume();
+        }
       }
     }, this.transitionDuration * 500);
   }
@@ -2277,6 +2494,58 @@ export class Game {
     }
 
     const state = this.store.getState();
+
+    // Update combo pause skill
+    if (this.comboPauseActive) {
+      this.comboPauseDuration -= dt;
+      if (this.comboPauseDuration <= 0) {
+        // Skill expired - resume combo and start cooldown
+        const now = Date.now();
+        this.comboPauseActive = false;
+        this.comboPauseDuration = 0;
+        this.comboPauseCooldown = this.COMBO_PAUSE_COOLDOWN;
+        this.comboSystem.resume();
+        
+        // Update state
+        state.comboPauseActive = false;
+        state.comboPauseEndTime = 0;
+        state.comboPauseCooldownEndTime = now + this.COMBO_PAUSE_COOLDOWN * 1000;
+        this.store.setState({ ...state });
+        
+        this.updateComboPauseButton();
+      } else {
+        // Update end time in state to reflect current duration
+        const now = Date.now();
+        state.comboPauseEndTime = now + this.comboPauseDuration * 1000;
+        this.store.setState({ ...state });
+        
+        // Update button display every second
+        if (Math.floor(this.comboPauseDuration) !== Math.floor(this.comboPauseDuration + dt)) {
+          this.updateComboPauseButton();
+        }
+      }
+    } else if (this.comboPauseCooldown > 0) {
+      this.comboPauseCooldown -= dt;
+      if (this.comboPauseCooldown <= 0) {
+        this.comboPauseCooldown = 0;
+        
+        // Update state
+        state.comboPauseCooldownEndTime = 0;
+        this.store.setState({ ...state });
+        
+        this.updateComboPauseButton();
+      } else {
+        // Update cooldown end time in state
+        const now = Date.now();
+        state.comboPauseCooldownEndTime = now + this.comboPauseCooldown * 1000;
+        this.store.setState({ ...state });
+        
+        // Update button display every second
+        if (Math.floor(this.comboPauseCooldown) !== Math.floor(this.comboPauseCooldown + dt)) {
+          this.updateComboPauseButton();
+        }
+      }
+    }
 
     if (this.godMode) {
       this.updateGodMode(scaledDt, realDt);
@@ -2322,9 +2591,17 @@ export class Game {
         const critBonus = this.powerUpSystem.getCritChanceBonus() * 100; // Convert to percentage
         this.hud.updateStats(dps, passiveGen, critChance, critBonus);
 
-        // Update power-up buffs display
+        // Update power-up buffs display (include combo pause skill if active)
         const activeBuffs = this.powerUpSystem.getActiveBuffs();
-        this.hud.updatePowerUpBuffs(activeBuffs);
+        const allBuffs: Array<{ type: string; duration: number; maxDuration: number }> = [...activeBuffs];
+        if (this.comboPauseActive) {
+          allBuffs.push({
+            type: 'combo_pause',
+            duration: this.comboPauseDuration,
+            maxDuration: this.COMBO_PAUSE_DURATION,
+          });
+        }
+        this.hud.updatePowerUpBuffs(allBuffs);
 
         // Refresh shop if power-up buffs changed (to update shop display with ⚡ and ⚔️ icons)
         const currentPowerUpCount = activeBuffs.length;

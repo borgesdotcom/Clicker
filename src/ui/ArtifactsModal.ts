@@ -6,6 +6,7 @@ export class ArtifactsModal {
   private artifactSystem: ArtifactSystem;
   private store: Store;
   private onCloseCallback: (() => void) | null = null;
+  private currentFilter: string = 'all';
 
   constructor(artifactSystem: ArtifactSystem, store: Store) {
     this.artifactSystem = artifactSystem;
@@ -28,11 +29,21 @@ export class ArtifactsModal {
           <button class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="artifacts-info">
-            <p>Equipped: <span id="equipped-count">0</span>/${this.artifactSystem.getMaxEquipped().toString()}</p>
-            <div class="artifact-bonuses" id="artifact-bonuses"></div>
+          <div class="artifacts-header">
+            <div class="artifacts-stats">
+              <span class="stat-item">Equipped: <strong id="equipped-count">0</strong>/${this.artifactSystem.getMaxEquipped().toString()}</span>
+              <span class="stat-item">Total: <strong id="total-count">0</strong></span>
+            </div>
+            <div class="artifacts-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="equipped">Equipped</button>
+              <button class="filter-btn" data-filter="common">Common</button>
+              <button class="filter-btn" data-filter="rare">Rare</button>
+              <button class="filter-btn" data-filter="epic">Epic</button>
+              <button class="filter-btn" data-filter="legendary">Legendary</button>
+            </div>
           </div>
-          <div class="artifacts-container" id="artifacts-list"></div>
+          <div class="artifacts-inventory" id="artifacts-list"></div>
         </div>
       </div>
     `;
@@ -50,6 +61,20 @@ export class ArtifactsModal {
       if (e.target === this.modal) {
         this.hide();
       }
+    });
+
+    // Filter buttons
+    const filterBtns = this.modal.querySelectorAll('.filter-btn');
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter');
+        if (filter) {
+          this.currentFilter = filter;
+          filterBtns.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.render();
+        }
+      });
     });
   }
 
@@ -87,30 +112,34 @@ export class ArtifactsModal {
 
   private render(): void {
     const container = this.modal.querySelector('#artifacts-list');
-    const bonusesContainer = this.modal.querySelector('#artifact-bonuses');
     const equippedCount = this.modal.querySelector('#equipped-count');
+    const totalCount = this.modal.querySelector('#total-count');
 
-    if (!container || !bonusesContainer || !equippedCount) return;
+    if (!container || !equippedCount || !totalCount) return;
 
     const artifacts = this.artifactSystem.getArtifacts();
     const equipped = this.artifactSystem.getEquippedArtifacts();
-    const bonuses = this.artifactSystem.getAllBonuses();
 
     equippedCount.textContent = equipped.length.toString();
+    totalCount.textContent = artifacts.length.toString();
 
-    // Render bonuses
-    bonusesContainer.innerHTML = bonuses
-      .map((bonus) => `<div class="bonus-item">${bonus}</div>`)
-      .join('');
+    // Filter artifacts
+    let filteredArtifacts = artifacts;
+    if (this.currentFilter === 'equipped') {
+      filteredArtifacts = artifacts.filter((a) => a.equipped);
+    } else if (this.currentFilter !== 'all') {
+      filteredArtifacts = artifacts.filter((a) => a.rarity === this.currentFilter);
+    }
 
-    if (artifacts.length === 0) {
+    if (filteredArtifacts.length === 0) {
+      const filterText = this.currentFilter === 'all' ? '' : ` (${this.currentFilter})`;
       container.innerHTML =
-        '<p class="no-artifacts">No artifacts found. Complete missions and bosses to earn artifacts!</p>';
+        `<div class="no-artifacts">No artifacts found${filterText}. Complete missions and bosses to earn artifacts!</div>`;
       return;
     }
 
     // Sort: equipped first, then by rarity
-    const sortedArtifacts = [...artifacts].sort((a, b) => {
+    const sortedArtifacts = [...filteredArtifacts].sort((a, b) => {
       if (a.equipped !== b.equipped) return a.equipped ? -1 : 1;
       const rarityOrder = { legendary: 0, epic: 1, rare: 2, common: 3 };
       return rarityOrder[a.rarity] - rarityOrder[b.rarity];
@@ -122,37 +151,46 @@ export class ArtifactsModal {
         const upgradeCost = this.artifactSystem.getUpgradeCostForDisplay(
           artifact.id,
         );
+        const sellValue = this.artifactSystem.getSellValue(artifact.id);
         const canUpgrade = artifact.level < artifact.maxLevel;
         const state = this.store.getState();
 
         return `
-        <div class="artifact-card ${artifact.equipped ? 'equipped' : ''}" style="border-color: ${color}">
-          <div class="artifact-header">
-            <div class="artifact-icon">${artifact.icon}</div>
-            <div class="artifact-title">
-              <h3 style="color: ${color}">${artifact.name}</h3>
-              <p class="artifact-rarity" style="color: ${color}">${artifact.rarity.toUpperCase()}</p>
+        <div class="artifact-slot ${artifact.equipped ? 'equipped' : ''}" style="border-color: ${color}; box-shadow: 0 0 15px ${color}30;">
+          <div class="artifact-slot-glow" style="background: radial-gradient(circle, ${color}25 0%, transparent 70%);"></div>
+          <div class="artifact-slot-icon rarity-${artifact.rarity}" style="background: linear-gradient(135deg, ${color}25, ${color}08); border-color: ${color}40;">
+            <div class="artifact-icon-large" style="filter: drop-shadow(0 0 10px ${color});">${artifact.icon}</div>
+            ${artifact.equipped ? '<div class="equipped-badge">✓</div>' : ''}
+            <div class="artifact-rarity-badge" style="background: ${color}60; border-color: ${color}; box-shadow: 0 0 8px ${color}50;">
+              <span class="rarity-letter">${artifact.rarity.charAt(0).toUpperCase()}</span>
             </div>
           </div>
-          <div class="artifact-details">
-            <p class="artifact-description">${artifact.description}</p>
-            <p class="artifact-level">Level: ${artifact.level.toString()}/${artifact.maxLevel.toString()}</p>
+          <div class="artifact-slot-info">
+            <div class="artifact-slot-name" style="color: ${color}; text-shadow: 0 0 8px ${color}60;">${artifact.name}</div>
+            <div class="artifact-slot-desc">${artifact.description}</div>
+            <div class="artifact-slot-level">
+              <span class="level-label">Level</span>
+              <span class="level-value">${artifact.level.toString()}/${artifact.maxLevel.toString()}</span>
+            </div>
           </div>
-          <div class="artifact-actions">
-            <button class="artifact-equip-btn ${artifact.equipped ? 'equipped' : ''}" data-id="${artifact.id}">
-              ${artifact.equipped ? '✓ Equipped' : 'Equip'}
+          <div class="artifact-slot-actions">
+            <button class="artifact-action-btn equip-btn ${artifact.equipped ? 'active' : ''}" data-id="${artifact.id}" data-action="equip" title="${artifact.equipped ? 'Unequip' : 'Equip'}">
+              <span class="btn-icon">${artifact.equipped ? '✓' : '⚔'}</span>
             </button>
             ${
               canUpgrade
-                ? `
-              <button class="artifact-upgrade-btn ${state.points >= upgradeCost ? '' : 'disabled'}" 
+                ? `<button class="artifact-action-btn upgrade-btn ${state.points >= upgradeCost ? '' : 'disabled'}" 
                       data-id="${artifact.id}" 
-                      ${state.points < upgradeCost ? 'disabled' : ''}>
-                Upgrade (${upgradeCost.toLocaleString()})
-              </button>
-            `
-                : '<span class="max-level">MAX LEVEL</span>'
+                      data-action="upgrade"
+                      ${state.points < upgradeCost ? 'disabled' : ''}
+                      title="Upgrade: ${upgradeCost.toLocaleString()}">
+                  <span class="btn-icon">⬆</span>
+                </button>`
+                : ''
             }
+            <button class="artifact-action-btn sell-btn" data-id="${artifact.id}" data-action="sell" title="Sell for ${sellValue.toLocaleString()} points">
+              <span class="btn-icon">💰</span>
+            </button>
           </div>
         </div>
       `;
@@ -160,34 +198,37 @@ export class ArtifactsModal {
       .join('');
 
     // Add event listeners
-    const equipBtns = container.querySelectorAll('.artifact-equip-btn');
-    equipBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
+    container.querySelectorAll('.artifact-action-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = btn.getAttribute('data-id');
-        if (id) {
-          this.artifactSystem.equipArtifact(id);
-          const state = this.store.getState();
-          this.store.setState({ ...state });
-          this.render();
-        }
-      });
-    });
-
-    const upgradeBtns = container.querySelectorAll('.artifact-upgrade-btn');
-    upgradeBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        if (!id) return;
+        const action = btn.getAttribute('data-action');
+        if (!id || !action) return;
 
         const state = this.store.getState();
-        const result = this.artifactSystem.upgradeArtifact(id, state.points);
 
-        if (result.success) {
-          state.points -= result.cost;
-          this.store.setState(state);
+        if (action === 'equip') {
+          this.artifactSystem.equipArtifact(id);
+          this.store.setState({ ...state });
           this.render();
+        } else if (action === 'upgrade') {
+          const result = this.artifactSystem.upgradeArtifact(id, state.points);
+          if (result.success) {
+            state.points -= result.cost;
+            this.store.setState(state);
+            this.render();
+          }
+        } else if (action === 'sell') {
+          const sellValue = this.artifactSystem.getSellValue(id);
+          if (confirm(`Sell ${this.artifactSystem.getArtifacts().find(a => a.id === id)?.name} for ${sellValue.toLocaleString()} points?`)) {
+            const pointsGained = this.artifactSystem.sellArtifact(id);
+            state.points += pointsGained;
+            this.store.setState(state);
+            this.render();
+          }
         }
       });
     });
   }
 }
+

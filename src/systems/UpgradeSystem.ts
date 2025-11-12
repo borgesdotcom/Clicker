@@ -2139,8 +2139,8 @@ export class UpgradeSystem {
       multiplier *= 1.15;
     }
 
-    // Cap the multiplier to prevent excessive damage (max 2x - very strict cap)
-    return Math.min(multiplier, 2.0);
+    // Cap the multiplier to prevent excessive damage (max 10x - allows upgrades to be meaningful)
+    return Math.min(multiplier, 10.0);
   }
 
   getPassiveGen(state: GameState): number {

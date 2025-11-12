@@ -41,6 +41,10 @@ export class Save {
       lastPlayTime: Date.now(),
       // Visual customization
       selectedThemes: state.selectedThemes,
+      // Combo pause skill state
+      comboPauseActive: state.comboPauseActive ?? false,
+      comboPauseEndTime: state.comboPauseEndTime ?? 0,
+      comboPauseCooldownEndTime: state.comboPauseCooldownEndTime ?? 0,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -297,6 +301,10 @@ export class Save {
       highestLevelReached,
       autoBuyEnabled,
       selectedThemes: data.selectedThemes,
+      // Combo pause skill state
+      comboPauseActive: data.comboPauseActive ?? false,
+      comboPauseEndTime: data.comboPauseEndTime ?? 0,
+      comboPauseCooldownEndTime: data.comboPauseCooldownEndTime ?? 0,
     };
 
     return state;
