@@ -90,8 +90,9 @@ export class AlienBall {
       this.triggerFlash();
     }
     // Trigger deformation effect with combo scaling
-    if (hitDirection) {
-      this.triggerDeformation(hitDirection, combo ?? 0, isBeam ?? false);
+    // Don't trigger deformation for beam damage (only main ship attacks cause deformation)
+    if (hitDirection && !isBeam) {
+      this.triggerDeformation(hitDirection, combo ?? 0, false);
     }
     if (this.currentHp <= 0 && wasAlive) {
       this.breakAnimTime = this.breakAnimDuration;

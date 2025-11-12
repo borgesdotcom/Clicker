@@ -100,32 +100,37 @@ export class ColorManager {
   static getHp(level: number): number {
     const baseHp = 120;
 
+    let hpBase: number;
+
     // Tier 1: Levels 1-100 - Mildly faster growth to set the pace
     if (level <= 100) {
-      return Math.floor(baseHp * Math.pow(1.18, level - 1));
+      hpBase = baseHp * Math.pow(1.18, level - 1);
+    } else {
+      // Tier 2: Levels 101-300 - Steeper ramp to slow mid-game snowballing
+      const tier1Hp = baseHp * Math.pow(1.18, 99);
+      if (level <= 300) {
+        hpBase = tier1Hp * Math.pow(1.16, level - 100);
+      } else {
+        // Tier 3: Levels 301-600 - Continue increasing but slightly softer
+        const tier2Hp = tier1Hp * Math.pow(1.16, 200);
+        if (level <= 600) {
+          hpBase = tier2Hp * Math.pow(1.13, level - 300);
+        } else {
+          // Tier 4: 601+ - Still growing, but controlled to avoid impossible numbers
+          const tier3Hp = tier2Hp * Math.pow(1.13, 300);
+          hpBase = tier3Hp * Math.pow(1.1, level - 600);
+        }
+      }
     }
 
-    // Tier 2: Levels 101-300 - Steeper ramp to slow mid-game snowballing
-    const tier1Hp = baseHp * Math.pow(1.18, 99);
-    if (level <= 300) {
-      return Math.floor(tier1Hp * Math.pow(1.16, level - 100));
-    }
-
-    // Tier 3: Levels 301-600 - Continue increasing but slightly softer
-    const tier2Hp = tier1Hp * Math.pow(1.16, 200);
-    if (level <= 600) {
-      return Math.floor(tier2Hp * Math.pow(1.13, level - 300));
-    }
-
-    // Tier 4: 601+ - Still growing, but controlled to avoid impossible numbers
-    const tier3Hp = tier2Hp * Math.pow(1.13, 300);
-    return Math.floor(tier3Hp * Math.pow(1.1, level - 600));
+    const ramp = this.getHpRamp(level);
+    return Math.floor(hpBase * ramp);
   }
 
   static getBossHp(level: number): number {
     // Boss HP: tougher multiplier plus additional scaling tiers
     const baseHp = this.getHp(level) * 18;
-    const nerfFactor = 0.80;
+    const nerfFactor = 0.65;
 
     if (level < 50) {
       return Math.floor(baseHp * nerfFactor);
@@ -173,5 +178,18 @@ export class ColorManager {
       // Previous bonuses + 15s per 10 levels
       return baseTime + 75 + 300 + Math.floor((level - 500) / 10) * 15;
     }
+  }
+
+  private static getHpRamp(level: number): number {
+    if (level <= 30) {
+      return 1;
+    }
+
+    const extraLevels = level - 30;
+    const linearComponent = 1 + extraLevels * 0.008;
+    const exponentialComponent = Math.pow(1.003, Math.min(extraLevels, 700));
+
+    // Clamp to avoid runaway values at extremely high levels
+    return Math.min(linearComponent * exponentialComponent, 75);
   }
 }

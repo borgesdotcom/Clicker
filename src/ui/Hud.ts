@@ -18,6 +18,7 @@ export class Hud {
   private critDisplay: HTMLElement | null = null;
 
   private damageHistory: Array<{ damage: number; time: number }> = [];
+  private killRewardHistory: Array<{ reward: number; time: number }> = [];
   private readonly DPS_WINDOW = 5000; // 5 seconds window for DPS calculation
 
   // Cache last values to avoid unnecessary DOM updates
@@ -408,9 +409,13 @@ export class Hud {
     const dpsText = `⚔️ ${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
     const passiveText = `🏭 ${t('hud.passive')}: ${NumberFormatter.format(passive)}${t('hud.perSec')}`;
 
-    // Calculate total income (passive + active combat income)
+    // Calculate kill rewards per second (kill bounty)
+    const killRewardsPerSec = this.calculateKillRewardsPerSecond();
+
+    // Calculate total income (passive + active combat income + kill rewards)
     // DPS represents active income from combat since damage = points
-    const totalIncome = passive + dps;
+    // Kill rewards are the bonus points from killing enemies (kill bounty)
+    const totalIncome = passive + dps + killRewardsPerSec;
     const totalIncomeText = `💰 Total Income: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
 
     // Show crit chance with power-up bonus if active
@@ -494,6 +499,52 @@ export class Hud {
 
     const timeSpan = (now - this.damageHistory[firstValidIndex]!.time) / 1000;
     return timeSpan > 0 ? totalDamage / timeSpan : 0;
+  }
+
+  recordKillReward(reward: number): void {
+    const now = Date.now();
+    this.killRewardHistory.push({ reward, time: now });
+
+    // Remove old entries outside the DPS window in-place (more efficient than filter)
+    // Since entries are time-ordered, we can remove from the start until we find valid ones
+    const cutoff = now - this.DPS_WINDOW;
+    let removeCount = 0;
+    for (let i = 0; i < this.killRewardHistory.length; i++) {
+      const entry = this.killRewardHistory[i];
+      if (entry && entry.time >= cutoff) {
+        break;
+      }
+      removeCount++;
+    }
+    if (removeCount > 0) {
+      this.killRewardHistory.splice(0, removeCount);
+    }
+  }
+
+  calculateKillRewardsPerSecond(): number {
+    if (this.killRewardHistory.length === 0) return 0;
+
+    const now = Date.now();
+    const windowStart = now - this.DPS_WINDOW;
+
+    // Single pass: find first valid entry and calculate total
+    let totalReward = 0;
+    let firstValidIndex = -1;
+
+    for (let i = 0; i < this.killRewardHistory.length; i++) {
+      const entry = this.killRewardHistory[i];
+      if (entry && entry.time >= windowStart) {
+        if (firstValidIndex === -1) {
+          firstValidIndex = i;
+        }
+        totalReward += entry.reward;
+      }
+    }
+
+    if (firstValidIndex === -1 || totalReward === 0) return 0;
+
+    const timeSpan = (now - this.killRewardHistory[firstValidIndex]!.time) / 1000;
+    return timeSpan > 0 ? totalReward / timeSpan : 0;
   }
 
   updateLevel(level: number, experience: number, expToNext: number): void {

@@ -143,6 +143,16 @@ export class Game {
     nextBreakIn: number;
     breakTimer: number;
     breakDurationRange: { min: number; max: number };
+    bossCheckTimer: number;
+    bossCheckIntervalRange: { min: number; max: number };
+    bossRetryTimer: number;
+    bossRetryDelay: number;
+    bossRetryAttempts: number;
+    bossHistory: Array<{
+      timestamp: number;
+      level: number;
+      detail: string;
+    }>;
   } | null = null;
 
   // Boss retry system
@@ -1010,6 +1020,8 @@ export class Game {
     const newPrestigePoints = state.prestigePoints + prestigeGain;
     const newPrestigeLevel = state.prestigeLevel + 1;
 
+    const retainedUpgrades = this.calculateRetainedUpgrades(state);
+
     // Update prestige stats
     keepStats.totalPrestige = newPrestigeLevel;
 
@@ -1022,13 +1034,13 @@ export class Game {
     // Create a completely fresh state (NOT from save file)
     const freshState: import('./types').GameState = {
       points: 0,
-      shipsCount: 1,
-      attackSpeedLevel: 0,
-      autoFireUnlocked: false,
-      pointMultiplierLevel: 0,
-      critChanceLevel: 0,
-      resourceGenLevel: 0,
-      xpBoostLevel: 0,
+      shipsCount: retainedUpgrades.shipsCount,
+      attackSpeedLevel: retainedUpgrades.attackSpeedLevel,
+      autoFireUnlocked: retainedUpgrades.autoFireUnlocked,
+      pointMultiplierLevel: retainedUpgrades.pointMultiplierLevel,
+      critChanceLevel: retainedUpgrades.critChanceLevel,
+      resourceGenLevel: retainedUpgrades.resourceGenLevel,
+      xpBoostLevel: retainedUpgrades.xpBoostLevel,
       level: startingLevel,
       experience: 0,
       subUpgrades: {}, // Reset all special upgrades on ascension
@@ -1039,9 +1051,9 @@ export class Game {
       prestigeUpgrades: keepPrestigeUpgrades, // Keep prestige upgrades
       blockedOnBossLevel: null, // Reset boss block on ascension
       // v3.0: New upgrades (reset on ascension)
-      mutationEngineLevel: 0,
-      energyCoreLevel: 0,
-      cosmicKnowledgeLevel: 0,
+      mutationEngineLevel: retainedUpgrades.mutationEngineLevel,
+      energyCoreLevel: retainedUpgrades.energyCoreLevel,
+      cosmicKnowledgeLevel: retainedUpgrades.cosmicKnowledgeLevel,
       discoveredUpgrades: { ship: true }, // Reset discoveries, ship always visible
       // Track highest level for ascension point calculation
       highestLevelReached: newHighestLevel,
@@ -1070,6 +1082,76 @@ export class Game {
     this.autoFireSystem.reset();
     this.powerUpSystem.clear();
     this.saveTimer = 0;
+  }
+
+  private calculateRetainedUpgrades(
+    state: import('./types').GameState,
+  ): {
+    shipsCount: number;
+    attackSpeedLevel: number;
+    pointMultiplierLevel: number;
+    critChanceLevel: number;
+    resourceGenLevel: number;
+    xpBoostLevel: number;
+    mutationEngineLevel: number;
+    energyCoreLevel: number;
+    cosmicKnowledgeLevel: number;
+    autoFireUnlocked: boolean;
+  } {
+    const baseline = {
+      shipsCount: 1,
+      attackSpeedLevel: 0,
+      pointMultiplierLevel: 0,
+      critChanceLevel: 0,
+      resourceGenLevel: 0,
+      xpBoostLevel: 0,
+      mutationEngineLevel: 0,
+      energyCoreLevel: 0,
+      cosmicKnowledgeLevel: 0,
+      autoFireUnlocked: false,
+    };
+
+    const retainPercent = Math.min(
+      1,
+      Math.max(0, this.ascensionSystem.getRetainPercentage(state)),
+    );
+
+    if (retainPercent <= 0) {
+      return baseline;
+    }
+
+    const retainLevel = (value: number): number => {
+      if (value <= 0) return 0;
+      // Use Math.round for balanced percentage calculation
+      // This ensures 10% retention means approximately 10% of levels are retained
+      const retained = Math.round(value * retainPercent);
+      return Math.min(value, Math.max(0, retained));
+    };
+
+    const retainWithBase = (value: number, base: number): number => {
+      if (value <= base) {
+        return base;
+      }
+      const extra = value - base;
+      // Use Math.round for balanced percentage calculation
+      const retainedExtra = Math.round(extra * retainPercent);
+      return base + Math.min(extra, Math.max(0, retainedExtra));
+    };
+
+    const shipsCount = retainWithBase(state.shipsCount, 1);
+
+    return {
+      shipsCount,
+      attackSpeedLevel: retainLevel(state.attackSpeedLevel),
+      pointMultiplierLevel: retainLevel(state.pointMultiplierLevel),
+      critChanceLevel: retainLevel(state.critChanceLevel),
+      resourceGenLevel: retainLevel(state.resourceGenLevel),
+      xpBoostLevel: retainLevel(state.xpBoostLevel),
+      mutationEngineLevel: retainLevel(state.mutationEngineLevel),
+      energyCoreLevel: retainLevel(state.energyCoreLevel),
+      cosmicKnowledgeLevel: retainLevel(state.cosmicKnowledgeLevel),
+      autoFireUnlocked: state.autoFireUnlocked && retainPercent > 0,
+    };
   }
 
   private setupKeyboard(): void {
@@ -1401,6 +1483,19 @@ export class Game {
     const autoFireShips = totalShips - 1; // Exclude main ship
 
     return autoFireDamage * autoFireShips;
+  }
+
+  private getEnemyXpScaling(level: number): number {
+    if (level <= 30) {
+      return 1;
+    }
+
+    const extraLevels = level - 30;
+    const linearDrop = 1 / (1 + extraLevels * 0.02);
+    const exponentialDrop = Math.pow(0.995, Math.min(extraLevels, 600));
+    const combined = linearDrop * exponentialDrop;
+
+    return Math.max(0.15, combined);
   }
 
   private fireVolley(): void {
@@ -1780,6 +1875,8 @@ export class Game {
         }
         killReward *= this.powerUpSystem.getPointsMultiplier();
         const roundedReward = Math.max(1, Math.floor(killReward));
+        // Record kill reward for points per second calculation
+        this.hud.recordKillReward(roundedReward);
         this.store.addPoints(roundedReward);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.hud.showPointsGain(roundedReward);
@@ -1888,7 +1985,9 @@ export class Game {
     const upgradeBonus = this.upgradeSystem.getBonusXP(state);
     const artifactBonus = this.artifactSystem.getXPBonus();
 
-    let bonusXP = upgradeBonus * baseXP;
+    const xpScaling = this.getEnemyXpScaling(state.level);
+
+    let bonusXP = upgradeBonus * baseXP * xpScaling;
     bonusXP *= 1 + artifactBonus;
 
     if (this.blockedOnBossLevel !== null) {
@@ -1945,6 +2044,7 @@ export class Game {
     }
 
     const state = this.store.getState();
+    const defeatedBossLevel = state.level;
     this.store.incrementBossKill();
     this.missionSystem.trackBossKill();
 
@@ -1956,12 +2056,16 @@ export class Game {
     // Apply power-up points multiplier
     bossReward *= this.powerUpSystem.getPointsMultiplier();
 
+    // Record boss kill reward for points per second calculation
+    this.hud.recordKillReward(bossReward);
     this.store.addPoints(bossReward);
 
     const artifactXPBonus = this.artifactSystem.getXPBonus();
 
     let bossXP = Math.floor(state.level * 50);
     bossXP *= 1 + artifactXPBonus;
+    bossXP *= this.getEnemyXpScaling(state.level);
+    bossXP = Math.max(1, Math.floor(bossXP));
 
     state.experience += bossXP;
 
@@ -2001,6 +2105,15 @@ export class Game {
     this.blockedOnBossLevel = null;
     state.blockedOnBossLevel = null;
     this.store.setState(state);
+
+    if (this.godModeAgent) {
+      this.recordGodModeBossEvent(
+        this.godModeAgent,
+        defeatedBossLevel,
+        'Boss defeated - returning to normal',
+      );
+      this.resetGodModeBossTracking(this.godModeAgent);
+    }
 
     if (this.bossRetryButton) {
       this.bossRetryButton.style.display = 'none';
@@ -2133,7 +2246,9 @@ export class Game {
   }
 
   private update(dt: number): void {
+    const realDt = dt;
     dt = dt * this.gameSpeed;
+    const scaledDt = dt;
     this.frameCount++;
 
     // Update WebGL renderer time for animations
@@ -2147,7 +2262,7 @@ export class Game {
     const state = this.store.getState();
 
     if (this.godMode) {
-      this.updateGodMode(dt);
+      this.updateGodMode(scaledDt, realDt);
     }
 
     // Throttle boss timer updates (expensive DOM updates)
@@ -2753,6 +2868,12 @@ export class Game {
       nextBreakIn: this.getRandomInRange(25, 45),
       breakTimer: 0,
       breakDurationRange: { min: 1.4, max: 3.3 },
+      bossCheckTimer: 0,
+      bossCheckIntervalRange: { min: 0.15, max: 0.35 },
+      bossRetryTimer: 0,
+      bossRetryDelay: 300,
+      bossRetryAttempts: 0,
+      bossHistory: [],
     };
     this.notificationSystem.show(
       'God Mode autopilot engaged.',
@@ -2802,6 +2923,7 @@ export class Game {
       <div class="metric" data-metric="clicks">Clicks/min: 0</div>
       <div class="metric" data-metric="bosses">Bosses/hr: 0</div>
       <div class="metric" data-metric="upgrades">Upgrades/min: 0</div>
+      <div class="metric" data-metric="boss-log">Boss log: —</div>
       <div class="metric" data-metric="last-action" style="margin-top:8px;font-size:11px;color:#ddd;">
         Last action: —
       </div>
@@ -2810,7 +2932,7 @@ export class Game {
     return overlay;
   }
 
-  private updateGodMode(dt: number): void {
+  private updateGodMode(dt: number, realDt: number): void {
     if (!this.godModeAgent) return;
     const agent = this.godModeAgent;
 
@@ -2819,6 +2941,8 @@ export class Game {
     agent.powerUpTimer -= dt;
     agent.metricsTimer -= dt;
     agent.logTimer -= dt;
+    agent.bossCheckTimer -= dt;
+    agent.bossRetryTimer = Math.max(0, agent.bossRetryTimer - realDt);
     agent.burstCooldownTimer = Math.max(0, agent.burstCooldownTimer - dt);
 
     if (agent.breakTimer > 0) {
@@ -2841,6 +2965,19 @@ export class Game {
         agent.nextBreakIn = this.getRandomInRange(20, 45);
         agent.lastAction = 'Taking a short break';
       }
+    }
+
+    let handledBossAction = false;
+    if (agent.bossCheckTimer <= 0) {
+      handledBossAction = this.handleGodModeBossFlow(agent);
+      agent.bossCheckTimer = this.getRandomInRange(
+        agent.bossCheckIntervalRange.min,
+        agent.bossCheckIntervalRange.max,
+      );
+    }
+
+    if (handledBossAction) {
+      return;
     }
 
     const powerUpClicked = this.runGodModePowerUps(agent);
@@ -2907,6 +3044,17 @@ export class Game {
     const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
     if (!targetEntity || targetEntity.currentHp <= 0) return;
 
+    const state = this.store.getState();
+    const comboMultiplier = this.comboSystem.getMultiplier(state);
+    if (comboMultiplier >= 3) {
+      this.comboSystem.reset();
+      agent.breakTimer = this.getRandomInRange(0.6, 1.1);
+      agent.idleTimer = 0;
+      agent.lastAction = 'Capped combo at 3x multiplier';
+      agent.clickTimer = this.getRandomInRange(0.2, 0.35);
+      return;
+    }
+
     if (agent.clickTimer > 0) return;
 
     const jitterScale = this.mode === 'boss' ? 0.7 : 1;
@@ -2967,6 +3115,147 @@ export class Game {
     );
   }
 
+  private handleGodModeBossFlow(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): boolean {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+
+    const state = this.store.getState();
+    const blockedLevel =
+      state.blockedOnBossLevel ?? this.blockedOnBossLevel ?? null;
+    const resolvedBossLevel =
+      blockedLevel !== null ? blockedLevel : state.level;
+
+    const ensureAgentReady = (
+      action: string,
+      resetClickTimer = true,
+    ): void => {
+      agent.lastAction = action;
+      agent.breakTimer = 0;
+      agent.idleTimer = 0;
+      if (resetClickTimer) {
+        agent.clickTimer = this.getRandomInRange(0.05, 0.1);
+      }
+    };
+
+    const timeoutModal = document.getElementById('boss-timeout-modal');
+    if (
+      timeoutModal &&
+      timeoutModal.style.display !== 'none' &&
+      this.mode === 'boss'
+    ) {
+      const closeButton = document.getElementById('boss-timeout-close');
+      if (closeButton) {
+        closeButton.click();
+      } else {
+        timeoutModal.style.display = 'none';
+        if (this.bossRetryButton) {
+          this.bossRetryButton.style.display = 'flex';
+        }
+        this.startTransitionToNormal();
+      }
+      agent.bossRetryTimer = agent.bossRetryDelay;
+      agent.bossRetryAttempts += 1;
+      this.recordGodModeBossEvent(
+        agent,
+        resolvedBossLevel,
+        `Boss timeout (attempt ${String(agent.bossRetryAttempts)})`,
+      );
+      const waitLabel = this.formatDuration(agent.bossRetryDelay);
+      ensureAgentReady(`Boss escaped - retry in ${waitLabel}`, false);
+      return true;
+    }
+
+    if (this.mode !== 'normal') {
+      return false;
+    }
+
+    const dialog = document.getElementById('boss-dialog');
+    const dialogVisible = Boolean(dialog && dialog.style.display !== 'none');
+    const startButton = document.getElementById('boss-start-btn');
+
+    if (dialogVisible) {
+      if (startButton) {
+        startButton.click();
+      } else {
+        if (dialog) {
+          dialog.style.display = 'none';
+        }
+        this.startBossFight();
+      }
+      agent.bossRetryTimer = 0;
+      const attemptNumber = agent.bossRetryAttempts + 1;
+      this.recordGodModeBossEvent(
+        agent,
+        resolvedBossLevel,
+        `Starting boss attempt ${String(attemptNumber)}`,
+      );
+      if (blockedLevel === null) {
+        agent.bossRetryAttempts = 0;
+      }
+      ensureAgentReady(
+        blockedLevel !== null ? 'Re-engaging boss fight' : 'Engaging boss fight',
+      );
+      if (this.bossRetryButton) {
+        this.bossRetryButton.style.display = 'none';
+      }
+      return true;
+    }
+
+    if (blockedLevel !== null) {
+      if (agent.bossRetryTimer > 0) {
+        const waitLabel = this.formatDuration(agent.bossRetryTimer);
+        ensureAgentReady(`Boss retry in ${waitLabel}`, false);
+        return true;
+      }
+
+      const retryButton =
+        this.bossRetryButton ?? document.getElementById('boss-retry-btn');
+
+      if (retryButton && retryButton.style.display !== 'none') {
+        agent.bossRetryTimer = 0;
+        retryButton.click();
+        const attemptNumber = agent.bossRetryAttempts + 1;
+        this.recordGodModeBossEvent(
+          agent,
+          blockedLevel,
+          `Launching boss retry attempt ${String(attemptNumber)}`,
+        );
+        ensureAgentReady('Retrying boss fight', false);
+        return true;
+      }
+
+      agent.bossRetryTimer = 0;
+      this.recordGodModeBossEvent(
+        agent,
+        blockedLevel,
+        'Opening boss dialog for retry',
+      );
+      this.showBossDialog();
+      ensureAgentReady('Preparing boss retry', false);
+      return true;
+    }
+
+    const isBossLevel = ColorManager.isBossLevel(state.level);
+
+    if (isBossLevel && !this.ball) {
+      agent.bossRetryTimer = 0;
+      agent.bossRetryAttempts = 0;
+      this.recordGodModeBossEvent(
+        agent,
+        state.level,
+        'Boss detected - preparing fight',
+      );
+      this.showBossDialog();
+      ensureAgentReady('Summoning boss', false);
+      return true;
+    }
+
+    return false;
+  }
+
   private updateGodModeMetrics(
     agent: NonNullable<typeof this.godModeAgent>,
   ): void {
@@ -2995,6 +3284,26 @@ export class Game {
     const bossesPerHour = (deltaBosses / elapsedSeconds) * 3600;
     const upgradesPerMinute = (deltaUpgrades / elapsedSeconds) * 60;
 
+    const lastHistoryEntry =
+      agent.bossHistory.length > 0
+        ? agent.bossHistory[agent.bossHistory.length - 1]
+        : null;
+    const secondsSinceBossEvent = lastHistoryEntry
+      ? Math.max(0, (Date.now() - lastHistoryEntry.timestamp) / 1000)
+      : 0;
+    const bossEventText = lastHistoryEntry
+      ? `${lastHistoryEntry.detail} (${this.formatDuration(
+          secondsSinceBossEvent,
+        )} ago)`
+      : 'No boss activity yet';
+    const nextRetryText =
+      agent.bossRetryTimer > 0
+        ? `Next retry in ${this.formatDuration(agent.bossRetryTimer)}`
+        : 'Next retry ready';
+    const bossLogText = `${bossEventText} | Failures: ${String(
+      agent.bossRetryAttempts,
+    )} | ${nextRetryText}`;
+
     this.updateGodModeOverlay(agent, {
       elapsedSeconds,
       pointsPerMinute,
@@ -3002,7 +3311,37 @@ export class Game {
       bossesPerHour,
       upgradesPerMinute,
       lastAction: agent.lastAction,
+      bossLogText,
     });
+  }
+
+  private recordGodModeBossEvent(
+    agent: NonNullable<typeof this.godModeAgent>,
+    level: number,
+    detail: string,
+  ): void {
+    const timestamp = Date.now();
+    const entry = { timestamp, level, detail };
+    agent.bossHistory.push(entry);
+    if (agent.bossHistory.length > 12) {
+      agent.bossHistory.splice(0, agent.bossHistory.length - 12);
+    }
+    agent.lastAction = detail;
+    agent.metricsTimer = 0;
+    if (typeof console !== 'undefined' && typeof console.info === 'function') {
+      const timeIso = new Date(timestamp).toISOString();
+      console.info(
+        `[GodMode][Boss][${timeIso}] Level ${String(level)} - ${detail}`,
+      );
+    }
+  }
+
+  private resetGodModeBossTracking(
+    agent: NonNullable<typeof this.godModeAgent>,
+  ): void {
+    agent.bossRetryTimer = 0;
+    agent.bossRetryAttempts = 0;
+    agent.metricsTimer = 0;
   }
 
   private updateGodModeOverlay(
@@ -3014,6 +3353,7 @@ export class Game {
       bossesPerHour: number;
       upgradesPerMinute: number;
       lastAction: string;
+      bossLogText: string;
     },
   ): void {
     if (!agent.overlay) return;
@@ -3024,6 +3364,13 @@ export class Game {
       elapsedEl.textContent = `Elapsed: ${this.formatDuration(
         metrics.elapsedSeconds,
       )}`;
+    }
+
+    const bossLogEl = overlay.querySelector('[data-metric="boss-log"]');
+    if (bossLogEl) {
+      bossLogEl.textContent = `Boss log: ${
+        metrics.bossLogText ? metrics.bossLogText : '—'
+      }`;
     }
 
     const formatValue = (value: number, fractionDigits = 1): string => {

@@ -94,7 +94,7 @@ export class AscensionSystem {
         maxLevel: 10, // Extended for late game
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_retain_upgrades ?? 0,
-        effect: 'Retain +10% upgrades per level',
+        effect: 'Retain +1% upgrades per level',
       },
       {
         id: 'prestige_boss_power',
@@ -310,7 +310,7 @@ export class AscensionSystem {
 
   getRetainPercentage(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_retain_upgrades ?? 0;
-    return level * 0.1;
+    return level * 0.01;
   }
 
   getBossDamageMultiplier(state: GameState): number {
