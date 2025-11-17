@@ -1176,41 +1176,21 @@ export class Game {
     // Level 1-100 = space1, 101-200 = space2, etc.
     // Use Math.ceil to ensure level 100 stays in space1, level 101 goes to space2
     const backgroundIndex = Math.min(Math.ceil(level / 100), 9);
-    const backgroundGif = `space${backgroundIndex}_4-frames.gif`;
-    const backgroundUrl = `url('/src/animations/${backgroundGif}') repeat`;
+    
+    // Get the background GIF from the imported images
+    const backgroundGifUrl = images.backgroundGifs[backgroundIndex as keyof typeof images.backgroundGifs] || images.backgroundGif;
+    const backgroundUrl = `url("${backgroundGifUrl}")`;
     
     // Update game container background
     const gameContainer = document.getElementById('game-container');
     if (gameContainer) {
-      // Ensure game container has position relative for overlay
-      if (!gameContainer.style.position) {
-        gameContainer.style.position = 'relative';
-      }
-      // Set black background as base
-      gameContainer.style.background = `#000`;
+      // Set background directly on the container
+      gameContainer.style.backgroundImage = backgroundUrl;
+      gameContainer.style.backgroundRepeat = 'repeat';
+      gameContainer.style.backgroundSize = 'auto';
+      gameContainer.style.backgroundColor = '#000';
       
-      // Create or update background overlay div with opacity
-      let bgOverlay = document.getElementById('background-overlay');
-      if (!bgOverlay) {
-        bgOverlay = document.createElement('div');
-        bgOverlay.id = 'background-overlay';
-        bgOverlay.style.cssText = `
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: ${backgroundUrl};
-          background-size: auto;
-          opacity: 0.5;
-          pointer-events: none;
-          z-index: 0;
-        `;
-        gameContainer.insertBefore(bgOverlay, gameContainer.firstChild);
-      } else {
-        bgOverlay.style.background = backgroundUrl;
-        bgOverlay.style.opacity = '0.5';
-      }
+      console.log('Background updated by level:', backgroundIndex, backgroundUrl);
     }
     
     // Update shop panel background to match

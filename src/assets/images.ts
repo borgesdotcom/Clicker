@@ -60,8 +60,16 @@ import artifactInfinityCrystal from '@/icons/artifacts/infinity_cristals.png';
 import artifactCosmicHarmonizer from '@/icons/artifacts/cosmic_harmonizer.png';
 import artifactConstellationMap from '@/icons/artifacts/constelation_map.png';
 
-// Background GIF
-import backgroundGif from '@/animations/space4_4-frames.gif';
+// Background GIFs - import all variants
+import backgroundGif1 from '@/animations/space14-frames.gif';
+import backgroundGif2 from '@/animations/space24-frames.gif';
+import backgroundGif3 from '@/animations/space34-frames.gif';
+import backgroundGif4 from '@/animations/space44-frames.gif';
+import backgroundGif5 from '@/animations/space54-frames.gif';
+import backgroundGif6 from '@/animations/space64-frames.gif';
+import backgroundGif7 from '@/animations/space74-frames.gif';
+import backgroundGif8 from '@/animations/space84-frames.gif';
+import backgroundGif9 from '@/animations/space94-frames.gif';
 
 // Export as a map for easy access
 export const images = {
@@ -119,7 +127,18 @@ export const images = {
     cosmic_harmonizer: artifactCosmicHarmonizer,
     constelation_map: artifactConstellationMap,
   },
-  backgroundGif,
+  backgroundGif: backgroundGif4, // Default background
+  backgroundGifs: {
+    1: backgroundGif1,
+    2: backgroundGif2,
+    3: backgroundGif3,
+    4: backgroundGif4,
+    5: backgroundGif5,
+    6: backgroundGif6,
+    7: backgroundGif7,
+    8: backgroundGif8,
+    9: backgroundGif9,
+  },
 } as const;
 
 /**

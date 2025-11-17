@@ -36,8 +36,9 @@ export function initializeHtmlImages(): void {
     if (img) img.src = images.menu.left;
   }
 
-  // Set background GIF on game-container
-  // Try multiple times to ensure DOM is ready
+  // Set initial background GIF on game-container
+  // Note: This will be overridden by updateBackgroundByLevel in Game.ts
+  // but we set it here as a fallback
   const setBackground = () => {
     const gameContainer = document.getElementById('game-container');
     if (gameContainer && images.backgroundGif) {
@@ -51,7 +52,7 @@ export function initializeHtmlImages(): void {
       // Also set as CSS custom property for fallback
       gameContainer.style.setProperty('--bg-gif-url', `url("${bgUrl}")`);
       
-      console.log('Background GIF set:', bgUrl);
+      console.log('Initial background GIF set:', bgUrl);
       return true;
     }
     return false;
@@ -66,6 +67,9 @@ export function initializeHtmlImages(): void {
         setTimeout(() => {
           setBackground();
         }, 100);
+        setTimeout(() => {
+          setBackground();
+        }, 500);
       }
     });
   }
