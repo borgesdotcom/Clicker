@@ -224,6 +224,8 @@ img, svg {
   background-size: auto;
   background-repeat: repeat;
   /* Background GIF is set dynamically via JavaScript to ensure proper path resolution */
+  /* Fallback: use CSS custom property if available */
+  background-image: var(--bg-gif-url, none);
 }
 
 #game-container::before {

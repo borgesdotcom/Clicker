@@ -37,9 +37,37 @@ export function initializeHtmlImages(): void {
   }
 
   // Set background GIF on game-container
-  const gameContainer = document.getElementById('game-container');
-  if (gameContainer) {
-    gameContainer.style.backgroundImage = `url(${images.backgroundGif})`;
+  // Try multiple times to ensure DOM is ready
+  const setBackground = () => {
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer && images.backgroundGif) {
+      // Set background image with all necessary properties
+      const bgUrl = images.backgroundGif;
+      gameContainer.style.backgroundImage = `url("${bgUrl}")`;
+      gameContainer.style.backgroundRepeat = 'repeat';
+      gameContainer.style.backgroundSize = 'auto';
+      gameContainer.style.backgroundColor = '#000';
+      
+      // Also set as CSS custom property for fallback
+      gameContainer.style.setProperty('--bg-gif-url', `url("${bgUrl}")`);
+      
+      console.log('Background GIF set:', bgUrl);
+      return true;
+    }
+    return false;
+  };
+
+  // Try immediately
+  if (!setBackground()) {
+    // If not ready, try with requestAnimationFrame
+    requestAnimationFrame(() => {
+      if (!setBackground()) {
+        // Last resort: try after a short delay
+        setTimeout(() => {
+          setBackground();
+        }, 100);
+      }
+    });
   }
 
   // Load font dynamically

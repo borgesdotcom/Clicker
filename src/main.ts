@@ -37,8 +37,11 @@ async function init(): Promise<void> {
   // Set HTML lang attribute
   document.documentElement.lang = i18n.getLanguage();
 
-  // Initialize images in static HTML
+  // Initialize images in static HTML (including background)
   initializeHtmlImages();
+
+  // Wait a bit to ensure DOM is fully ready
+  await new Promise((resolve) => setTimeout(resolve, 0));
 
   const game = new Game();
   const mobileUI = new MobileUI();
