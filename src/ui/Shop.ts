@@ -25,6 +25,7 @@ export class Shop {
   private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
   private isDesktopCollapsed = false; // Desktop shop collapsed state
   private updateAutoBuyButtonCallback: (() => void) | null = null;
+  private activeTooltips: Set<HTMLElement> = new Set(); // Track active tooltips for cleanup
 
   constructor(
     private store: Store,
@@ -114,15 +115,13 @@ export class Shop {
       btn.textContent = qty === 'max' ? 'MAX' : `x${qty}`;
       btn.className = 'buy-quantity-btn';
       if (this.buyQuantity === qty) {
-        btn.style.background =
-          'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-        btn.style.borderImage =
-          'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+        btn.classList.add('active');
+        btn.style.background = 'rgba(102, 204, 255, 0.2)';
+        btn.style.borderColor = 'rgba(102, 204, 255, 0.5)';
+        btn.style.borderImage = 'none';
         btn.style.color = '#ffffff';
-        btn.style.textShadow =
-          '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
-        btn.style.boxShadow =
-          '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+        btn.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.8)';
+        btn.style.boxShadow = '0 0 8px rgba(102, 204, 255, 0.3)';
       }
       btn.addEventListener('click', () => {
         this.buyQuantity = qty;
@@ -131,24 +130,21 @@ export class Shop {
           const button = quantityContainer.children[i + 1] as HTMLElement;
           if (button) {
             if (q === qty) {
-              button.style.background =
-                'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-              button.style.borderImage =
-                'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+              button.classList.add('active');
+              button.style.background = 'rgba(102, 204, 255, 0.2)';
+              button.style.borderColor = 'rgba(102, 204, 255, 0.5)';
+              button.style.borderImage = 'none';
               button.style.color = '#ffffff';
-              button.style.textShadow =
-                '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
-              button.style.boxShadow =
-                '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+              button.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.8)';
+              button.style.boxShadow = '0 0 8px rgba(102, 204, 255, 0.3)';
             } else {
-              button.style.background =
-                'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
-              button.style.borderImage =
-                'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+              button.classList.remove('active');
+              button.style.background = 'rgba(0, 0, 0, 0.3)';
+              button.style.borderColor = 'rgba(102, 204, 255, 0.3)';
+              button.style.borderImage = 'none';
               button.style.color = '#ffffff';
-              button.style.textShadow =
-                '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
-              button.style.boxShadow = '0 0 8px rgba(255, 0, 255, 0.3)';
+              button.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.8)';
+              button.style.boxShadow = 'none';
             }
           }
         });
@@ -167,7 +163,7 @@ export class Shop {
   private setupAutoBuyToggle(container: HTMLElement): void {
     const autoBuyBtn = document.createElement('button');
     autoBuyBtn.className = 'buy-quantity-btn auto-buy-toggle';
-    autoBuyBtn.innerHTML = '🤖 Auto-Buy';
+    autoBuyBtn.textContent = 'Auto-Buy';
     autoBuyBtn.title =
       'Automatically purchase affordable upgrades every 0.5 seconds when enabled';
     autoBuyBtn.setAttribute('aria-label', 'Toggle Auto-Buy');
@@ -175,33 +171,41 @@ export class Shop {
     autoBuyBtn.setAttribute('role', 'switch');
     autoBuyBtn.setAttribute('aria-checked', 'false');
 
-    // Create tooltip element
+    // Create tooltip element - append to body to avoid overflow clipping
     const tooltip = document.createElement('div');
     tooltip.className = 'auto-buy-tooltip';
     tooltip.style.cssText = `
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      margin-bottom: 8px;
-      background: rgba(0, 0, 0, 0.95);
-      color: #fff;
+      position: fixed;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fffae5;
       padding: 8px 12px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 0, 255, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.8);
       font-size: 12px;
       white-space: nowrap;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s;
-      z-index: 1000;
+      z-index: 100000;
       font-family: 'Courier New', monospace;
-      text-shadow: 0 1px 0 #000;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      text-shadow: 1px 1px 0 rgba(0, 0, 0, 1), -1px -1px 0 rgba(0, 0, 0, 1);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.5);
     `;
     tooltip.textContent =
       'Automatically purchase affordable upgrades every 0.5 seconds';
-    container.appendChild(tooltip);
+    document.body.appendChild(tooltip);
+    
+    // Update tooltip position on hover
+    autoBuyBtn.addEventListener('mouseenter', () => {
+      const rect = autoBuyBtn.getBoundingClientRect();
+      tooltip.style.left = `${rect.left + rect.width / 2}px`;
+      tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+      tooltip.style.transform = 'translateX(-50%)';
+      tooltip.style.opacity = '1';
+    });
+    
+    autoBuyBtn.addEventListener('mouseleave', () => {
+      tooltip.style.opacity = '0';
+    });
 
     // Create info text for locked state
     const infoText = document.createElement('div');
@@ -229,9 +233,11 @@ export class Shop {
       if (!isUnlocked) {
         // Disabled - not unlocked
         autoBuyBtn.disabled = true;
-        autoBuyBtn.style.background = 'rgba(100, 100, 100, 0.3)';
-        autoBuyBtn.style.borderColor = 'rgba(100, 100, 100, 0.5)';
-        autoBuyBtn.style.boxShadow = 'none';
+        autoBuyBtn.classList.remove('auto-buy-enabled', 'auto-buy-disabled');
+        autoBuyBtn.classList.add('auto-buy-locked');
+        autoBuyBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+        autoBuyBtn.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        autoBuyBtn.style.boxShadow = 'inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)';
         autoBuyBtn.style.cursor = 'not-allowed';
         autoBuyBtn.style.opacity = '0.6';
         autoBuyBtn.setAttribute('aria-checked', 'false');
@@ -241,25 +247,19 @@ export class Shop {
       } else {
         // Unlocked - can toggle (button should be ENABLED/ACTIVE, not disabled)
         autoBuyBtn.disabled = false;
+        autoBuyBtn.classList.remove('auto-buy-locked');
         autoBuyBtn.style.cursor = 'pointer';
         autoBuyBtn.style.opacity = '1';
         autoBuyBtn.setAttribute('aria-checked', isEnabled.toString());
         infoText.style.display = 'none';
         if (isEnabled) {
-          autoBuyBtn.style.background =
-            'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-          autoBuyBtn.style.borderImage =
-            'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
-          autoBuyBtn.style.boxShadow =
-            '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+          autoBuyBtn.classList.add('auto-buy-enabled');
+          autoBuyBtn.classList.remove('auto-buy-disabled');
           tooltip.textContent =
             'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
         } else {
-          autoBuyBtn.style.background =
-            'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
-          autoBuyBtn.style.borderImage =
-            'linear-gradient(135deg, #ff00ff, #0088ff) 1';
-          autoBuyBtn.style.boxShadow = 'none';
+          autoBuyBtn.classList.add('auto-buy-disabled');
+          autoBuyBtn.classList.remove('auto-buy-enabled');
           tooltip.textContent =
             'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
         }
@@ -268,15 +268,6 @@ export class Shop {
 
     // Store the callback so it can be called when ascensionSystem is set
     this.updateAutoBuyButtonCallback = updateAutoBuyButton;
-
-    // Show tooltip on hover
-    autoBuyBtn.addEventListener('mouseenter', () => {
-      tooltip.style.opacity = '1';
-    });
-
-    autoBuyBtn.addEventListener('mouseleave', () => {
-      tooltip.style.opacity = '0';
-    });
 
     autoBuyBtn.addEventListener('click', () => {
       const state = this.store.getState();
@@ -309,6 +300,16 @@ export class Shop {
     });
   }
 
+  private updateToggleButtonImage(button: HTMLElement): void {
+    const img = button.querySelector('img');
+    if (img) {
+      img.src = this.isDesktopCollapsed 
+        ? '/src/icons/menu/right.png' 
+        : '/src/icons/menu/left.png';
+      img.alt = this.isDesktopCollapsed ? 'Open Shop' : 'Close Shop';
+    }
+  }
+
   private setupDesktopToggle(): void {
     const toggleButton = document.getElementById('desktop-shop-toggle');
     const shopPanel = document.getElementById('shop-panel');
@@ -320,6 +321,7 @@ export class Shop {
     if (savedState === 'true') {
       this.isDesktopCollapsed = true;
       shopPanel.classList.add('desktop-collapsed');
+      this.updateToggleButtonImage(toggleButton);
       // Trigger resize after a short delay to ensure proper canvas sizing
       setTimeout(() => {
         window.dispatchEvent(new Event('resize'));
@@ -336,6 +338,9 @@ export class Shop {
       } else {
         shopPanel.classList.remove('desktop-collapsed');
       }
+      
+      // Update button image
+      this.updateToggleButtonImage(toggleButton);
 
       // Save state to localStorage
       localStorage.setItem(
@@ -348,6 +353,9 @@ export class Shop {
         window.dispatchEvent(new Event('resize'));
       }, 350);
     });
+    
+    // Initialize button image
+    this.updateToggleButtonImage(toggleButton);
   }
 
   public forceRefresh(): void {
@@ -390,24 +398,21 @@ export class Shop {
         const button = btn as HTMLElement;
         if (index === 0) {
           // First button is x1
-          button.style.background =
-            'linear-gradient(135deg, rgba(255, 0, 255, 0.4), rgba(0, 136, 255, 0.4))';
-          button.style.borderImage =
-            'linear-gradient(135deg, #ff00ff, #00ffff, #8800ff) 1';
+          button.classList.add('active');
+          button.style.background = 'rgba(102, 204, 255, 0.2)';
+          button.style.borderColor = 'rgba(102, 204, 255, 0.5)';
+          button.style.borderImage = 'none';
           button.style.color = '#ffffff';
-          button.style.textShadow =
-            '0 0 3px rgba(255, 0, 255, 0.6), 0 0 5px rgba(0, 136, 255, 0.4), 0 1px 0 #000, 0 -1px 0 #000';
-          button.style.boxShadow =
-            '0 0 12px rgba(255, 0, 255, 0.6), 0 0 20px rgba(0, 136, 255, 0.4)';
+          button.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.8)';
+          button.style.boxShadow = '0 0 8px rgba(102, 204, 255, 0.3)';
         } else {
-          button.style.background =
-            'linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 136, 255, 0.15))';
-          button.style.borderImage =
-            'linear-gradient(135deg, #ff00ff, #0088ff) 1';
+          button.classList.remove('active');
+          button.style.background = 'rgba(0, 0, 0, 0.3)';
+          button.style.borderColor = 'rgba(102, 204, 255, 0.3)';
+          button.style.borderImage = 'none';
           button.style.color = '#ffffff';
-          button.style.textShadow =
-            '0 0 2px rgba(255, 0, 255, 0.5), 0 1px 0 #000';
-          button.style.boxShadow = '0 0 8px rgba(255, 0, 255, 0.3)';
+          button.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.8)';
+          button.style.boxShadow = 'none';
         }
       });
     }
@@ -505,9 +510,14 @@ export class Shop {
         continue;
       }
 
-      // Check if player has 75% of the cost (with discounts applied)
+      // Check if upgrade is visible (level/stat requirements)
+      if (!subUpgrade.isVisible(state)) {
+        continue;
+      }
+
+      // Check if player has 40% of the cost (with discounts applied)
       const discountedCost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
-      if (state.points >= discountedCost * 0.75) {
+      if (state.points >= discountedCost * 0.4) {
         state.discoveredUpgrades[subKey] = true;
         discoveredNew = true;
       }
@@ -645,9 +655,15 @@ export class Shop {
     if (this.isRendering) return;
     this.isRendering = true;
 
+    // Clean up all active tooltips before re-rendering
+    this.cleanupTooltips();
+
     this.container.innerHTML = '';
     const state = this.store.getState();
     this.upgradeSystem.updateSubUpgradesFromState(state);
+    
+    // Always check for discoveries before rendering to ensure visibility is correct
+    this.checkForDiscoveries(state);
 
     if (this.currentTab === 'available') {
       this.renderAvailableTab(state);
@@ -656,6 +672,41 @@ export class Shop {
     }
 
     this.isRendering = false;
+  }
+
+  private cleanupTooltips(): void {
+    // Remove all active tooltips from DOM
+    this.activeTooltips.forEach((tooltip) => {
+      if (tooltip.parentNode) {
+        tooltip.parentNode.removeChild(tooltip);
+      }
+    });
+    this.activeTooltips.clear();
+  }
+
+  private setBuyButtonContent(buttonElement: HTMLButtonElement, displayQuantity: number): void {
+    // Clear existing content
+    buttonElement.innerHTML = '';
+    
+    // Add image
+    const img = document.createElement('img');
+    img.src = '/src/icons/menu/buy.png';
+    img.alt = 'Buy';
+    buttonElement.appendChild(img);
+    
+    // Add quantity text if needed
+    if (this.buyQuantity === 'max' && displayQuantity > 1) {
+      const quantityText = document.createElement('span');
+      quantityText.textContent = ` ×${displayQuantity}`;
+      quantityText.style.marginLeft = '4px';
+      buttonElement.appendChild(quantityText);
+    }
+    
+    // Add hover text "Buy"
+    const hoverText = document.createElement('span');
+    hoverText.className = 'buy-hover-text';
+    hoverText.textContent = 'Buy';
+    buttonElement.appendChild(hoverText);
   }
 
   private renderAvailableTab(state: GameState): void {
@@ -672,14 +723,22 @@ export class Shop {
     this.buttonCache.clear();
 
     // Render special upgrades box at the top
-    // Filter: must meet requirements AND be discovered (75% of cost OR already owned)
+    // Filter: must meet requirements, be visible, AND be discovered (40% of cost OR already owned)
+    // Once discovered, upgrades stay visible even if player drops below 40% cost
     const visibleSubUpgrades = allSubUpgrades.filter((sub) => {
       const subKey = `sub_${sub.id}`;
-      return (
-        !sub.owned &&
-        sub.requires(state) &&
-        (Boolean(state.discoveredUpgrades?.[subKey]) || sub.owned)
-      );
+      
+      // Must not be owned
+      if (sub.owned) return false;
+      
+      // Must meet requirements
+      if (!sub.requires(state)) return false;
+      
+      // Must be visible
+      if (!sub.isVisible(state)) return false;
+      
+      // Must be discovered (once discovered, it stays visible)
+      return Boolean(state.discoveredUpgrades?.[subKey]);
     });
 
     if (visibleSubUpgrades.length > 0) {
@@ -719,8 +778,18 @@ export class Shop {
         continue;
       }
 
+      // Create individual floating container for each upgrade item
+      const itemContainer = document.createElement('div');
+      itemContainer.className = 'upgrade-item-container';
+
       const item = document.createElement('div');
       item.className = 'upgrade-item';
+      
+      // Enhanced UI: Add visual indicator for ships
+      if (upgrade.id === 'ship') {
+        item.classList.add('upgrade-item-ship');
+        itemContainer.classList.add('upgrade-item-ship-container');
+      }
 
       const header = document.createElement('div');
       header.className = 'upgrade-header';
@@ -735,10 +804,6 @@ export class Shop {
 
       header.appendChild(name);
       header.appendChild(level);
-
-      const description = document.createElement('div');
-      description.className = 'upgrade-description';
-      description.textContent = upgrade.description;
 
       const footer = document.createElement('div');
       footer.className = 'upgrade-footer';
@@ -798,28 +863,18 @@ export class Shop {
           }
         }
 
-        displayQuantity = requestedQty;
-        canAffordExact = state.points >= displayCost;
+      displayQuantity = requestedQty;
+      canAffordExact = state.points >= displayCost;
       }
 
-      // Show cost with requested quantity (matching button text)
-      const costText =
-        displayQuantity > 1
-          ? `${t('common.cost')}: ${this.formatNumber(displayCost)} (x${displayQuantity})`
-          : `${t('common.cost')}: ${this.formatNumber(displayCost)}`;
-      cost.textContent = costText;
+      // Simplified cost display - just show the number
+      cost.textContent = this.formatNumber(displayCost);
+      if (displayQuantity > 1) {
+        cost.textContent += ` (×${displayQuantity})`;
+      }
 
-      // Show requested quantity in button text
-      const buttonText =
-        this.buyQuantity === 'max'
-          ? displayQuantity > 1
-            ? `${t('common.buy')} x${displayQuantity}`
-            : t('common.buy')
-          : displayQuantity > 1
-            ? `${t('common.buy')} x${displayQuantity}`
-            : t('common.buy');
-
-      const button = new Button(buttonText, () => {
+      // Create button with image instead of text
+      const button = new Button('', () => {
         // Buy exactly the requested quantity (or max affordable for MAX mode)
         const qtyToBuy =
           this.buyQuantity === 'max' ? displayQuantity : displayQuantity;
@@ -829,18 +884,25 @@ export class Shop {
 
       // Cache the button element for quick updates
       const buttonElement = button.getElement();
+      
+      // Set button content with image
+      this.setBuyButtonContent(buttonElement, displayQuantity);
+      
       this.buttonCache.set(upgrade.id, buttonElement);
 
       footer.appendChild(cost);
       footer.appendChild(buttonElement);
 
       item.appendChild(header);
-      item.appendChild(description);
       item.appendChild(footer);
 
-      this.container.appendChild(item);
+      // Add item to its container, then add container to shop
+      itemContainer.appendChild(item);
+      this.container.appendChild(itemContainer);
     }
   }
+
+
 
   private renderOwnedTab(state: GameState): void {
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
@@ -876,11 +938,20 @@ export class Shop {
     card.className = `sub-upgrade ${subUpgrade.owned ? 'owned' : ''}`;
     card.setAttribute('data-upgrade-id', subUpgrade.id);
 
+    // Add icon back for visibility - use star PNG for all special upgrades
     const icon = document.createElement('div');
     icon.className = 'sub-upgrade-icon';
-    icon.textContent = this.getUpgradeEmoji(subUpgrade.id);
+    const img = document.createElement('img');
+    img.src = '/src/icons/stars.png';
+    img.alt = t(`upgrades.special.${subUpgrade.id}.name`);
+    img.style.width = '130%';
+    img.style.height = '130%';
+    img.style.objectFit = 'contain';
+    img.style.transform = 'scale(1.1)';
+    icon.appendChild(img);
     card.appendChild(icon);
 
+    // Name and cost are hidden via CSS for simpler UI
     const name = document.createElement('div');
     name.className = 'sub-upgrade-name';
     name.textContent = t(`upgrades.special.${subUpgrade.id}.name`);
@@ -894,7 +965,7 @@ export class Shop {
       : this.formatNumber(discountedCost);
     card.appendChild(cost);
 
-    // Tooltip
+    // Tooltip - append to body to avoid overflow clipping
     const tooltip = document.createElement('div');
     tooltip.className = 'sub-upgrade-tooltip';
     const upgradeName = t(`upgrades.special.${subUpgrade.id}.name`);
@@ -902,8 +973,28 @@ export class Shop {
       `upgrades.special.${subUpgrade.id}.description`,
     );
     const upgradeFlavor = t(`upgrades.special.${subUpgrade.id}.flavor`);
-    tooltip.innerHTML = `<strong>${upgradeName}</strong><br>${upgradeDescription}<br><em style="color: #888; font-size: 10px;">${upgradeFlavor}</em>`;
-    card.appendChild(tooltip);
+    const costText = subUpgrade.owned
+      ? `✓ ${t('common.owned')}`
+      : this.formatNumber(discountedCost);
+    tooltip.innerHTML = `<strong>${upgradeName}</strong><br>${upgradeDescription}<br><div style="color: #66ccff; font-weight: 500; margin-top: 4px;">${costText}</div><em style="color: rgba(255, 255, 255, 0.6); font-size: 11px; margin-top: 4px; display: block;">${upgradeFlavor}</em>`;
+    document.body.appendChild(tooltip);
+    this.activeTooltips.add(tooltip);
+    
+    // Update tooltip position on hover
+    const showTooltip = () => {
+      const rect = card.getBoundingClientRect();
+      tooltip.style.left = `${rect.left + rect.width / 2}px`;
+      tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+      tooltip.style.transform = 'translateX(-50%)';
+      tooltip.style.opacity = '1';
+    };
+    
+    const hideTooltip = () => {
+      tooltip.style.opacity = '0';
+    };
+    
+    card.addEventListener('mouseenter', showTooltip);
+    card.addEventListener('mouseleave', hideTooltip);
 
     if (!subUpgrade.owned) {
       // Set initial affordability state
@@ -912,6 +1003,7 @@ export class Shop {
       card.style.cursor = canAfford ? 'pointer' : 'not-allowed';
 
       card.addEventListener('click', () => {
+        hideTooltip(); // Hide tooltip when clicking to buy
         const currentState = this.store.getState();
         const currentCost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
         if (currentState.points >= currentCost) {
@@ -923,55 +1015,6 @@ export class Shop {
     return card;
   }
 
-  private getUpgradeEmoji(upgradeId: string): string {
-    const emojiMap: Record<string, string> = {
-      // Original
-      auto_fire: '🔥',
-      death_pact: '💀',
-      laser_focusing: '💎',
-      quantum_targeting: '🎯',
-      energy_recycling: '♻️',
-      overclocked_reactors: '⚛️',
-      ship_swarm: '🐝',
-      neural_link: '🧠',
-      antimatter_rounds: '💥',
-      warp_core: '🌀',
-      ai_optimizer: '🤖',
-      perfect_precision: '✨',
-      void_channeling: '🌌',
-      temporal_acceleration: '⏰',
-      singularity_core: '🕳️',
-      cosmic_ascension: '🌟',
-      // New V1.0 Upgrades
-      coffee_machine: '☕',
-      lucky_dice: '🎲',
-      space_pizza: '🍕',
-      rubber_duck: '🦆',
-      falafel_rollo_special: '🥙',
-      motivational_posters: '📋',
-      disco_ball: '🪩',
-      lucky_horseshoe: '🍀',
-      arcade_machine: '🕹️',
-      chaos_emeralds: '💚',
-      time_machine: '⏱️',
-      philosophers_stone: '🗿',
-      golden_goose: '🦢',
-      infinity_gauntlet: '💍',
-      alien_cookbook: '📖',
-      nuclear_reactor: '☢️',
-      cheat_codes: '🎮',
-      dragon_egg: '🥚',
-      universe_map: '🗺️',
-      answer_to_everything: '4️⃣2️⃣',
-      heart_of_galaxy: '❤️',
-      meaning_of_life: '🔮',
-      // Click-focused upgrades
-      master_clicker: '👆',
-      click_multiplier: '✨',
-      super_clicker: '💪',
-    };
-    return emojiMap[upgradeId] || '⭐';
-  }
 
   private calculateBulkCost(
     upgrade: UpgradeConfig,
@@ -1129,8 +1172,7 @@ export class Shop {
 
         button.style.transition = 'all 0.3s ease';
         button.style.transform = 'scale(1.05)';
-        button.style.boxShadow =
-          '0 0 20px rgba(255, 0, 255, 0.8), 0 0 30px rgba(0, 136, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)';
+        button.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
 
         setTimeout(() => {
           button.style.transform = originalTransform;
@@ -1193,23 +1235,44 @@ export class Shop {
     let purchasedAny = false;
 
     // Check main upgrades (skip misc category)
-    for (const upgrade of upgrades) {
-      if (upgrade.id === 'misc') continue;
-
-      // Only buy discovered upgrades
-      if (
-        !state.discoveredUpgrades?.[upgrade.id] &&
-        upgrade.getLevel(state) === 0
-      ) {
-        continue;
+    // Prioritize ship upgrade first if it can be bought
+    // Ship upgrade should always be discoverable, but check explicitly first
+    const shipUpgrade = upgrades.find(upgrade => upgrade.id === 'ship');
+    if (shipUpgrade) {
+      // Ensure ship upgrade is always discovered
+      if (!state.discoveredUpgrades) {
+        state.discoveredUpgrades = {};
       }
-
-      // Check if we can afford at least one
-      if (upgrade.canBuy(state)) {
-        // Buy one at a time for auto-buy (safer and more predictable)
-        this.buyUpgrade(upgrade, 1);
+      state.discoveredUpgrades['ship'] = true;
+      
+      // Prioritize ship upgrade for god mode
+      if (shipUpgrade.canBuy(state)) {
+        this.buyUpgrade(shipUpgrade, 1);
         purchasedAny = true;
-        break; // Only buy one upgrade per check to avoid buying too many at once
+      }
+    }
+
+    // Check other upgrades if ship wasn't purchased
+    if (!purchasedAny) {
+      for (const upgrade of upgrades) {
+        if (upgrade.id === 'misc') continue;
+        if (upgrade.id === 'ship') continue; // Already checked above
+
+        // Only buy discovered upgrades
+        if (
+          !state.discoveredUpgrades?.[upgrade.id] &&
+          upgrade.getLevel(state) === 0
+        ) {
+          continue;
+        }
+
+        // Check if we can afford at least one
+        if (upgrade.canBuy(state)) {
+          // Buy one at a time for auto-buy (safer and more predictable)
+          this.buyUpgrade(upgrade, 1);
+          purchasedAny = true;
+          break; // Only buy one upgrade per check to avoid buying too many at once
+        }
       }
     }
 

@@ -13,6 +13,9 @@ export class DebugPanel {
     | ((type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => void)
     | null = null;
   private onClearPowerUps: (() => void) | null = null;
+  private onGenerateArtifact:
+    | ((rarity?: 'common' | 'rare' | 'epic' | 'legendary') => void)
+    | null = null;
   private godModeActive = false;
 
   constructor(
@@ -25,6 +28,9 @@ export class DebugPanel {
       type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical',
     ) => void,
     onClearPowerUps?: () => void,
+    onGenerateArtifact?: (
+      rarity?: 'common' | 'rare' | 'epic' | 'legendary',
+    ) => void,
   ) {
     this.store = store;
     this.onBossTrigger = onBossTrigger;
@@ -33,6 +39,7 @@ export class DebugPanel {
     this.onToggleGodMode = onToggleGodMode;
     this.onSpawnPowerUp = onSpawnPowerUp || null;
     this.onClearPowerUps = onClearPowerUps || null;
+    this.onGenerateArtifact = onGenerateArtifact || null;
     this.createPanel();
     this.setupKeyboardShortcut();
   }
@@ -56,7 +63,7 @@ export class DebugPanel {
       <div class="debug-content">
         <div class="debug-header">
           <h2>🛠️ Admin Debug Panel</h2>
-          <button id="debug-close" class="debug-btn debug-btn-close">×</button>
+          <button id="debug-close" class="debug-btn debug-btn-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         
         <div class="debug-section">
@@ -128,6 +135,19 @@ export class DebugPanel {
           </div>
           <div class="debug-controls">
             <button id="debug-clear-powerups" class="debug-btn debug-btn-danger">Clear All Power-Ups</button>
+          </div>
+        </div>
+
+        <div class="debug-section">
+          <h3>💎 Artifacts</h3>
+          <div class="debug-controls">
+            <button id="debug-artifact-common" class="debug-btn">Generate Common</button>
+            <button id="debug-artifact-rare" class="debug-btn">Generate Rare</button>
+            <button id="debug-artifact-epic" class="debug-btn">Generate Epic</button>
+            <button id="debug-artifact-legendary" class="debug-btn debug-btn-special">Generate Legendary</button>
+          </div>
+          <div class="debug-controls">
+            <button id="debug-artifact-random" class="debug-btn">Generate Random</button>
           </div>
         </div>
 
@@ -364,6 +384,52 @@ export class DebugPanel {
         if (this.onClearPowerUps) {
           this.onClearPowerUps();
           this.showNotification('All power-ups cleared!');
+        }
+      });
+
+    // Artifact controls
+    document
+      .getElementById('debug-artifact-common')
+      ?.addEventListener('click', () => {
+        if (this.onGenerateArtifact) {
+          this.onGenerateArtifact('common');
+          this.showNotification('Generated Common artifact!');
+        }
+      });
+
+    document
+      .getElementById('debug-artifact-rare')
+      ?.addEventListener('click', () => {
+        if (this.onGenerateArtifact) {
+          this.onGenerateArtifact('rare');
+          this.showNotification('Generated Rare artifact!');
+        }
+      });
+
+    document
+      .getElementById('debug-artifact-epic')
+      ?.addEventListener('click', () => {
+        if (this.onGenerateArtifact) {
+          this.onGenerateArtifact('epic');
+          this.showNotification('Generated Epic artifact!');
+        }
+      });
+
+    document
+      .getElementById('debug-artifact-legendary')
+      ?.addEventListener('click', () => {
+        if (this.onGenerateArtifact) {
+          this.onGenerateArtifact('legendary');
+          this.showNotification('Generated Legendary artifact!');
+        }
+      });
+
+    document
+      .getElementById('debug-artifact-random')
+      ?.addEventListener('click', () => {
+        if (this.onGenerateArtifact) {
+          this.onGenerateArtifact();
+          this.showNotification('Generated Random artifact!');
         }
       });
   }

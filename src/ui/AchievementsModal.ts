@@ -21,8 +21,8 @@ export class AchievementsModal {
     modal.innerHTML = `
       <div class="modal-content achievements-content">
         <div class="modal-header">
-          <h2>🏆 Achievements</h2>
-          <button class="modal-close" id="achievements-close">&times;</button>
+          <h2><img src="/src/icons/trophy.png" alt="Achievements" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Achievements</h2>
+          <button class="modal-close" id="achievements-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         <div class="achievements-progress">
           <div class="progress-text">

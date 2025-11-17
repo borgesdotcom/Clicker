@@ -230,6 +230,14 @@ export class EnhancedAlienBall extends AlienBall {
   public override draw(drawer: Draw): void {
     const ctx = drawer.getContext();
 
+    // Enable pixelated rendering for pixel art style
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'low';
+
+    // Helper function to pixelate coordinates (round to nearest 3 pixels for more noticeable pixelation)
+    const pixelSize = 3; // Increase pixel size for more visible pixelation
+    const pixelate = (value: number): number => Math.round(value / pixelSize) * pixelSize;
+
     // Disable deformation on mobile for performance
     const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
 
@@ -283,19 +291,19 @@ export class EnhancedAlienBall extends AlienBall {
       scaleY = parallelScale;
     }
 
-    // Add pulsing animation for visual variety
+    // Add pulsing animation for visual variety - pixelated
     const basePulseValue = Math.sin((this as any).animationTime * 1.5) * 0.02;
-    const currentRadius = this.radius * (1 + basePulseValue);
+    const currentRadius = pixelate(this.radius * (1 + basePulseValue));
 
-    const deformedRadiusX = currentRadius * scaleX;
-    const deformedRadiusY = currentRadius * scaleY;
+    const deformedRadiusX = pixelate(currentRadius * scaleX);
+    const deformedRadiusY = pixelate(currentRadius * scaleY);
 
-    const centerX = this.x + deformationX;
-    const centerY = this.y + deformationY;
+    const centerX = pixelate(this.x + deformationX);
+    const centerY = pixelate(this.y + deformationY);
 
-    // Draw enhanced glow effect - space-themed pulsing aura
+    // Draw enhanced glow effect - space-themed pulsing aura - pixelated
     const glowRadius =
-      Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1);
+      pixelate(Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1));
     const glowGradient = ctx.createRadialGradient(
       centerX,
       centerY,
@@ -417,10 +425,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.fillStyle = fillColor;
     ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
 
-    // Border
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(barX, barY, barWidth, barHeight);
+    // No border - removed container
 
     this.drawEffectInfo(ctx, centerX, barWidth, barY);
   }
@@ -551,8 +556,8 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.rotate(animationTime * 1.2);
     ctx.strokeStyle = `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.65)`;
     ctx.lineWidth = 3;
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.7)`;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
     for (let i = 0; i < 6; i++) {
       const startAngle = (i / 6) * Math.PI * 2;
       const endAngle = startAngle + Math.PI / 6;
@@ -779,8 +784,8 @@ export class EnhancedAlienBall extends AlienBall {
       const particleSize = 2 + Math.sin(animationTime * 4 + i) * 0.8;
 
       ctx.fillStyle = `rgba(255, 255, 255, ${particleAlpha})`;
-      ctx.shadowBlur = 5;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.9)`;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
       ctx.beginPath();
       ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
       ctx.fill();
@@ -821,8 +826,8 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.rotate(animationTime * 2);
     ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + pulseValue * 3})`;
     ctx.lineWidth = 1.5;
-    ctx.shadowBlur = 3;
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
     for (let i = 0; i < 4; i++) {
       const angle = (i / 4) * Math.PI * 2;
       const startRadius = currentRadius * 0.7;
@@ -895,8 +900,8 @@ export class EnhancedAlienBall extends AlienBall {
     // Energy border with glow - also deformed with multiple layers
     ctx.strokeStyle = this.stats.color;
     ctx.lineWidth = 2.5;
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.7)`;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
     ctx.beginPath();
     ctx.save();
     ctx.translate(centerX, centerY);
@@ -1183,8 +1188,8 @@ export class EnhancedAlienBall extends AlienBall {
     // Thick energy border with strong glow - also deformed
     ctx.strokeStyle = this.stats.color;
     ctx.lineWidth = 4;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
     ctx.beginPath();
     ctx.save();
     ctx.translate(centerX, centerY);
@@ -1408,8 +1413,8 @@ export class EnhancedAlienBall extends AlienBall {
     // Energy border with healing glow - also deformed with multiple layers
     ctx.strokeStyle = this.stats.color;
     ctx.lineWidth = 2.5;
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = `rgba(0, ${g + 50}, ${b + 50}, 0.7)`;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
     ctx.beginPath();
     ctx.save();
     ctx.translate(centerX, centerY);
@@ -1441,8 +1446,8 @@ export class EnhancedAlienBall extends AlienBall {
     const crossAlpha = 0.85 + Math.sin(animationTime * 2.5) * 0.1;
     ctx.strokeStyle = `rgba(0, 255, 136, ${crossAlpha})`;
     ctx.lineWidth = 3.5;
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = 'rgba(0, 255, 136, 0.6)';
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
     ctx.beginPath();
     ctx.moveTo(-12, 0);
     ctx.lineTo(12, 0);

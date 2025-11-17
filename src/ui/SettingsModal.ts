@@ -13,6 +13,8 @@ export class SettingsModal {
   private soundCallback: ((enabled: boolean) => void) | null = null;
   private soundtrackCallback: ((enabled: boolean) => void) | null = null;
   private volumeCallback: ((volume: number) => void) | null = null;
+  private resetCallback: (() => void) | null = null;
+  private creditsModal: any | null = null;
   private graphicsToggle: HTMLButtonElement | null = null;
   private shipLasersToggle: HTMLButtonElement | null = null;
   private damageNumbersToggle: HTMLButtonElement | null = null;
@@ -51,6 +53,14 @@ export class SettingsModal {
 
   setVolumeCallback(callback: (volume: number) => void): void {
     this.volumeCallback = callback;
+  }
+
+  setResetCallback(callback: () => void): void {
+    this.resetCallback = callback;
+  }
+
+  setCreditsModal(creditsModal: any): void {
+    this.creditsModal = creditsModal;
   }
 
   updateGraphicsToggles(
@@ -469,6 +479,117 @@ export class SettingsModal {
     graphicsSection.appendChild(damageNumbersHint);
 
     content.appendChild(graphicsSection);
+
+    // Save Data & Actions Section
+    const actionsSection = document.createElement('div');
+    actionsSection.style.marginBottom = '25px';
+    actionsSection.style.marginTop = '30px';
+    actionsSection.style.paddingTop = '25px';
+    actionsSection.style.borderTop = '1px solid rgba(255, 255, 255, 0.3)';
+
+    const actionsTitle = document.createElement('h3');
+    actionsTitle.textContent = '💾 Save Data & Actions';
+    actionsTitle.style.marginBottom = '15px';
+    actionsTitle.style.color = '#ffffff';
+    actionsTitle.style.fontFamily = 'var(--font-family)';
+    actionsTitle.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+    actionsSection.appendChild(actionsTitle);
+
+    // Export Button
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'modal-button matrix-button';
+    exportBtn.textContent = 'EXPORT SAVE DATA';
+    exportBtn.style.width = '100%';
+    exportBtn.style.marginBottom = '10px';
+    exportBtn.style.background = 'rgba(0, 0, 0, 0.95)';
+    exportBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
+    exportBtn.style.color = '#ffffff';
+    exportBtn.style.fontFamily = 'var(--font-family)';
+    exportBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+    exportBtn.style.letterSpacing = '2px';
+    exportBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    exportBtn.style.transition = 'all 0.1s linear';
+    exportBtn.addEventListener('click', () => {
+      if (this.creditsModal) {
+        this.creditsModal.exportSave();
+      }
+    });
+    exportBtn.addEventListener('mouseenter', () => {
+      exportBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
+      exportBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+    });
+    exportBtn.addEventListener('mouseleave', () => {
+      exportBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+      exportBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    });
+    actionsSection.appendChild(exportBtn);
+
+    // Import Button
+    const importBtn = document.createElement('button');
+    importBtn.className = 'modal-button matrix-button';
+    importBtn.textContent = 'IMPORT SAVE DATA';
+    importBtn.style.width = '100%';
+    importBtn.style.marginBottom = '10px';
+    importBtn.style.background = 'rgba(0, 0, 0, 0.95)';
+    importBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
+    importBtn.style.color = '#ffffff';
+    importBtn.style.fontFamily = 'var(--font-family)';
+    importBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+    importBtn.style.letterSpacing = '2px';
+    importBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    importBtn.style.transition = 'all 0.1s linear';
+    importBtn.addEventListener('click', () => {
+      if (this.creditsModal) {
+        this.creditsModal.importSave();
+      }
+    });
+    importBtn.addEventListener('mouseenter', () => {
+      importBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
+      importBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+    });
+    importBtn.addEventListener('mouseleave', () => {
+      importBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+      importBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    });
+    actionsSection.appendChild(importBtn);
+
+    // Reset Save Button
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'modal-button matrix-button matrix-button-danger';
+    resetBtn.textContent = '⚠️ Reset Save';
+    resetBtn.style.width = '100%';
+    resetBtn.style.marginBottom = '10px';
+    resetBtn.style.background = 'rgba(0, 0, 0, 0.95)';
+    resetBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
+    resetBtn.style.color = '#ffffff';
+    resetBtn.style.fontFamily = 'var(--font-family)';
+    resetBtn.style.textShadow = '0 0 4px rgba(255, 255, 255, 1), 0 0 8px rgba(255, 255, 255, 0.8)';
+    resetBtn.style.letterSpacing = '2px';
+    resetBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    resetBtn.style.transition = 'all 0.1s linear';
+    resetBtn.addEventListener('click', () => {
+      if (
+        confirm(
+          'Are you sure you want to reset all progress? This cannot be undone.',
+        )
+      ) {
+        if (this.resetCallback) {
+          this.resetCallback();
+        }
+        this.hide();
+      }
+    });
+    resetBtn.addEventListener('mouseenter', () => {
+      resetBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
+      resetBtn.style.boxShadow = '0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(255, 255, 255, 0.5)';
+    });
+    resetBtn.addEventListener('mouseleave', () => {
+      resetBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+      resetBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    });
+    actionsSection.appendChild(resetBtn);
+
+    content.appendChild(actionsSection);
 
     // Close button
     const closeButton = document.createElement('button');

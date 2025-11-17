@@ -1,27 +1,17 @@
 import type { Draw } from '../render/Draw';
 import type { AscensionSystem } from './AscensionSystem';
 import type { GameState } from '../types';
+import { Config } from '../core/GameConfig';
 
 /**
  * ComboSystem.ts - Click combo system with linear damage scaling
  *
  * Features:
- * - Linear multiplier: 1 + (combo × 0.001)
- * - 10-second decay timer (resets combo if no hits)
+ * - Linear multiplier: 1 + (combo × multiplier)
+ * - Configurable decay timer (resets combo if no hits)
  * - Visual timer bar showing remaining time
  * - Optional max combo cap (configurable, default: unlimited)
  */
-
-// ===== CONFIGURATION CONSTANTS =====
-
-/** Base combo multiplier per hit */
-const BASE_COMBO_MULTIPLIER = 0.0005;
-
-/** Time in seconds before combo resets */
-const COMBO_TIMEOUT = 10.0;
-
-/** Maximum combo count (null = unlimited) */
-const COMBO_MAX_MULTIPLIER: number | null = null; // Set to a number to cap, e.g., 3000 for max 4x
 
 // ===== CLASS =====
 
@@ -45,7 +35,7 @@ export class ComboSystem {
    * Get combo timeout duration (base + prestige bonus)
    */
   private getComboTimeout(state?: GameState): number {
-    let timeout = COMBO_TIMEOUT;
+    let timeout = Config.combo.timeout;
     if (this.ascensionSystem && state) {
       const durationBonus = this.ascensionSystem.getComboDurationBonus(state);
       timeout += durationBonus;
@@ -61,13 +51,13 @@ export class ComboSystem {
     this.combo++;
 
     // Apply cap if configured
-    if (COMBO_MAX_MULTIPLIER !== null) {
-      const maxCombo = Math.floor(COMBO_MAX_MULTIPLIER / BASE_COMBO_MULTIPLIER);
+    if (Config.combo.maxMultiplier !== null) {
+      const maxCombo = Math.floor(Config.combo.maxMultiplier / Config.combo.baseMultiplier);
       this.combo = Math.min(this.combo, maxCombo);
     }
 
     this.comboTimer = this.getComboTimeout(state);
-    this.comboAnimationTime = 0.3;
+    this.comboAnimationTime = Config.visual.combo.animation.duration;
 
     if (this.combo > this.maxCombo) {
       this.maxCombo = this.combo;
@@ -154,7 +144,7 @@ export class ComboSystem {
     const multiplierPerHit =
       this.ascensionSystem && state
         ? this.ascensionSystem.getComboBoostMultiplier(state)
-        : BASE_COMBO_MULTIPLIER;
+        : Config.combo.baseMultiplier;
     return 1 + this.combo * multiplierPerHit;
   }
 
@@ -201,9 +191,10 @@ export class ComboSystem {
     ctx.save();
 
     // Pulse effect on new hit
+    const animationConfig = Config.visual.combo.animation;
     const scale =
       this.comboAnimationTime > 0
-        ? 1 + (this.comboAnimationTime / 0.3) * 0.3
+        ? 1 + (this.comboAnimationTime / animationConfig.duration) * animationConfig.scaleAmount
         : 1;
 
     ctx.translate(x, y);
@@ -231,8 +222,9 @@ export class ComboSystem {
 
     // Timer bar (shows remaining time before reset)
     const timePercent = this.getTimePercent(state);
-    const barWidth = 120;
-    const barHeight = 4;
+    const barConfig = Config.visual.combo.bar;
+    const barWidth = barConfig.width;
+    const barHeight = barConfig.height;
     const barX = x - barWidth / 2;
     const barY = y + 30;
 
@@ -267,13 +259,16 @@ export class ComboSystem {
    */
   private getComboColor(): string {
     const mult = this.getMultiplier();
-
-    if (mult >= 2.0) return '#ff00ff'; // Magenta for massive combos
-    if (mult >= 1.6) return '#ff0000'; // Red for high combos
-    if (mult >= 1.35) return '#ffaa00'; // Orange for good combos
-    if (mult >= 1.15) return '#ffff00'; // Yellow for decent combos
-    if (mult >= 1.03) return '#00ff00'; // Green for building combos
-    return '#ffffff'; // White for low combos
+    
+    // Use configured color thresholds
+    for (const threshold of Config.combo.colorThresholds) {
+      if (mult >= threshold.minMultiplier) {
+        return threshold.color;
+      }
+    }
+    
+    // Fallback to white if no threshold matches
+    return '#ffffff';
   }
 
   reset(): void {

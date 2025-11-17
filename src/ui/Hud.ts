@@ -6,16 +6,16 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { t } from '../core/I18n';
+import { IconGenerator } from '../utils/IconGenerator';
 
 export class Hud {
   private pointsDisplay: HTMLElement;
   private levelText: HTMLElement;
   private expText: HTMLElement;
   private levelBarFill: HTMLElement;
-  private dpsDisplay: HTMLElement | null = null;
-  private passiveDisplay: HTMLElement | null = null;
   private totalIncomeDisplay: HTMLElement | null = null; // Combined income display
-  private critDisplay: HTMLElement | null = null;
+  private combatStatsContainer: HTMLElement | null = null; // Always visible combat stats
+  private dpsFullDisplay: HTMLElement | null = null;
 
   private damageHistory: Array<{ damage: number; time: number }> = [];
   private killRewardHistory: Array<{ reward: number; time: number }> = [];
@@ -23,13 +23,21 @@ export class Hud {
 
   // Cache last values to avoid unnecessary DOM updates
   private lastPointsText = '';
-  private lastStatsText = { dps: '', passive: '', totalIncome: '', crit: '' };
+  private lastStatsText = { totalIncome: '' };
   private lastLevelText = { level: '', exp: '', percent: -1 };
 
   constructor() {
     const pointsEl = document.getElementById('points-display');
     if (!pointsEl) throw new Error('Points display element not found');
     this.pointsDisplay = pointsEl;
+    
+    // Wrap the money text in a span for easier updates
+    const moneyText = pointsEl.textContent || 'Points: 0';
+    pointsEl.textContent = '';
+    const moneySpan = document.createElement('span');
+    moneySpan.id = 'money-text';
+    moneySpan.textContent = moneyText;
+    pointsEl.appendChild(moneySpan);
 
     const levelTextEl = document.getElementById('level-text');
     if (!levelTextEl) throw new Error('Level text element not found');
@@ -128,12 +136,12 @@ export class Hud {
     }
 
     const POWERUP_ICONS: Record<string, string> = {
-      points: '💰',
-      damage: '⚔️',
-      speed: '⚡',
-      multishot: '✨',
-      critical: '💥',
-      combo_pause: '⏸️',
+      points: IconGenerator.getUpgradeIcon('powerup_points'),
+      damage: IconGenerator.getUpgradeIcon('powerup_damage'),
+      speed: IconGenerator.getUpgradeIcon('powerup_speed'),
+      multishot: IconGenerator.getUpgradeIcon('powerup_multishot'),
+      critical: IconGenerator.getUpgradeIcon('powerup_critical'),
+      combo_pause: IconGenerator.getUpgradeIcon('temporal_acceleration'), // Use clock icon
     };
 
     const POWERUP_COLORS: Record<string, string> = {
@@ -161,7 +169,7 @@ export class Hud {
 
       for (const buff of activeBuffs) {
         const color = POWERUP_COLORS[buff.type] || '#ffffff';
-        const icon = POWERUP_ICONS[buff.type] || '⚡';
+        const iconSvg = POWERUP_ICONS[buff.type] || IconGenerator.getUpgradeIcon('powerup_speed');
         const name = POWERUP_NAMES[buff.type] || 'Buff';
         const timeLeft = Math.ceil(buff.duration);
         const percent = (buff.duration / buff.maxDuration) * 100;
@@ -188,7 +196,7 @@ export class Hud {
         buffEl.innerHTML = `
           <div class="powerup-buff-glow" style="background: radial-gradient(circle, ${color}40 0%, transparent 70%);"></div>
           <div class="powerup-buff-content">
-            <div class="powerup-buff-icon" style="color: ${color}; filter: drop-shadow(0 0 8px ${color});">${icon}</div>
+            <div class="powerup-buff-icon" style="color: ${color}; filter: drop-shadow(0 0 8px ${color});">${iconSvg}</div>
             <div class="powerup-buff-name" style="color: ${color}; text-shadow: 0 0 6px ${color};">${name}</div>
             <div class="powerup-buff-timer" style="color: ${color}; text-shadow: 0 0 8px ${color};">
               <span class="powerup-buff-time-value">${timeLeft}</span>
@@ -240,134 +248,92 @@ export class Hud {
   }
 
   private createStatsDisplay(): void {
-    // Create stats container - Colorful space theme
-    const statsContainer = document.createElement('div');
-    statsContainer.id = 'stats-display';
-    statsContainer.style.cssText = `
-      margin-top: 15px;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 10px;
-      border: 2px solid;
-      border-image: linear-gradient(135deg, #ff00ff, #0088ff, #00ffff) 1;
-      border-radius: 4px;
-      font-size: 14px;
-      width: 300px;
-      min-width: 300px;
-      max-width: 300px;
-      font-family: 'Courier New', monospace;
-      box-shadow: 
-        0 0 15px rgba(255, 0, 255, 0.4),
-        0 0 20px rgba(0, 136, 255, 0.3),
-        inset 0 0 20px rgba(136, 0, 255, 0.12);
-      /* Colorful scanline effect */
-      background-image: linear-gradient(
-        transparent 50%,
-        rgba(255, 0, 255, 0.04) 50%
-      );
-      background-size: 100% 4px;
-    `;
-
-    // DPS Display - White label, colorful border
-    this.dpsDisplay = document.createElement('div');
-    this.dpsDisplay.style.cssText = `
-      margin-bottom: 5px; 
-      color: #fff; 
-      text-shadow: 0 0 3px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 1px;
-      border-left: 3px solid;
-      border-image: linear-gradient(180deg, #ff00ff, #0088ff) 1;
-      padding-left: 8px;
-    `;
-    this.dpsDisplay.textContent = `⚔️ ${t('hud.dps')}: 0`;
-
-    // Passive Display - White label, colorful border
-    this.passiveDisplay = document.createElement('div');
-    this.passiveDisplay.style.cssText = `
-      margin-bottom: 5px; 
-      color: #fff; 
-      text-shadow: 0 0 3px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 1px;
-      border-left: 3px solid;
-      border-image: linear-gradient(180deg, #0088ff, #00ffff) 1;
-      padding-left: 8px;
-    `;
-    this.passiveDisplay.textContent = `🏭 ${t('hud.passive')}: 0${t('hud.perSec')}`;
-
-    // Crit Display - White label, colorful border
-    this.critDisplay = document.createElement('div');
-    this.critDisplay.style.cssText = `
-      color: #fff; 
-      text-shadow: 0 0 3px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 1px;
-      border-left: 3px solid;
-      border-image: linear-gradient(180deg, #8800ff, #ff00ff) 1;
-      padding-left: 8px;
-    `;
-    this.critDisplay.textContent = `✨ ${t('hud.crit')}: 0%`;
-
-    statsContainer.appendChild(this.dpsDisplay);
-    statsContainer.appendChild(this.passiveDisplay);
-    // totalIncomeDisplay is now below points, not in stats panel
-    statsContainer.appendChild(this.critDisplay);
-
     const hudElement = document.getElementById('hud');
-    if (hudElement) {
-      hudElement.appendChild(statsContainer);
+    if (!hudElement) return;
 
-      // Move buttons container to be after stats display
-      const buttonsContainer = document.getElementById('hud-buttons-container');
-      if (buttonsContainer && buttonsContainer.parentElement === hudElement) {
-        // Only move if it exists and is already in the HUD
-        hudElement.insertBefore(buttonsContainer, statsContainer.nextSibling);
-      }
-    }
-
-    // Create income display below points display
+    // Create income display first (right after points)
     this.createIncomeDisplay();
   }
 
+
   private createIncomeDisplay(): void {
-    // Create income display below points display
+    // Put income display inside points display container
+    const pointsDisplay = document.getElementById('points-display');
+    if (!pointsDisplay) return;
+
+    // Main total income display
     this.totalIncomeDisplay = document.createElement('div');
     this.totalIncomeDisplay.id = 'income-display';
-    this.totalIncomeDisplay.style.cssText = `
-      order: 1;
-      font-size: 18px;
-      font-weight: bold;
-      color: #ffffff;
-      text-shadow: 0 0 2px rgba(255, 0, 255, 0.4), 0 0 3px rgba(0, 136, 255, 0.3), 0 1px 0 rgba(0, 0, 0, 0.8);
-      font-family: 'Courier New', monospace;
-      letter-spacing: 1px;
-      margin-top: 5px;
-      margin-bottom: 15px;
-    `;
-    this.totalIncomeDisplay.textContent = `💰 ${t('hud.perSec')}: 0`;
+    this.totalIncomeDisplay.textContent = `Total Income: 0${t('hud.perSec')}`;
+    this.totalIncomeDisplay.title = 'Click to toggle income breakdown';
 
-    const hudElement = document.getElementById('hud');
-    if (hudElement) {
-      // Insert right after points display
-      const pointsDisplay = document.getElementById('points-display');
-      if (pointsDisplay && pointsDisplay.parentNode === hudElement) {
-        // Insert after points display
-        if (pointsDisplay.nextSibling) {
-          hudElement.insertBefore(
-            this.totalIncomeDisplay,
-            pointsDisplay.nextSibling,
+    // Income breakdown (collapsible)
+    const breakdownContainer = document.createElement('div');
+    breakdownContainer.id = 'income-breakdown';
+
+    // Breakdown items will be created dynamically
+    const breakdownContent = document.createElement('div');
+    breakdownContent.id = 'income-breakdown-content';
+    breakdownContainer.appendChild(breakdownContent);
+
+    // Toggle breakdown on click
+    let breakdownVisible = false;
+    this.totalIncomeDisplay.addEventListener('click', () => {
+      breakdownVisible = !breakdownVisible;
+      breakdownContainer.style.display = breakdownVisible ? 'block' : 'none';
+      if (this.totalIncomeDisplay) {
+        this.totalIncomeDisplay.style.opacity = breakdownVisible ? '0.8' : '1';
+      }
+      // Refresh breakdown content with last values when opening
+      if (breakdownVisible) {
+        const lastValues = (this as any).lastBreakdownValues;
+        if (lastValues) {
+          this.updateIncomeBreakdown(
+            lastValues.passive,
+            lastValues.dps,
+            lastValues.killRewards,
+            lastValues.total,
+            lastValues.critChance,
+            lastValues.hitDamage,
+            lastValues.attackSpeed,
           );
-        } else {
-          hudElement.appendChild(this.totalIncomeDisplay);
         }
       }
-    }
+    });
+
+    // Create always visible combat stats container
+    this.combatStatsContainer = document.createElement('div');
+    this.combatStatsContainer.id = 'combat-stats-container';
+    
+    // DPS (full number, no abbreviation)
+    this.dpsFullDisplay = document.createElement('div');
+    this.dpsFullDisplay.className = 'combat-stat';
+    this.combatStatsContainer.appendChild(this.dpsFullDisplay);
+
+    // Append income to points display container
+    pointsDisplay.appendChild(this.totalIncomeDisplay);
+    pointsDisplay.appendChild(this.combatStatsContainer);
+    pointsDisplay.appendChild(breakdownContainer);
+
+    // Store breakdown container reference
+    (this as any).incomeBreakdownContainer = breakdownContainer;
+    (this as any).incomeBreakdownContent = breakdownContent;
   }
 
   update(points: number): void {
     const newText = `$ ${NumberFormatter.format(points)}`;
     if (newText !== this.lastPointsText) {
-      this.pointsDisplay.textContent = newText;
+      // Update only the money text span
+      const moneySpan = document.getElementById('money-text');
+      if (moneySpan) {
+        moneySpan.textContent = newText;
+      } else {
+        // Fallback: update first child if span doesn't exist
+        const firstChild = this.pointsDisplay.firstChild;
+        if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+          firstChild.textContent = newText;
+        }
+      }
       this.lastPointsText = newText;
     }
   }
@@ -407,11 +373,10 @@ export class Hud {
     dps: number,
     passive: number,
     critChance: number,
-    critBonus: number = 0,
+    _critBonus: number = 0,
+    hitDamage?: number,
+    attackSpeed?: number,
   ): void {
-    const dpsText = `⚔️ ${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
-    const passiveText = `🏭 ${t('hud.passive')}: ${NumberFormatter.format(passive)}${t('hud.perSec')}`;
-
     // Calculate kill rewards per second (kill bounty)
     const killRewardsPerSec = this.calculateKillRewardsPerSecond();
 
@@ -419,23 +384,9 @@ export class Hud {
     // DPS represents active income from combat since damage = points
     // Kill rewards are the bonus points from killing enemies (kill bounty)
     const totalIncome = passive + dps + killRewardsPerSec;
-    const totalIncomeText = `💰 Total Income: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
+    const totalIncomeText = `Total Income: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
 
-    // Show crit chance with power-up bonus if active
-    const totalCritChance = critChance + critBonus;
-    let critText = `✨ ${t('hud.crit')}: ${NumberFormatter.formatDecimal(totalCritChance, 1)}%`;
-    if (critBonus > 0) {
-      critText += ` (+${NumberFormatter.formatDecimal(critBonus, 1)}%)`;
-    }
-
-    if (this.dpsDisplay && dpsText !== this.lastStatsText.dps) {
-      this.dpsDisplay.textContent = dpsText;
-      this.lastStatsText.dps = dpsText;
-    }
-    if (this.passiveDisplay && passiveText !== this.lastStatsText.passive) {
-      this.passiveDisplay.textContent = passiveText;
-      this.lastStatsText.passive = passiveText;
-    }
+    // Update total income display
     if (
       this.totalIncomeDisplay &&
       totalIncomeText !== this.lastStatsText.totalIncome
@@ -443,19 +394,100 @@ export class Hud {
       this.totalIncomeDisplay.textContent = totalIncomeText;
       this.lastStatsText.totalIncome = totalIncomeText;
     }
-    if (this.critDisplay && critText !== this.lastStatsText.crit) {
-      this.critDisplay.textContent = critText;
-      this.lastStatsText.crit = critText;
-      // Highlight if power-up is active
-      if (critBonus > 0) {
-        this.critDisplay.style.color = '#ffff00';
-        this.critDisplay.style.textShadow = '0 0 8px #ffff00';
-      } else {
-        this.critDisplay.style.color = '#fff';
-        this.critDisplay.style.textShadow =
-          '0 0 2px rgba(255, 255, 255, 0.8), 0 1px 0 #000, 0 -1px 0 #000';
-      }
+
+    // Update always visible combat stats (only DPS)
+    if (this.dpsFullDisplay) {
+      this.dpsFullDisplay.textContent = `DPS: ${NumberFormatter.format(dps)}`;
     }
+
+    // Enhanced UI: Update income breakdown with combat stats
+    this.updateIncomeBreakdown(
+      passive,
+      dps,
+      killRewardsPerSec,
+      totalIncome,
+      critChance,
+      hitDamage,
+      attackSpeed,
+    );
+  }
+
+
+  /**
+   * Update income breakdown display (Enhanced UI)
+   */
+  private updateIncomeBreakdown(
+    passive: number,
+    dps: number,
+    killRewards: number,
+    total: number,
+    critChance?: number,
+    hitDamage?: number,
+    attackSpeed?: number,
+  ): void {
+    const breakdownContent = (this as any).incomeBreakdownContent;
+    if (!breakdownContent) return;
+
+    // Store last values for potential later use
+    (this as any).lastBreakdownValues = {
+      passive,
+      dps,
+      killRewards,
+      total,
+      critChance,
+      hitDamage,
+      attackSpeed,
+    };
+
+    const passivePercent = total > 0 ? (passive / total) * 100 : 0;
+    const dpsPercent = total > 0 ? (dps / total) * 100 : 0;
+    const killPercent = total > 0 ? (killRewards / total) * 100 : 0;
+
+    // Always show combat stats section even if values are 0
+    const hasCombatStats = hitDamage !== undefined || attackSpeed !== undefined || critChance !== undefined;
+
+    breakdownContent.innerHTML = `
+      <div style="margin-bottom: 3px;">
+        <span style="color: #00ffff;">🏭 Passive:</span>
+        <span style="float: right; color: #88ffff;">${NumberFormatter.format(passive)}/s (${passivePercent.toFixed(1)}%)</span>
+      </div>
+      <div style="margin-bottom: 3px;">
+        <span style="color: #ff4444;">⚔️ Combat:</span>
+        <span style="float: right; color: #ff8888;">${NumberFormatter.format(dps)}/s (${dpsPercent.toFixed(1)}%)</span>
+      </div>
+      ${killRewards > 0 ? `
+      <div style="margin-bottom: 3px;">
+        <span style="color: #ffaa00;">💥 Kills:</span>
+        <span style="float: right; color: #ffcc88;">${NumberFormatter.format(killRewards)}/s (${killPercent.toFixed(1)}%)</span>
+      </div>
+      ` : ''}
+      ${hasCombatStats ? `
+      <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.2);">
+        <div style="margin-bottom: 3px;">
+          <span style="color: #ffffff;">DPS:</span>
+          <span style="float: right; color: #ffffff;">${NumberFormatter.format(dps)}</span>
+        </div>
+        ${hitDamage !== undefined && hitDamage !== null ? `
+        <div style="margin-bottom: 3px;">
+          <span style="color: #ffffff;">Hit Damage:</span>
+          <span style="float: right; color: #ffffff;">${NumberFormatter.format(hitDamage)}</span>
+        </div>
+        ` : ''}
+        ${attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0 ? `
+        <div style="margin-bottom: 3px;">
+          <span style="color: #ffffff;">Attack Speed:</span>
+          <span style="float: right; color: #ffffff;">${attackSpeed.toFixed(2)} shots/sec</span>
+        </div>
+        ` : ''}
+        ${critChance !== undefined && critChance !== null ? `
+        <div>
+          <span style="color: #ffffff;">Critical Chance:</span>
+          <span style="float: right; color: #ffffff;">${critChance.toFixed(1)}%</span>
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
+    `;
   }
 
   recordDamage(amount: number): void {
@@ -570,7 +602,7 @@ export class Hud {
       this.lastLevelText.percent = percent;
     }
 
-    // Add visual feedback for milestone levels - White text with minimal shadow
+    // Add visual feedback for level milestones - White text with minimal shadow
     if (level % 10 === 0 && level > 0) {
       this.levelText.style.color = '#fff';
       this.levelText.style.textShadow =

@@ -266,9 +266,11 @@ export class Save {
       }
     }
 
+    const shipsCount = clamp(data.shipsCount ?? 1, 1, 1000);
+
     const state: GameState = {
       points: clamp(data.points ?? 0, 0, 1e15),
-      shipsCount: clamp(data.shipsCount ?? 1, 1, 1000),
+      shipsCount,
       attackSpeedLevel: clamp(data.attackSpeedLevel ?? 0, 0, 1000),
       autoFireUnlocked: data.autoFireUnlocked ?? false,
       pointMultiplierLevel: clamp(data.pointMultiplierLevel ?? 0, 0, 1000),
@@ -284,7 +286,6 @@ export class Save {
         ...data.stats,
         criticalHits: data.stats?.criticalHits ?? 0,
         totalPrestige: data.stats?.totalPrestige ?? 0,
-        milestonesReached: data.stats?.milestonesReached ?? 0,
       },
       prestigeLevel,
       prestigePoints,
@@ -352,7 +353,6 @@ export class Save {
       playTime: 0,
       criticalHits: 0,
       totalPrestige: 0,
-      milestonesReached: 0,
     };
   }
 }

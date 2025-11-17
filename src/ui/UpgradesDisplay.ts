@@ -26,9 +26,15 @@ export class UpgradesDisplay {
       const icon = document.createElement('div');
       icon.className = 'upgrade-icon';
 
-      // Add emoji icon
-      const emoji = this.getUpgradeEmoji(upgrade.id);
-      icon.textContent = emoji;
+      // Use star PNG image for all special upgrades
+      const img = document.createElement('img');
+      img.src = '/src/icons/stars.png';
+      img.alt = t(`upgrades.special.${upgrade.id}.name`);
+      img.style.width = '130%';
+      img.style.height = '130%';
+      img.style.objectFit = 'contain';
+      img.style.transform = 'scale(1.1)';
+      icon.appendChild(img);
 
       // Add tooltip on hover
       const tooltip = document.createElement('div');
@@ -38,28 +44,5 @@ export class UpgradesDisplay {
 
       this.container.appendChild(icon);
     }
-  }
-
-  private getUpgradeEmoji(upgradeId: string): string {
-    const emojiMap: Record<string, string> = {
-      auto_fire: '🔥',
-      death_pact: '💀',
-      laser_focusing: '💎',
-      quantum_targeting: '🎯',
-      energy_recycling: '♻️',
-      overclocked_reactors: '⚛️',
-      ship_swarm: '🐝',
-      neural_link: '🧠',
-      antimatter_rounds: '💥',
-      warp_core: '🌀',
-      ai_optimizer: '🤖',
-      perfect_precision: '✨',
-      void_channeling: '🌌',
-      temporal_acceleration: '⏰',
-      singularity_core: '🕳️',
-      cosmic_ascension: '🌟',
-    };
-
-    return emojiMap[upgradeId] || '⭐';
   }
 }

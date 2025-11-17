@@ -45,8 +45,8 @@ export class CustomizationModal {
       <div class="modal-overlay"></div>
       <div class="modal-content customization-modal-content">
         <div class="modal-header">
-          <h2>🎨 Visual Customization</h2>
-          <button class="modal-close" aria-label="Close">&times;</button>
+          <h2><img src="/src/icons/art.png" alt="Customization" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Visual Customization</h2>
+          <button class="modal-close" aria-label="Close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         <div class="modal-body customization-body">
           <div class="customization-tabs">

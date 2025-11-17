@@ -58,7 +58,7 @@ export class PerformanceMonitor {
       <div class="perf-content">
         <div class="perf-header">
           <h3>⚡ Performance Monitor</h3>
-          <button id="perf-close" class="perf-close-btn">×</button>
+          <button id="perf-close" class="perf-close-btn"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         
         <div class="perf-section">

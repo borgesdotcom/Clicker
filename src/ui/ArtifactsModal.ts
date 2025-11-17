@@ -25,8 +25,8 @@ export class ArtifactsModal {
     modal.innerHTML = `
       <div class="modal-content artifacts-modal-content">
         <div class="modal-header">
-          <h2>✨ Artifacts</h2>
-          <button class="modal-close">&times;</button>
+          <h2><img src="/src/icons/stars.png" alt="Artifacts" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Artifacts</h2>
+          <button class="modal-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         <div class="modal-body">
           <div class="artifacts-header">
@@ -110,6 +110,10 @@ export class ArtifactsModal {
     this.onCloseCallback = callback;
   }
 
+  public refresh(): void {
+    this.render();
+  }
+
   private render(): void {
     const container = this.modal.querySelector('#artifacts-list');
     const equippedCount = this.modal.querySelector('#equipped-count');
@@ -159,7 +163,11 @@ export class ArtifactsModal {
         <div class="artifact-slot ${artifact.equipped ? 'equipped' : ''}" style="border-color: ${color}; box-shadow: 0 0 15px ${color}30;">
           <div class="artifact-slot-glow" style="background: radial-gradient(circle, ${color}25 0%, transparent 70%);"></div>
           <div class="artifact-slot-icon rarity-${artifact.rarity}" style="background: linear-gradient(135deg, ${color}25, ${color}08); border-color: ${color}40;">
-            <div class="artifact-icon-large" style="filter: drop-shadow(0 0 10px ${color});">${artifact.icon}</div>
+            <div class="artifact-icon-large" style="${artifact.icon.startsWith('/') || artifact.icon.startsWith('http') ? '' : `filter: drop-shadow(0 0 10px ${color});`}">
+              ${artifact.icon.startsWith('/') || artifact.icon.startsWith('http') 
+                ? `<img src="${artifact.icon}" alt="${artifact.name}" style="filter: drop-shadow(0 0 10px ${color});" />`
+                : artifact.icon}
+            </div>
             ${artifact.equipped ? '<div class="equipped-badge">✓</div>' : ''}
             <div class="artifact-rarity-badge" style="background: ${color}60; border-color: ${color}; box-shadow: 0 0 8px ${color}50;">
               <span class="rarity-letter">${artifact.rarity.charAt(0).toUpperCase()}</span>

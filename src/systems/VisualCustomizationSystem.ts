@@ -400,14 +400,220 @@ export class VisualCustomizationSystem {
   }
 
   /**
-   * Get ship color based on selected theme
+   * Get ship color based on selected theme and special upgrades
    */
-  getShipColors(_state: GameState): {
+  getShipColors(state: GameState): {
     fillColor: string;
     outlineColor: string;
     glowColor: string;
     themeId?: string;
   } {
+    // Check for special upgrades that change ship appearance (priority order - most powerful first)
+    let upgradeThemeId: string | undefined;
+    let upgradeColors: {
+      fillColor: string;
+      outlineColor: string;
+      glowColor: string;
+    } | undefined;
+
+    // Legendary tier upgrades
+    if (state.subUpgrades['cosmic_ascension']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#7b2cbf',
+        outlineColor: '#9d4edd',
+        glowColor: 'rgba(123, 44, 191, 0.6)',
+      };
+    } else if (state.subUpgrades['reality_anchor']) {
+      upgradeThemeId = 'hologram_ship';
+      upgradeColors = {
+        fillColor: '#ffffff',
+        outlineColor: '#e0e0e0',
+        glowColor: 'rgba(255, 255, 255, 0.7)',
+      };
+    } else if (state.subUpgrades['infinity_gauntlet']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ff1493',
+        outlineColor: '#ff69b4',
+        glowColor: 'rgba(255, 20, 147, 0.6)',
+      };
+    } else if (state.subUpgrades['meaning_of_life']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ffff',
+        outlineColor: '#00cccc',
+        glowColor: 'rgba(0, 255, 255, 0.6)',
+      };
+    } else if (state.subUpgrades['heart_of_galaxy']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ff0044',
+        outlineColor: '#ff3366',
+        glowColor: 'rgba(255, 0, 68, 0.6)',
+      };
+    } else if (state.subUpgrades['singularity_core']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#1a0033',
+        outlineColor: '#4b0082',
+        glowColor: 'rgba(75, 0, 130, 0.7)',
+      };
+    }
+    // Epic tier upgrades
+    else if (state.subUpgrades['antimatter_rounds']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#ff00ff',
+        outlineColor: '#ff66ff',
+        glowColor: 'rgba(255, 0, 255, 0.6)',
+      };
+    } else if (state.subUpgrades['photon_amplifier']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ffff',
+        outlineColor: '#00cccc',
+        glowColor: 'rgba(0, 255, 255, 0.5)',
+      };
+    } else if (state.subUpgrades['stellar_forge']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ffaa00',
+        outlineColor: '#ffcc00',
+        glowColor: 'rgba(255, 170, 0, 0.6)',
+      };
+    } else if (state.subUpgrades['hyper_reactor']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ff0080',
+        outlineColor: '#ff3399',
+        glowColor: 'rgba(255, 0, 128, 0.6)',
+      };
+    } else if (state.subUpgrades['dark_matter_engine']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#4b0082',
+        outlineColor: '#6a0dad',
+        glowColor: 'rgba(75, 0, 130, 0.6)',
+      };
+    } else if (state.subUpgrades['antimatter_cascade']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#ff00aa',
+        outlineColor: '#ff33cc',
+        glowColor: 'rgba(255, 0, 170, 0.6)',
+      };
+    } else if (state.subUpgrades['quantum_entanglement']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ff88',
+        outlineColor: '#00cc66',
+        glowColor: 'rgba(0, 255, 136, 0.5)',
+      };
+    } else if (state.subUpgrades['plasma_matrix']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ff4400',
+        outlineColor: '#ff6600',
+        glowColor: 'rgba(255, 68, 0, 0.6)',
+      };
+    } else if (state.subUpgrades['nebula_harvester']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#9370db',
+        outlineColor: '#ba55d3',
+        glowColor: 'rgba(147, 112, 219, 0.5)',
+      };
+    } else if (state.subUpgrades['cosmic_battery']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#4169e1',
+        outlineColor: '#6495ed',
+        glowColor: 'rgba(65, 105, 225, 0.5)',
+      };
+    }
+    // Rare tier upgrades
+    else if (state.subUpgrades['warp_core']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#9d4edd',
+        outlineColor: '#c77dff',
+        glowColor: 'rgba(157, 78, 221, 0.5)',
+      };
+    } else if (state.subUpgrades['quantum_targeting']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ffff',
+        outlineColor: '#00ff88',
+        glowColor: 'rgba(0, 255, 255, 0.5)',
+      };
+    } else if (state.subUpgrades['temporal_acceleration']) {
+      upgradeThemeId = 'hologram_ship';
+      upgradeColors = {
+        fillColor: '#66ccff',
+        outlineColor: '#99ddff',
+        glowColor: 'rgba(102, 204, 255, 0.4)',
+      };
+    } else if (state.subUpgrades['ai_optimizer']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ff88',
+        outlineColor: '#00ffff',
+        glowColor: 'rgba(0, 255, 136, 0.5)',
+      };
+    } else if (state.subUpgrades['holographic_decoys']) {
+      upgradeThemeId = 'hologram_ship';
+      upgradeColors = {
+        fillColor: '#88aaff',
+        outlineColor: '#aaccff',
+        glowColor: 'rgba(136, 170, 255, 0.4)',
+      };
+    } else if (state.subUpgrades['overclocked_reactors']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ff6600',
+        outlineColor: '#ffaa00',
+        glowColor: 'rgba(255, 102, 0, 0.5)',
+      };
+    } else if (state.subUpgrades['chaos_emeralds']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ff88',
+        outlineColor: '#00cc66',
+        glowColor: 'rgba(0, 255, 136, 0.5)',
+      };
+    } else if (state.subUpgrades['void_channeling']) {
+      upgradeThemeId = 'cosmic_ship';
+      upgradeColors = {
+        fillColor: '#8b00ff',
+        outlineColor: '#a020f0',
+        glowColor: 'rgba(139, 0, 255, 0.6)',
+      };
+    } else if (state.subUpgrades['nanobots']) {
+      upgradeThemeId = 'neon_ship';
+      upgradeColors = {
+        fillColor: '#00ff00',
+        outlineColor: '#00cc00',
+        glowColor: 'rgba(0, 255, 0, 0.5)',
+      };
+    } else if (state.subUpgrades['nuclear_reactor']) {
+      upgradeThemeId = 'fire_ship';
+      upgradeColors = {
+        fillColor: '#ffff00',
+        outlineColor: '#ffcc00',
+        glowColor: 'rgba(255, 255, 0, 0.5)',
+      };
+    }
+
+    // If upgrade theme is set, use it instead of customization theme
+    if (upgradeThemeId && upgradeColors) {
+      return {
+        ...upgradeColors,
+        themeId: upgradeThemeId,
+      };
+    }
+
+    // Otherwise use customization theme
     const theme = this.getSelectedTheme('ship');
     if (!theme) {
       // Fallback to default colors
@@ -419,7 +625,7 @@ export class VisualCustomizationSystem {
       };
     }
 
-    // Use theme colors ONLY - no upgrade overrides
+    // Use theme colors
     const fillColor = theme.colors.primary;
     const glowColor =
       theme.colors.glow ??

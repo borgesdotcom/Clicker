@@ -36,7 +36,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% damage',
       type: 'damage',
       baseBonus: 5,
-      icon: '🔧',
+      icon: '/src/icons/artifacts/rusty_coil.png',
       maxLevel: 10,
     },
     {
@@ -44,7 +44,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% attack speed',
       type: 'speed',
       baseBonus: 3,
-      icon: '🎯',
+      icon: '/src/icons/artifacts/baisc_targeting_system.png',
       maxLevel: 10,
     },
     {
@@ -52,7 +52,47 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% crit chance',
       type: 'critical',
       baseBonus: 2,
-      icon: '🍀',
+      icon: '/src/icons/artifacts/lucky_charm.png',
+      maxLevel: 10,
+    },
+    {
+      name: 'Alien Head',
+      description: '+{bonus}% XP gained',
+      type: 'xp',
+      baseBonus: 4,
+      icon: '/src/icons/artifacts/alien_head.png',
+      maxLevel: 10,
+    },
+    {
+      name: 'Battery Pack',
+      description: '+{bonus}% attack speed',
+      type: 'speed',
+      baseBonus: 4,
+      icon: '/src/icons/artifacts/battery.png',
+      maxLevel: 10,
+    },
+    {
+      name: 'Cookie',
+      description: '+{bonus}% points gained',
+      type: 'points',
+      baseBonus: 6,
+      icon: '/src/icons/artifacts/cookie.png',
+      maxLevel: 10,
+    },
+    {
+      name: 'Water Bottle',
+      description: '+{bonus}% XP gained',
+      type: 'xp',
+      baseBonus: 5,
+      icon: '/src/icons/artifacts/water_bottle.png',
+      maxLevel: 10,
+    },
+    {
+      name: 'Small Meteor',
+      description: '+{bonus}% damage',
+      type: 'damage',
+      baseBonus: 6,
+      icon: '/src/icons/artifacts/small_sized_meteor.png',
       maxLevel: 10,
     },
   ],
@@ -62,7 +102,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% points gained',
       type: 'points',
       baseBonus: 10,
-      icon: '💎',
+      icon: '/src/icons/artifacts/alien_power_core.png',
       maxLevel: 15,
     },
     {
@@ -70,7 +110,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% damage',
       type: 'damage',
       baseBonus: 12,
-      icon: '⚡',
+      icon: '/src/icons/artifacts/enhance_capacitor.png',
       maxLevel: 15,
     },
     {
@@ -78,7 +118,79 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% XP gained',
       type: 'xp',
       baseBonus: 8,
-      icon: '🧠',
+      icon: '/src/icons/artifacts/quantum_processor.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Anxiety Pills',
+      description: '+{bonus}% crit chance',
+      type: 'critical',
+      baseBonus: 9,
+      icon: '/src/icons/artifacts/anxiety_pills.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Gold Bar',
+      description: '+{bonus}% points gained',
+      type: 'points',
+      baseBonus: 12,
+      icon: '/src/icons/artifacts/gold_bar.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Magnetizer',
+      description: '+{bonus}% points gained',
+      type: 'points',
+      baseBonus: 11,
+      icon: '/src/icons/artifacts/magnetizer.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Satellite',
+      description: '+{bonus}% attack speed',
+      type: 'speed',
+      baseBonus: 10,
+      icon: '/src/icons/artifacts/sattelite.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Strange Potion',
+      description: '+{bonus}% XP gained',
+      type: 'xp',
+      baseBonus: 9,
+      icon: '/src/icons/artifacts/strange_potion.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Strange Key',
+      description: '+{bonus}% crit chance',
+      type: 'critical',
+      baseBonus: 8,
+      icon: '/src/icons/artifacts/strange_key.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Lollipop',
+      description: '+{bonus}% XP gained',
+      type: 'xp',
+      baseBonus: 7,
+      icon: '/src/icons/artifacts/lolipop.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Credit Card',
+      description: '+{bonus}% points gained',
+      type: 'points',
+      baseBonus: 13,
+      icon: '/src/icons/artifacts/credit_card.png',
+      maxLevel: 15,
+    },
+    {
+      name: 'Moon Fragment',
+      description: '+{bonus}% damage',
+      type: 'damage',
+      baseBonus: 14,
+      icon: '/src/icons/artifacts/moon.png',
       maxLevel: 15,
     },
   ],
@@ -88,7 +200,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% damage',
       type: 'damage',
       baseBonus: 20,
-      icon: '⚛️',
+      icon: '/src/icons/artifacts/plasma_reactor.png',
       maxLevel: 20,
     },
     {
@@ -96,7 +208,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% attack speed',
       type: 'speed',
       baseBonus: 15,
-      icon: '⏱️',
+      icon: '/src/icons/artifacts/temporal_accelerator.png',
       maxLevel: 20,
     },
     {
@@ -104,7 +216,39 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% crit damage',
       type: 'critical',
       baseBonus: 25,
-      icon: '✨',
+      icon: '/src/icons/artifacts/fortune_fragment.png',
+      maxLevel: 20,
+    },
+    {
+      name: 'Adrenaline Injection',
+      description: '+{bonus}% attack speed',
+      type: 'speed',
+      baseBonus: 18,
+      icon: '/src/icons/artifacts/adrenaline_injection.png',
+      maxLevel: 20,
+    },
+    {
+      name: 'Black Hole Core',
+      description: '+{bonus}% damage',
+      type: 'damage',
+      baseBonus: 22,
+      icon: '/src/icons/artifacts/black_hole.png',
+      maxLevel: 20,
+    },
+    {
+      name: 'Galaxy Spiral',
+      description: '+{bonus}% XP gained',
+      type: 'xp',
+      baseBonus: 16,
+      icon: '/src/icons/artifacts/galaxy_spiral.png',
+      maxLevel: 20,
+    },
+    {
+      name: 'Nuke Warhead',
+      description: '+{bonus}% crit damage',
+      type: 'critical',
+      baseBonus: 28,
+      icon: '/src/icons/artifacts/nuke.png',
       maxLevel: 20,
     },
   ],
@@ -114,7 +258,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% all damage',
       type: 'damage',
       baseBonus: 35,
-      icon: '🌟',
+      icon: '/src/icons/artifacts/heart_of_dying_star.png',
       maxLevel: 25,
     },
     {
@@ -122,7 +266,7 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% points and XP',
       type: 'special',
       baseBonus: 30,
-      icon: '💠',
+      icon: '/src/icons/artifacts/infinity_cristals.png',
       maxLevel: 25,
     },
     {
@@ -130,7 +274,15 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       description: '+{bonus}% to all bonuses',
       type: 'special',
       baseBonus: 20,
-      icon: '🔮',
+      icon: '/src/icons/artifacts/cosmic_harmonizer.png',
+      maxLevel: 25,
+    },
+    {
+      name: 'Constellation Map',
+      description: '+{bonus}% points and XP',
+      type: 'special',
+      baseBonus: 32,
+      icon: '/src/icons/artifacts/constelation_map.png',
       maxLevel: 25,
     },
   ],
@@ -280,51 +432,113 @@ export class ArtifactSystem {
 
   public getDamageBonus(): number {
     let bonus = 0;
+    let cosmicHarmonizerBonus = 0;
+    
+    // First, collect all damage bonuses and find Cosmic Harmonizer
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'damage') {
         bonus += artifact.bonus;
+      } else if (artifact.name === 'Cosmic Harmonizer') {
+        // Cosmic Harmonizer boosts all other bonuses
+        cosmicHarmonizerBonus = artifact.bonus;
       }
     }
+    
+    // Apply Cosmic Harmonizer bonus to all damage bonuses
+    if (cosmicHarmonizerBonus > 0 && bonus > 0) {
+      bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
+    }
+    
     return bonus / 100;
   }
 
   public getSpeedBonus(): number {
     let bonus = 0;
+    let cosmicHarmonizerBonus = 0;
+    
+    // First, collect all speed bonuses and find Cosmic Harmonizer
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'speed') {
         bonus += artifact.bonus;
+      } else if (artifact.name === 'Cosmic Harmonizer') {
+        cosmicHarmonizerBonus = artifact.bonus;
       }
     }
+    
+    // Apply Cosmic Harmonizer bonus to all speed bonuses
+    if (cosmicHarmonizerBonus > 0 && bonus > 0) {
+      bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
+    }
+    
     return bonus / 100;
   }
 
   public getCritBonus(): number {
     let bonus = 0;
+    let cosmicHarmonizerBonus = 0;
+    
+    // First, collect all crit bonuses and find Cosmic Harmonizer
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'critical') {
         bonus += artifact.bonus;
+      } else if (artifact.name === 'Cosmic Harmonizer') {
+        cosmicHarmonizerBonus = artifact.bonus;
       }
     }
+    
+    // Apply Cosmic Harmonizer bonus to all crit bonuses
+    if (cosmicHarmonizerBonus > 0 && bonus > 0) {
+      bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
+    }
+    
     return bonus / 100;
   }
 
   public getPointsBonus(): number {
     let bonus = 0;
+    let cosmicHarmonizerBonus = 0;
+    
+    // First, collect all points bonuses and find special artifacts
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'points') {
         bonus += artifact.bonus;
+      } else if (artifact.name === 'Infinity Crystal' || artifact.name === 'Constellation Map') {
+        // These special artifacts affect both points and XP
+        bonus += artifact.bonus;
+      } else if (artifact.name === 'Cosmic Harmonizer') {
+        cosmicHarmonizerBonus = artifact.bonus;
       }
     }
+    
+    // Apply Cosmic Harmonizer bonus to all points bonuses
+    if (cosmicHarmonizerBonus > 0 && bonus > 0) {
+      bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
+    }
+    
     return bonus / 100;
   }
 
   public getXPBonus(): number {
     let bonus = 0;
+    let cosmicHarmonizerBonus = 0;
+    
+    // First, collect all XP bonuses and find special artifacts
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'xp') {
         bonus += artifact.bonus;
+      } else if (artifact.name === 'Infinity Crystal' || artifact.name === 'Constellation Map') {
+        // These special artifacts affect both points and XP
+        bonus += artifact.bonus;
+      } else if (artifact.name === 'Cosmic Harmonizer') {
+        cosmicHarmonizerBonus = artifact.bonus;
       }
     }
+    
+    // Apply Cosmic Harmonizer bonus to all XP bonuses
+    if (cosmicHarmonizerBonus > 0 && bonus > 0) {
+      bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
+    }
+    
     return bonus / 100;
   }
 
@@ -409,3 +623,7 @@ export class ArtifactSystem {
     return Math.floor(baseValue * 0.5 + totalUpgradeCost * 0.3);
   }
 }
+
+
+
+

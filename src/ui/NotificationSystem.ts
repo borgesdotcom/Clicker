@@ -3,6 +3,8 @@
  * Supports multiple notification types and auto-dismissal
  */
 
+import { IconGenerator } from '../utils/IconGenerator';
+
 export type NotificationType =
   | 'info'
   | 'success'
@@ -146,7 +148,7 @@ export class NotificationSystem {
 
       // Add icon based on type
       const icon = this.getIcon(notification.type);
-      notifElement.innerHTML = `${icon} ${notification.message}`;
+      notifElement.innerHTML = `<span style="display: inline-flex; align-items: center; margin-right: 8px; vertical-align: middle; width: 20px; height: 20px;">${icon}</span>${notification.message}`;
 
       // Add click to dismiss
       notifElement.addEventListener('click', () => {
@@ -173,7 +175,7 @@ export class NotificationSystem {
   private getBorderColor(type: NotificationType): string {
     switch (type) {
       case 'success':
-        return 'rgba(255, 0, 255, 0.5)'; // Colorful like HUD
+        return 'rgba(102, 255, 204, 0.5)'; // Alien cyan/green
       case 'warning':
         return 'rgba(255, 170, 0, 0.5)'; // Orange/yellow
       case 'error':
@@ -181,28 +183,28 @@ export class NotificationSystem {
       case 'achievement':
         return 'rgba(255, 215, 0, 0.5)'; // Gold
       case 'mission':
-        return 'rgba(0, 136, 255, 0.7)'; // Brighter blue for missions
+        return 'rgba(102, 204, 255, 0.7)'; // Alien blue
       case 'info':
       default:
-        return 'rgba(255, 0, 255, 0.5)'; // Default colorful
+        return 'rgba(102, 204, 255, 0.5)'; // Alien blue
     }
   }
 
   private getIcon(type: NotificationType): string {
     switch (type) {
       case 'success':
-        return '✅';
+        return IconGenerator.getUpgradeIcon('notification_info'); // Use info icon for success
       case 'warning':
-        return '⚠️';
+        return IconGenerator.getUpgradeIcon('notification_warning');
       case 'error':
-        return '❌';
+        return IconGenerator.getUpgradeIcon('notification_error');
       case 'achievement':
-        return '🏆';
+        return IconGenerator.getUpgradeIcon('notification_achievement');
       case 'mission':
-        return '🎯';
+        return IconGenerator.getUpgradeIcon('notification_mission');
       case 'info':
       default:
-        return 'ℹ️';
+        return IconGenerator.getUpgradeIcon('notification_info');
     }
   }
 

@@ -23,31 +23,32 @@ export class AscensionModal {
     modal.innerHTML = `
       <div class="modal-content ascension-content">
         <div class="modal-header">
-          <h2>🌟 ASCENSION 🌟</h2>
-          <button class="modal-close" id="ascension-close">&times;</button>
+          <h2>ASCENSION</h2>
+          <button class="modal-close" id="ascension-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         <div class="ascension-info">
           <div class="ascension-description">
             <p>Ascend to a higher plane of existence. You will lose all progress except:</p>
             <ul>
-              <li>✓ Achievements</li>
-              <li>✓ Statistics</li>
-              <li>✓ Prestige Upgrades</li>
+              <li>Achievements</li>
+              <li>Statistics</li>
+              <li>Prestige Upgrades</li>
             </ul>
-            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 0, 255, 0.1); border: 2px solid rgba(255, 0, 255, 0.3); border-radius: 8px;">
-              <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 16px; color: #ff00ff; text-shadow: 0 0 5px rgba(255, 0, 255, 0.8);">🌟 How Prestige Points Work:</p>
-              <p style="margin: 5px 0; font-size: 14px;"><strong>Base PP:</strong> You always earn Prestige Points for ascending past level 99!</p>
-              <p style="margin: 5px 0; font-size: 14px;"><strong>Bonus PP:</strong> Earn extra valuable Prestige Points by surpassing your previous best level!</p>
+            <div class="ascension-info-box">
+              <p class="ascension-info-title">How Prestige Points Work:</p>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>Base PP:</strong> Earned using square root scaling - you always get points for ascending past level 99!</p>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>Bonus PP:</strong> Earn <strong>2x bonus</strong> for levels beyond your previous best level!</p>
+              <p style="margin: 5px 0; font-size: 13px; color: rgba(255, 255, 255, 0.6);">To double your PP, reach roughly 4x your previous level progress (square root scaling)</p>
               <div style="margin-top: 10px; font-size: 13px;">
-                <p style="margin: 5px 0; color: #00ffff; font-weight: bold;">Current Level: <span id="current-level-display">0</span></p>
-                <p style="margin: 5px 0; color: #ffff00; font-weight: bold;">Previous Best Level: <span id="previous-best-level">0</span></p>
+                <p style="margin: 5px 0; color: #ffffff; font-weight: bold;">Current Level: <span id="current-level-display">0</span></p>
+                <p style="margin: 5px 0; color: #ffffff; font-weight: bold;">Previous Best Level: <span id="previous-best-level">0</span></p>
               </div>
             </div>
-            <div style="margin-top: 15px; padding: 15px; background: rgba(255, 255, 0, 0.1); border: 2px solid rgba(255, 255, 0, 0.3); border-radius: 8px;">
-              <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 16px; color: #ffff00; text-shadow: 0 0 5px rgba(255, 255, 0, 0.8);">⚡ Unspent Prestige Points Bonus:</p>
+            <div class="ascension-info-box">
+              <p class="ascension-info-title">Unspent Prestige Points Bonus:</p>
               <p style="margin: 5px 0; font-size: 14px;">Each <strong>unspent Prestige Point gives +0.25% income</strong> to all point sources!</p>
-              <p style="margin: 5px 0; font-size: 13px; color: #aaa;">This applies to clicks, kills, and passive generation.</p>
-              <p style="margin: 10px 0 0 0; font-size: 13px; color: #ffff00; font-weight: bold;">Current Income Bonus: <span id="unspent-pp-bonus">+0%</span></p>
+              <p style="margin: 5px 0; font-size: 13px; color: rgba(255, 255, 255, 0.6);">This applies to clicks, kills, and passive generation.</p>
+              <p style="margin: 10px 0 0 0; font-size: 13px; color: #ffffff; font-weight: bold;">Current Income Bonus: <span id="unspent-pp-bonus">+0%</span></p>
             </div>
           </div>
           <div class="ascension-rewards">
@@ -55,8 +56,8 @@ export class AscensionModal {
               <div class="prestige-current">Current: <span id="prestige-current">0</span> PP</div>
               <div class="prestige-gain">
                 <div style="margin-bottom: 5px;">Total Gain: <span id="prestige-gain">0</span> PP</div>
-                <div style="font-size: 13px; color: #aaa; margin-left: 10px;">Base: <span id="prestige-base">0</span> PP</div>
-                <div style="font-size: 13px; color: #ffff00; margin-left: 10px; font-weight: bold;">Bonus: <span id="prestige-bonus">0</span> PP</div>
+                <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-left: 10px;">Base: <span id="prestige-base">0</span> PP</div>
+                <div style="font-size: 13px; color: #ffffff; margin-left: 10px; font-weight: bold;">Bonus: <span id="prestige-bonus">0</span> PP</div>
               </div>
             </div>
           </div>
@@ -161,7 +162,8 @@ export class AscensionModal {
     // Get breakdown of PP gain
     const breakdown =
       this.ascensionSystem.calculatePrestigePointsBreakdown(state);
-    const totalGain = breakdown.base + breakdown.bonus;
+    // Calculate total gain with multiplier applied
+    const totalGain = this.ascensionSystem.calculatePrestigePoints(state);
 
     if (gainPP) {
       gainPP.textContent = totalGain.toString();

@@ -80,9 +80,9 @@ export class Canvas {
    * Optimize canvas context settings for GPU performance
    */
   private optimizeContextForGPU(): void {
-    // Enable image smoothing for better quality (GPU handles this efficiently)
-    this.ctx.imageSmoothingEnabled = true;
-    this.ctx.imageSmoothingQuality = 'high';
+    // Disable image smoothing for pixel art style (hard edges, no anti-aliasing)
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.imageSmoothingQuality = 'low';
 
     // Use composite operations that are GPU-friendly
     // Default 'source-over' is optimal for GPU
@@ -147,21 +147,20 @@ export class Canvas {
     return this.getHeight() / 2;
   }
 
-  clear(color: string = '#000'): void {
+  clear(): void {
     // Clear main canvas (WebGL handles its own clearing)
+    // Use transparent clear so CSS background (animated GIF) shows through
     if (this.useWebGL && this.offscreenCanvas && this.offscreenCtx) {
-      // Clear offscreen canvas
-      this.offscreenCtx.fillStyle = color;
-      this.offscreenCtx.fillRect(
+      // Clear offscreen canvas with transparent
+      this.offscreenCtx.clearRect(
         0,
         0,
         this.offscreenCanvas.width,
         this.offscreenCanvas.height,
       );
     } else {
-      // Clear main 2D canvas
-      this.ctx.fillStyle = color;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      // Clear main 2D canvas with transparent so CSS background shows through
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
   }
 

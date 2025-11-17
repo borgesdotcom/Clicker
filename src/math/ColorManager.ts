@@ -1,4 +1,5 @@
 import type { BallColor } from '../types';
+import { Config } from '../core/GameConfig';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ColorManager {
@@ -42,154 +43,157 @@ export class ColorManager {
   }
 
   static getExpRequired(level: number): number {
-    // Smooth exponential XP requirements for levels 1-1000+
-    // Uses softcaps to prevent runaway growth at high levels
+    const xpConfig = Config.progression.xp;
+    
+    // Calculate base XP with exponential growth
+    let baseXP = xpConfig.base * Math.pow(xpConfig.growthRate, level);
 
-    let baseXP = 10 * Math.pow(1.1, level);
-
-    // Apply softcaps at specific thresholds
-    if (level >= 800) {
-      // Severe softcap: reduce by 25%
-      baseXP *= 0.75;
-    } else if (level >= 500) {
-      // Major softcap: reduce by 15%
-      baseXP *= 0.85;
-    } else if (level >= 200) {
-      // Minor softcap: reduce by 10%
-      baseXP *= 0.9;
+    // Apply softcaps at configured thresholds
+    for (const softcap of xpConfig.softcaps) {
+      if (level >= softcap.minLevel) {
+        baseXP *= softcap.multiplier;
+      }
     }
 
     // Add logarithmic damping for very high levels
-    const dampingFactor = Math.max(1, Math.log10(level + 10) / Math.log10(11));
+    const dampingConfig = xpConfig.damping;
+    const dampingFactor = Math.max(
+      1,
+      Math.log10(level + dampingConfig.base) / Math.log10(dampingConfig.divisor)
+    );
 
     return Math.floor(baseXP / dampingFactor);
   }
 
   static isBossLevel(level: number): boolean {
-    // Boss battles at regular intervals throughout progression
-    // Early game: every 25 levels
-    // Mid game: every 50 levels after 100
-    // Late game: every 100 levels after 500
-
     if (level < 1) return false;
 
-    // Special milestone bosses
-    if (
-      level === 50 ||
-      level === 100 ||
-      level === 250 ||
-      level === 500 ||
-      level === 750 ||
-      level === 1000
-    ) {
+    const bossConfig = Config.enemies.boss;
+
+    // Check milestone bosses first
+    if (bossConfig.milestones.includes(level)) {
       return true;
     }
 
-    // Regular boss intervals
-    if (level <= 100) {
-      return level % 25 === 0; // Bosses at 25, 50, 75, 100
-    } else if (level <= 500) {
-      return level % 50 === 0; // Bosses at 150, 200, 250, etc.
+    // Check regular boss intervals
+    const intervals = bossConfig.intervals;
+    if (level <= intervals.earlyThreshold) {
+      return level % intervals.early === 0;
+    } else if (level <= intervals.midThreshold) {
+      return level % intervals.mid === 0;
     } else {
-      return level % 100 === 0; // Bosses at 600, 700, 800, etc.
+      return level % intervals.late === 0;
     }
   }
 
   // New method: Get alien HP with proper scaling for level 1-1000
   // Rebalanced to prevent exponential explosion at high levels
   static getHp(level: number): number {
-    const baseHp = 120;
+    const hpConfig = Config.enemies.hpScaling;
+    const baseHp = hpConfig.baseHp;
 
-    let hpBase: number;
+    let hpBase = baseHp;
+    let previousTierHp = baseHp;
+    let previousMaxLevel = 1;
 
-    // Tier 1: Levels 1-100 - Mildly faster growth to set the pace
-    if (level <= 100) {
-      hpBase = baseHp * Math.pow(1.18, level - 1);
-    } else {
-      // Tier 2: Levels 101-300 - Steeper ramp to slow mid-game snowballing
-      const tier1Hp = baseHp * Math.pow(1.18, 99);
-      if (level <= 300) {
-        hpBase = tier1Hp * Math.pow(1.16, level - 100);
-      } else {
-        // Tier 3: Levels 301-600 - Continue increasing but slightly softer
-        const tier2Hp = tier1Hp * Math.pow(1.16, 200);
-        if (level <= 600) {
-          hpBase = tier2Hp * Math.pow(1.13, level - 300);
-        } else {
-          // Tier 4: 601+ - Still growing, but controlled to avoid impossible numbers
-          const tier3Hp = tier2Hp * Math.pow(1.13, 300);
-          hpBase = tier3Hp * Math.pow(1.1, level - 600);
-        }
+    // Calculate HP using configured tiers
+    for (const tier of hpConfig.tiers) {
+      const tierMaxLevel = tier.maxLevel === null || tier.maxLevel === Infinity 
+        ? Infinity 
+        : tier.maxLevel;
+      
+      if (level <= tierMaxLevel) {
+        const levelsInTier = level - previousMaxLevel;
+        hpBase = previousTierHp * Math.pow(tier.multiplier, levelsInTier);
+        break;
       }
+      
+      // Calculate HP at end of this tier for next tier
+      const levelsInTier = tierMaxLevel - previousMaxLevel;
+      previousTierHp = previousTierHp * Math.pow(tier.multiplier, levelsInTier);
+      previousMaxLevel = tierMaxLevel;
     }
 
+    // Apply HP ramp
     const ramp = this.getHpRamp(level);
     return Math.floor(hpBase * ramp);
   }
 
   static getBossHp(level: number): number {
-    // Boss HP: tougher multiplier plus additional scaling tiers
-    const baseHp = this.getHp(level) * 18;
-    const nerfFactor = 0.65;
+    const bossConfig = Config.enemies.boss;
+    const baseHp = this.getHp(level) * bossConfig.hpMultiplier;
+    const nerfFactor = bossConfig.nerfFactor;
 
-    if (level < 50) {
-      return Math.floor(baseHp * nerfFactor);
+    let hpBonus = 1;
+    let previousMinLevel = 0;
+
+    // Calculate HP bonus using configured tiers
+    for (const tier of bossConfig.hpTiers) {
+      if (tier.maxLevel !== undefined && level >= tier.maxLevel) {
+        // Calculate bonus up to maxLevel
+        const levelsInTier = tier.maxLevel - Math.max(tier.minLevel, previousMinLevel);
+        hpBonus *= Math.pow(tier.bonusMultiplier, levelsInTier);
+        previousMinLevel = tier.maxLevel;
+        continue;
+      }
+      
+      // Apply bonus for current tier
+      if (level >= tier.minLevel) {
+        const levelsInTier = level - Math.max(tier.minLevel, previousMinLevel);
+        hpBonus *= Math.pow(tier.bonusMultiplier, levelsInTier);
+        break;
+      }
     }
 
-    if (level < 150) {
-      return Math.floor(
-        baseHp * Math.pow(1.08, level - 50) * nerfFactor,
-      );
-    }
-
-    const tier1Bonus = Math.pow(1.08, 100);
-    if (level < 300) {
-      return Math.floor(
-        baseHp * tier1Bonus * Math.pow(1.1, level - 150) * nerfFactor,
-      );
-    }
-
-    const tier2Bonus = tier1Bonus * Math.pow(1.1, 150);
-    if (level < 600) {
-      return Math.floor(
-        baseHp * tier2Bonus * Math.pow(1.08, level - 300) * nerfFactor,
-      );
-    }
-
-    const tier3Bonus = tier2Bonus * Math.pow(1.08, 300);
-    return Math.floor(
-      baseHp * tier3Bonus * Math.pow(1.06, level - 600) * nerfFactor,
-    );
+    return Math.floor(baseHp * hpBonus * nerfFactor);
   }
 
   // Get boss timer limit (scales with level)
   static getBossTimeLimit(level: number): number {
-    const baseTime = 30;
+    const timeConfig = Config.enemies.boss.timeLimit;
+    let time = timeConfig.baseSeconds;
 
-    if (level < 50) {
-      return baseTime;
-    } else if (level < 200) {
-      // +5s per 10 levels
-      return baseTime + Math.floor((level - 50) / 10) * 5;
-    } else if (level < 500) {
-      // Previous bonus + 10s per 10 levels
-      return baseTime + 75 + Math.floor((level - 200) / 10) * 10;
-    } else {
-      // Previous bonuses + 15s per 10 levels
-      return baseTime + 75 + 300 + Math.floor((level - 500) / 10) * 15;
+    // Apply time bonuses from tiers
+    for (const tier of timeConfig.tiers) {
+      if (tier.maxLevel !== undefined && level >= tier.maxLevel) {
+        // Apply full bonus for this tier
+        const levelsInTier = tier.maxLevel - tier.minLevel;
+        time += Math.floor(levelsInTier / 10) * tier.secondsPer10Levels;
+        if (tier.baseBonus !== undefined) {
+          time += tier.baseBonus;
+        }
+        continue;
+      }
+      
+      if (level >= tier.minLevel) {
+        // Apply partial bonus for current tier
+        const levelsInTier = level - tier.minLevel;
+        time += Math.floor(levelsInTier / 10) * tier.secondsPer10Levels;
+        if (tier.baseBonus !== undefined) {
+          time += tier.baseBonus;
+        }
+        break;
+      }
     }
+
+    return time;
   }
 
   private static getHpRamp(level: number): number {
-    if (level <= 30) {
+    const rampConfig = Config.enemies.hpScaling.ramp;
+
+    if (level <= rampConfig.startLevel) {
       return 1;
     }
 
-    const extraLevels = level - 30;
-    const linearComponent = 1 + extraLevels * 0.008;
-    const exponentialComponent = Math.pow(1.003, Math.min(extraLevels, 700));
+    const extraLevels = level - rampConfig.startLevel;
+    const linearComponent = 1 + extraLevels * rampConfig.linearComponent;
+    const exponentialComponent = Math.pow(
+      rampConfig.exponentialBase,
+      Math.min(extraLevels, rampConfig.exponentialCap)
+    );
 
     // Clamp to avoid runaway values at extremely high levels
-    return Math.min(linearComponent * exponentialComponent, 75);
+    return Math.min(linearComponent * exponentialComponent, rampConfig.maxRamp);
   }
 }

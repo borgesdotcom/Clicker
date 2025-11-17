@@ -1,5 +1,31 @@
 import type { Draw } from '../render/Draw';
-import type { Vec2, GameState } from '../types';
+import type { Vec2 } from '../types';
+// Import ship GIF image using Vite's asset handling
+import shipGifSrc from '../animations/littleships.gif';
+
+// Load ship GIF image
+let shipImage: HTMLImageElement | null = null;
+let shipImageLoaded = false;
+
+const loadShipImage = (): void => {
+  if (shipImageLoaded || shipImage) return;
+  
+  shipImage = new Image();
+  shipImage.onload = () => {
+    shipImageLoaded = true;
+    console.log('Ship GIF image loaded successfully');
+  };
+  shipImage.onerror = () => {
+    console.error('Failed to load ship GIF image');
+    shipImage = null;
+  };
+  shipImage.src = shipGifSrc;
+};
+
+// Preload the image when module loads
+if (typeof window !== 'undefined') {
+  loadShipImage();
+}
 
 export class Ship {
   public x = 0;
@@ -17,6 +43,10 @@ export class Ship {
     // Give each ship a fixed, slow rotation speed
     this.rotationSpeed = isMainShip ? 0.15 : 0.1 + Math.random() * 0.1; // 0.1 to 0.2 for non-main ships
     this.updatePosition();
+  }
+
+  destroy(): void {
+    // No cleanup needed - using canvas rendering, not DOM elements
   }
 
   updatePosition(): void {
@@ -66,13 +96,55 @@ export class Ship {
     };
   }
 
-  draw(drawer: Draw, state?: GameState): void {
+
+  draw(drawer: Draw): void {
     const ctx = drawer.getContext();
     const size = this.isMainShip ? 20 : 14; // Match increased sizes for 2D fallback
 
-    // Determine ship appearance - check for custom visuals first, then upgrades
-    const customVisuals = (this as any).customVisuals;
-    const visuals = customVisuals ?? this.getShipVisuals(state);
+    // Try to load image if not already loaded
+    if (!shipImageLoaded && !shipImage) {
+      loadShipImage();
+    }
+
+    // Use canvas rendering for better performance (GIF will show first frame only)
+    // This is much faster than DOM overlay elements when there are many ships
+    if (shipImage && (shipImage.complete || shipImageLoaded) && shipImage.naturalWidth > 0) {
+      ctx.save();
+      
+      // Enable pixelated rendering for GIF
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'low';
+      
+      // Move to ship position and rotate
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle + Math.PI); // Rotate so ship faces correct direction
+      
+      // Draw the ship GIF (first frame only - for performance)
+      const drawSize = size * 1.1; // Make GIF a bit bigger for visibility
+      
+      // Always draw the original ship image without color customization
+      ctx.drawImage(
+        shipImage,
+        -drawSize / 2,
+        -drawSize / 2,
+        drawSize,
+        drawSize,
+      );
+      
+      ctx.restore();
+      return;
+    }
+    
+    // If image is still loading, wait a bit before falling back
+    if (shipImage && !shipImage.complete) {
+      // Image is loading, skip this frame and try again next frame
+      return;
+    }
+
+    // Fallback to original triangle rendering if GIF not loaded
+    // Always use default white colors (no customization)
+    const defaultFillColor = '#ffffff';
+    const defaultGlowColor = 'rgba(255, 255, 255, 0.3)';
 
     // Engine pulse animation
     const enginePulse = Math.sin(this.enginePulse) * 0.25 + 0.75;
@@ -89,8 +161,8 @@ export class Ship {
         this.y,
         size * 2,
       );
-      glow.addColorStop(0, this.hexToRgba(visuals.fillColor, 0.3));
-      glow.addColorStop(0.6, this.hexToRgba(visuals.fillColor, 0.1));
+      glow.addColorStop(0, defaultGlowColor);
+      glow.addColorStop(0.6, 'rgba(255, 255, 255, 0.1)');
       glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
@@ -120,11 +192,11 @@ export class Ship {
       );
       exhaustGradient.addColorStop(
         0,
-        this.hexToRgba(visuals.fillColor, 0.5 * enginePulse),
+        `rgba(255, 255, 255, ${0.5 * enginePulse})`,
       );
       exhaustGradient.addColorStop(
         0.5,
-        this.hexToRgba(visuals.fillColor, 0.2 * enginePulse),
+        `rgba(255, 255, 255, ${0.2 * enginePulse})`,
       );
       exhaustGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.strokeStyle = exhaustGradient;
@@ -146,23 +218,23 @@ export class Ship {
       ctx.lineTo(rightX, rightY);
       ctx.closePath();
 
-      // Solid fill with slight gradient
+      // Solid fill with slight gradient (white)
       const bodyGradient = ctx.createLinearGradient(tipX, tipY, this.x, this.y);
-      bodyGradient.addColorStop(0, visuals.fillColor);
-      bodyGradient.addColorStop(1, this.lightenColor(visuals.fillColor, 0.15));
+      bodyGradient.addColorStop(0, defaultFillColor);
+      bodyGradient.addColorStop(1, '#f0f0f0');
       ctx.fillStyle = bodyGradient;
       ctx.fill();
 
       // Clean white outline
       ctx.shadowBlur = 6;
-      ctx.shadowColor = visuals.fillColor;
+      ctx.shadowColor = defaultFillColor;
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
 
       // Small center highlight
-      ctx.fillStyle = this.hexToRgba('#ffffff', 0.4);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 0.2, 0, Math.PI * 2);
       ctx.fill();
@@ -178,7 +250,7 @@ export class Ship {
         this.y,
         size * 1.5,
       );
-      allyGlow.addColorStop(0, this.hexToRgba(visuals.fillColor, 0.2));
+      allyGlow.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
       allyGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = allyGlow;
       ctx.beginPath();
@@ -200,7 +272,6 @@ export class Ship {
       const exhaustY = this.y + Math.sin(this.angle) * size * 0.25;
       const exhaustLength = size * 0.5 * enginePulse;
 
-      const lightColor = this.lightenColor(visuals.fillColor, 0.25);
       const exhaustGradient = ctx.createLinearGradient(
         this.x,
         this.y,
@@ -209,7 +280,7 @@ export class Ship {
       );
       exhaustGradient.addColorStop(
         0,
-        this.hexToRgba(lightColor, 0.4 * enginePulse),
+        `rgba(255, 255, 255, ${0.4 * enginePulse})`,
       );
       exhaustGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.strokeStyle = exhaustGradient;
@@ -231,94 +302,23 @@ export class Ship {
       ctx.lineTo(rightX, rightY);
       ctx.closePath();
 
-      ctx.fillStyle = lightColor;
+      ctx.fillStyle = defaultFillColor;
       ctx.fill();
 
       // Outline
       ctx.shadowBlur = 4;
-      ctx.shadowColor = lightColor;
-      ctx.strokeStyle = this.lightenColor(lightColor, 0.4);
+      ctx.shadowColor = defaultFillColor;
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.restore();
 
       // Tiny center dot
-      ctx.fillStyle = this.hexToRgba(lightColor, 0.5);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.beginPath();
       ctx.arc(this.x, this.y, size * 0.15, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  private getShipVisuals(state?: GameState): {
-    fillColor: string;
-    outlineColor: string;
-    glowColor: string;
-  } {
-    if (!state) {
-      return {
-        fillColor: '#ffffff',
-        outlineColor: '#cccccc',
-        glowColor: 'rgba(255, 255, 255, 0.3)',
-      };
-    }
-
-    // Match laser color progression
-    let fillColor = '#ffffff'; // Default white (matches default laser)
-
-    if (state.subUpgrades['cosmic_ascension']) {
-      fillColor = '#ff00ff'; // Magenta
-    } else if (state.subUpgrades['singularity_core']) {
-      fillColor = '#8800ff'; // Purple
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      fillColor = '#ff0044'; // Red
-    } else if (state.subUpgrades['antimatter_rounds']) {
-      fillColor = '#ff0088'; // Pink
-    } else if (state.subUpgrades['chaos_emeralds']) {
-      fillColor = '#00ff88'; // Emerald green
-    } else if (state.subUpgrades['overclocked_reactors']) {
-      fillColor = '#ff6600'; // Orange
-    } else if (state.subUpgrades['laser_focusing']) {
-      fillColor = '#00ffff'; // Cyan
-    } else if (state.pointMultiplierLevel >= 10) {
-      fillColor = '#88ff88'; // Light green
-    }
-
-    return {
-      fillColor,
-      outlineColor: '#ffffff',
-      glowColor: this.hexToRgba(fillColor, 0.4),
-    };
-  }
-
-  private lightenColor(hex: string, amount: number): string {
-    // Extract RGB values
-    const rgb = this.hexToRgb(hex);
-    if (!rgb) return hex;
-
-    // Lighten by mixing with white
-    const r = Math.min(255, Math.floor(rgb.r + (255 - rgb.r) * amount));
-    const g = Math.min(255, Math.floor(rgb.g + (255 - rgb.g) * amount));
-    const b = Math.min(255, Math.floor(rgb.b + (255 - rgb.b) * amount));
-
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  }
-
-  private hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1] ?? '0', 16),
-          g: parseInt(result[2] ?? '0', 16),
-          b: parseInt(result[3] ?? '0', 16),
-        }
-      : null;
-  }
-
-  private hexToRgba(hex: string, alpha: number): string {
-    const rgb = this.hexToRgb(hex);
-    return rgb
-      ? `rgba(${rgb.r.toString()}, ${rgb.g.toString()}, ${rgb.b.toString()}, ${alpha.toString()})`
-      : `rgba(0, 255, 255, ${alpha.toString()})`;
-  }
 }

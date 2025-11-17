@@ -1,0 +1,282 @@
+{
+  "upgrades": {
+    "baseDamage": 1,
+    "damagePerLevel": 0.1,
+    "costScaling": {
+      "baseMultiplier": 1,
+      "exponentialFactor": 1.15
+    },
+    "speedScaling": {
+      "baseInterval": 1.0,
+      "reductionPerLevel": 0.05,
+      "minInterval": 0.1
+    },
+    "critChance": {
+      "baseChance": 5,
+      "perLevel": 2,
+      "maxChance": 100,
+      "critMultiplier": 2
+    },
+    "passiveGeneration": {
+      "basePerSecond": 0,
+      "perLevel": 1
+    },
+    "cosmicKnowledge": {
+      "discountPerLevel": 0.5,
+      "maxDiscount": 90
+    }
+  },
+  "ascension": {
+    "minLevelRequired": 100,
+    "prestigePointCalculation": {
+      "earlyLevels": {
+        "startLevel": 100,
+        "endLevel": 110,
+        "basePerLevel": 2
+      },
+      "baseScaling": {
+        "startLevel": 111,
+        "formulaBase": 3,
+        "formulaPower": 22,
+        "formulaExponent": 1.35
+      },
+      "bonusScaling": {
+        "formulaBase": 4,
+        "formulaPower": 6,
+        "formulaExponent": 1.35
+      },
+      "achievementBonus": {
+        "achievementsPerPP": 10
+      }
+    },
+    "unspentPPMultiplier": {
+      "percentagePerPP": 0.25
+    },
+    "costScaling": {
+      "exponentialBase": 1.15
+    }
+  },
+  "enemies": {
+    "types": {
+      "normal": {
+        "hpMultiplier": 1,
+        "pointsMultiplier": 1,
+        "spawnWeight": 0.6
+      },
+      "scout": {
+        "hpMultiplier": 0.35,
+        "pointsMultiplier": 1.8,
+        "spawnWeight": {
+          "base": 0.22,
+          "max": 0.42,
+          "scaleDivisor": 220
+        }
+      },
+      "tank": {
+        "hpMultiplier": 4,
+        "pointsMultiplier": 3,
+        "spawnWeight": {
+          "base": 0.12,
+          "max": 0.3,
+          "scaleDivisor": 320
+        }
+      },
+      "healer": {
+        "hpMultiplier": 0.9,
+        "pointsMultiplier": 3.5,
+        "spawnWeight": {
+          "base": 0.08,
+          "max": 0.2,
+          "scaleDivisor": 420
+        },
+        "healInterval": 2,
+        "healPercent": 5
+      },
+      "guardian": {
+        "hpMultiplier": 2.2,
+        "pointsMultiplier": 1.5,
+        "spawnWeight": {
+          "base": 0.08,
+          "max": 0.2,
+          "scaleDivisor": 450
+        }
+      },
+      "hoarder": {
+        "hpMultiplier": 1.1,
+        "pointsMultiplier": 8,
+        "spawnWeight": {
+          "base": 0.005,
+          "max": 0.015,
+          "scaleDivisor": 1200
+        }
+      }
+    },
+    "hpScaling": {
+      "baseHp": 120,
+      "tiers": [
+        { "maxLevel": 100, "multiplier": 1.18 },
+        { "maxLevel": 300, "multiplier": 1.16 },
+        { "maxLevel": 600, "multiplier": 1.13 },
+        { "maxLevel": null, "multiplier": 1.1 }
+      ],
+      "ramp": {
+        "startLevel": 30,
+        "linearComponent": 0.008,
+        "exponentialBase": 1.003,
+        "exponentialCap": 700,
+        "maxRamp": 75
+      }
+    },
+    "boss": {
+      "hpMultiplier": 18,
+      "nerfFactor": 0.65,
+      "hpTiers": [
+        { "minLevel": 0, "maxLevel": 50, "bonusMultiplier": 1 },
+        { "minLevel": 50, "maxLevel": 150, "bonusMultiplier": 1.08 },
+        { "minLevel": 150, "maxLevel": 300, "bonusMultiplier": 1.1 },
+        { "minLevel": 300, "maxLevel": 600, "bonusMultiplier": 1.08 },
+        { "minLevel": 600, "bonusMultiplier": 1.06 }
+      ],
+      "timeLimit": {
+        "baseSeconds": 30,
+        "tiers": [
+          { "minLevel": 0, "maxLevel": 50, "secondsPer10Levels": 0, "baseBonus": 0 },
+          { "minLevel": 50, "maxLevel": 200, "secondsPer10Levels": 5 },
+          { "minLevel": 200, "maxLevel": 500, "secondsPer10Levels": 10, "baseBonus": 75 },
+          { "minLevel": 500, "secondsPer10Levels": 15, "baseBonus": 375 }
+        ]
+      },
+      "intervals": {
+        "early": 25,
+        "mid": 50,
+        "late": 100,
+        "earlyThreshold": 100,
+        "midThreshold": 500
+      },
+      "milestones": [50, 100, 250, 500, 750, 1000]
+    },
+    "xpScaling": {
+      "noReductionLevel": 30,
+      "linearDrop": {
+        "divisorPerLevel": 0.02
+      },
+      "exponentialDrop": {
+        "base": 0.995,
+        "maxLevels": 600
+      },
+      "minMultiplier": 0.15
+    }
+  },
+  "missions": {
+    "regular": {
+      "count": 5
+    },
+    "daily": {
+      "count": 3,
+      "rewardMultiplier": 2
+    },
+    "templates": {
+      "clicks": {
+        "targetBase": 100,
+        "targetMultiplier": 50,
+        "pointsMultiplier": 500,
+        "xpPerLevel": 15
+      },
+      "damage": {
+        "targetBase": 5000,
+        "targetMultiplier": 2000,
+        "pointsMultiplier": 750,
+        "shipsPer10Levels": 1
+      },
+      "kills": {
+        "targetBase": 10,
+        "targetMultiplier": 3,
+        "pointsMultiplier": 400,
+        "xpPerLevel": 12
+      },
+      "boss_kills": {
+        "targetCount": 3,
+        "pointsMultiplier": 2500,
+        "shipsPer5Levels": 1,
+        "minShips": 2
+      },
+      "upgrades": {
+        "targetBase": 5,
+        "targetDivisor": 2,
+        "pointsMultiplier": 600
+      },
+      "level": {
+        "levelsAhead": 5,
+        "pointsMultiplier": 1000,
+        "xpPerLevel": 30
+      },
+      "ships": {
+        "targetBase": 5,
+        "targetDivisor": 3,
+        "pointsMultiplier": 1500
+      },
+      "combo": {
+        "targetBase": 10,
+        "targetMultiplier": 2,
+        "pointsMultiplier": 1250,
+        "xpPerLevel": 25
+      }
+    }
+  },
+  "combo": {
+    "baseMultiplier": 0.0005,
+    "timeout": 10.0,
+    "maxMultiplier": null,
+    "colorThresholds": [
+      { "minMultiplier": 2.0, "color": "#ff00ff" },
+      { "minMultiplier": 1.6, "color": "#ff0000" },
+      { "minMultiplier": 1.35, "color": "#ffaa00" },
+      { "minMultiplier": 1.15, "color": "#ffff00" },
+      { "minMultiplier": 1.03, "color": "#00ff00" },
+      { "minMultiplier": 0, "color": "#ffffff" }
+    ]
+  },
+  "progression": {
+    "xp": {
+      "base": 10,
+      "growthRate": 1.1,
+      "softcaps": [
+        { "minLevel": 200, "multiplier": 0.9 },
+        { "minLevel": 500, "multiplier": 0.85 },
+        { "minLevel": 800, "multiplier": 0.75 }
+      ],
+      "damping": {
+        "base": 10,
+        "divisor": 11
+      }
+    },
+    "levelCap": null
+  },
+  "powerUps": {
+    "damageBoost": {
+      "multiplier": 2,
+      "duration": 30
+    },
+    "speedBoost": {
+      "multiplier": 2,
+      "duration": 30
+    },
+    "multishot": {
+      "shotMultiplier": 2,
+      "duration": 30
+    }
+  },
+  "visual": {
+    "combo": {
+      "animation": {
+        "duration": 0.3,
+        "scaleAmount": 0.3
+      },
+      "bar": {
+        "width": 120,
+        "height": 4
+      }
+    }
+  }
+}
+

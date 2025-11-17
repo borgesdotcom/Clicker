@@ -1,4 +1,5 @@
 import type { GameState } from '../types';
+import { Config } from '../core/GameConfig';
 
 export interface AscensionUpgrade {
   id: string;
@@ -27,7 +28,7 @@ export class AscensionSystem {
         maxLevel: 100, // Extended for late game
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_damage ?? 0,
-        effect: '+10% damage per level',
+        effect: '+15% damage per level',
       },
       {
         id: 'prestige_points',
@@ -37,7 +38,7 @@ export class AscensionSystem {
         maxLevel: 100, // Extended for late game
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_points ?? 0,
-        effect: '+15% points per level',
+        effect: '+20% points per level',
       },
       {
         id: 'prestige_xp',
@@ -46,7 +47,7 @@ export class AscensionSystem {
         cost: 1,
         maxLevel: 100, // Extended for late game
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_xp ?? 0,
-        effect: '+20% XP per level',
+        effect: '+25% XP per level',
       },
       {
         id: 'prestige_crit',
@@ -65,7 +66,7 @@ export class AscensionSystem {
         maxLevel: 75, // Extended for late game
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_passive ?? 0,
-        effect: '+25% passive per level',
+        effect: '+30% passive per level',
       },
       {
         id: 'prestige_speed',
@@ -157,9 +158,9 @@ export class AscensionSystem {
     const breakdown = this.calculatePrestigePointsBreakdown(state);
     let total = breakdown.base + breakdown.bonus;
     
-    // Transcendence upgrade: x10 prestige points
+    // Transcendence upgrade: x2 prestige points
     if (state.subUpgrades?.['transcendence']) {
-      total *= 10;
+      total *= 2;
     }
     
     return total;
@@ -170,9 +171,10 @@ export class AscensionSystem {
     bonus: number;
     previousBest: number;
   } {
-    // Always give base PP for ascending past level 99
-    // Bonus PP for surpassing previous best level
-    if (state.level < 100) {
+    // Part III: Improved prestige calculation following proven patterns
+    const config = Config.ascension.prestigePointCalculation;
+    
+    if (state.level < config.baseLevel) {
       return {
         base: 0,
         bonus: 0,
@@ -182,111 +184,54 @@ export class AscensionSystem {
 
     const isFirstAscension = state.prestigeLevel === 0;
     const previousHighest = state.highestLevelReached ?? 0;
-
-    // For first ascension: all points are "base" (no previous best to beat)
-    if (isFirstAscension) {
-      let basePoints = 0;
-
-      // Minimal PP for early ascension attempts (levels 101-110)
-      const earlyLevels = Math.min(state.level, 110);
-      if (earlyLevels > 100) {
-        basePoints += Math.floor((earlyLevels - 100) / 2);
-      }
-
-      for (let level = 111; level <= state.level; level++) {
-        const scaledLevel = level - 110;
-        const levelPoints = Math.floor(3 + Math.pow(scaledLevel / 22, 1.35));
-        basePoints += levelPoints;
-      }
-
-      // Milestone bonuses
-      const milestones = [
-        { level: 1000, bonus: 200 },
-        { level: 750, bonus: 100 },
-        { level: 500, bonus: 50 },
-        { level: 250, bonus: 20 },
-      ];
-
-      for (const milestone of milestones) {
-        if (state.level >= milestone.level) {
-          basePoints += milestone.bonus;
-        }
-      }
-
-      // Achievement bonus
-      const achievementBonus = this.calculateAchievementBonus(state);
-      basePoints += achievementBonus;
-
-      // Apply Transcendence multiplier to breakdown for display
-      // (The actual multiplier is applied in calculatePrestigePoints)
-      const transcendenceMultiplier = state.subUpgrades?.['transcendence'] ? 10 : 1;
-
-      return {
-        base: Math.max(0, basePoints) * transcendenceMultiplier,
-        bonus: 0,
-        previousBest: 0,
-      };
-    }
-
-    // For subsequent ascensions:
-    // Base PP: Always given for levels past 99 (scaled by current level)
-    // Bonus PP: Extra for surpassing previous best
-    let basePoints = 0;
-    let bonusPoints = 0;
-
-    // Base PP: Calculate for all levels from 100 to current
-    // This ensures players always get something for ascending past 99
-    for (let level = 100; level <= state.level; level++) {
-      if (level <= 110) continue; // No base PP for minimal pushes
-      const scaledLevel = level - 110;
-      const baseLevelPoints = Math.floor(1 + Math.pow(scaledLevel / 30, 1.25));
-      basePoints += baseLevelPoints;
-    }
-
-    // Bonus PP: Only for NEW levels beyond previous best
-    // If previousHighest is 0 or undefined, treat it as if they haven't set a record yet
-    // (This handles edge cases where highestLevelReached wasn't saved properly)
     const effectivePreviousBest = previousHighest > 0 ? previousHighest : 0;
 
-    if (state.level > effectivePreviousBest) {
-      // Calculate bonus for levels beyond previous best
-      const startLevel = Math.max(100, effectivePreviousBest + 1);
-      for (let level = startLevel; level <= state.level; level++) {
-        if (level <= 110) continue;
-        const progress = level - Math.max(110, effectivePreviousBest);
-        const bonusLevelPoints = Math.floor(4 + Math.pow(progress / 6, 1.35));
-        bonusPoints += bonusLevelPoints;
-      }
-
-      // Milestone bonuses: only award if we're crossing the milestone for the first time
-      const milestones = [
-        { level: 1000, bonus: 200 },
-        { level: 750, bonus: 100 },
-        { level: 500, bonus: 50 },
-        { level: 250, bonus: 20 },
-      ];
-
-      for (const milestone of milestones) {
-        if (
-          effectivePreviousBest < milestone.level &&
-          state.level >= milestone.level
-        ) {
-          bonusPoints += milestone.bonus;
-        }
+    // Part III: Use square root or cube root scaling (like Realm Grinder/Cookie Clicker)
+    // Formula: PP = baseMultiplier * root((level - baseLevel) / scalingDivisor)
+    // Square root: more generous, cube root: more aggressive
+    const levelProgress = state.level - config.baseLevel;
+    const scaledProgress = levelProgress / config.scalingDivisor;
+    
+    let basePoints = 0;
+    if (scaledProgress > 0) {
+      if (config.useCubeRoot) {
+        // Cube root scaling (like Cookie Clicker) - more aggressive
+        basePoints = Math.floor(config.baseMultiplier * Math.pow(scaledProgress, 1/3));
+      } else {
+        // Square root scaling (like Realm Grinder/AdVenture Capitalist) - balanced
+        basePoints = Math.floor(config.baseMultiplier * Math.sqrt(scaledProgress));
       }
     }
 
-    // Achievement bonus goes to base (always available)
+
+    // Achievement bonus (always available)
     const achievementBonus = this.calculateAchievementBonus(state);
     basePoints += achievementBonus;
 
-    // Apply Transcendence multiplier to breakdown for display
-    // (The actual multiplier is applied in calculatePrestigePoints)
-    const transcendenceMultiplier = state.subUpgrades?.['transcendence'] ? 10 : 1;
+    // Part III: Bonus for surpassing previous best (lifetime-based system)
+    // This encourages players to push further each run
+    let bonusPoints = 0;
+    if (!isFirstAscension && state.level > effectivePreviousBest && config.newLevelBonus.enabled) {
+      // Calculate bonus for new levels beyond previous best
+      const newLevelProgress = state.level - Math.max(config.baseLevel, effectivePreviousBest);
+      const newScaledProgress = newLevelProgress / config.scalingDivisor;
+      
+      let newLevelPP = 0;
+      if (newScaledProgress > 0) {
+        if (config.useCubeRoot) {
+          newLevelPP = Math.floor(config.baseMultiplier * Math.pow(newScaledProgress, 1/3));
+        } else {
+          newLevelPP = Math.floor(config.baseMultiplier * Math.sqrt(newScaledProgress));
+        }
+      }
+      
+      // Apply bonus multiplier for new levels
+      bonusPoints = Math.floor(newLevelPP * (config.newLevelBonus.multiplier - 1));
+    }
 
     return {
-      base: Math.max(0, basePoints) * transcendenceMultiplier,
-      bonus: Math.max(0, bonusPoints) * transcendenceMultiplier,
+      base: Math.max(0, basePoints),
+      bonus: Math.max(0, bonusPoints),
       previousBest: effectivePreviousBest,
     };
   }
@@ -310,17 +255,21 @@ export class AscensionSystem {
 
   getDamageMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_damage ?? 0;
-    return 1 + level * 0.1;
+    // Improved scaling: each level gives meaningful boost
+    // Following idle game principles: prestige should provide clear acceleration
+    return 1 + level * 0.15; // Increased from 0.1 to 0.15 (15% per level)
   }
 
   getPointsMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_points ?? 0;
-    return 1 + level * 0.15;
+    // Points are the primary currency, so they get a good boost
+    return 1 + level * 0.2; // Increased from 0.15 to 0.2 (20% per level)
   }
 
   getXPMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_xp ?? 0;
-    return 1 + level * 0.2;
+    // XP helps reach prestige faster, so it's valuable
+    return 1 + level * 0.25; // Increased from 0.2 to 0.25 (25% per level)
   }
 
   getCritBonus(state: GameState): number {
@@ -330,7 +279,8 @@ export class AscensionSystem {
 
   getPassiveMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_passive ?? 0;
-    return 1 + level * 0.25;
+    // Passive generation is crucial for idle gameplay
+    return 1 + level * 0.3; // Increased from 0.25 to 0.3 (30% per level)
   }
 
   getSpeedMultiplier(state: GameState): number {

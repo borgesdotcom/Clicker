@@ -44,11 +44,14 @@ export class StatsPanel {
     header.className = 'modal-header';
 
     const title = document.createElement('h2');
-    title.textContent = '📊 Statistics';
+    title.innerHTML = 'STATISTICS';
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
-    closeBtn.textContent = '×';
+    const closeImg = document.createElement('img');
+    closeImg.src = '/src/icons/menu/close.png';
+    closeImg.alt = 'Close';
+    closeBtn.appendChild(closeImg);
     closeBtn.addEventListener('click', () => {
       this.hide();
     });
@@ -120,7 +123,7 @@ export class StatsPanel {
     // Create stats categories
     const categories = [
       {
-        title: '⚔️ Combat Stats',
+        title: 'COMBAT STATS',
         stats: [
           {
             label: 'Total Clicks',
@@ -145,7 +148,7 @@ export class StatsPanel {
         ],
       },
       {
-        title: '📈 Progression Stats',
+        title: 'PROGRESSION STATS',
         stats: [
           { label: 'Current Level', value: state.level.toString() },
           {
@@ -160,7 +163,7 @@ export class StatsPanel {
         ],
       },
       {
-        title: '🛸 Fleet Stats',
+        title: 'FLEET STATS',
         stats: [
           { label: 'Ships', value: state.shipsCount.toString() },
           {
@@ -180,7 +183,7 @@ export class StatsPanel {
         ],
       },
       {
-        title: '🔬 Technology Stats',
+        title: 'TECHNOLOGY STATS',
         stats: [
           {
             label: 'Total Upgrades Purchased',
@@ -197,7 +200,7 @@ export class StatsPanel {
         ],
       },
       {
-        title: '💰 Wealth Stats',
+        title: 'WEALTH STATS',
         stats: [
           { label: 'Current Points', value: this.formatNumber(state.points) },
           {

@@ -2,7 +2,10 @@
 // Import sound files
 import laserSound from '../sound/laser.mp3';
 import popSound from '../sound/pop.mp3';
-import soundtrackSound from '../sound/soundtrack.mp3';
+import soundtrackSound from '../sound/soundtrack.ogg';
+import bossSoundtrackSound from '../sound/bossbattlesoundtrack.ogg';
+import buyClickSound from '../sound/buy-click.mp3';
+import achievementSound from '../sound/achievement.mp3';
 
 export class SoundManager {
   private enabled = true;
@@ -12,7 +15,11 @@ export class SoundManager {
   private laserAudio: HTMLAudioElement | null = null;
   private popAudio: HTMLAudioElement | null = null;
   private soundtrackAudio: HTMLAudioElement | null = null;
+  private bossSoundtrackAudio: HTMLAudioElement | null = null;
+  private buyClickAudio: HTMLAudioElement | null = null;
+  private achievementAudio: HTMLAudioElement | null = null;
   private readonly soundtrackVolumeRatio = 0.4; // Soundtrack is 40% of main volume
+  private isPlayingBossSoundtrack = false;
 
   constructor() {
     try {
@@ -47,6 +54,28 @@ export class SoundManager {
         this.soundtrackAudio.loop = true;
         this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
       }
+
+      // Load boss battle soundtrack
+      if (typeof bossSoundtrackSound === 'string') {
+        this.bossSoundtrackAudio = new Audio(bossSoundtrackSound);
+        this.bossSoundtrackAudio.preload = 'auto';
+        this.bossSoundtrackAudio.loop = true;
+        this.bossSoundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+      }
+
+      // Load buy-click sound
+      if (typeof buyClickSound === 'string') {
+        this.buyClickAudio = new Audio(buyClickSound);
+        this.buyClickAudio.preload = 'auto';
+        this.buyClickAudio.volume = this.volume * 0.7;
+      }
+
+      // Load achievement sound
+      if (typeof achievementSound === 'string') {
+        this.achievementAudio = new Audio(achievementSound);
+        this.achievementAudio.preload = 'auto';
+        this.achievementAudio.volume = this.volume * 0.8;
+      }
     } catch {
       console.warn('Audio not supported');
       this.enabled = false;
@@ -56,13 +85,16 @@ export class SoundManager {
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     // Pause/resume soundtrack based on enabled state and soundtrack setting
-    if (this.soundtrackAudio) {
+    const currentSoundtrack = this.isPlayingBossSoundtrack
+      ? this.bossSoundtrackAudio
+      : this.soundtrackAudio;
+    if (currentSoundtrack) {
       if (enabled && this.soundtrackEnabled) {
         // Try to start soundtrack (will work if user has interacted)
         this.attemptSoundtrackStart();
       } else {
         // Pause if sound disabled or soundtrack disabled
-        this.soundtrackAudio.pause();
+        currentSoundtrack.pause();
       }
     }
   }
@@ -73,15 +105,18 @@ export class SoundManager {
 
   setSoundtrackEnabled(enabled: boolean): void {
     this.soundtrackEnabled = enabled;
-    if (this.soundtrackAudio) {
+    const currentSoundtrack = this.isPlayingBossSoundtrack
+      ? this.bossSoundtrackAudio
+      : this.soundtrackAudio;
+    if (currentSoundtrack) {
       if (enabled && this.enabled) {
         // Ensure volume is set correctly before starting
-        this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+        currentSoundtrack.volume = this.volume * this.soundtrackVolumeRatio;
         // Try to start soundtrack if enabled
         this.attemptSoundtrackStart();
       } else {
         // Stop soundtrack if disabled
-        this.soundtrackAudio.pause();
+        currentSoundtrack.pause();
       }
     }
   }
@@ -100,9 +135,21 @@ export class SoundManager {
       // Pop sound uses 140% of main volume
       this.popAudio.volume = Math.max(0, Math.min(1, this.volume * 1.4));
     }
+    if (this.buyClickAudio) {
+      this.buyClickAudio.volume = Math.max(0, Math.min(1, this.volume * 0.7));
+    }
+    if (this.achievementAudio) {
+      this.achievementAudio.volume = Math.max(0, Math.min(1, this.volume * 0.8));
+    }
     // Soundtrack uses a percentage of main volume based on ratio
     if (this.soundtrackAudio) {
       this.soundtrackAudio.volume = Math.max(
+        0,
+        Math.min(1, this.volume * this.soundtrackVolumeRatio),
+      );
+    }
+    if (this.bossSoundtrackAudio) {
+      this.bossSoundtrackAudio.volume = Math.max(
         0,
         Math.min(1, this.volume * this.soundtrackVolumeRatio),
       );
@@ -181,18 +228,26 @@ export class SoundManager {
   // Crit sounds removed to prevent endgame spam
 
   playPurchase(): void {
-    // Satisfying "ka-ching" purchase sound
-    if (!this.enabled || !this.context) return;
+    // Play buy-click sound from file
+    if (!this.enabled || !this.buyClickAudio) return;
 
-    // Quick ascending notes with more punch
-    [523, 659, 784, 1047].forEach((freq, i) => {
-      setTimeout(() => {
-        this.playTone(freq, 0.12, 'triangle', 0.22 * this.volume);
-      }, i * 40);
+    // Try to start soundtrack on first user interaction (browser autoplay policy)
+    this.attemptSoundtrackStart();
+
+    // Resume AudioContext if suspended (required for some browsers)
+    if (this.context && this.context.state === 'suspended') {
+      this.context.resume().catch((_error: unknown) => {
+        // AudioContext resume error (silent fail for production)
+      });
+    }
+
+    // Clone the audio to allow overlapping sounds (rapid purchases)
+    const audio = this.buyClickAudio.cloneNode() as HTMLAudioElement;
+    audio.volume = Math.max(0, Math.min(1, this.volume * 0.7));
+    audio.play().catch((_error: unknown) => {
+      // Ignore playback errors (e.g., user interaction required)
+      // Buy-click sound playback error (silent fail for production)
     });
-
-    // Add a low "thump" at the start
-    this.playTone(100, 0.08, 'square', 0.3 * this.volume);
   }
 
   playLevelUp(): void {
@@ -280,19 +335,26 @@ export class SoundManager {
   }
 
   playAchievement(): void {
-    // Epic achievement fanfare
-    if (!this.enabled || !this.context) return;
+    // Play achievement sound from file
+    if (!this.enabled || !this.achievementAudio) return;
 
-    [523, 659, 784, 1047, 1319].forEach((freq, i) => {
-      setTimeout(() => {
-        this.playTone(freq, 0.18, 'triangle', 0.25 * this.volume);
-      }, i * 45);
+    // Try to start soundtrack on first user interaction (browser autoplay policy)
+    this.attemptSoundtrackStart();
+
+    // Resume AudioContext if suspended (required for some browsers)
+    if (this.context && this.context.state === 'suspended') {
+      this.context.resume().catch((_error: unknown) => {
+        // AudioContext resume error (silent fail for production)
+      });
+    }
+
+    // Clone the audio to allow overlapping sounds
+    const audio = this.achievementAudio.cloneNode() as HTMLAudioElement;
+    audio.volume = Math.max(0, Math.min(1, this.volume * 0.8));
+    audio.play().catch((_error: unknown) => {
+      // Ignore playback errors (e.g., user interaction required)
+      // Achievement sound playback error (silent fail for production)
     });
-
-    // Add bass "boom" for extra impact
-    setTimeout(() => {
-      this.playTone(130, 0.25, 'sine', 0.4 * this.volume);
-    }, 225);
   }
 
   playMetronomeTick(): void {
@@ -380,11 +442,14 @@ export class SoundManager {
 
   private attemptSoundtrackStart(): void {
     // Try to start soundtrack (will only succeed after user interaction due to autoplay policy)
+    const currentSoundtrack = this.isPlayingBossSoundtrack
+      ? this.bossSoundtrackAudio
+      : this.soundtrackAudio;
     if (
       !this.enabled ||
       !this.soundtrackEnabled ||
-      !this.soundtrackAudio ||
-      !this.soundtrackAudio.paused
+      !currentSoundtrack ||
+      !currentSoundtrack.paused
     ) {
       return;
     }
@@ -396,10 +461,10 @@ export class SoundManager {
       });
     }
 
-    // Ensure volume is set correctly before playing (soundtrackAudio already checked above)
-    this.soundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+    // Ensure volume is set correctly before playing (currentSoundtrack already checked above)
+    currentSoundtrack.volume = this.volume * this.soundtrackVolumeRatio;
 
-    this.soundtrackAudio.play().catch((_error: unknown) => {
+    currentSoundtrack.play().catch((_error: unknown) => {
       // Ignore playback errors - will retry on next user interaction
       // Soundtrack playback error (will retry silently)
     });
@@ -411,5 +476,43 @@ export class SoundManager {
       this.soundtrackAudio.pause();
       this.soundtrackAudio.currentTime = 0;
     }
+    if (this.bossSoundtrackAudio) {
+      this.bossSoundtrackAudio.pause();
+      this.bossSoundtrackAudio.currentTime = 0;
+    }
+  }
+
+  startBossSoundtrack(): void {
+    // Switch to boss battle soundtrack
+    if (!this.enabled || !this.soundtrackEnabled || !this.bossSoundtrackAudio) {
+      return;
+    }
+
+    // Stop normal soundtrack
+    if (this.soundtrackAudio) {
+      this.soundtrackAudio.pause();
+      this.soundtrackAudio.currentTime = 0;
+    }
+
+    // Start boss soundtrack
+    this.isPlayingBossSoundtrack = true;
+    this.attemptSoundtrackStart();
+  }
+
+  stopBossSoundtrack(): void {
+    // Switch back to normal soundtrack
+    if (!this.enabled || !this.soundtrackEnabled || !this.soundtrackAudio) {
+      return;
+    }
+
+    // Stop boss soundtrack
+    if (this.bossSoundtrackAudio) {
+      this.bossSoundtrackAudio.pause();
+      this.bossSoundtrackAudio.currentTime = 0;
+    }
+
+    // Start normal soundtrack
+    this.isPlayingBossSoundtrack = false;
+    this.attemptSoundtrackStart();
   }
 }

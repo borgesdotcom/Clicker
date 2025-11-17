@@ -33,7 +33,7 @@ export class CreditsModal {
 
     // Title
     const title = document.createElement('h2');
-    title.textContent = '🎮 Credits & Share';
+    title.innerHTML = '<img src="/src/icons/graph.png" alt="Credits" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Credits & Share';
     title.style.marginBottom = '20px';
     title.style.textAlign = 'center';
     content.appendChild(title);
@@ -197,86 +197,6 @@ export class CreditsModal {
 
     content.appendChild(shareSection);
 
-    // Save Data Section
-    const saveSection = document.createElement('div');
-    saveSection.style.marginBottom = '25px';
-
-    const saveTitle = document.createElement('h3');
-    saveTitle.textContent = '💾 Save Data Management';
-    saveTitle.style.marginBottom = '15px';
-    saveTitle.style.color = '#00ff88';
-    saveSection.appendChild(saveTitle);
-
-    // Export Button
-    const exportBtn = document.createElement('button');
-    exportBtn.className = 'modal-button';
-    exportBtn.innerHTML = '📥 Export Save Data';
-    exportBtn.style.width = '100%';
-    exportBtn.style.padding = '12px';
-    exportBtn.style.fontSize = '14px';
-    exportBtn.style.marginBottom = '10px';
-    exportBtn.style.background = '#00ff88';
-    exportBtn.style.border = 'none';
-    exportBtn.style.borderRadius = '8px';
-    exportBtn.style.color = '#000';
-    exportBtn.style.cursor = 'pointer';
-    exportBtn.style.transition = 'all 0.2s';
-    exportBtn.style.fontWeight = 'bold';
-
-    exportBtn.addEventListener('mouseenter', () => {
-      exportBtn.style.background = '#00cc6f';
-      exportBtn.style.transform = 'scale(1.02)';
-    });
-    exportBtn.addEventListener('mouseleave', () => {
-      exportBtn.style.background = '#00ff88';
-      exportBtn.style.transform = 'scale(1)';
-    });
-
-    exportBtn.addEventListener('click', () => {
-      this.exportSave();
-    });
-    saveSection.appendChild(exportBtn);
-
-    // Import Button
-    const importBtn = document.createElement('button');
-    importBtn.className = 'modal-button';
-    importBtn.innerHTML = '📤 Import Save Data';
-    importBtn.style.width = '100%';
-    importBtn.style.padding = '12px';
-    importBtn.style.fontSize = '14px';
-    importBtn.style.marginBottom = '10px';
-    importBtn.style.background = '#ffaa00';
-    importBtn.style.border = 'none';
-    importBtn.style.borderRadius = '8px';
-    importBtn.style.color = '#000';
-    importBtn.style.cursor = 'pointer';
-    importBtn.style.transition = 'all 0.2s';
-    importBtn.style.fontWeight = 'bold';
-
-    importBtn.addEventListener('mouseenter', () => {
-      importBtn.style.background = '#cc8800';
-      importBtn.style.transform = 'scale(1.02)';
-    });
-    importBtn.addEventListener('mouseleave', () => {
-      importBtn.style.background = '#ffaa00';
-      importBtn.style.transform = 'scale(1)';
-    });
-
-    importBtn.addEventListener('click', () => {
-      this.importSave();
-    });
-    saveSection.appendChild(importBtn);
-
-    const saveHint = document.createElement('p');
-    saveHint.textContent =
-      'Backup your progress or transfer it between devices';
-    saveHint.style.fontSize = '12px';
-    saveHint.style.color = '#888';
-    saveHint.style.textAlign = 'center';
-    saveHint.style.marginTop = '5px';
-    saveSection.appendChild(saveHint);
-
-    content.appendChild(saveSection);
 
     // Steam Section
     const steamSection = document.createElement('div');
@@ -583,7 +503,7 @@ export class CreditsModal {
     window.open(twitterUrl, '_blank', 'width=550,height=420');
   }
 
-  private exportSave(): void {
+  public exportSave(): void {
     const saveData = Save.export();
     if (!saveData) {
       alert('❌ No save data found to export!');
@@ -605,7 +525,7 @@ export class CreditsModal {
     alert('✅ Save data exported successfully!\n\nSaved as: ' + a.download);
   }
 
-  private importSave(): void {
+  public importSave(): void {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';

@@ -24,7 +24,6 @@ import { DamageNumberSystem } from './systems/DamageNumberSystem';
 import { ComboSystem } from './systems/ComboSystem';
 import { SoundManager } from './systems/SoundManager';
 import { PowerUpSystem } from './systems/PowerUpSystem';
-import type { PowerUpType } from './systems/PowerUpSystem';
 import { Hud } from './ui/Hud';
 import { Shop } from './ui/Shop';
 import { AchievementSnackbar } from './ui/AchievementSnackbar';
@@ -36,7 +35,6 @@ import { DebugPanel } from './ui/DebugPanel';
 import { MissionsModal } from './ui/MissionsModal';
 import { ArtifactsModal } from './ui/ArtifactsModal';
 import { VersionSplash } from './ui/VersionSplash';
-import { Layout } from './ui/Layout';
 import { CreditsModal } from './ui/CreditsModal';
 import { GameInfoModal } from './ui/GameInfoModal';
 import { PerformanceMonitor } from './ui/PerformanceMonitor';
@@ -44,7 +42,6 @@ import { ColorManager } from './math/ColorManager';
 import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
 import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
-import { CustomizationModal } from './ui/CustomizationModal';
 import { NumberFormatter } from './utils/NumberFormatter';
 import type { Vec2, GameMode, ThemeCategory } from './types';
 import type { UserSettings } from './core/Settings';
@@ -85,7 +82,6 @@ export class Game {
   private hud: Hud;
   private shop: Shop;
   private customizationSystem: VisualCustomizationSystem;
-  private customizationModal: CustomizationModal;
   private saveTimer = 0;
   private saveInterval = 3;
   private autoBuyTimer = 0;
@@ -310,15 +306,7 @@ export class Game {
       );
     });
 
-    // Setup power-up spawn notifications
-    this.powerUpSystem.setOnPowerUpSpawn((type: PowerUpType) => {
-      const config = this.powerUpSystem.getBuffName(type);
-      this.notificationSystem.show(
-        `⚡ Power-Up Spawned: ${config}`,
-        'success',
-        3000,
-      );
-    });
+    // Power-up spawn notifications removed
 
     // Initialize visual customization system
     this.customizationSystem = new VisualCustomizationSystem();
@@ -332,35 +320,14 @@ export class Game {
     }
     this.customizationSystem.updateUnlocks(initialState);
 
-    // Set initial background theme (before first render)
+    // Set initial background based on level (before first render)
+    const initialLevel = initialState.level || 1;
+    this.updateBackgroundByLevel(initialLevel);
+    
+    // Set initial background theme colors (keep for star colors, etc.)
     const bgColors = this.customizationSystem.getBackgroundColors();
-    const initialBgTheme =
-      this.customizationSystem.getSelectedTheme('background');
-    const initialThemeId: string = initialBgTheme?.id ?? 'default_background';
+    const initialThemeId: string = 'default_background';
     this.background.setThemeColors(bgColors, initialThemeId);
-
-    // Initialize customization modal
-    this.customizationModal = new CustomizationModal(this.customizationSystem);
-    this.customizationModal.updateState(initialState);
-    this.customizationModal.setOnThemeChange((category, themeId) => {
-      // Save theme selection
-      const currentState = this.store.getState();
-      if (!currentState.selectedThemes) {
-        currentState.selectedThemes = {};
-      }
-      currentState.selectedThemes[category] = themeId;
-      this.store.setState(currentState);
-      Save.save(currentState);
-
-      // Update background immediately if background theme changed
-      if (category === 'background') {
-        const newBgColors = this.customizationSystem.getBackgroundColors();
-        const newBgTheme =
-          this.customizationSystem.getSelectedTheme('background');
-        const newThemeId: string = newBgTheme?.id ?? 'default_background';
-        this.background.setThemeColors(newBgColors, newThemeId);
-      }
-    });
 
     (this as any).debugPanel = new DebugPanel(
       this.store,
@@ -382,6 +349,9 @@ export class Game {
       () => {
         this.powerUpSystem.clear();
         this.shop.forceRefresh();
+      },
+      (rarity?: 'common' | 'rare' | 'epic' | 'legendary') => {
+        this.debugGenerateArtifact(rarity);
       },
     );
 
@@ -510,14 +480,14 @@ export class Game {
     this.setupSettingsButton();
     this.setupMissionsButton();
     this.setupArtifactsButton();
-    this.setupCreditsButton();
-    this.setupDiscordButton();
     this.setupGameInfoButton();
-    this.setupCustomizationButton();
     this.setupComboPauseButton();
-    Layout.setupResetButton(() => {
+    this.setupDiscordButton();
+    // Reset button is now in SettingsModal
+    this.settingsModal.setResetCallback(() => {
       this.resetGame();
     });
+    this.settingsModal.setCreditsModal(this.creditsModal);
   }
 
   private setupBossDialog(): void {
@@ -548,7 +518,7 @@ export class Game {
       this.bossRetryButton.setAttribute('data-text', 'Retry Boss');
       this.bossRetryButton.setAttribute('aria-label', 'Retry Boss Fight');
       this.bossRetryButton.innerHTML =
-        '<span class="hud-button-icon">⚔️</span><span class="hud-button-text">Retry Boss</span>';
+        '<img src="/src/icons/bossbattle.png" alt="Boss" />';
       this.bossRetryButton.style.display = 'none';
       this.bossRetryButton.style.pointerEvents = 'auto';
 
@@ -679,6 +649,8 @@ export class Game {
 
     // Clean up boss battle state first
     this.hideBossTimer();
+    // Switch back to normal soundtrack
+    this.soundManager.stopBossSoundtrack();
     // Pause combo to preserve it during transition back to normal (unless combo pause skill is active)
     if (!this.comboPauseActive) {
       this.comboSystem.pause();
@@ -845,7 +817,7 @@ export class Game {
       ascensionBtn.setAttribute('aria-label', 'Open Prestige/Ascension');
       ascensionBtn.setAttribute('aria-keyshortcuts', 'P');
       ascensionBtn.innerHTML =
-        '<span class="hud-button-icon">🌟</span><span class="hud-button-text">Ascend</span>';
+        '<img src="/src/icons/menu/ascension.png" alt="Ascension" />';
       ascensionBtn.addEventListener('click', () => {
         this.ascensionModal.show();
       });
@@ -876,7 +848,7 @@ export class Game {
       settingsBtn.setAttribute('aria-label', 'Open Settings');
       settingsBtn.setAttribute('aria-keyshortcuts', 'S');
       settingsBtn.innerHTML =
-        '<span class="hud-button-icon">⚙️</span><span class="hud-button-text">Settings</span>';
+        '<img src="/src/icons/menu/settings.png" alt="Settings" />';
       settingsBtn.addEventListener('click', () => {
         this.settingsModal.show();
       });
@@ -895,7 +867,7 @@ export class Game {
       missionsBtn.setAttribute('aria-label', 'Open Missions');
       missionsBtn.setAttribute('aria-keyshortcuts', 'M');
       missionsBtn.innerHTML =
-        '<span class="hud-button-icon">🎯</span><span class="hud-button-text">Missions</span>';
+        '<img src="/src/icons/menu/info.png" alt="Missions" />';
       missionsBtn.addEventListener('click', () => {
         this.missionsModal.show();
       });
@@ -912,7 +884,7 @@ export class Game {
       artifactsBtn.setAttribute('data-icon', '✨');
       artifactsBtn.setAttribute('data-text', 'Artifacts');
       artifactsBtn.innerHTML =
-        '<span class="hud-button-icon">✨</span><span class="hud-button-text">Artifacts</span>';
+        '<img src="/src/icons/menu/artifacts.png" alt="Artifacts" />';
       artifactsBtn.addEventListener('click', () => {
         this.artifactsModal.show();
       });
@@ -920,48 +892,73 @@ export class Game {
     }
   }
 
-  private setupCreditsButton(): void {
-    // Add Credits button to the shop panel instead of HUD (more space)
-    const shopPanel = document.getElementById('shop-panel');
-    const resetContainer = document.getElementById('reset-container');
-
-    if (shopPanel && resetContainer) {
-      const creditsBtn = document.createElement('button');
-      creditsBtn.id = 'credits-button';
-      creditsBtn.className = 'shop-button';
-      creditsBtn.textContent = '🎮 Credits & Share';
-      creditsBtn.style.marginBottom = '10px';
-      creditsBtn.style.marginTop = '10px';
-      creditsBtn.style.width = '100%';
-      creditsBtn.addEventListener('click', () => {
-        this.creditsModal.show();
-      });
-
-      // Insert before reset button
-      shopPanel.insertBefore(creditsBtn, resetContainer);
-    }
-  }
 
   private setupDiscordButton(): void {
     const shopPanel = document.getElementById('shop-panel');
-    const resetContainer = document.getElementById('reset-container');
-
-    if (shopPanel && resetContainer) {
+    if (shopPanel) {
+      // Discord Button
       const discordBtn = document.createElement('button');
       discordBtn.id = 'discord-button';
-      discordBtn.className = 'shop-button discord-button';
+      discordBtn.className = 'shop-button';
       discordBtn.textContent = '💬 Join Discord';
-      discordBtn.style.color = '#ffffff';
-      discordBtn.style.marginBottom = '10px';
       discordBtn.style.width = '100%';
-      discordBtn.style.background =
-        'linear-gradient(135deg, #5865F2 0%, #4752C4 100%)';
-      discordBtn.style.border = '2px solid #5865F2';
+      discordBtn.style.marginTop = '20px';
+      discordBtn.style.padding = '12px';
+      discordBtn.style.background = 'rgba(0, 0, 0, 0.95)';
+      discordBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
+      discordBtn.style.color = '#ffffff';
+      discordBtn.style.fontFamily = 'var(--font-family)';
+      discordBtn.style.fontWeight = 'bold';
+      discordBtn.style.letterSpacing = '2px';
+      discordBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+      discordBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      discordBtn.style.transition = 'all 0.1s linear';
+      discordBtn.style.cursor = 'pointer';
       discordBtn.addEventListener('click', () => {
         window.open('https://discord.gg/bfxYsvnw2S', '_blank');
       });
+      discordBtn.addEventListener('mouseenter', () => {
+        discordBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
+        discordBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+      });
+      discordBtn.addEventListener('mouseleave', () => {
+        discordBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+        discordBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      });
 
-      shopPanel.insertBefore(discordBtn, resetContainer);
+      shopPanel.appendChild(discordBtn);
+
+      // Credits & Share Button
+      const creditsBtn = document.createElement('button');
+      creditsBtn.id = 'credits-share-button';
+      creditsBtn.className = 'shop-button';
+      creditsBtn.textContent = 'CREDITS & SHARE';
+      creditsBtn.style.width = '100%';
+      creditsBtn.style.marginTop = '10px';
+      creditsBtn.style.padding = '12px';
+      creditsBtn.style.background = 'rgba(0, 0, 0, 0.95)';
+      creditsBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
+      creditsBtn.style.color = '#ffffff';
+      creditsBtn.style.fontFamily = 'var(--font-family)';
+      creditsBtn.style.fontWeight = 'bold';
+      creditsBtn.style.letterSpacing = '2px';
+      creditsBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+      creditsBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      creditsBtn.style.transition = 'all 0.1s linear';
+      creditsBtn.style.cursor = 'pointer';
+      creditsBtn.addEventListener('click', () => {
+        this.creditsModal.show();
+      });
+      creditsBtn.addEventListener('mouseenter', () => {
+        creditsBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
+        creditsBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+      });
+      creditsBtn.addEventListener('mouseleave', () => {
+        creditsBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+        creditsBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      });
+
+      shopPanel.appendChild(creditsBtn);
     }
   }
 
@@ -974,7 +971,7 @@ export class Game {
       infoBtn.setAttribute('data-icon', '📖');
       infoBtn.setAttribute('data-text', 'Game Info');
       infoBtn.innerHTML =
-        '<span class="hud-button-icon">📖</span><span class="hud-button-text">Game Info</span>';
+        '<img src="/src/icons/menu/missions.png" alt="Game Info" />';
       infoBtn.addEventListener('click', () => {
         this.gameInfoModal.show();
       });
@@ -1176,24 +1173,83 @@ export class Game {
     }
   }
 
-  private setupCustomizationButton(): void {
-    const buttonsContainer = document.getElementById('hud-buttons-container');
-    if (buttonsContainer) {
-      const customizeBtn = document.createElement('button');
-      customizeBtn.id = 'customization-button';
-      customizeBtn.className = 'hud-button';
-      customizeBtn.setAttribute('data-icon', '🎨');
-      customizeBtn.setAttribute('data-text', 'Customize');
-      customizeBtn.setAttribute('aria-label', 'Open Visual Customization');
-      customizeBtn.setAttribute('aria-keyshortcuts', 'C');
-      customizeBtn.innerHTML =
-        '<span class="hud-button-icon">🎨</span><span class="hud-button-text">Customize</span>';
-      customizeBtn.addEventListener('click', () => {
-        const state = this.store.getState();
-        this.customizationModal.updateState(state);
-        this.customizationModal.show();
-      });
-      buttonsContainer.appendChild(customizeBtn);
+  /**
+   * Update background based on level (one background per 100 levels)
+   */
+  private updateBackgroundByLevel(level: number): void {
+    // Calculate which background to use (1-9, one per 100 levels)
+    // Level 1-100 = space1, 101-200 = space2, etc.
+    // Use Math.ceil to ensure level 100 stays in space1, level 101 goes to space2
+    const backgroundIndex = Math.min(Math.ceil(level / 100), 9);
+    const backgroundGif = `space${backgroundIndex}_4-frames.gif`;
+    const backgroundUrl = `url('/src/animations/${backgroundGif}') repeat`;
+    
+    // Update game container background
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+      // Ensure game container has position relative for overlay
+      if (!gameContainer.style.position) {
+        gameContainer.style.position = 'relative';
+      }
+      // Set black background as base
+      gameContainer.style.background = `#000`;
+      
+      // Create or update background overlay div with opacity
+      let bgOverlay = document.getElementById('background-overlay');
+      if (!bgOverlay) {
+        bgOverlay = document.createElement('div');
+        bgOverlay.id = 'background-overlay';
+        bgOverlay.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: ${backgroundUrl};
+          background-size: auto;
+          opacity: 0.5;
+          pointer-events: none;
+          z-index: 0;
+        `;
+        gameContainer.insertBefore(bgOverlay, gameContainer.firstChild);
+      } else {
+        bgOverlay.style.background = backgroundUrl;
+        bgOverlay.style.opacity = '0.5';
+      }
+    }
+    
+    // Update shop panel background to match
+    const shopPanel = document.getElementById('shop-panel');
+    if (shopPanel) {
+      // Ensure shop panel has position relative for overlay
+      if (!shopPanel.style.position) {
+        shopPanel.style.position = 'relative';
+      }
+      // Set black background as base
+      shopPanel.style.background = `#000`;
+      
+      // Create or update shop background overlay div with opacity
+      let shopBgOverlay = document.getElementById('shop-background-overlay');
+      if (!shopBgOverlay) {
+        shopBgOverlay = document.createElement('div');
+        shopBgOverlay.id = 'shop-background-overlay';
+        shopBgOverlay.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: ${backgroundUrl};
+          background-size: auto;
+          opacity: 0.4;
+          pointer-events: none;
+          z-index: 0;
+        `;
+        shopPanel.insertBefore(shopBgOverlay, shopPanel.firstChild);
+      } else {
+        shopBgOverlay.style.background = backgroundUrl;
+        shopBgOverlay.style.opacity = '0.7';
+      }
     }
   }
 
@@ -1222,6 +1278,8 @@ export class Game {
     const keepAchievements = { ...state.achievements };
     const keepStats = { ...state.stats };
     const keepPrestigeUpgrades = { ...state.prestigeUpgrades };
+    const keepAutoBuyEnabled = state.autoBuyEnabled ?? false; // Preserve user preference
+    const keepSelectedThemes = state.selectedThemes; // Preserve visual customization
     const newPrestigePoints = state.prestigePoints + prestigeGain;
     const newPrestigeLevel = state.prestigeLevel + 1;
 
@@ -1262,6 +1320,13 @@ export class Game {
       discoveredUpgrades: { ship: true }, // Reset discoveries, ship always visible
       // Track highest level for ascension point calculation
       highestLevelReached: newHighestLevel,
+      // Preserve user preferences (unlocks are in prestigeUpgrades)
+      autoBuyEnabled: keepAutoBuyEnabled,
+      selectedThemes: keepSelectedThemes,
+      // Combo pause state: reset on ascension (but unlock remains in prestigeUpgrades)
+      comboPauseActive: false,
+      comboPauseEndTime: 0,
+      comboPauseCooldownEndTime: 0,
     };
 
     // Clear local boss block state
@@ -1272,6 +1337,9 @@ export class Game {
 
     this.store.setState(freshState);
     Save.save(this.store.getState());
+    
+    // Update background based on new starting level
+    this.updateBackgroundByLevel(freshState.level);
 
     // Reset shop UI
     this.shop.reset();
@@ -1287,6 +1355,12 @@ export class Game {
     this.autoFireSystem.reset();
     this.powerUpSystem.clear();
     this.saveTimer = 0;
+    
+    // Reset combo pause skill state and update button (to show if unlocked)
+    this.comboPauseActive = false;
+    this.comboPauseDuration = 0;
+    this.comboPauseCooldown = 0;
+    this.updateComboPauseButton();
   }
 
   private calculateRetainedUpgrades(
@@ -1501,6 +1575,7 @@ export class Game {
       state.experience,
       ColorManager.getExpRequired(state.level),
     );
+    this.updateBackgroundByLevel(state.level);
 
     // Restore combo pause skill state
     this.restoreComboPauseState();
@@ -1552,6 +1627,11 @@ export class Game {
     const orbitRadius =
       Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.4;
 
+    // Destroy old ships and clean up their image elements before creating new ones
+    for (const ship of this.ships) {
+      ship.destroy();
+    }
+
     this.ships = [];
     for (let i = 0; i < state.shipsCount; i++) {
       // Random angle for each ship instead of perfect circle
@@ -1597,21 +1677,8 @@ export class Game {
     const collectedPowerUp = this.powerUpSystem.checkCollision(pos.x, pos.y);
     if (collectedPowerUp) {
       this.soundManager.playClick();
-      const config = this.powerUpSystem.getBuffName(collectedPowerUp);
-      // Get icon directly using a simple map to avoid type issues
-      const iconMap: Record<string, string> = {
-        points: '💰',
-        damage: '⚔️',
-        speed: '⚡',
-        multishot: '✨',
-        critical: '💥',
-      };
-      const powerUpIcon = iconMap[collectedPowerUp] ?? '⚡';
 
-      // Show notification using the notification system (same as missions and powerup spawns)
-      const notificationMessage: string =
-        powerUpIcon + ' ' + config + ' Activated!';
-      this.notificationSystem.show(notificationMessage, 'success', 3000);
+      // Power-up pickup notification removed
 
       // Spawn collection particles
       if (this.userSettings.highGraphics) {
@@ -1898,6 +1965,80 @@ export class Game {
       return { isCrit, color, width };
     }
 
+    // Apply special upgrade visual effects to lasers (priority order - most powerful first)
+    // Legendary tier upgrades
+    if (state.subUpgrades['cosmic_ascension']) {
+      color = '#00ffff'; // Cyan for cosmic
+      width = 3.8;
+    } else if (state.subUpgrades['reality_anchor']) {
+      color = '#ffffff'; // Pure white for reality
+      width = 3.6;
+    } else if (state.subUpgrades['infinity_gauntlet']) {
+      color = '#ff1493'; // Hot pink for infinity
+      width = 3.7;
+    } else if (state.subUpgrades['meaning_of_life']) {
+      color = '#00ffff'; // Cyan for meaning
+      width = 3.5;
+    } else if (state.subUpgrades['heart_of_galaxy']) {
+      color = '#ff0044'; // Deep red for heart
+      width = 3.4;
+    } else if (state.subUpgrades['singularity_core']) {
+      color = '#000000'; // Black with glow for singularity
+      width = 3.9;
+    }
+    // Epic tier upgrades
+    else if (state.subUpgrades['antimatter_rounds']) {
+      color = '#ff00ff'; // Magenta for antimatter
+      width = 3.2;
+    } else if (state.subUpgrades['photon_amplifier']) {
+      color = '#00ffff'; // Cyan for photon
+      width = 3.3;
+    } else if (state.subUpgrades['stellar_forge']) {
+      color = '#ffaa00'; // Gold for stellar
+      width = 3.4;
+    } else if (state.subUpgrades['hyper_reactor']) {
+      color = '#ff0080'; // Pink for hyper
+      width = 3.1;
+    } else if (state.subUpgrades['dark_matter_engine']) {
+      color = '#4b0082'; // Indigo for dark matter
+      width = 3.3;
+    } else if (state.subUpgrades['antimatter_cascade']) {
+      color = '#ff00aa'; // Bright magenta for cascade
+      width = 3.2;
+    } else if (state.subUpgrades['quantum_entanglement']) {
+      color = '#00ff88'; // Green for quantum
+      width = 3.0;
+    } else if (state.subUpgrades['plasma_matrix']) {
+      color = '#ff4400'; // Red-orange for plasma
+      width = 3.1;
+    } else if (state.subUpgrades['nebula_harvester']) {
+      color = '#00ffff'; // Cyan for nebula
+      width = 3.0;
+    } else if (state.subUpgrades['cosmic_battery']) {
+      color = '#4169e1'; // Royal blue for cosmic battery
+      width = 2.9;
+    }
+    // Rare tier upgrades
+    else if (state.subUpgrades['laser_focusing']) {
+      color = '#ff6600'; // Orange for focused laser
+      width = 2.8;
+    } else if (state.subUpgrades['warp_core']) {
+      color = '#00ffff'; // Cyan for warp
+      width = 2.9;
+    } else if (state.subUpgrades['chaos_emeralds']) {
+      color = '#00ff88'; // Emerald green for chaos
+      width = 2.8;
+    } else if (state.subUpgrades['void_channeling']) {
+      color = '#00ffff'; // Cyan for void
+      width = 2.9;
+    } else if (state.subUpgrades['nanobots']) {
+      color = '#00ff00'; // Bright green for nanobots
+      width = 2.7;
+    } else if (state.subUpgrades['nuclear_reactor']) {
+      color = '#ffff00'; // Yellow for nuclear
+      width = 2.8;
+    }
+
     // Perfect precision visual effect is now handled in handleDamage()
     // The visual check here is kept for consistency, but actual damage multiplier
     // is applied in handleDamage() to ensure it's only checked once per hit
@@ -1912,8 +2053,83 @@ export class Game {
     width: number;
   } {
     // Small ships cannot crit - always return non-crit visuals
-    const color = this.customizationSystem.getLaserColor(state, false);
-    const width = 2.5;
+    let color = this.customizationSystem.getLaserColor(state, false);
+    let width = 2.5;
+
+    // Apply special upgrade visual effects to lasers (same as main ship - priority order)
+    // Legendary tier upgrades
+    if (state.subUpgrades['cosmic_ascension']) {
+      color = '#00ffff'; // Cyan for cosmic
+      width = 3.8;
+    } else if (state.subUpgrades['reality_anchor']) {
+      color = '#ffffff'; // Pure white for reality
+      width = 3.6;
+    } else if (state.subUpgrades['infinity_gauntlet']) {
+      color = '#ff1493'; // Hot pink for infinity
+      width = 3.7;
+    } else if (state.subUpgrades['meaning_of_life']) {
+      color = '#00ffff'; // Cyan for meaning
+      width = 3.5;
+    } else if (state.subUpgrades['heart_of_galaxy']) {
+      color = '#ff0044'; // Deep red for heart
+      width = 3.4;
+    } else if (state.subUpgrades['singularity_core']) {
+      color = '#000000'; // Black with glow for singularity
+      width = 3.9;
+    }
+    // Epic tier upgrades
+    else if (state.subUpgrades['antimatter_rounds']) {
+      color = '#ff00ff'; // Magenta for antimatter
+      width = 3.2;
+    } else if (state.subUpgrades['photon_amplifier']) {
+      color = '#00ffff'; // Cyan for photon
+      width = 3.3;
+    } else if (state.subUpgrades['stellar_forge']) {
+      color = '#ffaa00'; // Gold for stellar
+      width = 3.4;
+    } else if (state.subUpgrades['hyper_reactor']) {
+      color = '#ff0080'; // Pink for hyper
+      width = 3.1;
+    } else if (state.subUpgrades['dark_matter_engine']) {
+      color = '#4b0082'; // Indigo for dark matter
+      width = 3.3;
+    } else if (state.subUpgrades['antimatter_cascade']) {
+      color = '#ff00aa'; // Bright magenta for cascade
+      width = 3.2;
+    } else if (state.subUpgrades['quantum_entanglement']) {
+      color = '#00ff88'; // Green for quantum
+      width = 3.0;
+    } else if (state.subUpgrades['plasma_matrix']) {
+      color = '#ff4400'; // Red-orange for plasma
+      width = 3.1;
+    } else if (state.subUpgrades['nebula_harvester']) {
+      color = '#00ffff'; // Cyan for nebula
+      width = 3.0;
+    } else if (state.subUpgrades['cosmic_battery']) {
+      color = '#4169e1'; // Royal blue for cosmic battery
+      width = 2.9;
+    }
+    // Rare tier upgrades
+    else if (state.subUpgrades['laser_focusing']) {
+      color = '#ff6600'; // Orange for focused laser
+      width = 2.8;
+    } else if (state.subUpgrades['warp_core']) {
+      color = '#00ffff'; // Cyan for warp
+      width = 2.9;
+    } else if (state.subUpgrades['chaos_emeralds']) {
+      color = '#00ff88'; // Emerald green for chaos
+      width = 2.8;
+    } else if (state.subUpgrades['void_channeling']) {
+      color = '#00ffff'; // Cyan for void
+      width = 2.9;
+    } else if (state.subUpgrades['nanobots']) {
+      color = '#00ff00'; // Bright green for nanobots
+      width = 2.7;
+    } else if (state.subUpgrades['nuclear_reactor']) {
+      color = '#ffff00'; // Yellow for nuclear
+      width = 2.8;
+    }
+
     return { isCrit: false, color, width };
   }
 
@@ -2089,6 +2305,8 @@ export class Game {
         if (this.ball instanceof EnhancedAlienBall) {
           killReward = this.ball.getPointsReward(killReward);
         }
+        // Apply artifact points bonus
+        killReward *= 1 + this.artifactSystem.getPointsBonus();
         killReward *= this.powerUpSystem.getPointsMultiplier();
         const roundedReward = Math.max(1, Math.floor(killReward));
         // Record kill reward for points per second calculation
@@ -2213,11 +2431,13 @@ export class Game {
     state.experience += bonusXP;
 
     let leveledUp = false;
+    let newLevel = state.level;
     if (this.blockedOnBossLevel === null) {
       while (state.experience >= ColorManager.getExpRequired(state.level)) {
         const expRequired = ColorManager.getExpRequired(state.level);
         state.experience -= expRequired;
         state.level++;
+        newLevel = state.level;
         this.store.updateMaxLevel();
 
         // Note: highestLevelReached is NOT updated here - it only tracks the highest level
@@ -2229,6 +2449,9 @@ export class Game {
     }
 
     if (leveledUp) {
+      // Update background immediately when level changes
+      this.updateBackgroundByLevel(newLevel);
+      
       this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
@@ -2315,6 +2538,9 @@ export class Game {
       state.experience -= expRequired;
       state.level++;
       this.store.updateMaxLevel();
+      
+      // Update background immediately when level changes
+      this.updateBackgroundByLevel(state.level);
 
       // Note: highestLevelReached is NOT updated here - it only tracks the highest level
       // from PREVIOUS ascensions, not the current run. It's updated in performAscension()
@@ -2429,6 +2655,8 @@ export class Game {
         this.createBoss();
         this.mode = 'boss';
         this.startBossTimer();
+        // Switch to boss battle soundtrack
+        this.soundManager.startBossSoundtrack();
         // Resume combo when boss fight actually starts (not during transition, unless combo pause is active)
         if (!this.comboPauseActive) {
           this.comboSystem.resume();
@@ -2444,6 +2672,9 @@ export class Game {
 
     // Cleanup systems for memory management
     this.cleanup();
+
+    // Switch back to normal soundtrack
+    this.soundManager.stopBossSoundtrack();
 
     // Faster transition back to normal - reduced delay
     setTimeout(() => {
@@ -2589,7 +2820,11 @@ export class Game {
         const passiveGen = this.upgradeSystem.getPassiveGen(state);
         const critChance = this.upgradeSystem.getCritChance(state);
         const critBonus = this.powerUpSystem.getCritChanceBonus() * 100; // Convert to percentage
-        this.hud.updateStats(dps, passiveGen, critChance, critBonus);
+        const hitDamage = this.upgradeSystem.getPointsPerHit(state);
+        const fireCooldown = this.upgradeSystem.getFireCooldown(state, true);
+        const attackSpeed = fireCooldown > 0 ? 1000 / fireCooldown : 0; // Convert ms to shots per second
+        this.hud.updateStats(dps, passiveGen, critChance, critBonus, hitDamage, attackSpeed);
+
 
         // Update power-up buffs display (include combo pause skill if active)
         const activeBuffs = this.powerUpSystem.getActiveBuffs();
@@ -2783,10 +3018,12 @@ export class Game {
       if (target && targetEntity) {
         // Auto-fire ships: Static beams with theme colors
         // Main ship (index 0) doesn't use beams - it fires regular projectiles for click feedback
-        const beamColor = this.customizationSystem.getLaserColor(state, false);
+        // Get laser visuals (which includes upgrade-based colors)
+        const laserVisuals = this.getLaserVisualsNoCrit(state);
+        const beamColor = laserVisuals.color;
+        const beamWidth = laserVisuals.width;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         const beamThemeId = this.customizationSystem.getLaserThemeId();
-        const beamWidth = 2;
 
         for (let i = 1; i < this.ships.length; i++) {
           const ship = this.ships[i];
@@ -2907,12 +3144,12 @@ export class Game {
   }
 
   private render(): void {
-    // Apply background theme (only update if changed)
+    // Apply background theme colors (keep for star colors, etc.)
     const bgColors = this.customizationSystem.getBackgroundColors();
-    const currentBgTheme =
-      this.customizationSystem.getSelectedTheme('background');
-    const themeId: string = currentBgTheme?.id ?? 'default_background';
+    const themeId: string = 'default_background';
     this.background.setThemeColors(bgColors, themeId);
+    
+    // Background GIF is updated automatically by level in updateBackgroundByLevel()
 
     // Clear canvas (WebGL or 2D)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
@@ -2922,9 +3159,9 @@ export class Game {
       // Clear WebGL canvas
       webglRenderer.clear(bgColors.primary);
       // Also clear offscreen 2D canvas for background/text
-      this.canvas.clear(bgColors.primary);
+      this.canvas.clear();
     } else {
-      this.canvas.clear(bgColors.primary);
+      this.canvas.clear();
     }
 
     const ctx = this.canvas.getContext();
@@ -2999,42 +3236,14 @@ export class Game {
     }
 
     // Render ships (batch by entity type)
+    // Use 2D canvas rendering for ships (better performance than DOM overlays)
     const state = this.store.getState();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const webglRenderer = this.canvas.getWebGLRenderer();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const useWebGL = this.canvas.isWebGLEnabled() && webglRenderer !== null;
-
-    if (useWebGL) {
-      // Use WebGL instanced rendering for ships (MUCH faster - single draw call for all ships)
+    for (const ship of this.ships) {
+      // Apply customization
       const visuals = this.customizationSystem.getShipColors(state);
-
-      for (const ship of this.ships) {
-        // Make ships bigger and more visible
-        const size = ship.isMainShip ? 20 : 14; // Increased from 13/8 to 20/14
-        const shipColor = visuals.fillColor;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const themeId = visuals.themeId;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.draw.addShip(
-          ship.x,
-          ship.y,
-          ship.angle,
-          size,
-          shipColor,
-          ship.isMainShip,
-          themeId,
-        );
-      }
-    } else {
-      // Fallback to 2D canvas rendering
-      for (const ship of this.ships) {
-        // Apply customization
-        const visuals = this.customizationSystem.getShipColors(state);
-        // Store visuals for ship to use
-        (ship as any).customVisuals = visuals;
-        ship.draw(this.draw, state);
-      }
+      // Store visuals for ship to use (for fallback triangle rendering)
+      (ship as any).customVisuals = visuals;
+      ship.draw(this.draw);
     }
 
     // Render UI elements
@@ -3113,7 +3322,16 @@ export class Game {
     const nearestBoss = Math.ceil(state.level / 5) * 5;
     state.level = nearestBoss;
     this.store.setState(state);
+    this.updateBackgroundByLevel(state.level);
     this.showBossDialog();
+  }
+
+  private debugGenerateArtifact(
+    rarity?: 'common' | 'rare' | 'epic' | 'legendary',
+  ): void {
+    this.artifactSystem.generateArtifact(rarity);
+    // Refresh the artifacts modal if it's open
+    this.artifactsModal.refresh();
   }
 
   private setGameSpeed(speed: number): void {
@@ -3816,6 +4034,7 @@ export class Game {
     }
 
     if (this.ships.length > 0) {
+      // Recreate ships to update their orbits and clean up old image elements
       this.createShips();
     }
   }

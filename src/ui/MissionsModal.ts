@@ -26,8 +26,8 @@ export class MissionsModal {
     modal.innerHTML = `
       <div class="modal-content missions-modal-content">
         <div class="modal-header">
-          <h2>🎯 Missions & Quests</h2>
-          <button class="modal-close">&times;</button>
+          <h2>MISSIONS & QUESTS</h2>
+          <button class="modal-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
         <div class="modal-body">
           <div class="missions-tabs">
@@ -173,9 +173,22 @@ export class MissionsModal {
             : calculatedReward.xp || 0,
         };
 
+        // Map emoji icons to image icons
+        const iconMap: Record<string, string> = {
+          '🖱️': '/src/icons/target.png',
+          '⚔️': '/src/icons/bossbattle.png',
+          '👾': '/src/icons/bossbattle.png',
+          '🏆': '/src/icons/trophy.png',
+          '🔧': '/src/icons/settings.png',
+          '⭐': '/src/icons/stars.png',
+          '🚀': '/src/icons/stars.png',
+          '🔥': '/src/icons/graph.png',
+        };
+        const iconSrc = iconMap[mission.icon] || '/src/icons/target.png';
+
         return `
       <div class="mission-card ${mission.completed ? 'completed' : ''} ${mission.claimed ? 'claimed' : ''}">
-        <div class="mission-icon">${mission.icon}</div>
+        <div class="mission-icon"><img src="${iconSrc}" alt="${mission.title}" style="width: 48px; height: 48px; object-fit: contain;" /></div>
         <div class="mission-info">
           <h3 class="mission-title">${mission.title}</h3>
           <p class="mission-description">${mission.description}</p>
@@ -186,10 +199,10 @@ export class MissionsModal {
         </div>
         <div class="mission-reward">
           ${displayedReward.points > 0 ? `<div class="reward-item">$ +${displayedReward.points.toLocaleString()}</div>` : ''}
-          ${displayedReward.ships > 0 ? `<div class="reward-item">🚀 +${displayedReward.ships}</div>` : ''}
-          ${displayedReward.xp > 0 ? `<div class="reward-item">⭐ +${displayedReward.xp} XP</div>` : ''}
-          ${mission.completed && !mission.claimed ? `<button class="claim-btn" data-id="${mission.id}">Claim</button>` : ''}
-          ${mission.claimed ? '<span class="claimed-badge">✓ Claimed</span>' : ''}
+          ${displayedReward.ships > 0 ? `<div class="reward-item">+${displayedReward.ships} SHIPS</div>` : ''}
+          ${displayedReward.xp > 0 ? `<div class="reward-item">+${displayedReward.xp} XP</div>` : ''}
+          ${mission.completed && !mission.claimed ? `<button class="claim-btn" data-id="${mission.id}">CLAIM</button>` : ''}
+          ${mission.claimed ? '<span class="claimed-badge">CLAIMED</span>' : ''}
         </div>
       </div>
     `;

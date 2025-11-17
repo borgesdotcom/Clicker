@@ -1,6 +1,7 @@
 import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { t } from '../core/I18n';
+import { Config } from '../core/GameConfig';
 
 export class UpgradeSystem {
   private basePoints = 1;
@@ -1452,11 +1453,12 @@ export class UpgradeSystem {
       id: 'ship',
       name: t('upgrades.main.ship.name'),
       description: t('upgrades.main.ship.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(15 * Math.pow(1.2, level))),
+        this.applyDiscount(Math.ceil(15 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(15 * Math.pow(1.2, state.shipsCount)),
+          Math.ceil(15 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, state.shipsCount)),
         );
         return state.points >= cost;
       },
@@ -1464,8 +1466,9 @@ export class UpgradeSystem {
         state.shipsCount++;
       },
       getLevel: (state: GameState) => state.shipsCount,
-      getDisplayText: (state: GameState) =>
-        `Fleet: ${state.shipsCount.toString()}`,
+      getDisplayText: (state: GameState) => {
+        return `Fleet: ${state.shipsCount.toString()}`;
+      },
       subUpgrades: shipSubUpgrades,
     };
 
@@ -1473,11 +1476,12 @@ export class UpgradeSystem {
       id: 'attackSpeed',
       name: t('upgrades.main.attackSpeed.name'),
       description: t('upgrades.main.attackSpeed.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(70 * Math.pow(1.32, level))),
+        this.applyDiscount(Math.ceil(70 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.22, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(70 * Math.pow(1.32, state.attackSpeedLevel)),
+          Math.ceil(70 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.22, state.attackSpeedLevel)),
         );
         const cooldown = this.getFireCooldown(state);
         // Don't allow buying if already at minimum cooldown (50ms)
@@ -1509,11 +1513,12 @@ export class UpgradeSystem {
       id: 'pointMultiplier',
       name: t('upgrades.main.pointMultiplier.name'),
       description: t('upgrades.main.pointMultiplier.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(140 * Math.pow(1.38, level))),
+        this.applyDiscount(Math.ceil(140 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(140 * Math.pow(1.38, state.pointMultiplierLevel)),
+          Math.ceil(140 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, state.pointMultiplierLevel)),
         );
         return state.points >= cost;
       },
@@ -1555,11 +1560,12 @@ export class UpgradeSystem {
       id: 'critChance',
       name: t('upgrades.main.critChance.name'),
       description: t('upgrades.main.critChance.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(200 * Math.pow(1.42, level))),
+        this.applyDiscount(Math.ceil(200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.50, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(200 * Math.pow(1.42, state.critChanceLevel)),
+          Math.ceil(150 * Math.pow(Config.upgrades.costScaling.exponentialFactor, state.critChanceLevel)),
         );
         return state.points >= cost;
       },
@@ -1576,11 +1582,12 @@ export class UpgradeSystem {
       id: 'resourceGen',
       name: t('upgrades.main.resourceGen.name'),
       description: t('upgrades.main.resourceGen.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(250 * Math.pow(1.45, level))),
+        this.applyDiscount(Math.ceil(200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(250 * Math.pow(1.45, state.resourceGenLevel)),
+          Math.ceil(200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, state.resourceGenLevel)),
         );
         return state.points >= cost;
       },
@@ -1603,11 +1610,12 @@ export class UpgradeSystem {
       id: 'xpBoost',
       name: t('upgrades.main.xpBoost.name'),
       description: t('upgrades.main.xpBoost.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(320 * Math.pow(1.36, level))),
+        this.applyDiscount(Math.ceil(180 * Math.pow(Config.upgrades.costScaling.exponentialFactor, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(320 * Math.pow(1.36, state.xpBoostLevel)),
+          Math.ceil(180 * Math.pow(Config.upgrades.costScaling.exponentialFactor, state.xpBoostLevel)),
         );
         return state.points >= cost;
       },
@@ -1640,11 +1648,12 @@ export class UpgradeSystem {
       id: 'mutationEngine',
       name: t('upgrades.main.mutationEngine.name'),
       description: t('upgrades.main.mutationEngine.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(30000 * Math.pow(1.8, level))),
+        this.applyDiscount(Math.ceil(30000 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.50, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(30000 * Math.pow(1.8, state.mutationEngineLevel)),
+          Math.ceil(30000 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.50, state.mutationEngineLevel)),
         );
         return state.points >= cost;
       },
@@ -1677,11 +1686,12 @@ export class UpgradeSystem {
       id: 'energyCore',
       name: t('upgrades.main.energyCore.name'),
       description: t('upgrades.main.energyCore.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(1200 * Math.pow(1.36, level))),
+        this.applyDiscount(Math.ceil(1200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(1200 * Math.pow(1.36, state.energyCoreLevel)),
+          Math.ceil(1200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, state.energyCoreLevel)),
         );
         return state.points >= cost;
       },
@@ -1720,11 +1730,12 @@ export class UpgradeSystem {
       id: 'cosmicKnowledge',
       name: t('upgrades.main.cosmicKnowledge.name'),
       description: t('upgrades.main.cosmicKnowledge.description'),
+      // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(2500 * Math.pow(1.32, level))),
+        this.applyDiscount(Math.ceil(2500 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, level))),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(2500 * Math.pow(1.32, state.cosmicKnowledgeLevel)),
+          Math.ceil(2500 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, state.cosmicKnowledgeLevel)),
         );
         return state.points >= cost;
       },
@@ -2043,6 +2054,12 @@ export class UpgradeSystem {
       // Apply at 50% effectiveness to reduce overall damage
       multiplier *= 1 + (damageBonus - 1) * 0.5;
       multiplier *= 1 + (pointsBonus - 1) * 0.5;
+    }
+
+    // Apply artifact damage bonus (multiplicative)
+    if (this.artifactSystem) {
+      const artifactBonus = this.artifactSystem.getDamageBonus();
+      multiplier *= 1 + artifactBonus;
     }
 
     return multiplier;

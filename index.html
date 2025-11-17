@@ -18,12 +18,12 @@
           <div id="points-display">Points: 0</div>
           <button id="mobile-menu-toggle" class="mobile-menu-toggle" style="display: none;">☰</button>
           <div id="hud-buttons-container">
-            <button id="achievements-btn" class="hud-button" data-icon="🏆" data-text="Achievements" aria-label="Open Achievements (Press H)"><span class="hud-button-icon">🏆</span><span class="hud-button-text">Achievements</span></button>
-            <button id="stats-btn" class="hud-button" data-icon="📊" data-text="Statistics" aria-label="Open Statistics"><span class="hud-button-icon">📊</span><span class="hud-button-text">Statistics</span></button>
+            <button id="achievements-btn" class="hud-button" aria-label="Open Achievements (Press H)"><img src="/src/icons/menu/achievements.png" alt="Achievements" /></button>
+            <button id="stats-btn" class="hud-button" aria-label="Open Statistics"><img src="/src/icons/menu/statistic.png" alt="Statistics" /></button>
           </div>
         </div>
         <div id="mobile-menu" class="mobile-menu" style="display: none;">
-          <button id="mobile-menu-close" class="mobile-menu-close">✕</button>
+          <button id="mobile-menu-close" class="mobile-menu-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
           <div class="mobile-menu-content"></div>
         </div>
         <div id="level-bar-container">
@@ -98,17 +98,14 @@
         🛒 Shop
       </button>
       <div id="shop-panel">
-        <button id="mobile-shop-close" class="mobile-shop-close" style="display: none;">✕</button>
-        <button id="desktop-shop-toggle" class="desktop-shop-toggle">◀</button>
+        <button id="mobile-shop-close" class="mobile-shop-close" style="display: none;"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+        <button id="desktop-shop-toggle" class="desktop-shop-toggle"><img src="/src/icons/menu/left.png" alt="Toggle Shop" /></button>
         <h2>UPGRADES</h2>
         <div id="shop-tabs">
           <button id="tab-available" class="shop-tab active" aria-label="Show Available Upgrades">Available</button>
           <button id="tab-owned" class="shop-tab" aria-label="Show Owned Upgrades">Owned</button>
         </div>
         <div id="shop-content"></div>
-        <div id="reset-container">
-          <button id="reset-btn" class="shop-button" aria-label="Reset Game Save">Reset Save</button>
-        </div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

@@ -51,7 +51,6 @@ export interface GameStats {
   playTime: number; // seconds
   criticalHits: number;
   totalPrestige: number;
-  milestonesReached: number;
 }
 
 export interface GameState {
