@@ -492,7 +492,8 @@ export class SettingsModal {
     actionsTitle.style.marginBottom = '15px';
     actionsTitle.style.color = '#ffffff';
     actionsTitle.style.fontFamily = 'var(--font-family)';
-    actionsTitle.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+    actionsTitle.style.textShadow =
+      '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
     actionsSection.appendChild(actionsTitle);
 
     // Export Button
@@ -505,9 +506,11 @@ export class SettingsModal {
     exportBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
     exportBtn.style.color = '#ffffff';
     exportBtn.style.fontFamily = 'var(--font-family)';
-    exportBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+    exportBtn.style.textShadow =
+      '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
     exportBtn.style.letterSpacing = '2px';
-    exportBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    exportBtn.style.boxShadow =
+      '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     exportBtn.style.transition = 'all 0.1s linear';
     exportBtn.addEventListener('click', () => {
       if (this.creditsModal) {
@@ -516,11 +519,13 @@ export class SettingsModal {
     });
     exportBtn.addEventListener('mouseenter', () => {
       exportBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
-      exportBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+      exportBtn.style.boxShadow =
+        '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
     });
     exportBtn.addEventListener('mouseleave', () => {
       exportBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
-      exportBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      exportBtn.style.boxShadow =
+        '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     });
     actionsSection.appendChild(exportBtn);
 
@@ -534,9 +539,11 @@ export class SettingsModal {
     importBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
     importBtn.style.color = '#ffffff';
     importBtn.style.fontFamily = 'var(--font-family)';
-    importBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+    importBtn.style.textShadow =
+      '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
     importBtn.style.letterSpacing = '2px';
-    importBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    importBtn.style.boxShadow =
+      '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     importBtn.style.transition = 'all 0.1s linear';
     importBtn.addEventListener('click', () => {
       if (this.creditsModal) {
@@ -545,11 +552,13 @@ export class SettingsModal {
     });
     importBtn.addEventListener('mouseenter', () => {
       importBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
-      importBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+      importBtn.style.boxShadow =
+        '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
     });
     importBtn.addEventListener('mouseleave', () => {
       importBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
-      importBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      importBtn.style.boxShadow =
+        '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     });
     actionsSection.appendChild(importBtn);
 
@@ -563,9 +572,11 @@ export class SettingsModal {
     resetBtn.style.border = '1px solid rgba(255, 255, 255, 0.9)';
     resetBtn.style.color = '#ffffff';
     resetBtn.style.fontFamily = 'var(--font-family)';
-    resetBtn.style.textShadow = '0 0 4px rgba(255, 255, 255, 1), 0 0 8px rgba(255, 255, 255, 0.8)';
+    resetBtn.style.textShadow =
+      '0 0 4px rgba(255, 255, 255, 1), 0 0 8px rgba(255, 255, 255, 0.8)';
     resetBtn.style.letterSpacing = '2px';
-    resetBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+    resetBtn.style.boxShadow =
+      '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     resetBtn.style.transition = 'all 0.1s linear';
     resetBtn.addEventListener('click', () => {
       if (
@@ -581,11 +592,13 @@ export class SettingsModal {
     });
     resetBtn.addEventListener('mouseenter', () => {
       resetBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
-      resetBtn.style.boxShadow = '0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(255, 255, 255, 0.5)';
+      resetBtn.style.boxShadow =
+        '0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(255, 255, 255, 0.5)';
     });
     resetBtn.addEventListener('mouseleave', () => {
       resetBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
-      resetBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      resetBtn.style.boxShadow =
+        '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     });
     actionsSection.appendChild(resetBtn);
 

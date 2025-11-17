@@ -1,10 +1,10 @@
 /**
  * GameConfig.ts - Centralized game balancing configuration system
- * 
+ *
  * This system provides a professional way to tune all gameplay values
  * without touching game logic code. All values are organized by system
  * and can be easily modified here or loaded from a JSON file.
- * 
+ *
  * Usage:
  * - Import: import { GameConfig } from './core/GameConfig';
  * - Access: GameConfig.upgrades.baseDamage
@@ -141,12 +141,38 @@ export interface AscensionConfig {
 
 export interface EnemyConfig {
   types: {
-    normal: { hpMultiplier: number; pointsMultiplier: number; spawnWeight: number };
-    scout: { hpMultiplier: number; pointsMultiplier: number; spawnWeight: { base: number; max: number; scaleDivisor: number } };
-    tank: { hpMultiplier: number; pointsMultiplier: number; spawnWeight: { base: number; max: number; scaleDivisor: number } };
-    healer: { hpMultiplier: number; pointsMultiplier: number; spawnWeight: { base: number; max: number; scaleDivisor: number }; healInterval: number; healPercent: number };
-    guardian: { hpMultiplier: number; pointsMultiplier: number; spawnWeight: { base: number; max: number; scaleDivisor: number } };
-    hoarder: { hpMultiplier: number; pointsMultiplier: number; spawnWeight: { base: number; max: number; scaleDivisor: number } };
+    normal: {
+      hpMultiplier: number;
+      pointsMultiplier: number;
+      spawnWeight: number;
+    };
+    scout: {
+      hpMultiplier: number;
+      pointsMultiplier: number;
+      spawnWeight: { base: number; max: number; scaleDivisor: number };
+    };
+    tank: {
+      hpMultiplier: number;
+      pointsMultiplier: number;
+      spawnWeight: { base: number; max: number; scaleDivisor: number };
+    };
+    healer: {
+      hpMultiplier: number;
+      pointsMultiplier: number;
+      spawnWeight: { base: number; max: number; scaleDivisor: number };
+      healInterval: number;
+      healPercent: number;
+    };
+    guardian: {
+      hpMultiplier: number;
+      pointsMultiplier: number;
+      spawnWeight: { base: number; max: number; scaleDivisor: number };
+    };
+    hoarder: {
+      hpMultiplier: number;
+      pointsMultiplier: number;
+      spawnWeight: { base: number; max: number; scaleDivisor: number };
+    };
   };
   hpScaling: {
     baseHp: number;
@@ -210,14 +236,51 @@ export interface MissionConfig {
     rewardMultiplier: number; // Multiplier for daily mission rewards
   };
   templates: {
-    clicks: { targetBase: number; targetMultiplier: number; pointsMultiplier: number; xpPerLevel: number };
-    damage: { targetBase: number; targetMultiplier: number; pointsMultiplier: number; shipsPer10Levels: number };
-    kills: { targetBase: number; targetMultiplier: number; pointsMultiplier: number; xpPerLevel: number };
-    boss_kills: { targetCount: number; pointsMultiplier: number; shipsPer5Levels: number; minShips: number };
-    upgrades: { targetBase: number; targetDivisor: number; pointsMultiplier: number };
-    level: { levelsAhead: number; pointsMultiplier: number; xpPerLevel: number };
-    ships: { targetBase: number; targetDivisor: number; pointsMultiplier: number };
-    combo: { targetBase: number; targetMultiplier: number; pointsMultiplier: number; xpPerLevel: number };
+    clicks: {
+      targetBase: number;
+      targetMultiplier: number;
+      pointsMultiplier: number;
+      xpPerLevel: number;
+    };
+    damage: {
+      targetBase: number;
+      targetMultiplier: number;
+      pointsMultiplier: number;
+      shipsPer10Levels: number;
+    };
+    kills: {
+      targetBase: number;
+      targetMultiplier: number;
+      pointsMultiplier: number;
+      xpPerLevel: number;
+    };
+    boss_kills: {
+      targetCount: number;
+      pointsMultiplier: number;
+      shipsPer5Levels: number;
+      minShips: number;
+    };
+    upgrades: {
+      targetBase: number;
+      targetDivisor: number;
+      pointsMultiplier: number;
+    };
+    level: {
+      levelsAhead: number;
+      pointsMultiplier: number;
+      xpPerLevel: number;
+    };
+    ships: {
+      targetBase: number;
+      targetDivisor: number;
+      pointsMultiplier: number;
+    };
+    combo: {
+      targetBase: number;
+      targetMultiplier: number;
+      pointsMultiplier: number;
+      xpPerLevel: number;
+    };
   };
 }
 
@@ -335,7 +398,12 @@ const DEFAULT_CONFIG: GameConfigData = {
       startingLevel: { costPerLevel: 5, maxLevel: 20, levelsPerUpgrade: 5 },
       retainUpgrades: { costPerLevel: 10, maxLevel: 10, percentagePerLevel: 1 },
       bossPower: { costPerLevel: 3, maxLevel: 50, multiplierPerLevel: 0.2 },
-      comboBoost: { costPerLevel: 5, maxLevel: 20, baseMultiplier: 0.0005, bonusPerLevel: 0.00035 },
+      comboBoost: {
+        costPerLevel: 5,
+        maxLevel: 20,
+        baseMultiplier: 0.0005,
+        bonusPerLevel: 0.00035,
+      },
       comboDuration: { costPerLevel: 4, maxLevel: 25, secondsPerLevel: 1 },
       autoBuyUnlock: { cost: 50 },
       comboPauseUnlock: { cost: 30 },
@@ -350,11 +418,33 @@ const DEFAULT_CONFIG: GameConfigData = {
   enemies: {
     types: {
       normal: { hpMultiplier: 1, pointsMultiplier: 1, spawnWeight: 0.6 },
-      scout: { hpMultiplier: 0.35, pointsMultiplier: 1.8, spawnWeight: { base: 0.22, max: 0.42, scaleDivisor: 220 } },
-      tank: { hpMultiplier: 4, pointsMultiplier: 3, spawnWeight: { base: 0.12, max: 0.3, scaleDivisor: 320 } },
-      healer: { hpMultiplier: 0.9, pointsMultiplier: 3.5, spawnWeight: { base: 0.08, max: 0.2, scaleDivisor: 420 }, healInterval: 2, healPercent: 5 },
-      guardian: { hpMultiplier: 2.2, pointsMultiplier: 1.5, spawnWeight: { base: 0.08, max: 0.2, scaleDivisor: 450 } },
-      hoarder: { hpMultiplier: 1.1, pointsMultiplier: 8, spawnWeight: { base: 0.005, max: 0.015, scaleDivisor: 1200 } },
+      scout: {
+        hpMultiplier: 0.35,
+        pointsMultiplier: 1.8,
+        spawnWeight: { base: 0.22, max: 0.42, scaleDivisor: 220 },
+      },
+      tank: {
+        hpMultiplier: 4,
+        pointsMultiplier: 3,
+        spawnWeight: { base: 0.12, max: 0.3, scaleDivisor: 320 },
+      },
+      healer: {
+        hpMultiplier: 0.9,
+        pointsMultiplier: 3.5,
+        spawnWeight: { base: 0.08, max: 0.2, scaleDivisor: 420 },
+        healInterval: 2,
+        healPercent: 5,
+      },
+      guardian: {
+        hpMultiplier: 2.2,
+        pointsMultiplier: 1.5,
+        spawnWeight: { base: 0.08, max: 0.2, scaleDivisor: 450 },
+      },
+      hoarder: {
+        hpMultiplier: 1.1,
+        pointsMultiplier: 8,
+        spawnWeight: { base: 0.005, max: 0.015, scaleDivisor: 1200 },
+      },
     },
     boss: {
       hpMultiplier: 18,
@@ -371,7 +461,12 @@ const DEFAULT_CONFIG: GameConfigData = {
         tiers: [
           { minLevel: 0, maxLevel: 50, secondsPer10Levels: 0, baseBonus: 0 },
           { minLevel: 50, maxLevel: 200, secondsPer10Levels: 5 },
-          { minLevel: 200, maxLevel: 500, secondsPer10Levels: 10, baseBonus: 75 },
+          {
+            minLevel: 200,
+            maxLevel: 500,
+            secondsPer10Levels: 10,
+            baseBonus: 75,
+          },
           { minLevel: 500, secondsPer10Levels: 15, baseBonus: 375 },
         ],
       },
@@ -411,14 +506,39 @@ const DEFAULT_CONFIG: GameConfigData = {
     regular: { count: 5 },
     daily: { count: 3, rewardMultiplier: 2 },
     templates: {
-      clicks: { targetBase: 100, targetMultiplier: 50, pointsMultiplier: 500, xpPerLevel: 15 },
-      damage: { targetBase: 5000, targetMultiplier: 2000, pointsMultiplier: 750, shipsPer10Levels: 1 },
-      kills: { targetBase: 10, targetMultiplier: 3, pointsMultiplier: 400, xpPerLevel: 12 },
-      boss_kills: { targetCount: 3, pointsMultiplier: 2500, shipsPer5Levels: 1, minShips: 2 },
+      clicks: {
+        targetBase: 100,
+        targetMultiplier: 50,
+        pointsMultiplier: 500,
+        xpPerLevel: 15,
+      },
+      damage: {
+        targetBase: 5000,
+        targetMultiplier: 2000,
+        pointsMultiplier: 750,
+        shipsPer10Levels: 1,
+      },
+      kills: {
+        targetBase: 10,
+        targetMultiplier: 3,
+        pointsMultiplier: 400,
+        xpPerLevel: 12,
+      },
+      boss_kills: {
+        targetCount: 3,
+        pointsMultiplier: 2500,
+        shipsPer5Levels: 1,
+        minShips: 2,
+      },
       upgrades: { targetBase: 5, targetDivisor: 2, pointsMultiplier: 600 },
       level: { levelsAhead: 5, pointsMultiplier: 1000, xpPerLevel: 30 },
       ships: { targetBase: 5, targetDivisor: 3, pointsMultiplier: 1500 },
-      combo: { targetBase: 10, targetMultiplier: 2, pointsMultiplier: 1250, xpPerLevel: 25 },
+      combo: {
+        targetBase: 10,
+        targetMultiplier: 2,
+        pointsMultiplier: 1250,
+        xpPerLevel: 25,
+      },
     },
   },
   combo: {
@@ -465,7 +585,7 @@ const DEFAULT_CONFIG: GameConfigData = {
 
 /**
  * GameConfig - Centralized game configuration system
- * 
+ *
  * This is a singleton class that provides access to all game balancing values.
  * It supports loading custom configurations from JSON files for easy tuning.
  */
@@ -474,7 +594,9 @@ export class GameConfig {
   private config: GameConfigData;
 
   private constructor(config?: GameConfigData) {
-    this.config = config ? this.mergeConfig(DEFAULT_CONFIG, config) : DEFAULT_CONFIG;
+    this.config = config
+      ? this.mergeConfig(DEFAULT_CONFIG, config)
+      : DEFAULT_CONFIG;
   }
 
   /**
@@ -506,9 +628,12 @@ export class GameConfig {
   /**
    * Deep merge two configuration objects
    */
-  private mergeConfig(defaultConfig: GameConfigData, override: Partial<GameConfigData>): GameConfigData {
+  private mergeConfig(
+    defaultConfig: GameConfigData,
+    override: Partial<GameConfigData>,
+  ): GameConfigData {
     const merged = { ...defaultConfig };
-    
+
     for (const key in override) {
       if (override.hasOwnProperty(key)) {
         const typedKey = key as keyof GameConfigData;
@@ -516,11 +641,15 @@ export class GameConfig {
         const defaultValue = merged[typedKey];
 
         if (overrideValue !== undefined) {
-          if (typeof overrideValue === 'object' && !Array.isArray(overrideValue) && overrideValue !== null) {
+          if (
+            typeof overrideValue === 'object' &&
+            !Array.isArray(overrideValue) &&
+            overrideValue !== null
+          ) {
             // Recursively merge objects
             merged[typedKey] = this.mergeConfig(
               defaultValue as any,
-              overrideValue as any
+              overrideValue as any,
             ) as any;
           } else {
             // Direct assignment for primitives and arrays
@@ -576,4 +705,3 @@ export class GameConfig {
 
 // Export singleton instance for convenient access
 export const Config = GameConfig.getInstance();
-

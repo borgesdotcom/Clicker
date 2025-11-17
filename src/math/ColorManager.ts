@@ -44,7 +44,7 @@ export class ColorManager {
 
   static getExpRequired(level: number): number {
     const xpConfig = Config.progression.xp;
-    
+
     // Calculate base XP with exponential growth
     let baseXP = xpConfig.base * Math.pow(xpConfig.growthRate, level);
 
@@ -59,7 +59,8 @@ export class ColorManager {
     const dampingConfig = xpConfig.damping;
     const dampingFactor = Math.max(
       1,
-      Math.log10(level + dampingConfig.base) / Math.log10(dampingConfig.divisor)
+      Math.log10(level + dampingConfig.base) /
+        Math.log10(dampingConfig.divisor),
     );
 
     return Math.floor(baseXP / dampingFactor);
@@ -98,16 +99,17 @@ export class ColorManager {
 
     // Calculate HP using configured tiers
     for (const tier of hpConfig.tiers) {
-      const tierMaxLevel = tier.maxLevel === null || tier.maxLevel === Infinity 
-        ? Infinity 
-        : tier.maxLevel;
-      
+      const tierMaxLevel =
+        tier.maxLevel === null || tier.maxLevel === Infinity
+          ? Infinity
+          : tier.maxLevel;
+
       if (level <= tierMaxLevel) {
         const levelsInTier = level - previousMaxLevel;
         hpBase = previousTierHp * Math.pow(tier.multiplier, levelsInTier);
         break;
       }
-      
+
       // Calculate HP at end of this tier for next tier
       const levelsInTier = tierMaxLevel - previousMaxLevel;
       previousTierHp = previousTierHp * Math.pow(tier.multiplier, levelsInTier);
@@ -131,12 +133,13 @@ export class ColorManager {
     for (const tier of bossConfig.hpTiers) {
       if (tier.maxLevel !== undefined && level >= tier.maxLevel) {
         // Calculate bonus up to maxLevel
-        const levelsInTier = tier.maxLevel - Math.max(tier.minLevel, previousMinLevel);
+        const levelsInTier =
+          tier.maxLevel - Math.max(tier.minLevel, previousMinLevel);
         hpBonus *= Math.pow(tier.bonusMultiplier, levelsInTier);
         previousMinLevel = tier.maxLevel;
         continue;
       }
-      
+
       // Apply bonus for current tier
       if (level >= tier.minLevel) {
         const levelsInTier = level - Math.max(tier.minLevel, previousMinLevel);
@@ -164,7 +167,7 @@ export class ColorManager {
         }
         continue;
       }
-      
+
       if (level >= tier.minLevel) {
         // Apply partial bonus for current tier
         const levelsInTier = level - tier.minLevel;
@@ -190,7 +193,7 @@ export class ColorManager {
     const linearComponent = 1 + extraLevels * rampConfig.linearComponent;
     const exponentialComponent = Math.pow(
       rampConfig.exponentialBase,
-      Math.min(extraLevels, rampConfig.exponentialCap)
+      Math.min(extraLevels, rampConfig.exponentialCap),
     );
 
     // Clamp to avoid runaway values at extremely high levels

@@ -410,11 +410,13 @@ export class VisualCustomizationSystem {
   } {
     // Check for special upgrades that change ship appearance (priority order - most powerful first)
     let upgradeThemeId: string | undefined;
-    let upgradeColors: {
-      fillColor: string;
-      outlineColor: string;
-      glowColor: string;
-    } | undefined;
+    let upgradeColors:
+      | {
+          fillColor: string;
+          outlineColor: string;
+          glowColor: string;
+        }
+      | undefined;
 
     // Legendary tier upgrades
     if (state.subUpgrades['cosmic_ascension']) {

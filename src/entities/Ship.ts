@@ -9,7 +9,7 @@ let shipImageLoaded = false;
 
 const loadShipImage = (): void => {
   if (shipImageLoaded || shipImage) return;
-  
+
   shipImage = new Image();
   shipImage.onload = () => {
     shipImageLoaded = true;
@@ -96,7 +96,6 @@ export class Ship {
     };
   }
 
-
   draw(drawer: Draw): void {
     const ctx = drawer.getContext();
     const size = this.isMainShip ? 20 : 14; // Match increased sizes for 2D fallback
@@ -108,20 +107,24 @@ export class Ship {
 
     // Use canvas rendering for better performance (GIF will show first frame only)
     // This is much faster than DOM overlay elements when there are many ships
-    if (shipImage && (shipImage.complete || shipImageLoaded) && shipImage.naturalWidth > 0) {
+    if (
+      shipImage &&
+      (shipImage.complete || shipImageLoaded) &&
+      shipImage.naturalWidth > 0
+    ) {
       ctx.save();
-      
+
       // Enable pixelated rendering for GIF
       ctx.imageSmoothingEnabled = false;
       ctx.imageSmoothingQuality = 'low';
-      
+
       // Move to ship position and rotate
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle + Math.PI); // Rotate so ship faces correct direction
-      
+
       // Draw the ship GIF (first frame only - for performance)
       const drawSize = size * 1.1; // Make GIF a bit bigger for visibility
-      
+
       // Always draw the original ship image without color customization
       ctx.drawImage(
         shipImage,
@@ -130,11 +133,11 @@ export class Ship {
         drawSize,
         drawSize,
       );
-      
+
       ctx.restore();
       return;
     }
-    
+
     // If image is still loading, wait a bit before falling back
     if (shipImage && !shipImage.complete) {
       // Image is loading, skip this frame and try again next frame
@@ -320,5 +323,4 @@ export class Ship {
       ctx.fill();
     }
   }
-
 }

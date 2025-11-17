@@ -225,7 +225,7 @@ export class UpgradeSystem {
         name: 'Falafel Rollo Special',
         description: '+10% damage',
         flavor:
-          'The aliens can\'t resist the delicious smell. The secret ingredient is... well, we\'re not entirely sure, but it works! Warning: may cause space indigestion.',
+          "The aliens can't resist the delicious smell. The secret ingredient is... well, we're not entirely sure, but it works! Warning: may cause space indigestion.",
         cost: 40000,
         owned: false,
         requires: (state) => state.subUpgrades['space_pizza'] === true,
@@ -1446,7 +1446,12 @@ export class UpgradeSystem {
 
     // General/misc sub-upgrades
     const miscSubUpgrades = this.subUpgrades.filter((u) =>
-      ['energy_recycling', 'cheat_codes', 'alien_cookbook', 'falafel_rollo_special'].includes(u.id),
+      [
+        'energy_recycling',
+        'cheat_codes',
+        'alien_cookbook',
+        'falafel_rollo_special',
+      ].includes(u.id),
     );
 
     const shipUpgrade: UpgradeConfig = {
@@ -1455,10 +1460,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.ship.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(15 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, level))),
+        this.applyDiscount(
+          Math.ceil(
+            15 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(15 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, state.shipsCount)),
+          Math.ceil(
+            15 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                state.shipsCount,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1478,10 +1497,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.attackSpeed.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(70 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.22, level))),
+        this.applyDiscount(
+          Math.ceil(
+            70 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.22,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(70 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.22, state.attackSpeedLevel)),
+          Math.ceil(
+            70 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.22,
+                state.attackSpeedLevel,
+              ),
+          ),
         );
         const cooldown = this.getFireCooldown(state);
         // Don't allow buying if already at minimum cooldown (50ms)
@@ -1515,10 +1548,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.pointMultiplier.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(140 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, level))),
+        this.applyDiscount(
+          Math.ceil(
+            140 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(140 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, state.pointMultiplierLevel)),
+          Math.ceil(
+            140 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                state.pointMultiplierLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1562,10 +1609,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.critChance.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.50, level))),
+        this.applyDiscount(
+          Math.ceil(
+            200 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.5,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(150 * Math.pow(Config.upgrades.costScaling.exponentialFactor, state.critChanceLevel)),
+          Math.ceil(
+            150 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor,
+                state.critChanceLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1584,10 +1645,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.resourceGen.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, level))),
+        this.applyDiscount(
+          Math.ceil(
+            200 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, state.resourceGenLevel)),
+          Math.ceil(
+            200 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                state.resourceGenLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1612,10 +1687,21 @@ export class UpgradeSystem {
       description: t('upgrades.main.xpBoost.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(180 * Math.pow(Config.upgrades.costScaling.exponentialFactor, level))),
+        this.applyDiscount(
+          Math.ceil(
+            180 *
+              Math.pow(Config.upgrades.costScaling.exponentialFactor, level),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(180 * Math.pow(Config.upgrades.costScaling.exponentialFactor, state.xpBoostLevel)),
+          Math.ceil(
+            180 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor,
+                state.xpBoostLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1650,10 +1736,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.mutationEngine.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(30000 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.50, level))),
+        this.applyDiscount(
+          Math.ceil(
+            30000 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.5,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(30000 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.50, state.mutationEngineLevel)),
+          Math.ceil(
+            30000 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.5,
+                state.mutationEngineLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1688,10 +1788,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.energyCore.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(1200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, level))),
+        this.applyDiscount(
+          Math.ceil(
+            1200 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(1200 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.30, state.energyCoreLevel)),
+          Math.ceil(
+            1200 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                state.energyCoreLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1732,10 +1846,24 @@ export class UpgradeSystem {
       description: t('upgrades.main.cosmicKnowledge.description'),
       // Cost scaling using config value
       getCost: (level: number) =>
-        this.applyDiscount(Math.ceil(2500 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, level))),
+        this.applyDiscount(
+          Math.ceil(
+            2500 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                level,
+              ),
+          ),
+        ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
-          Math.ceil(2500 * Math.pow(Config.upgrades.costScaling.exponentialFactor + 0.15, state.cosmicKnowledgeLevel)),
+          Math.ceil(
+            2500 *
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                state.cosmicKnowledgeLevel,
+              ),
+          ),
         );
         return state.points >= cost;
       },
@@ -1935,7 +2063,7 @@ export class UpgradeSystem {
 
     // Falafel Rollo Special: +10% damage (aliens distracted by delicious smell)
     if (state.subUpgrades['falafel_rollo_special']) {
-      multiplier *= 1.10;
+      multiplier *= 1.1;
     }
 
     // Chaos emeralds: +35%

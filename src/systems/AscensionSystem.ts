@@ -157,12 +157,12 @@ export class AscensionSystem {
   calculatePrestigePoints(state: GameState): number {
     const breakdown = this.calculatePrestigePointsBreakdown(state);
     let total = breakdown.base + breakdown.bonus;
-    
+
     // Transcendence upgrade: x2 prestige points
     if (state.subUpgrades?.['transcendence']) {
       total *= 2;
     }
-    
+
     return total;
   }
 
@@ -173,7 +173,7 @@ export class AscensionSystem {
   } {
     // Part III: Improved prestige calculation following proven patterns
     const config = Config.ascension.prestigePointCalculation;
-    
+
     if (state.level < config.baseLevel) {
       return {
         base: 0,
@@ -191,18 +191,21 @@ export class AscensionSystem {
     // Square root: more generous, cube root: more aggressive
     const levelProgress = state.level - config.baseLevel;
     const scaledProgress = levelProgress / config.scalingDivisor;
-    
+
     let basePoints = 0;
     if (scaledProgress > 0) {
       if (config.useCubeRoot) {
         // Cube root scaling (like Cookie Clicker) - more aggressive
-        basePoints = Math.floor(config.baseMultiplier * Math.pow(scaledProgress, 1/3));
+        basePoints = Math.floor(
+          config.baseMultiplier * Math.pow(scaledProgress, 1 / 3),
+        );
       } else {
         // Square root scaling (like Realm Grinder/AdVenture Capitalist) - balanced
-        basePoints = Math.floor(config.baseMultiplier * Math.sqrt(scaledProgress));
+        basePoints = Math.floor(
+          config.baseMultiplier * Math.sqrt(scaledProgress),
+        );
       }
     }
-
 
     // Achievement bonus (always available)
     const achievementBonus = this.calculateAchievementBonus(state);
@@ -211,22 +214,33 @@ export class AscensionSystem {
     // Part III: Bonus for surpassing previous best (lifetime-based system)
     // This encourages players to push further each run
     let bonusPoints = 0;
-    if (!isFirstAscension && state.level > effectivePreviousBest && config.newLevelBonus.enabled) {
+    if (
+      !isFirstAscension &&
+      state.level > effectivePreviousBest &&
+      config.newLevelBonus.enabled
+    ) {
       // Calculate bonus for new levels beyond previous best
-      const newLevelProgress = state.level - Math.max(config.baseLevel, effectivePreviousBest);
+      const newLevelProgress =
+        state.level - Math.max(config.baseLevel, effectivePreviousBest);
       const newScaledProgress = newLevelProgress / config.scalingDivisor;
-      
+
       let newLevelPP = 0;
       if (newScaledProgress > 0) {
         if (config.useCubeRoot) {
-          newLevelPP = Math.floor(config.baseMultiplier * Math.pow(newScaledProgress, 1/3));
+          newLevelPP = Math.floor(
+            config.baseMultiplier * Math.pow(newScaledProgress, 1 / 3),
+          );
         } else {
-          newLevelPP = Math.floor(config.baseMultiplier * Math.sqrt(newScaledProgress));
+          newLevelPP = Math.floor(
+            config.baseMultiplier * Math.sqrt(newScaledProgress),
+          );
         }
       }
-      
+
       // Apply bonus multiplier for new levels
-      bonusPoints = Math.floor(newLevelPP * (config.newLevelBonus.multiplier - 1));
+      bonusPoints = Math.floor(
+        newLevelPP * (config.newLevelBonus.multiplier - 1),
+      );
     }
 
     return {

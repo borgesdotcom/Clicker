@@ -481,7 +481,6 @@ export class IconGenerator {
     );
   }
 
-
   // Trophy icon (for achievements)
   private static createTrophyIcon(): string {
     return this.createSVG(
@@ -516,6 +515,4 @@ export class IconGenerator {
   static getGraphIcon(): string {
     return this.createGraphIcon();
   }
-
 }
-

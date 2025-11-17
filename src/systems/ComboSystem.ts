@@ -52,7 +52,9 @@ export class ComboSystem {
 
     // Apply cap if configured
     if (Config.combo.maxMultiplier !== null) {
-      const maxCombo = Math.floor(Config.combo.maxMultiplier / Config.combo.baseMultiplier);
+      const maxCombo = Math.floor(
+        Config.combo.maxMultiplier / Config.combo.baseMultiplier,
+      );
       this.combo = Math.min(this.combo, maxCombo);
     }
 
@@ -194,7 +196,9 @@ export class ComboSystem {
     const animationConfig = Config.visual.combo.animation;
     const scale =
       this.comboAnimationTime > 0
-        ? 1 + (this.comboAnimationTime / animationConfig.duration) * animationConfig.scaleAmount
+        ? 1 +
+          (this.comboAnimationTime / animationConfig.duration) *
+            animationConfig.scaleAmount
         : 1;
 
     ctx.translate(x, y);
@@ -259,14 +263,14 @@ export class ComboSystem {
    */
   private getComboColor(): string {
     const mult = this.getMultiplier();
-    
+
     // Use configured color thresholds
     for (const threshold of Config.combo.colorThresholds) {
       if (mult >= threshold.minMultiplier) {
         return threshold.color;
       }
     }
-    
+
     // Fallback to white if no threshold matches
     return '#ffffff';
   }

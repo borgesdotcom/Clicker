@@ -140,9 +140,19 @@
       "timeLimit": {
         "baseSeconds": 30,
         "tiers": [
-          { "minLevel": 0, "maxLevel": 50, "secondsPer10Levels": 0, "baseBonus": 0 },
+          {
+            "minLevel": 0,
+            "maxLevel": 50,
+            "secondsPer10Levels": 0,
+            "baseBonus": 0
+          },
           { "minLevel": 50, "maxLevel": 200, "secondsPer10Levels": 5 },
-          { "minLevel": 200, "maxLevel": 500, "secondsPer10Levels": 10, "baseBonus": 75 },
+          {
+            "minLevel": 200,
+            "maxLevel": 500,
+            "secondsPer10Levels": 10,
+            "baseBonus": 75
+          },
           { "minLevel": 500, "secondsPer10Levels": 15, "baseBonus": 375 }
         ]
       },
@@ -279,4 +289,3 @@
     }
   }
 }
-

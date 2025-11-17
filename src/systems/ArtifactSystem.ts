@@ -433,7 +433,7 @@ export class ArtifactSystem {
   public getDamageBonus(): number {
     let bonus = 0;
     let cosmicHarmonizerBonus = 0;
-    
+
     // First, collect all damage bonuses and find Cosmic Harmonizer
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'damage') {
@@ -443,19 +443,19 @@ export class ArtifactSystem {
         cosmicHarmonizerBonus = artifact.bonus;
       }
     }
-    
+
     // Apply Cosmic Harmonizer bonus to all damage bonuses
     if (cosmicHarmonizerBonus > 0 && bonus > 0) {
       bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
     }
-    
+
     return bonus / 100;
   }
 
   public getSpeedBonus(): number {
     let bonus = 0;
     let cosmicHarmonizerBonus = 0;
-    
+
     // First, collect all speed bonuses and find Cosmic Harmonizer
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'speed') {
@@ -464,19 +464,19 @@ export class ArtifactSystem {
         cosmicHarmonizerBonus = artifact.bonus;
       }
     }
-    
+
     // Apply Cosmic Harmonizer bonus to all speed bonuses
     if (cosmicHarmonizerBonus > 0 && bonus > 0) {
       bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
     }
-    
+
     return bonus / 100;
   }
 
   public getCritBonus(): number {
     let bonus = 0;
     let cosmicHarmonizerBonus = 0;
-    
+
     // First, collect all crit bonuses and find Cosmic Harmonizer
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'critical') {
@@ -485,60 +485,66 @@ export class ArtifactSystem {
         cosmicHarmonizerBonus = artifact.bonus;
       }
     }
-    
+
     // Apply Cosmic Harmonizer bonus to all crit bonuses
     if (cosmicHarmonizerBonus > 0 && bonus > 0) {
       bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
     }
-    
+
     return bonus / 100;
   }
 
   public getPointsBonus(): number {
     let bonus = 0;
     let cosmicHarmonizerBonus = 0;
-    
+
     // First, collect all points bonuses and find special artifacts
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'points') {
         bonus += artifact.bonus;
-      } else if (artifact.name === 'Infinity Crystal' || artifact.name === 'Constellation Map') {
+      } else if (
+        artifact.name === 'Infinity Crystal' ||
+        artifact.name === 'Constellation Map'
+      ) {
         // These special artifacts affect both points and XP
         bonus += artifact.bonus;
       } else if (artifact.name === 'Cosmic Harmonizer') {
         cosmicHarmonizerBonus = artifact.bonus;
       }
     }
-    
+
     // Apply Cosmic Harmonizer bonus to all points bonuses
     if (cosmicHarmonizerBonus > 0 && bonus > 0) {
       bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
     }
-    
+
     return bonus / 100;
   }
 
   public getXPBonus(): number {
     let bonus = 0;
     let cosmicHarmonizerBonus = 0;
-    
+
     // First, collect all XP bonuses and find special artifacts
     for (const artifact of this.equippedArtifacts) {
       if (artifact.type === 'xp') {
         bonus += artifact.bonus;
-      } else if (artifact.name === 'Infinity Crystal' || artifact.name === 'Constellation Map') {
+      } else if (
+        artifact.name === 'Infinity Crystal' ||
+        artifact.name === 'Constellation Map'
+      ) {
         // These special artifacts affect both points and XP
         bonus += artifact.bonus;
       } else if (artifact.name === 'Cosmic Harmonizer') {
         cosmicHarmonizerBonus = artifact.bonus;
       }
     }
-    
+
     // Apply Cosmic Harmonizer bonus to all XP bonuses
     if (cosmicHarmonizerBonus > 0 && bonus > 0) {
       bonus = bonus * (1 + cosmicHarmonizerBonus / 100);
     }
-    
+
     return bonus / 100;
   }
 
@@ -623,7 +629,3 @@ export class ArtifactSystem {
     return Math.floor(baseValue * 0.5 + totalUpgradeCost * 0.3);
   }
 }
-
-
-
-

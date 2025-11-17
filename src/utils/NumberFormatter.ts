@@ -38,19 +38,119 @@ export class NumberFormatter {
     // Cookie Clicker notation: divide by 1000 each step
     // Suffixes: K, M, B, T, Qa, Qi, Sx, Sp, Oc, No, Dc, Ud, Dd, Td, Qad, Qid, Sxd, Spd, Ocd, Nod, Vg, Uvg, Dvg, Tvg, Qavg, Qivg, Sxvg, Spvg, Ocvg, Novg, Tg, Utg, Dtg, Ttg, Qatg, Qitg, Sxtg, Sptg, Octg, Notg, Qag, Uqag, Dqag, Tqag, Qaqag, Qiqag, Sxqag, Spqag, Ocqag, Noqag, Qig, Uqig, Dqig, Tqig, Qaqig, Qiqig, Sxqig, Spqig, Ocqig, Noqig, Sxg, Usxg, Dsxg, Tsxg, Qasxg, Qisxg, Sxsxg, Spsxg, Ocsxg, Nosxg, Spg, Uspg, Dspg, Tspg, Qaspg, Qispg, Sxspg, Spspg, Ocspg, Nospg, Ocgg, Uocgg, Docgg, Tocgg, Qaocgg, Qiocgg, Sxocgg, Spocgg, Ococgg, Noocgg, Nog, Unog, Dnog, Tnog, Qanog, Qinog, Sxnog, Spnog, Ocnog, Nonog, C, Uc, Dc, Tc, Qac, Qic, Sxc, Spc, Occ, Noc
     // For simplicity, we'll use the main ones and then switch to scientific notation
-    
+
     const suffixes = [
-      '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd', 'Td', 
-      'Qad', 'Qid', 'Sxd', 'Spd', 'Ocd', 'Nod', 'Vg', 'Uvg', 'Dvg', 'Tvg', 'Qavg', 'Qivg', 
-      'Sxvg', 'Spvg', 'Ocvg', 'Novg', 'Tg', 'Utg', 'Dtg', 'Ttg', 'Qatg', 'Qitg', 'Sxtg', 
-      'Sptg', 'Octg', 'Notg', 'Qag', 'Uqag', 'Dqag', 'Tqag', 'Qaqag', 'Qiqag', 'Sxqag', 
-      'Spqag', 'Ocqag', 'Noqag', 'Qig', 'Uqig', 'Dqig', 'Tqig', 'Qaqig', 'Qiqig', 'Sxqig', 
-      'Spqig', 'Ocqig', 'Noqig', 'Sxg', 'Usxg', 'Dsxg', 'Tsxg', 'Qasxg', 'Qisxg', 'Sxsxg', 
-      'Spsxg', 'Ocsxg', 'Nosxg', 'Spg', 'Uspg', 'Dspg', 'Tspg', 'Qaspg', 'Qispg', 'Sxspg', 
-      'Spspg', 'Ocspg', 'Nospg', 'Ocgg', 'Uocgg', 'Docgg', 'Tocgg', 'Qaocgg', 'Qiocgg', 
-      'Sxocgg', 'Spocgg', 'Ococgg', 'Noocgg', 'Nog', 'Unog', 'Dnog', 'Tnog', 'Qanog', 'Qinog', 
-      'Sxnog', 'Spnog', 'Ocnog', 'Nonog', 'C', 'Uc', 'Dc', 'Tc', 'Qac', 'Qic', 'Sxc', 'Spc', 
-      'Occ', 'Noc'
+      '',
+      'K',
+      'M',
+      'B',
+      'T',
+      'Qa',
+      'Qi',
+      'Sx',
+      'Sp',
+      'Oc',
+      'No',
+      'Dc',
+      'Ud',
+      'Dd',
+      'Td',
+      'Qad',
+      'Qid',
+      'Sxd',
+      'Spd',
+      'Ocd',
+      'Nod',
+      'Vg',
+      'Uvg',
+      'Dvg',
+      'Tvg',
+      'Qavg',
+      'Qivg',
+      'Sxvg',
+      'Spvg',
+      'Ocvg',
+      'Novg',
+      'Tg',
+      'Utg',
+      'Dtg',
+      'Ttg',
+      'Qatg',
+      'Qitg',
+      'Sxtg',
+      'Sptg',
+      'Octg',
+      'Notg',
+      'Qag',
+      'Uqag',
+      'Dqag',
+      'Tqag',
+      'Qaqag',
+      'Qiqag',
+      'Sxqag',
+      'Spqag',
+      'Ocqag',
+      'Noqag',
+      'Qig',
+      'Uqig',
+      'Dqig',
+      'Tqig',
+      'Qaqig',
+      'Qiqig',
+      'Sxqig',
+      'Spqig',
+      'Ocqig',
+      'Noqig',
+      'Sxg',
+      'Usxg',
+      'Dsxg',
+      'Tsxg',
+      'Qasxg',
+      'Qisxg',
+      'Sxsxg',
+      'Spsxg',
+      'Ocsxg',
+      'Nosxg',
+      'Spg',
+      'Uspg',
+      'Dspg',
+      'Tspg',
+      'Qaspg',
+      'Qispg',
+      'Sxspg',
+      'Spspg',
+      'Ocspg',
+      'Nospg',
+      'Ocgg',
+      'Uocgg',
+      'Docgg',
+      'Tocgg',
+      'Qaocgg',
+      'Qiocgg',
+      'Sxocgg',
+      'Spocgg',
+      'Ococgg',
+      'Noocgg',
+      'Nog',
+      'Unog',
+      'Dnog',
+      'Tnog',
+      'Qanog',
+      'Qinog',
+      'Sxnog',
+      'Spnog',
+      'Ocnog',
+      'Nonog',
+      'C',
+      'Uc',
+      'Dc',
+      'Tc',
+      'Qac',
+      'Qic',
+      'Sxc',
+      'Spc',
+      'Occ',
+      'Noc',
     ];
 
     if (roundedNum < 1000) {
@@ -60,7 +160,7 @@ export class NumberFormatter {
       // Cookie Clicker style: divide by 1000 repeatedly
       let value = roundedNum;
       let suffixIndex = 0;
-      
+
       // Divide by 1000 until we get a value < 1000 or run out of suffixes
       while (value >= 1000 && suffixIndex < suffixes.length - 1) {
         value /= 1000;
@@ -114,29 +214,29 @@ export class NumberFormatter {
     if (!value.includes('.')) {
       return value;
     }
-    
+
     // Split into parts before and after decimal
     const parts = value.split('.');
     if (parts.length !== 2) {
       return value;
     }
-    
+
     const integerPart = parts[0]!;
     let decimalPart = parts[1]!;
-    
+
     // Validate that decimal part only contains digits
     if (!/^\d+$/.test(decimalPart)) {
       return value;
     }
-    
+
     // Remove trailing zeros from decimal part
     decimalPart = decimalPart.replace(/0+$/, '');
-    
+
     // If decimal part is empty, return just the integer part (without decimal point)
     if (decimalPart === '') {
       return integerPart;
     }
-    
+
     // Otherwise, combine with the cleaned decimal part
     return `${integerPart}.${decimalPart}`;
   }
@@ -154,7 +254,9 @@ export class NumberFormatter {
     const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
     // Combine with decimal part if present
-    return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+    return decimalPart
+      ? `${formattedInteger}.${decimalPart}`
+      : formattedInteger;
   }
 
   /**

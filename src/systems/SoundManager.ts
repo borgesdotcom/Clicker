@@ -60,7 +60,8 @@ export class SoundManager {
         this.bossSoundtrackAudio = new Audio(bossSoundtrackSound);
         this.bossSoundtrackAudio.preload = 'auto';
         this.bossSoundtrackAudio.loop = true;
-        this.bossSoundtrackAudio.volume = this.volume * this.soundtrackVolumeRatio;
+        this.bossSoundtrackAudio.volume =
+          this.volume * this.soundtrackVolumeRatio;
       }
 
       // Load buy-click sound
@@ -139,7 +140,10 @@ export class SoundManager {
       this.buyClickAudio.volume = Math.max(0, Math.min(1, this.volume * 0.7));
     }
     if (this.achievementAudio) {
-      this.achievementAudio.volume = Math.max(0, Math.min(1, this.volume * 0.8));
+      this.achievementAudio.volume = Math.max(
+        0,
+        Math.min(1, this.volume * 0.8),
+      );
     }
     // Soundtrack uses a percentage of main volume based on ratio
     if (this.soundtrackAudio) {

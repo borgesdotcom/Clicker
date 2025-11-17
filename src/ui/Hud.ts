@@ -30,7 +30,7 @@ export class Hud {
     const pointsEl = document.getElementById('points-display');
     if (!pointsEl) throw new Error('Points display element not found');
     this.pointsDisplay = pointsEl;
-    
+
     // Wrap the money text in a span for easier updates
     const moneyText = pointsEl.textContent || 'Points: 0';
     pointsEl.textContent = '';
@@ -169,7 +169,9 @@ export class Hud {
 
       for (const buff of activeBuffs) {
         const color = POWERUP_COLORS[buff.type] || '#ffffff';
-        const iconSvg = POWERUP_ICONS[buff.type] || IconGenerator.getUpgradeIcon('powerup_speed');
+        const iconSvg =
+          POWERUP_ICONS[buff.type] ||
+          IconGenerator.getUpgradeIcon('powerup_speed');
         const name = POWERUP_NAMES[buff.type] || 'Buff';
         const timeLeft = Math.ceil(buff.duration);
         const percent = (buff.duration / buff.maxDuration) * 100;
@@ -255,7 +257,6 @@ export class Hud {
     this.createIncomeDisplay();
   }
 
-
   private createIncomeDisplay(): void {
     // Put income display inside points display container
     const pointsDisplay = document.getElementById('points-display');
@@ -304,7 +305,7 @@ export class Hud {
     // Create always visible combat stats container
     this.combatStatsContainer = document.createElement('div');
     this.combatStatsContainer.id = 'combat-stats-container';
-    
+
     // DPS (full number, no abbreviation)
     this.dpsFullDisplay = document.createElement('div');
     this.dpsFullDisplay.className = 'combat-stat';
@@ -412,7 +413,6 @@ export class Hud {
     );
   }
 
-
   /**
    * Update income breakdown display (Enhanced UI)
    */
@@ -444,7 +444,10 @@ export class Hud {
     const killPercent = total > 0 ? (killRewards / total) * 100 : 0;
 
     // Always show combat stats section even if values are 0
-    const hasCombatStats = hitDamage !== undefined || attackSpeed !== undefined || critChance !== undefined;
+    const hasCombatStats =
+      hitDamage !== undefined ||
+      attackSpeed !== undefined ||
+      critChance !== undefined;
 
     breakdownContent.innerHTML = `
       <div style="margin-bottom: 3px;">
@@ -455,38 +458,58 @@ export class Hud {
         <span style="color: #ff4444;">⚔️ Combat:</span>
         <span style="float: right; color: #ff8888;">${NumberFormatter.format(dps)}/s (${dpsPercent.toFixed(1)}%)</span>
       </div>
-      ${killRewards > 0 ? `
+      ${
+        killRewards > 0
+          ? `
       <div style="margin-bottom: 3px;">
         <span style="color: #ffaa00;">💥 Kills:</span>
         <span style="float: right; color: #ffcc88;">${NumberFormatter.format(killRewards)}/s (${killPercent.toFixed(1)}%)</span>
       </div>
-      ` : ''}
-      ${hasCombatStats ? `
+      `
+          : ''
+      }
+      ${
+        hasCombatStats
+          ? `
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.2);">
         <div style="margin-bottom: 3px;">
           <span style="color: #ffffff;">DPS:</span>
           <span style="float: right; color: #ffffff;">${NumberFormatter.format(dps)}</span>
         </div>
-        ${hitDamage !== undefined && hitDamage !== null ? `
+        ${
+          hitDamage !== undefined && hitDamage !== null
+            ? `
         <div style="margin-bottom: 3px;">
           <span style="color: #ffffff;">Hit Damage:</span>
           <span style="float: right; color: #ffffff;">${NumberFormatter.format(hitDamage)}</span>
         </div>
-        ` : ''}
-        ${attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0 ? `
+        `
+            : ''
+        }
+        ${
+          attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0
+            ? `
         <div style="margin-bottom: 3px;">
           <span style="color: #ffffff;">Attack Speed:</span>
           <span style="float: right; color: #ffffff;">${attackSpeed.toFixed(2)} shots/sec</span>
         </div>
-        ` : ''}
-        ${critChance !== undefined && critChance !== null ? `
+        `
+            : ''
+        }
+        ${
+          critChance !== undefined && critChance !== null
+            ? `
         <div>
           <span style="color: #ffffff;">Critical Chance:</span>
           <span style="float: right; color: #ffffff;">${critChance.toFixed(1)}%</span>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
-      ` : ''}
+      `
+          : ''
+      }
     `;
   }
 
@@ -578,7 +601,8 @@ export class Hud {
 
     if (firstValidIndex === -1 || totalReward === 0) return 0;
 
-    const timeSpan = (now - this.killRewardHistory[firstValidIndex]!.time) / 1000;
+    const timeSpan =
+      (now - this.killRewardHistory[firstValidIndex]!.time) / 1000;
     return timeSpan > 0 ? totalReward / timeSpan : 0;
   }
 
