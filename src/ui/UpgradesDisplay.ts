@@ -1,6 +1,7 @@
 import type { GameState } from '../types';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
 import { t } from '../core/I18n';
+import { images } from '../assets/images';
 
 export class UpgradesDisplay {
   private container: HTMLElement;
@@ -28,7 +29,7 @@ export class UpgradesDisplay {
 
       // Use star PNG image for all special upgrades
       const img = document.createElement('img');
-      img.src = '/src/icons/stars.png';
+      img.src = images.stars;
       img.alt = t(`upgrades.special.${upgrade.id}.name`);
       img.style.width = '130%';
       img.style.height = '130%';

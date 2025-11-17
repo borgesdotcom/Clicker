@@ -2,6 +2,7 @@ import { Game } from './Game';
 import { MobileUI } from './ui/MobileUI';
 import { i18n } from './core/I18n';
 import '../styles.css';
+import { initializeHtmlImages } from './utils/imageLoader';
 
 // Extend Window interface for debugging properties
 declare global {
@@ -35,6 +36,9 @@ async function init(): Promise<void> {
 
   // Set HTML lang attribute
   document.documentElement.lang = i18n.getLanguage();
+
+  // Initialize images in static HTML
+  initializeHtmlImages();
 
   const game = new Game();
   const mobileUI = new MobileUI();

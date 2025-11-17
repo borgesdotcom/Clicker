@@ -1,5 +1,6 @@
 import type { AscensionSystem } from '../systems/AscensionSystem';
 import type { Store } from '../core/Store';
+import { images } from '../assets/images';
 
 export class AscensionModal {
   private modal: HTMLElement;
@@ -24,7 +25,7 @@ export class AscensionModal {
       <div class="modal-content ascension-content">
         <div class="modal-header">
           <h2>ASCENSION</h2>
-          <button class="modal-close" id="ascension-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <button class="modal-close" id="ascension-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="ascension-info">
           <div class="ascension-description">

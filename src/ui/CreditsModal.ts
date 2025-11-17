@@ -1,6 +1,7 @@
 import type { Store } from '../core/Store';
 import { Save } from '../core/Save';
 import { NumberFormatter } from '../utils/NumberFormatter';
+import { images } from '../assets/images';
 
 export class CreditsModal {
   private modal: HTMLElement | null = null;
@@ -33,7 +34,7 @@ export class CreditsModal {
 
     // Title
     const title = document.createElement('h2');
-    title.innerHTML = '<img src="/src/icons/graph.png" alt="Credits" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Credits & Share';
+    title.innerHTML = `<img src="${images.graph}" alt="Credits" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Credits & Share`;
     title.style.marginBottom = '20px';
     title.style.textAlign = 'center';
     content.appendChild(title);

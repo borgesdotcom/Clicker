@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { AchievementSystem } from '../systems/AchievementSystem';
+import { images } from '../assets/images';
 
 export class AchievementsModal {
   private modal: HTMLElement;
@@ -21,8 +22,8 @@ export class AchievementsModal {
     modal.innerHTML = `
       <div class="modal-content achievements-content">
         <div class="modal-header">
-          <h2><img src="/src/icons/trophy.png" alt="Achievements" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Achievements</h2>
-          <button class="modal-close" id="achievements-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <h2><img src="${images.trophy}" alt="Achievements" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Achievements</h2>
+          <button class="modal-close" id="achievements-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="achievements-progress">
           <div class="progress-text">

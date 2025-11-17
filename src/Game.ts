@@ -39,6 +39,7 @@ import { CreditsModal } from './ui/CreditsModal';
 import { GameInfoModal } from './ui/GameInfoModal';
 import { PerformanceMonitor } from './ui/PerformanceMonitor';
 import { ColorManager } from './math/ColorManager';
+import { images } from './assets/images';
 import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
 import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
@@ -517,8 +518,7 @@ export class Game {
       this.bossRetryButton.setAttribute('data-icon', '⚔️');
       this.bossRetryButton.setAttribute('data-text', 'Retry Boss');
       this.bossRetryButton.setAttribute('aria-label', 'Retry Boss Fight');
-      this.bossRetryButton.innerHTML =
-        '<img src="/src/icons/bossbattle.png" alt="Boss" />';
+      this.bossRetryButton.innerHTML = `<img src="${images.bossbattle}" alt="Boss" />`;
       this.bossRetryButton.style.display = 'none';
       this.bossRetryButton.style.pointerEvents = 'auto';
 
@@ -816,8 +816,7 @@ export class Game {
       ascensionBtn.setAttribute('data-text', 'Ascend');
       ascensionBtn.setAttribute('aria-label', 'Open Prestige/Ascension');
       ascensionBtn.setAttribute('aria-keyshortcuts', 'P');
-      ascensionBtn.innerHTML =
-        '<img src="/src/icons/menu/ascension.png" alt="Ascension" />';
+      ascensionBtn.innerHTML = `<img src="${images.menu.ascension}" alt="Ascension" />`;
       ascensionBtn.addEventListener('click', () => {
         this.ascensionModal.show();
       });
@@ -847,8 +846,7 @@ export class Game {
       settingsBtn.setAttribute('data-text', 'Settings');
       settingsBtn.setAttribute('aria-label', 'Open Settings');
       settingsBtn.setAttribute('aria-keyshortcuts', 'S');
-      settingsBtn.innerHTML =
-        '<img src="/src/icons/menu/settings.png" alt="Settings" />';
+      settingsBtn.innerHTML = `<img src="${images.menu.settings}" alt="Settings" />`;
       settingsBtn.addEventListener('click', () => {
         this.settingsModal.show();
       });
@@ -866,8 +864,7 @@ export class Game {
       missionsBtn.setAttribute('data-text', 'Missions');
       missionsBtn.setAttribute('aria-label', 'Open Missions');
       missionsBtn.setAttribute('aria-keyshortcuts', 'M');
-      missionsBtn.innerHTML =
-        '<img src="/src/icons/menu/info.png" alt="Missions" />';
+      missionsBtn.innerHTML = `<img src="${images.menu.info}" alt="Missions" />`;
       missionsBtn.addEventListener('click', () => {
         this.missionsModal.show();
       });
@@ -883,8 +880,7 @@ export class Game {
       artifactsBtn.className = 'hud-button';
       artifactsBtn.setAttribute('data-icon', '✨');
       artifactsBtn.setAttribute('data-text', 'Artifacts');
-      artifactsBtn.innerHTML =
-        '<img src="/src/icons/menu/artifacts.png" alt="Artifacts" />';
+      artifactsBtn.innerHTML = `<img src="${images.menu.artifacts}" alt="Artifacts" />`;
       artifactsBtn.addEventListener('click', () => {
         this.artifactsModal.show();
       });
@@ -970,8 +966,7 @@ export class Game {
       infoBtn.className = 'hud-button';
       infoBtn.setAttribute('data-icon', '📖');
       infoBtn.setAttribute('data-text', 'Game Info');
-      infoBtn.innerHTML =
-        '<img src="/src/icons/menu/missions.png" alt="Game Info" />';
+      infoBtn.innerHTML = `<img src="${images.menu.missions}" alt="Game Info" />`;
       infoBtn.addEventListener('click', () => {
         this.gameInfoModal.show();
       });

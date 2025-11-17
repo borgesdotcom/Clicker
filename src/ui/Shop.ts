@@ -6,6 +6,7 @@ import type { GameState, UpgradeConfig, SubUpgrade } from '../types';
 import { Button } from './Button';
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { t } from '../core/I18n';
+import { images } from '../assets/images';
 
 export class Shop {
   private container: HTMLElement;
@@ -304,8 +305,8 @@ export class Shop {
     const img = button.querySelector('img');
     if (img) {
       img.src = this.isDesktopCollapsed 
-        ? '/src/icons/menu/right.png' 
-        : '/src/icons/menu/left.png';
+        ? images.menu.right
+        : images.menu.left;
       img.alt = this.isDesktopCollapsed ? 'Open Shop' : 'Close Shop';
     }
   }
@@ -690,7 +691,7 @@ export class Shop {
     
     // Add image
     const img = document.createElement('img');
-    img.src = '/src/icons/menu/buy.png';
+    img.src = images.menu.buy;
     img.alt = 'Buy';
     buttonElement.appendChild(img);
     
@@ -942,7 +943,7 @@ export class Shop {
     const icon = document.createElement('div');
     icon.className = 'sub-upgrade-icon';
     const img = document.createElement('img');
-    img.src = '/src/icons/stars.png';
+    img.src = images.stars;
     img.alt = t(`upgrades.special.${subUpgrade.id}.name`);
     img.style.width = '130%';
     img.style.height = '130%';

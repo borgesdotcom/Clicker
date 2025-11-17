@@ -1,7 +1,7 @@
 import type { Draw } from '../render/Draw';
 import type { Vec2 } from '../types';
 // Import ship GIF image using Vite's asset handling
-import shipGifSrc from '../animations/littleships.gif';
+import shipGifSrc from '@/animations/littleships.gif';
 
 // Load ship GIF image
 let shipImage: HTMLImageElement | null = null;

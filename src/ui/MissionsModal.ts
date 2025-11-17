@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { MissionSystem, MissionType } from '../systems/MissionSystem';
 import type { Store } from '../core/Store';
+import { images } from '../assets/images';
 
 export class MissionsModal {
   private modal: HTMLElement;
@@ -27,7 +28,7 @@ export class MissionsModal {
       <div class="modal-content missions-modal-content">
         <div class="modal-header">
           <h2>MISSIONS & QUESTS</h2>
-          <button class="modal-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <button class="modal-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="modal-body">
           <div class="missions-tabs">
@@ -175,16 +176,16 @@ export class MissionsModal {
 
         // Map emoji icons to image icons
         const iconMap: Record<string, string> = {
-          '🖱️': '/src/icons/target.png',
-          '⚔️': '/src/icons/bossbattle.png',
-          '👾': '/src/icons/bossbattle.png',
-          '🏆': '/src/icons/trophy.png',
-          '🔧': '/src/icons/settings.png',
-          '⭐': '/src/icons/stars.png',
-          '🚀': '/src/icons/stars.png',
-          '🔥': '/src/icons/graph.png',
+          '🖱️': images.target,
+          '⚔️': images.bossbattle,
+          '👾': images.bossbattle,
+          '🏆': images.trophy,
+          '🔧': images.settings,
+          '⭐': images.stars,
+          '🚀': images.stars,
+          '🔥': images.graph,
         };
-        const iconSrc = iconMap[mission.icon] || '/src/icons/target.png';
+        const iconSrc = iconMap[mission.icon] || images.target;
 
         return `
       <div class="mission-card ${mission.completed ? 'completed' : ''} ${mission.claimed ? 'claimed' : ''}">

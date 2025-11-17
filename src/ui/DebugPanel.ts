@@ -1,5 +1,6 @@
 import type { Store } from '../core/Store';
 import { ColorManager } from '../math/ColorManager';
+import { images } from '../assets/images';
 
 export class DebugPanel {
   private panel: HTMLElement | null = null;
@@ -63,7 +64,7 @@ export class DebugPanel {
       <div class="debug-content">
         <div class="debug-header">
           <h2>🛠️ Admin Debug Panel</h2>
-          <button id="debug-close" class="debug-btn debug-btn-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <button id="debug-close" class="debug-btn debug-btn-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         
         <div class="debug-section">

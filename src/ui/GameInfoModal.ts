@@ -5,6 +5,7 @@ import type { ArtifactSystem } from '../systems/ArtifactSystem';
 import type { GameState } from '../types';
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { ColorManager } from '../math/ColorManager';
+import { images } from '../assets/images';
 
 export class GameInfoModal {
   private modal: HTMLElement;
@@ -27,8 +28,8 @@ export class GameInfoModal {
     modal.innerHTML = `
       <div class="modal-content info-content">
         <div class="modal-header">
-          <h2><img src="/src/icons/graph.png" alt="Game Info" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Game Information & Mechanics</h2>
-          <button class="modal-close" id="info-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <h2><img src="${images.graph}" alt="Game Info" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Game Information & Mechanics</h2>
+          <button class="modal-close" id="info-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="info-tabs">
           <button class="info-tab active" data-tab="combat">Combat</button>
@@ -142,7 +143,7 @@ export class GameInfoModal {
 
     return `
       <div class="info-section">
-        <h3><img src="/src/icons/bossbattle.png" alt="Combat" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Your Damage Output</h3>
+        <h3><img src="${images.bossbattle}" alt="Combat" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Your Damage Output</h3>
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Click Damage (Main Ship):</span>
@@ -164,7 +165,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/stars.png" alt="Critical" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Critical Hits</h3>
+        <h3><img src="${images.stars}" alt="Critical" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Critical Hits</h3>
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Crit Chance:</span>
@@ -183,7 +184,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/target.png" alt="Accuracy" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Accuracy Info</h3>
+        <h3><img src="${images.target}" alt="Accuracy" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Accuracy Info</h3>
         <p>• <strong>Main Ship (Clicks):</strong> Your clicks always hit and deal ${clickDamageDisplay} damage (can crit for ${critMultiplier.toFixed(1)}x)</p>
         <p>• <strong>Fleet Ships:</strong> Each ship fires ${attackSpeed.toFixed(2)} times per second, dealing ${shipDamageDisplay} per hit (same damage as clicks, but cannot crit)</p>
         <p>• <strong>Critical Hits:</strong> Only clicks can crit - fleet ships deal consistent damage</p>
@@ -198,7 +199,7 @@ export class GameInfoModal {
           artifactXPBonus > 0)
           ? `
       <div class="info-section">
-        <h3><img src="/src/icons/stars.png" alt="Artifacts" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Artifact Bonuses</h3>
+        <h3><img src="${images.stars}" alt="Artifacts" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Artifact Bonuses</h3>
         <div class="info-grid">
           ${
             artifactDamageBonus > 0
@@ -258,7 +259,7 @@ export class GameInfoModal {
 
     return `
       <div class="info-section">
-        <h3><img src="/src/icons/graph.png" alt="Leveling" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Leveling System</h3>
+        <h3><img src="${images.graph}" alt="Leveling" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Leveling System</h3>
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Current Level:</span>
@@ -277,7 +278,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/graph.png" alt="Income" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Income Sources</h3>
+        <h3><img src="${images.graph}" alt="Income" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Income Sources</h3>
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Passive Generation:</span>
@@ -293,7 +294,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/bossbattle.png" alt="Boss" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Boss Encounters</h3>
+        <h3><img src="${images.bossbattle}" alt="Boss" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Boss Encounters</h3>
         <p>• Bosses appear at <strong>regular intervals</strong>:</p>
         <p>&nbsp;&nbsp;→ Every 25 levels (1-100): 25, 50, 75, 100</p>
         <p>&nbsp;&nbsp;→ Every 50 levels (101-500): 150, 200, 250, etc.</p>
@@ -304,7 +305,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/trophy.png" alt="Ascension" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Ascension System (Part III)</h3>
+        <h3><img src="${images.trophy}" alt="Ascension" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Ascension System (Part III)</h3>
         <p><strong>How Prestige Points Work:</strong></p>
         <ul style="margin: 10px 0; padding-left: 20px;">
           <li><strong>Base PP:</strong> Earned for ascending past level 99 (square root scaling)</li>
@@ -334,13 +335,13 @@ export class GameInfoModal {
 
     return `
       <div class="info-section">
-        <h3><img src="/src/icons/graph.png" alt="Cost Reduction" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Cost Reduction Systems</h3>
+        <h3><img src="${images.graph}" alt="Cost Reduction" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Cost Reduction Systems</h3>
         <p><strong>🌌 Cosmic Knowledge:</strong> -${cosmicDiscount.toFixed(1)}% to ALL costs</p>
         <p class="info-note">💡 Stacks multiplicatively with Special Upgrade discounts!</p>
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/graph.png" alt="Combo" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Combo System</h3>
+        <h3><img src="${images.graph}" alt="Combo" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Combo System</h3>
         <p>• Build combo by hitting enemies without a 5-second gap</p>
         <p>• Damage multiplier: <strong>1 + (combo × 0.0005)</strong></p>
         <p>• Example: 100 combo = 1.05x damage, 500 combo = 1.25x damage</p>
@@ -348,7 +349,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/bossbattle.png" alt="Enemy Types" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Enemy Types</h3>
+        <h3><img src="${images.bossbattle}" alt="Enemy Types" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Enemy Types</h3>
         <p><strong>🟢 Normal (≈60%):</strong> Standard HP and rewards</p>
         <p><strong>🟡 Scout (≈20%):</strong> 50% HP, 2× speed, 70% size, 1.5× points</p>
         <p><strong>🔴 Tank (≈15%):</strong> 3× HP, 0.5× speed, 140% size, 2.5× points</p>
@@ -356,7 +357,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/settings.png" alt="Upgrades" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> How Upgrades Affect You</h3>
+        <h3><img src="${images.settings}" alt="Upgrades" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> How Upgrades Affect You</h3>
         <p><strong>Attack Speed:</strong> How fast your fleet fires (does NOT affect your clicks)</p>
         <p><strong>Damage:</strong> Increases both click AND fleet damage equally (1:1 ratio)</p>
         <p><strong>Crit Chance:</strong> Only affects clicks - fleet ships cannot crit</p>
@@ -366,7 +367,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/graph.png" alt="Special Tech" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Special Technology Progress</h3>
+        <h3><img src="${images.graph}" alt="Special Tech" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Special Technology Progress</h3>
         <p>Unlock Special Technologies by:</p>
         <p>• Meeting level requirements for the base upgrade</p>
         <p>• Having 40% of the cost (technology becomes visible)</p>
@@ -379,7 +380,7 @@ export class GameInfoModal {
   private renderTipsTab(): string {
     return `
       <div class="info-section">
-        <h3><img src="/src/icons/target.png" alt="Early Game" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Early Game (Levels 1-30)</h3>
+        <h3><img src="${images.target}" alt="Early Game" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Early Game (Levels 1-30)</h3>
         <p>• Focus on <strong>Ships</strong> and <strong>Attack Speed</strong> for consistent DPS</p>
         <p>• Upgrade <strong>Damage</strong> to scale both clicks and fleet power</p>
         <p>• Don't neglect <strong>Crit Chance</strong> - it makes your clicks even more powerful!</p>
@@ -387,7 +388,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/graph.png" alt="Mid Game" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Mid Game (Levels 30-100)</h3>
+        <h3><img src="${images.graph}" alt="Mid Game" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Mid Game (Levels 30-100)</h3>
         <p>• Invest in <strong>Cosmic Knowledge</strong> to reduce all costs</p>
         <p>• Start buying <strong>Special Upgrades</strong> (they're permanent!)</p>
         <p>• Balance between damage upgrades and cost reduction</p>
@@ -395,7 +396,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/stars.png" alt="Late Game" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Late Game (100+)</h3>
+        <h3><img src="${images.stars}" alt="Late Game" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Late Game (100+)</h3>
         <p>• Ascend at level 120+ to gain meaningful <strong>Prestige Points</strong></p>
         <p>• Prestige upgrades provide strong, permanent bonuses—plan your runs</p>
         <p>• Push for higher levels before ascending for bonus PP</p>
@@ -403,7 +404,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/books.png" alt="Tips" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Pro Tips</h3>
+        <h3><img src="${images.books}" alt="Tips" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Pro Tips</h3>
         <p>• <strong>Combo System:</strong> Keep attacking for damage multipliers!</p>
         <p>• <strong>Boss Prep:</strong> Upgrade before boss fights (every 25+ levels)</p>
         <p>• <strong>Bulk Buy:</strong> Use the buy quantity selector (1, 5, 10, MAX)</p>
@@ -412,7 +413,7 @@ export class GameInfoModal {
       </div>
 
       <div class="info-section">
-        <h3><img src="/src/icons/settings.png" alt="Keyboard" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Keyboard Shortcuts</h3>
+        <h3><img src="${images.settings}" alt="Keyboard" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Keyboard Shortcuts</h3>
         <p>• <strong>ESC:</strong> Close any open modal</p>
         <p>• <strong>A:</strong> Toggle Auto-Buy</p>
         <p>• <strong>M:</strong> Open Missions</p>

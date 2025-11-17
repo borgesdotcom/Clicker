@@ -1,5 +1,6 @@
 import type { ArtifactSystem } from '../systems/ArtifactSystem';
 import type { Store } from '../core/Store';
+import { images, resolveArtifactIcon } from '../assets/images';
 
 export class ArtifactsModal {
   private modal: HTMLElement;
@@ -25,8 +26,8 @@ export class ArtifactsModal {
     modal.innerHTML = `
       <div class="modal-content artifacts-modal-content">
         <div class="modal-header">
-          <h2><img src="/src/icons/stars.png" alt="Artifacts" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Artifacts</h2>
-          <button class="modal-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <h2><img src="${images.stars}" alt="Artifacts" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Artifacts</h2>
+          <button class="modal-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="modal-body">
           <div class="artifacts-header">
@@ -165,7 +166,7 @@ export class ArtifactsModal {
           <div class="artifact-slot-icon rarity-${artifact.rarity}" style="background: linear-gradient(135deg, ${color}25, ${color}08); border-color: ${color}40;">
             <div class="artifact-icon-large" style="${artifact.icon.startsWith('/') || artifact.icon.startsWith('http') ? '' : `filter: drop-shadow(0 0 10px ${color});`}">
               ${artifact.icon.startsWith('/') || artifact.icon.startsWith('http') 
-                ? `<img src="${artifact.icon}" alt="${artifact.name}" style="filter: drop-shadow(0 0 10px ${color});" />`
+                ? `<img src="${resolveArtifactIcon(artifact.icon)}" alt="${artifact.name}" style="filter: drop-shadow(0 0 10px ${color});" />`
                 : artifact.icon}
             </div>
             ${artifact.equipped ? '<div class="equipped-badge">✓</div>' : ''}

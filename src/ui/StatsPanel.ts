@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type { GameState } from '../types';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
+import { images } from '../assets/images';
 
 export class StatsPanel {
   private modalElement: HTMLElement | null = null;
@@ -49,7 +50,7 @@ export class StatsPanel {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
     const closeImg = document.createElement('img');
-    closeImg.src = '/src/icons/menu/close.png';
+    closeImg.src = images.menu.close;
     closeImg.alt = 'Close';
     closeBtn.appendChild(closeImg);
     closeBtn.addEventListener('click', () => {

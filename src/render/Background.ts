@@ -72,7 +72,9 @@ export class Background {
       console.warn('Failed to load meteorite sprite');
       this.meteoriteImageLoaded = false;
     };
-    this.meteoriteImage.src = '/src/animations/Asteroid 01 - Base.png';
+    // Use new URL() for dynamic asset path resolution
+    // Note: new URL() doesn't understand Vite aliases, so we use relative path
+    this.meteoriteImage.src = new URL('../animations/Asteroid 01 - Base.png', import.meta.url).href;
   }
 
   /**
