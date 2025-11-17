@@ -35,6 +35,25 @@ export function initializeHtmlImages(): void {
     const img = desktopShopToggle.querySelector('img');
     if (img) img.src = images.menu.left;
   }
+
+  // Set background GIF on game-container
+  const gameContainer = document.getElementById('game-container');
+  if (gameContainer) {
+    gameContainer.style.backgroundImage = `url(${images.backgroundGif})`;
+  }
+
+  // Load font dynamically
+  const fontUrl = new URL('../animations/m5x7.ttf', import.meta.url).href;
+  const fontFace = new FontFace('m5x7', `url(${fontUrl})`, {
+    style: 'normal',
+    weight: 'normal',
+    display: 'swap',
+  });
+  fontFace.load().then((loadedFont) => {
+    document.fonts.add(loadedFont);
+  }).catch((error) => {
+    console.warn('Failed to load m5x7 font:', error);
+  });
 }
 
 

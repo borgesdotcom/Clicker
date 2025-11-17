@@ -3,12 +3,13 @@
    ============================================ */
 
 /* Load pixel art font for money display */
+/* Font is loaded dynamically via JavaScript to ensure proper path resolution */
 @font-face {
   font-family: 'm5x7';
-  src: url('/src/animations/m5x7.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+  /* Font source is set dynamically via JavaScript */
 }
 
 :root {
@@ -219,8 +220,10 @@ img, svg {
   position: relative;
   flex: 1;
   min-width: 0;
-  background: #000 url('/src/animations/space4_4-frames.gif') repeat;
+  background: #000;
   background-size: auto;
+  background-repeat: repeat;
+  /* Background GIF is set dynamically via JavaScript to ensure proper path resolution */
 }
 
 #game-container::before {

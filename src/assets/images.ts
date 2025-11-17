@@ -60,6 +60,9 @@ import artifactInfinityCrystal from '@/icons/artifacts/infinity_cristals.png';
 import artifactCosmicHarmonizer from '@/icons/artifacts/cosmic_harmonizer.png';
 import artifactConstellationMap from '@/icons/artifacts/constelation_map.png';
 
+// Background GIF
+import backgroundGif from '@/animations/space4_4-frames.gif';
+
 // Export as a map for easy access
 export const images = {
   menu: {
@@ -116,6 +119,7 @@ export const images = {
     cosmic_harmonizer: artifactCosmicHarmonizer,
     constelation_map: artifactConstellationMap,
   },
+  backgroundGif,
 } as const;
 
 /**
