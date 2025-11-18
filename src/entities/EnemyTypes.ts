@@ -230,15 +230,6 @@ export class EnhancedAlienBall extends AlienBall {
   public override draw(drawer: Draw): void {
     const ctx = drawer.getContext();
 
-    // Enable pixelated rendering for pixel art style
-    ctx.imageSmoothingEnabled = false;
-    ctx.imageSmoothingQuality = 'low';
-
-    // Helper function to pixelate coordinates (round to nearest 3 pixels for more noticeable pixelation)
-    const pixelSize = 3; // Increase pixel size for more visible pixelation
-    const pixelate = (value: number): number =>
-      Math.round(value / pixelSize) * pixelSize;
-
     // Disable deformation on mobile for performance
     const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
 
@@ -292,20 +283,19 @@ export class EnhancedAlienBall extends AlienBall {
       scaleY = parallelScale;
     }
 
-    // Add pulsing animation for visual variety - pixelated
+    // Add pulsing animation for visual variety
     const basePulseValue = Math.sin((this as any).animationTime * 1.5) * 0.02;
-    const currentRadius = pixelate(this.radius * (1 + basePulseValue));
+    const currentRadius = this.radius * (1 + basePulseValue);
 
-    const deformedRadiusX = pixelate(currentRadius * scaleX);
-    const deformedRadiusY = pixelate(currentRadius * scaleY);
+    const deformedRadiusX = currentRadius * scaleX;
+    const deformedRadiusY = currentRadius * scaleY;
 
-    const centerX = pixelate(this.x + deformationX);
-    const centerY = pixelate(this.y + deformationY);
+    const centerX = this.x + deformationX;
+    const centerY = this.y + deformationY;
 
-    // Draw enhanced glow effect - space-themed pulsing aura - pixelated
-    const glowRadius = pixelate(
-      Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1),
-    );
+    // Draw enhanced glow effect - space-themed pulsing aura
+    const glowRadius =
+      Math.max(deformedRadiusX, deformedRadiusY) * (1.3 + basePulseValue * 0.1);
     const glowGradient = ctx.createRadialGradient(
       centerX,
       centerY,

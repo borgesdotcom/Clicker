@@ -1102,7 +1102,8 @@ export class Shop {
     this.isProcessingPurchase = true;
 
     const state = this.store.getState();
-    const isMaxMode = this.buyQuantity === 'max';
+    // For auto-buy, always use quantity = 1 (ignore buyQuantity setting)
+    const isMaxMode = false; // Auto-buy always buys one at a time
 
     // Calculate actual cost for the quantity
     let totalCost = 0;
@@ -1144,7 +1145,7 @@ export class Shop {
       ? actualQuantity > 0 && state.points >= totalCost
       : actualQuantity === quantity && state.points >= totalCost;
 
-    if (canBuy) {
+    if (canBuy && actualQuantity > 0) {
       state.points -= totalCost;
 
       // Buy multiple times
@@ -1232,59 +1233,98 @@ export class Shop {
     if (!force && !(state.autoBuyEnabled ?? false)) return;
     if (this.isProcessingPurchase) return; // Prevent concurrent purchases
 
+    // First, check for new discoveries (this ensures all affordable upgrades are discovered)
+    // Pass the state object so discoveries are saved
+    this.checkForDiscoveries(state);
+    // Save state after discoveries
+    this.store.setState(state);
+    
+    // Get fresh state after discoveries
+    let currentState = this.store.getState();
     const upgrades = this.upgradeSystem.getUpgrades();
     let purchasedAny = false;
 
-    // Check main upgrades (skip misc category)
-    // Prioritize ship upgrade first if it can be bought
-    // Ship upgrade should always be discoverable, but check explicitly first
-    const shipUpgrade = upgrades.find(upgrade => upgrade.id === 'ship');
-    if (shipUpgrade) {
-      // Ensure ship upgrade is always discovered
-      if (!state.discoveredUpgrades) {
-        state.discoveredUpgrades = {};
-      }
-      state.discoveredUpgrades['ship'] = true;
-      
-      // Prioritize ship upgrade for god mode
-      if (shipUpgrade.canBuy(state)) {
-        this.buyUpgrade(shipUpgrade, 1);
-        purchasedAny = true;
-      }
+    // Sort upgrades by priority: ship > attack speed > point multiplier > crit chance > others
+    const upgradePriority: Record<string, number> = {
+      ship: 0,
+      attackSpeed: 1,
+      pointMultiplier: 2,
+      critChance: 3,
+      resourceGen: 4,
+      xpBoost: 5,
+      mutationEngine: 6,
+      energyCore: 7,
+      cosmicKnowledge: 8,
+    };
+
+    const sortedUpgrades = [...upgrades].sort((a, b) => {
+      const priorityA = upgradePriority[a.id] ?? 999;
+      const priorityB = upgradePriority[b.id] ?? 999;
+      return priorityA - priorityB;
+    });
+
+    // Ensure ship upgrade is always discovered
+    if (!currentState.discoveredUpgrades) {
+      currentState.discoveredUpgrades = {};
     }
+    currentState.discoveredUpgrades['ship'] = true;
 
-    // Check other upgrades if ship wasn't purchased
-    if (!purchasedAny) {
-      for (const upgrade of upgrades) {
-        if (upgrade.id === 'misc') continue;
-        if (upgrade.id === 'ship') continue; // Already checked above
+    // Check main upgrades in priority order
+    // Buy the first affordable upgrade in priority order (not the cheapest)
+    // This ensures we buy upgrades in the correct priority order, not just the cheapest ones
+    for (const upgrade of sortedUpgrades) {
+      if (upgrade.id === 'misc') continue;
 
-        // Only buy discovered upgrades
-        if (
-          !state.discoveredUpgrades?.[upgrade.id] &&
-          upgrade.getLevel(state) === 0
-        ) {
+      // Get fresh state for each upgrade check (state may have changed)
+      currentState = this.store.getState();
+      
+      // Auto-discover upgrades if player has 75% of the cost (same as manual discovery)
+      const currentLevel = upgrade.getLevel(currentState);
+      const cost = upgrade.getCost(currentLevel);
+      const discoveryThreshold = cost * 0.75;
+      
+      if (!currentState.discoveredUpgrades?.[upgrade.id] && currentLevel === 0) {
+        // Auto-discover if player has 75% of cost
+        if (currentState.points >= discoveryThreshold) {
+          if (!currentState.discoveredUpgrades) {
+            currentState.discoveredUpgrades = {};
+          }
+          currentState.discoveredUpgrades[upgrade.id] = true;
+          this.store.setState(currentState);
+          // Refresh state after discovery
+          currentState = this.store.getState();
+        } else {
+          // Skip if not discovered and can't afford discovery threshold
           continue;
         }
+      }
 
-        // Check if we can afford at least one
-        if (upgrade.canBuy(state)) {
-          // Buy one at a time for auto-buy (safer and more predictable)
-          this.buyUpgrade(upgrade, 1);
-          purchasedAny = true;
-          break; // Only buy one upgrade per check to avoid buying too many at once
-        }
+      // Check if we can afford at least one
+      // Use canBuy to check, but also verify points directly as a safety check
+      // Get fresh state again before checking affordability
+      currentState = this.store.getState();
+      const upgradeCost = upgrade.getCost(upgrade.getLevel(currentState));
+      const canAfford = currentState.points >= upgradeCost;
+      const canBuyResult = upgrade.canBuy(currentState);
+      
+      if (canBuyResult && canAfford) {
+        // Buy one at a time for auto-buy (safer and more predictable)
+        this.buyUpgrade(upgrade, 1);
+        purchasedAny = true;
+        break; // Only buy one upgrade per check to avoid buying too many at once
       }
     }
 
     // If no main upgrades were purchased, check sub-upgrades
     if (!purchasedAny) {
+      // Get fresh state again after potential purchase
+      currentState = this.store.getState();
       const subUpgrades = this.upgradeSystem.getSubUpgrades();
       for (const subUpgrade of subUpgrades) {
-        if (!subUpgrade.isVisible(state) || subUpgrade.owned) continue;
+        if (!subUpgrade.isVisible(currentState) || subUpgrade.owned) continue;
 
         const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
-        if (state.points >= cost) {
+        if (currentState.points >= cost) {
           this.buySubUpgrade(subUpgrade);
           break; // Only buy one sub-upgrade per check
         }

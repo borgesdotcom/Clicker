@@ -312,7 +312,9 @@ export class LaserSystem {
         }
         if (laser.alive) {
           const current = laser.getCurrentPosition();
-          const progress = Math.min(1, laser.age / 0.15);
+          // Calculate progress including time after hit for fade-out
+          const travelTime = 0.15;
+          const progress = laser.age / travelTime; // Allow > 1.0 for fade-out calculation
           webglRenderer.addLaser(
             laser.origin.x,
             laser.origin.y,

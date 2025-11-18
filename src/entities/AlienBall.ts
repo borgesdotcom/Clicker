@@ -348,11 +348,6 @@ export class AlienBall {
   ): void {
     if (!this.speechBubbleDisplayedText) return;
 
-    // Helper function to pixelate coordinates (round to nearest 3 pixels for more noticeable pixelation)
-    const pixelSize = 3; // Increase pixel size for more visible pixelation
-    const pixelate = (value: number): number =>
-      Math.round(value / pixelSize) * pixelSize;
-
     // Calculate fade out animation (fade out in last 0.5 seconds)
     // Only fade out if typing is complete
     let opacity = 1;
@@ -373,8 +368,8 @@ export class AlienBall {
         : radius + 50; // Right side
     const bubbleOffsetY = -(radius + 25); // Above the alien
 
-    const bubbleX = pixelate(x + bubbleOffsetX);
-    const bubbleY = pixelate(y + bubbleOffsetY);
+    const bubbleX = x + bubbleOffsetX;
+    const bubbleY = y + bubbleOffsetY;
 
     // Measure text to size bubble (handle multi-line text)
     ctx.font = 'bold 11px "Courier New", monospace';
@@ -392,15 +387,16 @@ export class AlienBall {
     const textHeight =
       14 * lines.length + (lines.length > 1 ? (lines.length - 1) * 2 : 0); // Line height * lines + spacing
 
-    // Bubble dimensions with pixelated rounded corners
+    // Bubble dimensions with rounded corners
     const padding = 12; // Increased padding for better spacing
-    const cornerRadius = 4; // Pixelated corner radius
+    const cornerRadius = 4;
     const minWidth = 80; // Minimum bubble width
     const maxWidthBubble = 300; // Maximum bubble width to prevent overflow
-    const bubbleWidth = pixelate(
-      Math.min(Math.max(textWidth + padding * 2, minWidth), maxWidthBubble),
+    const bubbleWidth = Math.min(
+      Math.max(textWidth + padding * 2, minWidth),
+      maxWidthBubble,
     );
-    const bubbleHeight = pixelate(textHeight + padding * 2);
+    const bubbleHeight = textHeight + padding * 2;
 
     // Adjust bubble position based on side (center the bubble at bubbleX)
     const bubbleXPos = bubbleX - bubbleWidth / 2;
@@ -411,7 +407,7 @@ export class AlienBall {
     ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
     ctx.lineWidth = 2;
 
-    // Draw rounded rectangle with pixelated corners (simulated with multiple rectangles)
+    // Draw rounded rectangle with corners (simulated with multiple rectangles)
     // Top section
     ctx.fillRect(
       bubbleXPos + cornerRadius,
@@ -489,7 +485,7 @@ export class AlienBall {
       1,
       bubbleHeight - cornerRadius * 2,
     );
-    // Corners (pixelated)
+    // Corners
     ctx.fillRect(bubbleXPos, bubbleYPos, cornerRadius, 1);
     ctx.fillRect(bubbleXPos, bubbleYPos, 1, cornerRadius);
     ctx.fillRect(
@@ -564,15 +560,6 @@ export class AlienBall {
   draw(drawer: Draw): void {
     const ctx = drawer.getContext();
 
-    // Enable pixelated rendering for pixel art style - MUST be set before any drawing
-    ctx.imageSmoothingEnabled = false;
-    ctx.imageSmoothingQuality = 'low';
-
-    // Helper function to pixelate coordinates (round to nearest 3 pixels for more noticeable pixelation)
-    const pixelSize = 3; // Increase pixel size for more visible pixelation
-    const pixelate = (value: number): number =>
-      Math.round(value / pixelSize) * pixelSize;
-
     // Disable deformation on mobile for performance
     const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
 
@@ -629,27 +616,25 @@ export class AlienBall {
       scaleY = parallelScale;
     }
 
-    // Draw simple bubble - pixelated coordinates
-    const centerX = pixelate(this.x + deformationX);
-    const centerY = pixelate(this.y + deformationY);
+    // Draw simple bubble
+    const centerX = this.x + deformationX;
+    const centerY = this.y + deformationY;
 
-    // Subtle pulsing animation - pixelated radius
+    // Subtle pulsing animation
     const pulseValue =
       Math.sin(this.animationTime * 1.5 + this.rotationOffset) * 0.02;
-    const currentRadius = pixelate(this.radius * (1 + pulseValue));
+    const currentRadius = this.radius * (1 + pulseValue);
 
-    const deformedRadiusX = pixelate(currentRadius * scaleX);
-    const deformedRadiusY = pixelate(currentRadius * scaleY);
+    const deformedRadiusX = currentRadius * scaleX;
+    const deformedRadiusY = currentRadius * scaleY;
 
     // Color values
     const r = parseInt(this.color.fill.substring(1, 3), 16);
     const g = parseInt(this.color.fill.substring(3, 5), 16);
     const b = parseInt(this.color.fill.substring(5, 7), 16);
 
-    // Lordakia-inspired gel-like outer glow - enhanced translucent aura - pixelated
-    const glowRadius = pixelate(
-      Math.max(deformedRadiusX, deformedRadiusY) * 1.25,
-    );
+    // Lordakia-inspired gel-like outer glow - enhanced translucent aura
+    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * 1.25;
     const glowPulse =
       Math.sin(this.animationTime * 1.2 + this.rotationOffset) * 0.05;
     const glowGradient = ctx.createRadialGradient(
@@ -731,8 +716,8 @@ export class AlienBall {
     ctx.restore();
     ctx.fill();
 
-    // Inner gel core - visible through translucent shell (Lordakia inner structure) - pixelated
-    const innerCoreRadius = pixelate(currentRadius * 0.35);
+    // Inner gel core - visible through translucent shell (Lordakia inner structure)
+    const innerCoreRadius = currentRadius * 0.35;
     const corePulse =
       Math.sin(this.animationTime * 2 + this.rotationOffset) * 0.1;
     const innerGradient = ctx.createRadialGradient(
@@ -775,14 +760,12 @@ export class AlienBall {
     // Draw organic patterns inside the gel
     for (let i = 0; i < 3; i++) {
       const angle = (i / 3) * Math.PI * 2;
-      const patternRadius = pixelate(
-        currentRadius * (0.4 + Math.sin(this.animationTime * 1.5 + i) * 0.1),
-      );
-      const patternX = pixelate(Math.cos(angle) * patternRadius);
-      const patternY = pixelate(Math.sin(angle) * patternRadius);
-      const patternSize = pixelate(
-        currentRadius * (0.08 + Math.sin(this.animationTime * 2 + i) * 0.03),
-      );
+      const patternRadius =
+        currentRadius * (0.4 + Math.sin(this.animationTime * 1.5 + i) * 0.1);
+      const patternX = Math.cos(angle) * patternRadius;
+      const patternY = Math.sin(angle) * patternRadius;
+      const patternSize =
+        currentRadius * (0.08 + Math.sin(this.animationTime * 2 + i) * 0.03);
       const patternAlpha = 0.25 + Math.sin(this.animationTime * 2.5 + i) * 0.15;
 
       const patternGradient = ctx.createRadialGradient(
@@ -825,19 +808,14 @@ export class AlienBall {
       const tentacleSway = Math.sin(this.animationTime * 1.8 + i) * 0.2;
       const baseAngle = tentacleAngle + tentacleSway;
 
-      // Tentacle base (attached to body) - pixelated
-      const baseX = pixelate(Math.cos(baseAngle) * currentRadius * 0.85);
-      const baseY = pixelate(Math.sin(baseAngle) * currentRadius * 0.85);
-      const tentacleLength = pixelate(
-        currentRadius * (0.25 + Math.sin(this.animationTime * 2 + i) * 0.1),
-      );
-      const tentacleTipX = pixelate(
-        baseX + Math.cos(baseAngle) * tentacleLength,
-      );
-      const tentacleTipY = pixelate(
-        baseY + Math.sin(baseAngle) * tentacleLength,
-      );
-      const tentacleWidth = pixelate(currentRadius * 0.08);
+      // Tentacle base (attached to body)
+      const baseX = Math.cos(baseAngle) * currentRadius * 0.85;
+      const baseY = Math.sin(baseAngle) * currentRadius * 0.85;
+      const tentacleLength =
+        currentRadius * (0.25 + Math.sin(this.animationTime * 2 + i) * 0.1);
+      const tentacleTipX = baseX + Math.cos(baseAngle) * tentacleLength;
+      const tentacleTipY = baseY + Math.sin(baseAngle) * tentacleLength;
+      const tentacleWidth = currentRadius * 0.08;
 
       // Tentacle gradient (gel-like)
       const tentacleGradient = ctx.createLinearGradient(
@@ -899,14 +877,14 @@ export class AlienBall {
     ctx.shadowBlur = 0;
     ctx.restore();
 
-    // Enhanced glossy highlight - Lordakia reflective gel surface - pixelated
-    const highlightSize = pixelate(currentRadius * 0.4);
+    // Enhanced glossy highlight - Lordakia reflective gel surface
+    const highlightSize = currentRadius * 0.4;
     const highlightAlpha =
       0.6 + Math.sin(this.animationTime * 1.5 + this.rotationOffset) * 0.1;
 
-    // Main highlight - pixelated coordinates
-    const highlightX1 = pixelate(-currentRadius * 0.35);
-    const highlightY1 = pixelate(-currentRadius * 0.35);
+    // Main highlight
+    const highlightX1 = -currentRadius * 0.35;
+    const highlightY1 = -currentRadius * 0.35;
     ctx.fillStyle = `rgba(255, 255, 255, ${String(highlightAlpha)})`;
     ctx.beginPath();
     ctx.save();
@@ -916,10 +894,10 @@ export class AlienBall {
     ctx.restore();
     ctx.fill();
 
-    // Secondary smaller highlight for extra gloss - pixelated coordinates
-    const highlightX2 = pixelate(-currentRadius * 0.25);
-    const highlightY2 = pixelate(-currentRadius * 0.25);
-    const highlightSize2 = pixelate(highlightSize * 0.5);
+    // Secondary smaller highlight for extra gloss
+    const highlightX2 = -currentRadius * 0.25;
+    const highlightY2 = -currentRadius * 0.25;
+    const highlightSize2 = highlightSize * 0.5;
     ctx.fillStyle = `rgba(255, 255, 255, ${String(highlightAlpha * 0.5)})`;
     ctx.beginPath();
     ctx.save();
@@ -929,16 +907,16 @@ export class AlienBall {
     ctx.restore();
     ctx.fill();
 
-    // Gel-like border outline - pixelated, hard edges
+    // Gel-like border outline
     ctx.strokeStyle = `rgba(${String(strokeR)}, ${String(strokeG)}, ${String(strokeB)}, 0.8)`;
     ctx.lineWidth = 2;
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.beginPath();
     ctx.save();
-    ctx.translate(pixelate(centerX), pixelate(centerY));
+    ctx.translate(centerX, centerY);
     ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, pixelate(currentRadius), 0, Math.PI * 2);
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
     ctx.restore();
     ctx.stroke();
 
@@ -952,13 +930,11 @@ export class AlienBall {
       );
     }
 
-    // Health bar (bubble integrity) - position relative to deformed center - pixelated
-    const hpBarWidth = pixelate(this.radius * 2);
+    // Health bar (bubble integrity) - position relative to deformed center
+    const hpBarWidth = this.radius * 2;
     const hpBarHeight = 6;
-    const hpBarY = pixelate(
-      centerY - Math.max(deformedRadiusX, deformedRadiusY) - 18,
-    );
-    const hpBarX = pixelate(centerX - hpBarWidth / 2);
+    const hpBarY = centerY - Math.max(deformedRadiusX, deformedRadiusY) - 18;
+    const hpBarX = centerX - hpBarWidth / 2;
     const hpPercent = this.currentHp / this.maxHp;
 
     // Background
@@ -972,25 +948,24 @@ export class AlienBall {
     else if (hpPercent < 0.6) fillColor = '#ffaa00'; // Damaged
 
     ctx.fillStyle = fillColor;
-    const fillWidth = pixelate(hpBarWidth * hpPercent);
+    const fillWidth = hpBarWidth * hpPercent;
     ctx.fillRect(hpBarX, hpBarY, fillWidth, hpBarHeight);
 
     // No border - removed container
 
-    // Simple flash effect when damaged - pixelated
+    // Simple flash effect when damaged
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      const flashRadius = pixelate(
+      const flashRadius =
         Math.max(deformedRadiusX, deformedRadiusY) *
-          (1 + (1 - flashAlpha) * 0.2),
-      );
+        (1 + (1 - flashAlpha) * 0.2);
 
       drawer.setAlpha(flashAlpha * 0.6);
       drawer.setStroke(
         `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.9)`,
         4,
       );
-      drawer.circle(pixelate(centerX), pixelate(centerY), flashRadius, false);
+      drawer.circle(centerX, centerY, flashRadius, false);
 
       drawer.resetAlpha();
     }

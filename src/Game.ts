@@ -1788,6 +1788,12 @@ export class Game {
         : 0;
     const laserVisuals = this.getLaserVisuals(state);
 
+    // Update laser theme ID based on special upgrades
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const laserThemeId = this.customizationSystem.getLaserThemeId(state);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    this.laserSystem.lastBeamThemeId = laserThemeId;
+
     // Only fire from the main ship (index 0) when clicking
     if (this.ships[0]) {
       // Calculate base shot count
@@ -1888,7 +1894,7 @@ export class Game {
         : this.getLaserVisuals(state);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const laserThemeId = this.customizationSystem.getLaserThemeId();
+    const laserThemeId = this.customizationSystem.getLaserThemeId(state);
 
     // Store theme ID for laser rendering
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -1927,7 +1933,7 @@ export class Game {
     width: number;
   } {
     let color = this.customizationSystem.getLaserColor(state, false);
-    let width = 2.5;
+    let width = 1.5; // Reduced from 2.5 for thinner lasers
     let isCrit = false;
 
     let critChance = this.upgradeSystem.getCritChance(state);
@@ -1935,83 +1941,83 @@ export class Game {
     if (Math.random() * 100 < critChance) {
       isCrit = true;
       color = '#ffff00';
-      width = 3.5;
+      width = 2.0; // Reduced from 3.5 for thinner crit lasers
       this.store.getState().stats.criticalHits++;
       return { isCrit, color, width };
     }
 
     // Apply special upgrade visual effects to lasers (priority order - most powerful first)
-    // Legendary tier upgrades
+    // Legendary tier upgrades - thinner widths
     if (state.subUpgrades['cosmic_ascension']) {
       color = '#00ffff'; // Cyan for cosmic
-      width = 3.8;
+      width = 2.2;
     } else if (state.subUpgrades['reality_anchor']) {
       color = '#ffffff'; // Pure white for reality
-      width = 3.6;
+      width = 2.1;
     } else if (state.subUpgrades['infinity_gauntlet']) {
       color = '#ff1493'; // Hot pink for infinity
-      width = 3.7;
+      width = 2.15;
     } else if (state.subUpgrades['meaning_of_life']) {
       color = '#00ffff'; // Cyan for meaning
-      width = 3.5;
+      width = 2.0;
     } else if (state.subUpgrades['heart_of_galaxy']) {
       color = '#ff0044'; // Deep red for heart
-      width = 3.4;
+      width = 1.95;
     } else if (state.subUpgrades['singularity_core']) {
       color = '#000000'; // Black with glow for singularity
-      width = 3.9;
+      width = 2.25;
     }
     // Epic tier upgrades
     else if (state.subUpgrades['antimatter_rounds']) {
       color = '#ff00ff'; // Magenta for antimatter
-      width = 3.2;
+      width = 1.85;
     } else if (state.subUpgrades['photon_amplifier']) {
       color = '#00ffff'; // Cyan for photon
-      width = 3.3;
+      width = 1.9;
     } else if (state.subUpgrades['stellar_forge']) {
       color = '#ffaa00'; // Gold for stellar
-      width = 3.4;
+      width = 1.95;
     } else if (state.subUpgrades['hyper_reactor']) {
       color = '#ff0080'; // Pink for hyper
-      width = 3.1;
+      width = 1.8;
     } else if (state.subUpgrades['dark_matter_engine']) {
       color = '#4b0082'; // Indigo for dark matter
-      width = 3.3;
+      width = 1.9;
     } else if (state.subUpgrades['antimatter_cascade']) {
       color = '#ff00aa'; // Bright magenta for cascade
-      width = 3.2;
+      width = 1.85;
     } else if (state.subUpgrades['quantum_entanglement']) {
       color = '#00ff88'; // Green for quantum
-      width = 3.0;
+      width = 1.75;
     } else if (state.subUpgrades['plasma_matrix']) {
       color = '#ff4400'; // Red-orange for plasma
-      width = 3.1;
+      width = 1.8;
     } else if (state.subUpgrades['nebula_harvester']) {
       color = '#00ffff'; // Cyan for nebula
-      width = 3.0;
+      width = 1.75;
     } else if (state.subUpgrades['cosmic_battery']) {
       color = '#4169e1'; // Royal blue for cosmic battery
-      width = 2.9;
+      width = 1.7;
     }
     // Rare tier upgrades
     else if (state.subUpgrades['laser_focusing']) {
       color = '#ff6600'; // Orange for focused laser
-      width = 2.8;
+      width = 1.65;
     } else if (state.subUpgrades['warp_core']) {
       color = '#00ffff'; // Cyan for warp
-      width = 2.9;
+      width = 1.7;
     } else if (state.subUpgrades['chaos_emeralds']) {
       color = '#00ff88'; // Emerald green for chaos
-      width = 2.8;
+      width = 1.65;
     } else if (state.subUpgrades['void_channeling']) {
       color = '#00ffff'; // Cyan for void
-      width = 2.9;
+      width = 1.7;
     } else if (state.subUpgrades['nanobots']) {
       color = '#00ff00'; // Bright green for nanobots
-      width = 2.7;
+      width = 1.6;
     } else if (state.subUpgrades['nuclear_reactor']) {
       color = '#ffff00'; // Yellow for nuclear
-      width = 2.8;
+      width = 1.65;
     }
 
     // Perfect precision visual effect is now handled in handleDamage()
@@ -2029,80 +2035,80 @@ export class Game {
   } {
     // Small ships cannot crit - always return non-crit visuals
     let color = this.customizationSystem.getLaserColor(state, false);
-    let width = 2.5;
+    let width = 1.5; // Reduced from 2.5 for thinner lasers
 
     // Apply special upgrade visual effects to lasers (same as main ship - priority order)
-    // Legendary tier upgrades
+    // Legendary tier upgrades - thinner widths
     if (state.subUpgrades['cosmic_ascension']) {
       color = '#00ffff'; // Cyan for cosmic
-      width = 3.8;
+      width = 2.2;
     } else if (state.subUpgrades['reality_anchor']) {
       color = '#ffffff'; // Pure white for reality
-      width = 3.6;
+      width = 2.1;
     } else if (state.subUpgrades['infinity_gauntlet']) {
       color = '#ff1493'; // Hot pink for infinity
-      width = 3.7;
+      width = 2.15;
     } else if (state.subUpgrades['meaning_of_life']) {
       color = '#00ffff'; // Cyan for meaning
-      width = 3.5;
+      width = 2.0;
     } else if (state.subUpgrades['heart_of_galaxy']) {
       color = '#ff0044'; // Deep red for heart
-      width = 3.4;
+      width = 1.95;
     } else if (state.subUpgrades['singularity_core']) {
       color = '#000000'; // Black with glow for singularity
-      width = 3.9;
+      width = 2.25;
     }
     // Epic tier upgrades
     else if (state.subUpgrades['antimatter_rounds']) {
       color = '#ff00ff'; // Magenta for antimatter
-      width = 3.2;
+      width = 1.85;
     } else if (state.subUpgrades['photon_amplifier']) {
       color = '#00ffff'; // Cyan for photon
-      width = 3.3;
+      width = 1.9;
     } else if (state.subUpgrades['stellar_forge']) {
       color = '#ffaa00'; // Gold for stellar
-      width = 3.4;
+      width = 1.95;
     } else if (state.subUpgrades['hyper_reactor']) {
       color = '#ff0080'; // Pink for hyper
-      width = 3.1;
+      width = 1.8;
     } else if (state.subUpgrades['dark_matter_engine']) {
       color = '#4b0082'; // Indigo for dark matter
-      width = 3.3;
+      width = 1.9;
     } else if (state.subUpgrades['antimatter_cascade']) {
       color = '#ff00aa'; // Bright magenta for cascade
-      width = 3.2;
+      width = 1.85;
     } else if (state.subUpgrades['quantum_entanglement']) {
       color = '#00ff88'; // Green for quantum
-      width = 3.0;
+      width = 1.75;
     } else if (state.subUpgrades['plasma_matrix']) {
       color = '#ff4400'; // Red-orange for plasma
-      width = 3.1;
+      width = 1.8;
     } else if (state.subUpgrades['nebula_harvester']) {
       color = '#00ffff'; // Cyan for nebula
-      width = 3.0;
+      width = 1.75;
     } else if (state.subUpgrades['cosmic_battery']) {
       color = '#4169e1'; // Royal blue for cosmic battery
-      width = 2.9;
+      width = 1.7;
     }
     // Rare tier upgrades
     else if (state.subUpgrades['laser_focusing']) {
       color = '#ff6600'; // Orange for focused laser
-      width = 2.8;
+      width = 1.65;
     } else if (state.subUpgrades['warp_core']) {
       color = '#00ffff'; // Cyan for warp
-      width = 2.9;
+      width = 1.7;
     } else if (state.subUpgrades['chaos_emeralds']) {
       color = '#00ff88'; // Emerald green for chaos
-      width = 2.8;
+      width = 1.65;
     } else if (state.subUpgrades['void_channeling']) {
       color = '#00ffff'; // Cyan for void
-      width = 2.9;
+      width = 1.7;
     } else if (state.subUpgrades['nanobots']) {
       color = '#00ff00'; // Bright green for nanobots
-      width = 2.7;
+      width = 1.6;
     } else if (state.subUpgrades['nuclear_reactor']) {
       color = '#ffff00'; // Yellow for nuclear
-      width = 2.8;
+      width = 1.65;
     }
 
     return { isCrit: false, color, width };
@@ -2998,7 +3004,7 @@ export class Game {
         const beamColor = laserVisuals.color;
         const beamWidth = laserVisuals.width;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-        const beamThemeId = this.customizationSystem.getLaserThemeId();
+        const beamThemeId = this.customizationSystem.getLaserThemeId(state);
 
         for (let i = 1; i < this.ships.length; i++) {
           const ship = this.ships[i];

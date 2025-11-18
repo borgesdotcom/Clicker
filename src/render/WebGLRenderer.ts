@@ -1245,9 +1245,17 @@ export class WebGLRenderer {
     isCrit: boolean = false,
     themeId?: string,
   ): void {
+    // Don't render laser if it has hit and is entering the alien (progress > 1.0)
+    // This prevents the laser from being visible inside the alien
+    if (progress > 1.0) {
+      return; // Laser disappears immediately when entering the alien
+    }
+    
     const pulse = Math.sin(this.time * 10.0 + progress * 20.0) * 0.05 + 0.95;
-    const fadeInAlpha = Math.min(1, progress * 3.0);
-    const baseAlpha = this.currentAlpha * fadeInAlpha * pulse * 1.5;
+    const normalProgress = Math.min(1, progress);
+    // Fade-in only at the very beginning (first 10% of travel), then full opacity
+    const fadeInAlpha = normalProgress < 0.1 ? Math.min(1, normalProgress * 10.0) : 1.0;
+    const baseAlpha = this.currentAlpha * fadeInAlpha * pulse;
 
     const boltDx = x2 - x1;
     const boltDy = y2 - y1;
@@ -1257,53 +1265,55 @@ export class WebGLRenderer {
       return;
     }
 
+    const boltPulse = Math.sin(this.time * 12.0) * 0.05 + 0.95;
+    const coreWidth = Math.max(width * 0.4, 1.2); // Thin core
+    const glowWidth = width * 1.0; // Subtle glow
+
+    // Calculate bolt length (shorter than full distance for projectile effect)
     const angle = Math.atan2(boltDy, boltDx);
-    const boltLength = Math.max(
-      Math.min(boltLen * 0.35, 20 * this.dpr),
-      6 * this.dpr,
-    );
+    const boltLength = Math.max(Math.min(boltLen * 0.4, 25 * this.dpr), 8 * this.dpr);
     const boltStartX = x2 - Math.cos(angle) * boltLength;
     const boltStartY = y2 - Math.sin(angle) * boltLength;
 
-    const boltPulse = Math.sin(this.time * 12.0) * 0.05 + 0.95;
-    const coreWidth = width * 0.5;
-    const glowWidth = width * 2.0;
-
     if (themeId === 'rainbow_laser') {
       const colors = [
-        '#ff0000',
-        '#ff8800',
-        '#ffff00',
-        '#00ff00',
-        '#0088ff',
-        '#0000ff',
-        '#8800ff',
-        '#ff00ff',
+        '#ff0080', // Hot pink
+        '#ff4000', // Red-orange
+        '#ff8000', // Orange
+        '#ffc000', // Yellow-orange
+        '#ffff00', // Yellow
+        '#c0ff00', // Yellow-green
+        '#80ff00', // Green
+        '#40ff80', // Green-cyan
+        '#00ffc0', // Cyan
+        '#00c0ff', // Light blue
+        '#0080ff', // Blue
+        '#4000ff', // Indigo
+        '#8000ff', // Purple
+        '#c000ff', // Magenta
+        '#ff00c0', // Pink
+        '#ff0080', // Back to hot pink
       ];
-      const colorOffset =
-        Math.floor(this.time * 8.0 + progress * 20.0) % colors.length;
-      const boltColor: string = colors[colorOffset % colors.length] ?? color;
+      const timeOffset = this.time * 12.0 + progress * 25.0;
+      const colorIndex1 = Math.floor(timeOffset) % colors.length;
+      const colorIndex2 = (colorIndex1 + 1) % colors.length;
+      const boltColor1: string = colors[colorIndex1] ?? '#ff0080';
+      const boltColor2: string = colors[colorIndex2] ?? '#ff0080';
 
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.6, 0.25));
-      this.setStroke(boltColor, glowWidth);
+      // Outer rainbow glow - richer and more vibrant
+      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.7, 0.5));
+      this.setStroke(boltColor2, glowWidth * 1.3);
       this.line(boltStartX, boltStartY, x2, y2);
 
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.85, 0.45));
-      this.setStroke(boltColor, width * 1.2);
+      // Middle glow layer
+      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.8, 0.6));
+      this.setStroke(boltColor1, glowWidth * 0.9);
       this.line(boltStartX, boltStartY, x2, y2);
 
-      this.setAlpha(Math.max(baseAlpha * boltPulse, 0.7));
+      // Main bright core - white with rainbow glow
+      this.setAlpha(Math.max(baseAlpha * boltPulse, 1.0));
       this.setStroke('#ffffff', coreWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-
-      const boltTipSize = width * 1.3 * boltPulse;
-      this.setFill('#ffffff');
-      this.setAlpha(Math.max(baseAlpha * boltPulse, 0.8));
-      this.circle(x2, y2, boltTipSize, true);
-
-      this.setFill(boltColor);
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.75, 0.6));
-      this.circle(x2, y2, boltTipSize * 0.7, true);
     } else if (themeId === 'plasma_laser') {
       const plasmaColorIndex =
         Math.floor(this.time * 10.0 + progress * 25.0) % 5;
@@ -1316,105 +1326,70 @@ export class WebGLRenderer {
       ];
       const boltColor: string = plasmaColors[plasmaColorIndex] ?? color;
 
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.7, 0.3));
-      this.setStroke(boltColor, glowWidth * 1.2);
+      // Plasma projectile design - slightly thicker
+      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.7, 0.5));
+      this.setStroke(boltColor, glowWidth * 1.1);
       this.line(boltStartX, boltStartY, x2, y2);
 
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.9, 0.5));
-      this.setStroke(boltColor, width * 1.3);
-      this.line(boltStartX, boltStartY, x2, y2);
-
-      this.setAlpha(Math.max(baseAlpha * boltPulse, 0.75));
+      // Main core
+      this.setAlpha(Math.max(baseAlpha * boltPulse, 1.0));
       this.setStroke('#ffffff', coreWidth * 1.1);
       this.line(boltStartX, boltStartY, x2, y2);
-
-      const boltTipSize = width * 1.4 * boltPulse;
-      this.setFill('#ffffff');
-      this.setAlpha(Math.max(baseAlpha * boltPulse, 0.85));
-      this.circle(x2, y2, boltTipSize, true);
-
-      this.setFill(boltColor);
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.8, 0.65));
-      this.circle(x2, y2, boltTipSize * 0.75, true);
     } else if (themeId === 'void_laser') {
       const voidPulse =
         Math.sin(this.time * 12.0 + progress * 25.0) * 0.15 + 0.85;
-      const voidPulse2 =
-        Math.sin(this.time * 16.0 + progress * 35.0) * 0.1 + 0.9;
 
-      this.setAlpha(Math.max(baseAlpha * voidPulse * 0.5, 0.25));
-      this.setStroke('#4400aa', glowWidth);
+      // Void projectile design - dual color
+      this.setAlpha(Math.max(baseAlpha * voidPulse * 0.6, 0.4));
+      this.setStroke('#8800ff', glowWidth);
       this.line(boltStartX, boltStartY, x2, y2);
 
-      this.setAlpha(Math.max(baseAlpha * voidPulse2 * 0.7, 0.4));
-      this.setStroke('#8800ff', width * 1.1);
-      this.line(boltStartX, boltStartY, x2, y2);
-
-      this.setAlpha(Math.max(baseAlpha * voidPulse, 0.65));
+      // Inner void core - magenta
+      this.setAlpha(Math.max(baseAlpha * voidPulse, 1.0));
       this.setStroke('#ff00ff', coreWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-
-      const boltTipSize = width * 1.3 * voidPulse;
-      this.setFill('#ff00ff');
-      this.setAlpha(Math.max(baseAlpha * voidPulse, 0.75));
-      this.circle(x2, y2, boltTipSize, true);
-
-      this.setFill('#8800ff');
-      this.setAlpha(Math.max(baseAlpha * voidPulse2 * 0.6, 0.5));
-      this.circle(x2, y2, boltTipSize * 0.7, true);
     } else {
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.6, 0.25));
+      // Default projectile design
+      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.6, 0.4));
       this.setStroke(color, glowWidth);
       this.line(boltStartX, boltStartY, x2, y2);
 
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.85, 0.45));
-      this.setStroke(color, width * 1.2);
-      this.line(boltStartX, boltStartY, x2, y2);
-
-      this.setAlpha(Math.max(baseAlpha * boltPulse, 0.7));
+      // Main laser core - thin and bright
+      this.setAlpha(Math.max(baseAlpha * boltPulse, 1.0));
       this.setStroke('#ffffff', coreWidth);
       this.line(boltStartX, boltStartY, x2, y2);
-
-      const boltTipSize = width * 1.3 * boltPulse;
-      this.setFill('#ffffff');
-      this.setAlpha(Math.max(baseAlpha * boltPulse, 0.8));
-      this.circle(x2, y2, boltTipSize, true);
-
-      this.setFill(color);
-      this.setAlpha(Math.max(baseAlpha * boltPulse * 0.75, 0.6));
-      this.circle(x2, y2, boltTipSize * 0.7, true);
     }
 
     if (isCrit) {
       const critPulse = Math.sin(this.time * 18.0) * 0.15 + 0.85;
 
       if (themeId === 'rainbow_laser') {
-        const colors = [
-          '#ffff00',
-          '#ff8800',
-          '#ff0000',
-          '#ff0088',
-          '#ff00ff',
-          '#8800ff',
-          '#0000ff',
-          '#0088ff',
+        const critColors = [
+          '#ffff00', // Bright yellow
+          '#ff8000', // Orange
+          '#ff0080', // Hot pink
+          '#ff00ff', // Magenta
+          '#8000ff', // Purple
+          '#0080ff', // Blue
+          '#00ffff', // Cyan
+          '#00ff80', // Green
+          '#80ff00', // Yellow-green
+          '#ffff00', // Back to yellow
         ];
-        const critColorOffset =
-          Math.floor(this.time * 12.0 + progress * 30.0) % colors.length;
-        const critColor: string =
-          colors[critColorOffset % colors.length] ?? '#ffff00';
+        const critTimeOffset = this.time * 15.0 + progress * 35.0;
+        const critColorIndex1 = Math.floor(critTimeOffset) % critColors.length;
+        const critColorIndex2 = (critColorIndex1 + 1) % critColors.length;
+        const critColor2: string = critColors[critColorIndex2] ?? '#ffff00';
 
-        this.setAlpha(Math.max(baseAlpha * critPulse * 0.5, 0.4));
-        this.setStroke(critColor, width * 3.0);
+        // Outer crit rainbow glow
+        this.setAlpha(Math.max(baseAlpha * critPulse * 0.8, 0.5));
+        this.setStroke(critColor2, coreWidth * 2.5);
         this.line(boltStartX, boltStartY, x2, y2);
 
-        this.setFill(critColor);
-        this.setAlpha(Math.max(baseAlpha * critPulse, 0.85));
-        this.circle(x2, y2, width * 2.0 * critPulse, true);
-
-        this.setFill('#ffffff');
-        this.setAlpha(Math.max(baseAlpha * critPulse * 0.7, 0.6));
-        this.circle(x2, y2, width * 1.5 * critPulse, true);
+        // Inner crit core
+        this.setAlpha(Math.max(baseAlpha * critPulse * 0.9, 0.6));
+        this.setStroke('#ffffff', coreWidth * 1.8);
+        this.line(boltStartX, boltStartY, x2, y2);
       } else if (themeId === 'plasma_laser') {
         const plasmaCritColors = ['#ffaa00', '#ff6600', '#ff4400'];
         const critColorIndex =
@@ -1422,44 +1397,27 @@ export class WebGLRenderer {
           plasmaCritColors.length;
         const critColor: string = plasmaCritColors[critColorIndex] ?? '#ff8800';
 
-        this.setAlpha(Math.max(baseAlpha * critPulse * 0.6, 0.45));
-        this.setStroke(critColor, width * 3.2);
+        // Plasma crit overlay
+        this.setAlpha(Math.max(baseAlpha * critPulse * 0.75, 0.5));
+        this.setStroke(critColor, coreWidth * 2.2);
         this.line(boltStartX, boltStartY, x2, y2);
-
-        this.setFill(critColor);
-        this.setAlpha(Math.max(baseAlpha * critPulse, 0.9));
-        this.circle(x2, y2, width * 2.2 * critPulse, true);
-
-        this.setFill('#ffffff');
-        this.setAlpha(Math.max(baseAlpha * critPulse * 0.75, 0.65));
-        this.circle(x2, y2, width * 1.6 * critPulse, true);
       } else if (themeId === 'void_laser') {
         const voidCritPulse =
           Math.sin(this.time * 20.0 + progress * 40.0) * 0.2 + 0.8;
 
-        this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.5, 0.4));
-        this.setStroke('#ff00ff', width * 3.0);
+        // Void crit overlay - dual color
+        this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.6, 0.4));
+        this.setStroke('#8800ff', coreWidth * 2.3);
         this.line(boltStartX, boltStartY, x2, y2);
 
-        this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.4, 0.35));
-        this.setStroke('#8800ff', width * 3.5);
+        this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.75, 0.5));
+        this.setStroke('#ff00ff', coreWidth * 1.8);
         this.line(boltStartX, boltStartY, x2, y2);
-
-        this.setFill('#ff00ff');
-        this.setAlpha(Math.max(baseAlpha * voidCritPulse, 0.85));
-        this.circle(x2, y2, width * 2.1 * voidCritPulse, true);
-
-        this.setFill('#8800ff');
-        this.setAlpha(Math.max(baseAlpha * voidCritPulse * 0.7, 0.6));
-        this.circle(x2, y2, width * 1.6 * voidCritPulse, true);
       } else {
-        this.setAlpha(Math.max(baseAlpha * critPulse * 0.4, 0.35));
-        this.setStroke('#ffff00', width * 2.5);
+        // Default crit overlay - yellow
+        this.setAlpha(Math.max(baseAlpha * critPulse * 0.7, 0.5));
+        this.setStroke('#ffff00', coreWidth * 2.0);
         this.line(boltStartX, boltStartY, x2, y2);
-
-        this.setFill('#ffff00');
-        this.setAlpha(Math.max(baseAlpha * critPulse, 0.8));
-        this.circle(x2, y2, width * 1.8 * critPulse, true);
       }
     }
   }

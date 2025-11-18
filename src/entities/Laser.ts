@@ -59,10 +59,21 @@ export class Laser {
   }
 
   getCurrentPosition(): Vec2 {
-    // Always calculate position based on animation progress
-    const progress = Math.min(1, this.age / this.travelTime);
+    // Calculate progress - allow > 1.0 when laser has hit to continue into target
+    let progress = this.age / this.travelTime;
+    
+    // If laser has hit, allow it to continue moving into the target (progress > 1.0)
+    // This makes the laser "enter" the alien while fading out
+    if (this.hasHit && progress > 1.0) {
+      // Continue the movement direction but with slower speed after hit
+      const hitProgress = (progress - 1.0) * 0.5; // Slow down movement after hit
+      progress = 1.0 + hitProgress;
+    } else {
+      // Normal travel - cap at 1.0
+      progress = Math.min(1, progress);
+    }
 
-    // Straight line laser beam
+    // Straight line laser beam - can extend beyond target when hasHit
     return {
       x: this.origin.x + (this.target.x - this.origin.x) * progress,
       y: this.origin.y + (this.target.y - this.origin.y) * progress,
@@ -90,9 +101,18 @@ export class Laser {
   draw(drawer: Draw): void {
     if (!this.alive) return;
 
+    const rawProgress = this.age / this.travelTime;
+    
+    // Don't render laser if it has hit and is entering the alien (progress > 1.0)
+    // This prevents the laser from being visible inside the alien
+    if (this.hasHit && rawProgress > 1.0) {
+      return; // Laser disappears immediately when entering the alien
+    }
+
     const current = this.getCurrentPosition();
-    const progress = Math.min(1, this.age / this.travelTime);
-    const fadeInAlpha = Math.min(1, progress * 3.0);
+    const progress = Math.min(1, rawProgress);
+    // Fade-in only at the very beginning (first 10% of travel), then full opacity
+    const fadeInAlpha = progress < 0.1 ? Math.min(1, progress * 10.0) : 1.0;
 
     const ctx = drawer.getContext();
     ctx.save();
@@ -106,228 +126,260 @@ export class Laser {
       return;
     }
 
+    const now = Date.now();
+    const pulse = Math.sin(now * 0.03) * 0.05 + 0.95; // Reduced pulse variation for more consistent visibility
+
+    // Thin projectile design - thinner but still a projectile bolt
+    const coreWidth = Math.max(this.width * 0.4, 1.2); // Thin core
+    const glowWidth = this.width * 1.0; // Subtle glow
+
+    // Calculate bolt length (shorter than full distance for projectile effect)
     const angle = Math.atan2(dy, dx);
-    const boltLength = Math.max(Math.min(len * 0.35, 20), 6);
+    const boltLength = Math.max(Math.min(len * 0.4, 25), 8);
     const boltStartX = current.x - Math.cos(angle) * boltLength;
     const boltStartY = current.y - Math.sin(angle) * boltLength;
 
-    const now = Date.now();
-    const pulse = Math.sin(now * 0.02) * 0.05 + 0.95;
-
-    const coreWidth = this.width * 0.5;
-    const glowWidth = this.width * 2.0;
-
-    ctx.shadowBlur = glowWidth * 1.8;
+    ctx.shadowBlur = glowWidth * 0.8; // Subtle glow
     ctx.shadowColor = this.color;
 
-    ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.6, 0.25);
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = glowWidth;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(boltStartX, boltStartY);
-    ctx.lineTo(current.x, current.y);
-    ctx.stroke();
+    // Style variations based on theme
+    if (this.themeId === 'rainbow_laser') {
+      const colors = [
+        '#ff0080', // Hot pink
+        '#ff4000', // Red-orange
+        '#ff8000', // Orange
+        '#ffc000', // Yellow-orange
+        '#ffff00', // Yellow
+        '#c0ff00', // Yellow-green
+        '#80ff00', // Green
+        '#40ff80', // Green-cyan
+        '#00ffc0', // Cyan
+        '#00c0ff', // Light blue
+        '#0080ff', // Blue
+        '#4000ff', // Indigo
+        '#8000ff', // Purple
+        '#c000ff', // Magenta
+        '#ff00c0', // Pink
+        '#ff0080', // Back to hot pink
+      ];
+      const timeOffset = now * 0.012 + Math.min(1, rawProgress) * 25.0;
+      const colorIndex1 = Math.floor(timeOffset) % colors.length;
+      const colorIndex2 = (colorIndex1 + 1) % colors.length;
+      const color1 = colors[colorIndex1] ?? '#ff0080';
+      const color2 = colors[colorIndex2] ?? '#ff0080';
 
-    ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.85, 0.45);
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = this.width * 1.2;
-    ctx.beginPath();
-    ctx.moveTo(boltStartX, boltStartY);
-    ctx.lineTo(current.x, current.y);
-    ctx.stroke();
+      // Create gradient for smooth color transition
+      const gradient = ctx.createLinearGradient(boltStartX, boltStartY, current.x, current.y);
+      gradient.addColorStop(0, color1);
+      gradient.addColorStop(0.5, color2);
+      gradient.addColorStop(1, color1);
 
-    ctx.globalAlpha = Math.max(fadeInAlpha * pulse, 0.7);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = coreWidth;
-    ctx.beginPath();
-    ctx.moveTo(boltStartX, boltStartY);
-    ctx.lineTo(current.x, current.y);
-    ctx.stroke();
+      // Outer rainbow glow - multiple layers for richness
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.7, 0.5);
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = glowWidth * 1.3;
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = glowWidth * 1.2;
+      ctx.shadowColor = color2;
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
 
-    const boltTipSize = this.width * 1.3 * pulse;
-    ctx.globalAlpha = Math.max(fadeInAlpha * pulse, 0.8);
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = boltTipSize * 2;
-    ctx.beginPath();
-    ctx.arc(current.x, current.y, boltTipSize, 0, Math.PI * 2);
-    ctx.fill();
+      // Middle glow layer
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.8, 0.6);
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = glowWidth * 0.9;
+      ctx.shadowBlur = glowWidth * 0.8;
+      ctx.shadowColor = color1;
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
 
-    ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.75, 0.6);
-    ctx.fillStyle = this.color;
-    ctx.shadowBlur = boltTipSize * 1.5;
-    ctx.beginPath();
-    ctx.arc(current.x, current.y, boltTipSize * 0.7, 0, Math.PI * 2);
-    ctx.fill();
+      // Main bright core - white with rainbow tint
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse, 1.0);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = coreWidth;
+      ctx.shadowBlur = coreWidth * 2.5;
+      ctx.shadowColor = color2;
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+    } else if (this.themeId === 'plasma_laser') {
+      const plasmaColors = ['#ff4400', '#ff6600', '#ff8800', '#ff4400', '#ff0044'];
+      const colorIndex = Math.floor(now * 0.01 + Math.min(1, rawProgress) * 25.0) % plasmaColors.length;
+      const boltColor = plasmaColors[colorIndex] ?? this.color;
+
+      // Outer glow - slightly thicker for plasma
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.7, 0.5);
+      ctx.strokeStyle = boltColor;
+      ctx.lineWidth = glowWidth * 1.1;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+
+      // Main core
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse, 1.0);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = coreWidth * 1.1;
+      ctx.shadowBlur = coreWidth * 1.8;
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+    } else if (this.themeId === 'void_laser') {
+      const voidPulse = Math.sin(now * 0.02 + Math.min(1, rawProgress) * 40.0) * 0.15 + 0.85;
+
+      // Outer void glow - purple
+      ctx.globalAlpha = Math.max(fadeInAlpha * voidPulse * 0.6, 0.4);
+      ctx.strokeStyle = '#8800ff';
+      ctx.lineWidth = glowWidth;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+
+      // Inner void core - magenta
+      ctx.globalAlpha = Math.max(fadeInAlpha * voidPulse, 1.0);
+      ctx.strokeStyle = '#ff00ff';
+      ctx.lineWidth = coreWidth;
+      ctx.shadowBlur = coreWidth * 1.6;
+      ctx.shadowColor = '#ff00ff';
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+    } else {
+      // Default laser style
+      // Outer glow
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse * 0.6, 0.4);
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = glowWidth;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+
+      // Main laser core - thin and bright
+      ctx.globalAlpha = Math.max(fadeInAlpha * pulse, 1.0);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = coreWidth;
+      ctx.shadowBlur = coreWidth * 1.5;
+      ctx.shadowColor = this.color;
+      ctx.beginPath();
+      ctx.moveTo(boltStartX, boltStartY);
+      ctx.lineTo(current.x, current.y);
+      ctx.stroke();
+    }
 
     if (this.isCrit) {
-      const critPulse = Math.sin(now * 0.03) * 0.2 + 0.8;
+      const critPulse = Math.sin(now * 0.04) * 0.15 + 0.85;
       const critTime = now * 0.001;
 
       if (this.themeId === 'rainbow_laser') {
-        const colors = [
-          '#ffff00',
-          '#ff8800',
-          '#ff0000',
-          '#ff0088',
-          '#ff00ff',
-          '#8800ff',
-          '#0000ff',
-          '#0088ff',
+        const critColors = [
+          '#ffff00', // Bright yellow
+          '#ff8000', // Orange
+          '#ff0080', // Hot pink
+          '#ff00ff', // Magenta
+          '#8000ff', // Purple
+          '#0080ff', // Blue
+          '#00ffff', // Cyan
+          '#00ff80', // Green
+          '#80ff00', // Yellow-green
+          '#ffff00', // Back to yellow
         ];
-        const critColorOffset =
-          Math.floor(critTime * 12.0 + progress * 30.0) % colors.length;
-        const critColor = colors[critColorOffset % colors.length] ?? '#ffff00';
+        const critTimeOffset = critTime * 15.0 + Math.min(1, rawProgress) * 35.0;
+        const critColorIndex1 = Math.floor(critTimeOffset) % critColors.length;
+        const critColorIndex2 = (critColorIndex1 + 1) % critColors.length;
+        const critColor1 = critColors[critColorIndex1] ?? '#ffff00';
+        const critColor2 = critColors[critColorIndex2] ?? '#ffff00';
 
-        ctx.globalAlpha = fadeInAlpha * critPulse * 0.5;
-        ctx.strokeStyle = critColor;
-        ctx.lineWidth = this.width * 3.0;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = critColor;
+        // Crit rainbow gradient
+        const critGradient = ctx.createLinearGradient(boltStartX, boltStartY, current.x, current.y);
+        critGradient.addColorStop(0, critColor1);
+        critGradient.addColorStop(0.5, critColor2);
+        critGradient.addColorStop(1, critColor1);
+
+        // Outer crit glow
+        ctx.globalAlpha = fadeInAlpha * critPulse * 0.8;
+        ctx.strokeStyle = critGradient;
+        ctx.lineWidth = coreWidth * 2.5;
+        ctx.shadowBlur = coreWidth * 3.5;
+        ctx.shadowColor = critColor2;
         ctx.beginPath();
         ctx.moveTo(boltStartX, boltStartY);
         ctx.lineTo(current.x, current.y);
         ctx.stroke();
 
-        ctx.globalAlpha = fadeInAlpha * critPulse;
-        ctx.fillStyle = critColor;
-        ctx.shadowBlur = 12;
+        // Inner crit core
+        ctx.globalAlpha = fadeInAlpha * critPulse * 0.9;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = coreWidth * 1.8;
+        ctx.shadowBlur = coreWidth * 2.8;
+        ctx.shadowColor = critColor1;
         ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 2.0 * critPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        ctx.globalAlpha = fadeInAlpha * critPulse * 0.7;
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 1.5 * critPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
+        ctx.moveTo(boltStartX, boltStartY);
+        ctx.lineTo(current.x, current.y);
+        ctx.stroke();
       } else if (this.themeId === 'plasma_laser') {
         const plasmaCritColors = ['#ffaa00', '#ff6600', '#ff4400'];
         const critColorIndex =
-          Math.floor(critTime * 15.0 + progress * 35.0) %
+          Math.floor(critTime * 15.0 + Math.min(1, rawProgress) * 35.0) %
           plasmaCritColors.length;
         const critColor = plasmaCritColors[critColorIndex] ?? '#ff8800';
 
-        ctx.globalAlpha = fadeInAlpha * critPulse * 0.6;
+        // Plasma crit overlay
+        ctx.globalAlpha = fadeInAlpha * critPulse * 0.75;
         ctx.strokeStyle = critColor;
-        ctx.lineWidth = this.width * 3.2;
-        ctx.shadowBlur = 18;
+        ctx.lineWidth = coreWidth * 2.2;
+        ctx.shadowBlur = coreWidth * 2.8;
         ctx.shadowColor = critColor;
         ctx.beginPath();
         ctx.moveTo(boltStartX, boltStartY);
         ctx.lineTo(current.x, current.y);
         ctx.stroke();
-
-        ctx.globalAlpha = fadeInAlpha * critPulse;
-        ctx.fillStyle = critColor;
-        ctx.shadowBlur = 14;
-        ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 2.2 * critPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        ctx.globalAlpha = fadeInAlpha * critPulse * 0.75;
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 1.6 * critPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
       } else if (this.themeId === 'void_laser') {
         const voidCritPulse =
-          Math.sin(critTime * 20.0 + progress * 40.0) * 0.2 + 0.8;
+          Math.sin(critTime * 20.0 + Math.min(1, rawProgress) * 40.0) * 0.15 + 0.85;
 
-        ctx.globalAlpha = fadeInAlpha * voidCritPulse * 0.5;
-        ctx.strokeStyle = '#ff00ff';
-        ctx.lineWidth = this.width * 3.0;
-        ctx.shadowBlur = 16;
-        ctx.shadowColor = '#ff00ff';
-        ctx.beginPath();
-        ctx.moveTo(boltStartX, boltStartY);
-        ctx.lineTo(current.x, current.y);
-        ctx.stroke();
-
-        ctx.globalAlpha = fadeInAlpha * voidCritPulse * 0.4;
+        // Void crit overlay - dual color
+        ctx.globalAlpha = fadeInAlpha * voidCritPulse * 0.6;
         ctx.strokeStyle = '#8800ff';
-        ctx.lineWidth = this.width * 3.5;
-        ctx.shadowBlur = 18;
+        ctx.lineWidth = coreWidth * 2.3;
+        ctx.shadowBlur = coreWidth * 2.5;
         ctx.shadowColor = '#8800ff';
         ctx.beginPath();
         ctx.moveTo(boltStartX, boltStartY);
         ctx.lineTo(current.x, current.y);
         ctx.stroke();
 
-        ctx.globalAlpha = fadeInAlpha * voidCritPulse;
-        ctx.fillStyle = '#ff00ff';
-        ctx.shadowBlur = 12;
+        ctx.globalAlpha = fadeInAlpha * voidCritPulse * 0.75;
+        ctx.strokeStyle = '#ff00ff';
+        ctx.lineWidth = coreWidth * 1.8;
+        ctx.shadowBlur = coreWidth * 2.0;
+        ctx.shadowColor = '#ff00ff';
         ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 2.1 * voidCritPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        ctx.globalAlpha = fadeInAlpha * voidCritPulse * 0.7;
-        ctx.fillStyle = '#8800ff';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 1.6 * voidCritPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
+        ctx.moveTo(boltStartX, boltStartY);
+        ctx.lineTo(current.x, current.y);
+        ctx.stroke();
       } else {
-        ctx.globalAlpha = fadeInAlpha * critPulse * 0.4;
+        // Default crit overlay - yellow
+        ctx.globalAlpha = fadeInAlpha * critPulse * 0.7;
         ctx.strokeStyle = '#ffff00';
-        ctx.lineWidth = this.width * 2.5;
-        ctx.shadowBlur = 12;
+        ctx.lineWidth = coreWidth * 2.0;
+        ctx.shadowBlur = coreWidth * 2.5;
         ctx.shadowColor = '#ffff00';
         ctx.beginPath();
         ctx.moveTo(boltStartX, boltStartY);
         ctx.lineTo(current.x, current.y);
         ctx.stroke();
-
-        ctx.globalAlpha = fadeInAlpha * critPulse;
-        ctx.fillStyle = '#ffff00';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(
-          current.x,
-          current.y,
-          this.width * 1.8 * critPulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
       }
     }
 

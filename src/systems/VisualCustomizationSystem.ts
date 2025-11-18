@@ -641,7 +641,46 @@ export class VisualCustomizationSystem {
     };
   }
 
-  getLaserThemeId(): string {
+  getLaserThemeId(state?: GameState): string {
+    // Check for special upgrades that override laser theme (priority order)
+    if (state) {
+      // Check for upgrades that should trigger specific laser themes
+      if (state.subUpgrades['chaos_emeralds']) {
+        return 'rainbow_laser';
+      } else if (state.subUpgrades['plasma_matrix']) {
+        return 'plasma_laser';
+      } else if (state.subUpgrades['void_channeling']) {
+        return 'void_laser';
+      } else if (state.subUpgrades['antimatter_rounds']) {
+        return 'void_laser'; // Magenta/purple void theme
+      } else if (state.subUpgrades['quantum_entanglement']) {
+        return 'rainbow_laser'; // Quantum effects = rainbow
+      } else if (state.subUpgrades['stellar_forge']) {
+        return 'plasma_laser'; // Stellar = plasma
+      } else if (state.subUpgrades['antimatter_cascade']) {
+        return 'void_laser'; // Antimatter = void
+      } else if (state.subUpgrades['hyper_reactor']) {
+        return 'plasma_laser'; // Hyper = plasma
+      } else if (state.subUpgrades['dark_matter_engine']) {
+        return 'void_laser'; // Dark matter = void
+      } else if (state.subUpgrades['nebula_harvester']) {
+        return 'rainbow_laser'; // Nebula = rainbow colors
+      } else if (state.subUpgrades['cosmic_battery']) {
+        return 'rainbow_laser'; // Cosmic = rainbow
+      } else if (state.subUpgrades['photon_amplifier']) {
+        return 'rainbow_laser'; // Photon = rainbow
+      } else if (state.subUpgrades['warp_core']) {
+        return 'rainbow_laser'; // Warp = rainbow
+      } else if (state.subUpgrades['laser_focusing']) {
+        return 'plasma_laser'; // Focused = plasma
+      } else if (state.subUpgrades['nuclear_reactor']) {
+        return 'plasma_laser'; // Nuclear = plasma
+      } else if (state.subUpgrades['nanobots']) {
+        return 'rainbow_laser'; // Nanobots = rainbow
+      }
+    }
+
+    // Fallback to selected theme
     const theme = this.getSelectedTheme('laser');
     return theme?.id ?? 'default_laser';
   }
