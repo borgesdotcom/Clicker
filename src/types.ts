@@ -66,6 +66,10 @@ export interface GameState {
   experience: number;
   subUpgrades: Record<string, boolean>;
   achievements: Record<string, boolean>;
+  // Tutorial state
+  tutorialCompleted?: boolean;
+
+  // Statistics
   stats: GameStats;
   prestigeLevel: number;
   prestigePoints: number;

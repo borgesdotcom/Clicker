@@ -342,7 +342,7 @@ const DEFAULT_CONFIG: GameConfigData = {
     damagePerLevel: 0.1, // 10% per level
     costScaling: {
       baseMultiplier: 1,
-      exponentialFactor: 1.07, // 7% cost increase per level (balanced for idle games)
+      exponentialFactor: 1.15, // Standard idle game scaling
     },
     speedScaling: {
       baseInterval: 1.0,
@@ -447,13 +447,14 @@ const DEFAULT_CONFIG: GameConfigData = {
       },
     },
     boss: {
-      hpMultiplier: 18,
+      hpMultiplier: 2,
       nerfFactor: 0.65,
       hpTiers: [
         { minLevel: 0, maxLevel: 50, bonusMultiplier: 1 },
-        { minLevel: 50, maxLevel: 150, bonusMultiplier: 1.08 },
-        { minLevel: 150, maxLevel: 300, bonusMultiplier: 1.1 },
-        { minLevel: 300, maxLevel: 600, bonusMultiplier: 1.08 },
+        { minLevel: 50, maxLevel: 75, bonusMultiplier: 1.1 },
+        { minLevel: 75, maxLevel: 99, bonusMultiplier: 1 },
+        { minLevel: 100, maxLevel: 149, bonusMultiplier: 1 },
+        { minLevel: 300, maxLevel: 600, bonusMultiplier: 1 },
         { minLevel: 600, bonusMultiplier: 1.06 },
       ],
       timeLimit: {
@@ -486,11 +487,21 @@ const DEFAULT_CONFIG: GameConfigData = {
       minMultiplier: 0.15,
     },
     hpScaling: {
-      baseHp: 120,
+      baseHp: 10,
       tiers: [
-        { maxLevel: 100, multiplier: 1.18 },
-        { maxLevel: 300, multiplier: 1.16 },
-        { maxLevel: 600, multiplier: 1.13 },
+        { maxLevel: 50, multiplier: 1.18 },
+        { maxLevel: 59, multiplier: 1.21 }, // Levels 1-59
+        { maxLevel: 65, multiplier: 1.25 }, // Levels 60-70: gradual increase starts
+        { maxLevel: 70, multiplier: 1.30 },
+        { maxLevel: 74, multiplier: 1.40 },
+        { maxLevel: 75, multiplier: 1.50 },
+        // { maxLevel: 75, multiplier: 1.31 },
+        { maxLevel: 85, multiplier: 1.65 },
+        { maxLevel: 90, multiplier: 1.80 },
+        { maxLevel: 95, multiplier: 2.00 },
+        { maxLevel: 99, multiplier: 1.75 },
+        { maxLevel: 100, multiplier: 8 },
+        { maxLevel: 110, multiplier: 2.4 },
         { maxLevel: Infinity, multiplier: 1.1 },
       ],
       ramp: {

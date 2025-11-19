@@ -712,9 +712,59 @@
         "flavor": "Alcance a divindade. Através de cliques."
       },
       "omniscience": {
-        "name": "Verdadeira Onisciência",
-        "description": "-30% todos os custos, +60% XP",
-        "flavor": "Sabe tudo. Otimiza tudo."
+        "name": "Onisciência Verdadeira",
+        "description": "-25% em todos os custos, +60% XP",
+        "flavor": "Saiba tudo. Otimize tudo."
+      },
+      "dimensional_rift": {
+        "name": "Fenda Dimensional",
+        "description": "Dano Total x1.2",
+        "flavor": "Um rasgo na realidade. Não coloque o dedo."
+      },
+      "void_prism": {
+        "name": "Prisma do Vazio",
+        "description": "Ganhe 0.0001% da Geração Passiva como Dano Base de Clique",
+        "flavor": "Refrata energia do vazio em poder bruto. Seus motores ociosos agora alimentam seus ataques."
+      },
+      "chronal_dust": {
+        "name": "Poeira Cronal",
+        "description": "Ganho de XP x1.2",
+        "flavor": "Resíduo temporal. Cheire para obter conhecimento. (Não cheire de verdade)."
+      },
+      "dark_matter_weaver": {
+        "name": "Tecelão de Matéria Escura",
+        "description": "Geração Passiva x1.5",
+        "flavor": "Tece nada em algo. Lucro!"
+      },
+      "entropy_injector": {
+        "name": "Injetor de Entropia",
+        "description": "Dano de Clique x1.5",
+        "flavor": "Acelera a morte térmica do universo, um clique de cada vez."
+      },
+      "temporal_siphon": {
+        "name": "Sifão Temporal",
+        "description": "Geração Passiva x2",
+        "flavor": "Rouba tempo do futuro. As taxas de juros são astronômicas."
+      },
+      "event_horizon_shield": {
+        "name": "Escudo de Horizonte de Eventos",
+        "description": "Dano Total x1.3",
+        "flavor": "Se a luz não escapa, nem os alienígenas."
+      },
+      "cosmic_filament": {
+        "name": "Filamento Cósmico",
+        "description": "Ganho de XP x1.4",
+        "flavor": "O sistema nervoso do universo."
+      },
+      "null_space_projector": {
+        "name": "Projetor de Espaço Nulo",
+        "description": "Dano Crítico x1.5",
+        "flavor": "Projeta não-existência nos alvos. Muito eficaz."
+      },
+      "omega_relay": {
+        "name": "Relé Ômega",
+        "description": "Dano Total x1.5, XP x1.5",
+        "flavor": "A conexão final antes da ascensão. Poder avassalador."
       }
     }
   }

@@ -56,10 +56,21 @@ export class ObjectPool<T> {
       return;
     }
 
-    // Find and remove from array (still O(n) but only happens on release)
+    // Find and remove from array using swap-and-pop (O(1))
+    // Order doesn't matter for object pool
     const index = this.active.indexOf(obj);
     if (index !== -1) {
-      this.active.splice(index, 1);
+      // Swap with the last element if it's not already the last
+      const lastIndex = this.active.length - 1;
+      if (index !== lastIndex) {
+        const lastObj = this.active[lastIndex];
+        if (lastObj !== undefined) {
+          this.active[index] = lastObj;
+        }
+      }
+      // Remove the last element
+      this.active.pop();
+      
       this.activeSet.delete(obj);
       this.reset(obj);
 

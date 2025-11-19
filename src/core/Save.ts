@@ -70,6 +70,18 @@ export class Save {
     }
   }
 
+  /**
+   * Check if save data exists (for first load detection)
+   */
+  static hasSaveData(): boolean {
+    try {
+      const saved = localStorage.getItem(SAVE_KEY);
+      return saved !== null && saved !== undefined;
+    } catch (error) {
+      return false;
+    }
+  }
+
   static load(): GameState {
     try {
       const saved = localStorage.getItem(SAVE_KEY);
@@ -172,6 +184,10 @@ export class Save {
         autoBuyEnabled: validatedState.autoBuyEnabled ?? false,
         // Visual customization
         selectedThemes: validatedState.selectedThemes,
+        // Combo pause skill state
+        comboPauseActive: validatedState.comboPauseActive ?? false,
+        comboPauseEndTime: validatedState.comboPauseEndTime ?? 0,
+        comboPauseCooldownEndTime: validatedState.comboPauseCooldownEndTime ?? 0,
         // Preserve lastPlayTime from imported data if it exists, otherwise use current time
         lastPlayTime: data.lastPlayTime ?? Date.now(),
       };

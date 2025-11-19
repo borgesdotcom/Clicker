@@ -2,7 +2,7 @@ export class Loop {
   private running = false;
   private lastTime = 0;
   private accumulator = 0;
-  private readonly fixedDt = 1 / 120; // Increased from 60 to 120 FPS
+  private readonly fixedDt = 1 / 60; // Standard 60 FPS for smooth gameplay
   private isVisible = true;
   private animationFrameId: number | null = null;
 

@@ -263,12 +263,12 @@
       },
       "lucky_dice": {
         "name": "Lucky Space Dice",
-        "description": "+5% critical hit chance",
+        "description": "+2% critical hit chance",
         "flavor": "Rolled a 7! These dice ensure maximum alien destruction rates. The invasion pays... wait."
       },
       "energy_recycling": {
         "name": "Energy Recycling System",
-        "description": "All upgrades are 5% cheaper",
+        "description": "All upgrades are 2.5% cheaper",
         "flavor": "Recycle alien material for maximum efficiency. Very environmentally conscious defense operation."
       },
       "overclocked_reactors": {
@@ -423,8 +423,38 @@
       },
       "hyper_reactor": {
         "name": "Hyper-Dimensional Reactor",
-        "description": "All damage x2, Critical chance +5%",
+        "description": "All damage x2, Critical chance +2%",
         "flavor": "Powers drawn from dimensions we can't even see."
+      },
+      "fleet_command_center": {
+        "name": "Fleet Command Center",
+        "description": "Attack damage x1.4",
+        "flavor": "Centralized coordination multiplies fleet effectiveness. Every ship fires in perfect harmony."
+      },
+      "quantum_singularity": {
+        "name": "Quantum Singularity Core",
+        "description": "All Damage x1.3, Passive Gen x1.2",
+        "flavor": "A singularity that defies all known physics. Very convenient."
+      },
+      "armada_command": {
+        "name": "Armada Command Center",
+        "description": "Fleet damage x1.2, Ships fire 15% faster",
+        "flavor": "Command an armada worthy of legends. Every ship a legend."
+      },
+      "chronos_accelerator": {
+        "name": "Chronos Accelerator",
+        "description": "Attack speed x1.4, Time flows faster",
+        "flavor": "Time itself accelerates. Everything dies faster."
+      },
+      "perfect_critical": {
+        "name": "Perfect Critical Mastery",
+        "description": "Critical chance +5%, Critical damage x1.5",
+        "flavor": "Every hit finds the perfect weak point. Perfection achieved."
+      },
+      "infinite_knowledge": {
+        "name": "Infinite Knowledge Core",
+        "description": "XP gain x2.5, Knowledge transcends limits",
+        "flavor": "All knowledge flows through you. You become knowledge itself."
       },
       "nuclear_reactor": {
         "name": "Pocket Nuclear Reactor",
@@ -453,12 +483,12 @@
       },
       "cheat_codes": {
         "name": "Cheat Code Manual",
-        "description": "All upgrades 20% cheaper",
+        "description": "All upgrades 10% cheaper",
         "flavor": "Up, Up, Down, Down, Left, Right, Left, Right, B, A, Start."
       },
       "dragon_egg": {
         "name": "Dragon Egg",
-        "description": "Critical hit chance +5%, Critical damage +3%",
+        "description": "Critical hit chance +2%, Critical damage +3%",
         "flavor": "It's either a dragon egg or a really angry space chicken."
       },
       "universe_map": {
@@ -513,7 +543,7 @@
       },
       "omniscient_ai": {
         "name": "Omniscient AI Core",
-        "description": "All stats +75%, Upgrades 30% cheaper",
+        "description": "All stats +75%, Upgrades 15% cheaper",
         "flavor": "Knows everything. Destroys everything. Still not self-aware. Probably."
       },
       "big_bang_generator": {
@@ -668,53 +698,103 @@
       },
       "ancient_texts": {
         "name": "Ancient Texts",
-        "description": "-3% all costs, +10% XP",
+        "description": "-1.5% all costs, +10% XP",
         "flavor": "The wisdom of civilizations long dead."
       },
       "akashic_records_library": {
         "name": "Akashic Records",
-        "description": "-5% all costs, +15% XP",
+        "description": "-2.5% all costs, +15% XP",
         "flavor": "Access the universal library."
       },
       "prophetic_vision": {
         "name": "Prophetic Vision",
-        "description": "-7% all costs, +20% XP, see the future",
+        "description": "-3.5% all costs, +20% XP, see the future",
         "flavor": "You know what comes next."
       },
       "universal_translator": {
         "name": "Universal Translator",
-        "description": "-10% all costs, +25% XP",
+        "description": "-5% all costs, +25% XP",
         "flavor": "Understand all languages. Even alien ones."
       },
       "omniscience_lite": {
         "name": "Omniscience Lite",
-        "description": "-12% all costs, +30% XP",
+        "description": "-7.5% all costs, +30% XP",
         "flavor": "Almost all-knowing. Close enough."
       },
       "forbidden_theorems": {
         "name": "Forbidden Theorems",
-        "description": "-15% all costs, +35% XP",
+        "description": "-10% all costs, +35% XP",
         "flavor": "Knowledge that breaks minds. Very efficient."
       },
       "schrodinger_upgrade": {
         "name": "Schrödinger's Upgrade",
-        "description": "-18% all costs, +40% XP",
+        "description": "-12.5% all costs, +40% XP",
         "flavor": "Both exists and doesn't exist. Both cheaper and more powerful."
       },
       "universal_constants": {
         "name": "Universal Constants Manipulator",
-        "description": "-20% all costs, +45% XP",
+        "description": "-15% all costs, +45% XP",
         "flavor": "Change the fundamental laws. Just a little."
       },
       "apotheosis": {
         "name": "Apotheosis",
-        "description": "-25% all costs, +50% XP",
+        "description": "-20% all costs, +50% XP",
         "flavor": "Achieve godhood. Through clicking."
       },
       "omniscience": {
         "name": "True Omniscience",
-        "description": "-30% all costs, +60% XP",
-        "flavor": "Know everything. Optimize everything."
+        "description": "-25% all costs, +150% XP, know everything",
+        "flavor": "There are no more secrets."
+      },
+      "dimensional_rift": {
+        "name": "Dimensional Rift",
+        "description": "All Damage x1.2",
+        "flavor": "A tear in reality. Don't put your finger in it."
+      },
+      "void_prism": {
+        "name": "Void Prism",
+        "description": "Gain 0.0001% of Passive Gen as Base Click Damage",
+        "flavor": "Refracts void energy into raw power. Your idle engines now fuel your attacks."
+      },
+      "chronal_dust": {
+        "name": "Chronal Dust",
+        "description": "XP Gain x1.2",
+        "flavor": "Time residue. Snort it for knowledge. (Don't actually snort it)."
+      },
+      "dark_matter_weaver": {
+        "name": "Dark Matter Weaver",
+        "description": "Passive Generation x1.5",
+        "flavor": "Weaves nothing into something. Profit!"
+      },
+      "entropy_injector": {
+        "name": "Entropy Injector",
+        "description": "Click Damage x1.5",
+        "flavor": "Accelerates the heat death of the universe, one click at a time."
+      },
+      "temporal_siphon": {
+        "name": "Temporal Siphon",
+        "description": "Passive Generation x2",
+        "flavor": "Steals time from the future. Interest rates are astronomical."
+      },
+      "event_horizon_shield": {
+        "name": "Event Horizon Shield",
+        "description": "All Damage x1.3",
+        "flavor": "If light can't escape, neither can the aliens."
+      },
+      "cosmic_filament": {
+        "name": "Cosmic Filament",
+        "description": "XP Gain x1.4",
+        "flavor": "The nervous system of the universe."
+      },
+      "null_space_projector": {
+        "name": "Null Space Projector",
+        "description": "Critical Damage x1.5",
+        "flavor": "Projects non-existence onto targets. Very effective."
+      },
+      "omega_relay": {
+        "name": "Omega Relay",
+        "description": "All Damage x1.5, XP x1.5",
+        "flavor": "The final connection before ascension. Power overwhelming."
       }
     }
   }

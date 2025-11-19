@@ -1,6 +1,7 @@
 import type { Draw } from '../render/Draw';
 import type { Vec2, BallColor } from '../types';
 import { ColorManager } from '../math/ColorManager';
+import { getSpriteForType, PixelGrid } from '../render/AlienSprites';
 
 export class AlienBall {
   private flashTime = 0;
@@ -30,6 +31,10 @@ export class AlienBall {
   private typingSpeed = 0.015; // Speed of typing animation (slower - chars per frame)
   private speechBubbleSide: 'left' | 'right' = 'left'; // Which side to show the bubble on
   private speechBubbleChance = 0.4; // 40% chance to speak even after cooldown (makes it rarer)
+
+  // New visual effects
+  protected shakeTime = 0;
+  protected shakeIntensity = 0;
 
   constructor(
     public x: number,
@@ -340,13 +345,16 @@ export class AlienBall {
     this.animationTime += dt;
   }
 
-  private drawSpeechBubble(
+  protected drawSpeechBubble(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     radius: number,
   ): void {
     if (!this.speechBubbleDisplayedText) return;
+
+    // Save canvas state to ensure proper rendering order
+    ctx.save();
 
     // Calculate fade out animation (fade out in last 0.5 seconds)
     // Only fade out if typing is complete
@@ -357,22 +365,27 @@ export class AlienBall {
       if (timeUntilHide <= fadeDuration && timeUntilHide > 0) {
         opacity = timeUntilHide / fadeDuration;
       } else if (timeUntilHide <= 0) {
+        ctx.restore();
         return; // Don't draw if completely faded
       }
     }
 
     // Position bubble to the side and above the alien
+    // Make sure it's high enough to avoid HP bar (HP bar is at centerY - spriteHeight/2 - 18)
+    // Position bubble higher to ensure it's always above HP bar
     const bubbleOffsetX =
       this.speechBubbleSide === 'left'
         ? -(radius + 50) // Left side
         : radius + 50; // Right side
-    const bubbleOffsetY = -(radius + 25); // Above the alien
+    // Position higher to avoid HP bar overlap (HP bar is ~18px above sprite top)
+    // Add extra space for bubble height and tail
+    const bubbleOffsetY = -(radius + 60); // Higher up to avoid HP bar
 
     const bubbleX = x + bubbleOffsetX;
     const bubbleY = y + bubbleOffsetY;
 
     // Measure text to size bubble (handle multi-line text)
-    ctx.font = 'bold 11px "Courier New", monospace';
+    ctx.font = '20px "m5x7", "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const lines = this.speechBubbleDisplayedText
@@ -383,9 +396,10 @@ export class AlienBall {
       const metrics = ctx.measureText(line);
       maxWidth = Math.max(maxWidth, metrics.width);
     }
+    const lineHeight = 20;
     const textWidth = maxWidth;
     const textHeight =
-      14 * lines.length + (lines.length > 1 ? (lines.length - 1) * 2 : 0); // Line height * lines + spacing
+      lineHeight * lines.length + (lines.length > 1 ? (lines.length - 1) * 2 : 0); // Line height * lines + spacing
 
     // Bubble dimensions with rounded corners
     const padding = 12; // Increased padding for better spacing
@@ -402,130 +416,74 @@ export class AlienBall {
     const bubbleXPos = bubbleX - bubbleWidth / 2;
     const bubbleYPos = bubbleY - bubbleHeight / 2;
 
-    // Draw bubble background with opacity (white interior like image)
-    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-    ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
+    // Draw bubble background with opacity (dark interior like game UI)
+    ctx.fillStyle = `rgba(0, 0, 0, ${opacity * 0.85})`;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
     ctx.lineWidth = 2;
 
-    // Draw rounded rectangle with corners (simulated with multiple rectangles)
-    // Top section
-    ctx.fillRect(
-      bubbleXPos + cornerRadius,
-      bubbleYPos,
-      bubbleWidth - cornerRadius * 2,
-      cornerRadius,
-    );
-    // Middle section
-    ctx.fillRect(
-      bubbleXPos,
-      bubbleYPos + cornerRadius,
-      bubbleWidth,
-      bubbleHeight - cornerRadius * 2,
-    );
-    // Bottom section
-    ctx.fillRect(
-      bubbleXPos + cornerRadius,
-      bubbleYPos + bubbleHeight - cornerRadius,
-      bubbleWidth - cornerRadius * 2,
-      cornerRadius,
-    );
-    // Left corner pixels
-    ctx.fillRect(
-      bubbleXPos,
-      bubbleYPos + cornerRadius,
-      cornerRadius,
-      cornerRadius,
-    );
-    ctx.fillRect(
-      bubbleXPos + cornerRadius,
-      bubbleYPos,
-      cornerRadius,
-      cornerRadius,
-    );
-    // Right corner pixels
-    ctx.fillRect(
-      bubbleXPos + bubbleWidth - cornerRadius * 2,
-      bubbleYPos,
-      cornerRadius,
-      cornerRadius,
-    );
-    ctx.fillRect(
-      bubbleXPos + bubbleWidth - cornerRadius,
-      bubbleYPos + cornerRadius,
-      cornerRadius,
-      cornerRadius,
-    );
-
-    // Draw border outline
-    // Top
-    ctx.strokeRect(
-      bubbleXPos + cornerRadius,
-      bubbleYPos,
-      bubbleWidth - cornerRadius * 2,
-      1,
-    );
-    // Bottom
-    ctx.strokeRect(
-      bubbleXPos + cornerRadius,
-      bubbleYPos + bubbleHeight - 1,
-      bubbleWidth - cornerRadius * 2,
-      1,
-    );
-    // Left
-    ctx.strokeRect(
-      bubbleXPos,
-      bubbleYPos + cornerRadius,
-      1,
-      bubbleHeight - cornerRadius * 2,
-    );
-    // Right
-    ctx.strokeRect(
-      bubbleXPos + bubbleWidth - 1,
-      bubbleYPos + cornerRadius,
-      1,
-      bubbleHeight - cornerRadius * 2,
-    );
-    // Corners
-    ctx.fillRect(bubbleXPos, bubbleYPos, cornerRadius, 1);
-    ctx.fillRect(bubbleXPos, bubbleYPos, 1, cornerRadius);
-    ctx.fillRect(
-      bubbleXPos + bubbleWidth - cornerRadius,
-      bubbleYPos,
-      cornerRadius,
-      1,
-    );
-    ctx.fillRect(bubbleXPos + bubbleWidth - 1, bubbleYPos, 1, cornerRadius);
-    ctx.fillRect(
-      bubbleXPos,
-      bubbleYPos + bubbleHeight - cornerRadius,
-      cornerRadius,
-      1,
-    );
-    ctx.fillRect(bubbleXPos, bubbleYPos + bubbleHeight - 1, 1, cornerRadius);
-    ctx.fillRect(
-      bubbleXPos + bubbleWidth - cornerRadius,
-      bubbleYPos + bubbleHeight - cornerRadius,
-      cornerRadius,
-      1,
-    );
-    ctx.fillRect(
-      bubbleXPos + bubbleWidth - 1,
-      bubbleYPos + bubbleHeight - cornerRadius,
-      1,
-      cornerRadius,
-    );
-
-    // Draw triangle pointer pointing down and slightly to the side (like in image)
-    const pointerSize = 8;
-    const pointerOffsetX = this.speechBubbleSide === 'left' ? 8 : -8; // Offset towards the side
-    const pointerY = bubbleYPos + bubbleHeight;
-    const pointerX = bubbleX + pointerOffsetX;
-
+    // Draw speech bubble path with tail
     ctx.beginPath();
-    ctx.moveTo(pointerX, pointerY);
-    ctx.lineTo(pointerX - pointerSize / 2, pointerY + pointerSize);
-    ctx.lineTo(pointerX + pointerSize / 2, pointerY + pointerSize);
+    const r = cornerRadius;
+    const bX = bubbleXPos;
+    const bY = bubbleYPos;
+    const bW = bubbleWidth;
+    const bH = bubbleHeight;
+
+    // Start at top-left
+    ctx.moveTo(bX + r, bY);
+
+    // Top edge
+    ctx.lineTo(bX + bW - r, bY);
+    // Top-right corner (chamfered)
+    ctx.lineTo(bX + bW, bY + r);
+
+    // Right edge
+    ctx.lineTo(bX + bW, bY + bH - r);
+    // Bottom-right corner (chamfered)
+    ctx.lineTo(bX + bW - r, bY + bH);
+
+    // Bottom edge with tail
+    if (this.speechBubbleSide === 'left') {
+      // Bubble is on left, alien is on right -> Tail on bottom-right
+      const tailBaseRight = bX + bW - 15;
+      const tailBaseLeft = bX + bW - 35;
+      const tailTipX = bX + bW + 5; // Point towards alien
+      const tailTipY = bY + bH + 15;
+
+      ctx.lineTo(tailBaseRight, bY + bH);
+      ctx.lineTo(tailTipX, tailTipY);
+      ctx.lineTo(tailBaseLeft, bY + bH);
+    } else {
+      // Normal line for this section if tail is on other side
+      // We handle the other tail in the next segment? 
+      // No, we are drawing the bottom edge from right to left.
+      // If side is 'right', tail is on bottom-left.
+
+      if (this.speechBubbleSide === 'right') {
+        const tailBaseRight = bX + 35;
+        const tailBaseLeft = bX + 15;
+        const tailTipX = bX - 5; // Point towards alien
+        const tailTipY = bY + bH + 15;
+
+        ctx.lineTo(tailBaseRight, bY + bH);
+        ctx.lineTo(tailTipX, tailTipY);
+        ctx.lineTo(tailBaseLeft, bY + bH);
+      }
+    }
+
+    // Finish bottom edge to left corner
+    ctx.lineTo(bX + r, bY + bH);
+    // Bottom-left corner (chamfered)
+    ctx.lineTo(bX, bY + bH - r);
+
+    // Left edge
+    ctx.lineTo(bX, bY + r);
+    // Top-left corner (chamfered)
+    ctx.lineTo(bX + r, bY);
+
     ctx.closePath();
+
+    // Fill and stroke the unified path
     ctx.fill();
     ctx.stroke();
 
@@ -535,13 +493,12 @@ export class AlienBall {
     const cursorChar = showCursor ? '_' : '';
     const displayText = this.speechBubbleDisplayedText + cursorChar;
 
-    // Draw text (black text on white background like image) - handle multi-line
-    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+    // Draw text (white text on dark background like game UI) - handle multi-line
+    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.textBaseline = 'top';
     const textLines = displayText.split('\n').filter((line) => line.length > 0);
-    const lineHeight = 14;
     // Center text vertically in the bubble
     const totalTextHeight =
       textLines.length * lineHeight +
@@ -553,6 +510,144 @@ export class AlienBall {
       const line = textLines[i];
       if (line) {
         ctx.fillText(line, textCenterX, startY + i * (lineHeight + 2));
+      }
+    }
+
+    // Restore canvas state
+    ctx.restore();
+  }
+
+  protected adjustColor(color: string, amount: number): string {
+    if (!color.startsWith('#')) return color;
+    const num = parseInt(color.slice(1), 16);
+    let r = (num >> 16) + amount;
+    let g = ((num >> 8) & 0x00FF) + amount;
+    let b = (num & 0x0000FF) + amount;
+
+    r = Math.max(Math.min(255, r), 0);
+    g = Math.max(Math.min(255, g), 0);
+    b = Math.max(Math.min(255, b), 0);
+
+    return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+  }
+
+  private static bufferCanvas: HTMLCanvasElement | null = null;
+  private static bufferCtx: CanvasRenderingContext2D | null = null;
+
+  private static getBuffer(width: number, height: number): { canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D } {
+    if (!AlienBall.bufferCanvas) {
+      AlienBall.bufferCanvas = document.createElement('canvas');
+      AlienBall.bufferCtx = AlienBall.bufferCanvas.getContext('2d', { willReadFrequently: false })!;
+    }
+
+    // Resize if necessary (grow only to avoid thrashing)
+    if (AlienBall.bufferCanvas.width < width || AlienBall.bufferCanvas.height < height) {
+      AlienBall.bufferCanvas.width = Math.max(AlienBall.bufferCanvas.width, Math.ceil(width));
+      AlienBall.bufferCanvas.height = Math.max(AlienBall.bufferCanvas.height, Math.ceil(height));
+    }
+
+    return { canvas: AlienBall.bufferCanvas, ctx: AlienBall.bufferCtx! };
+  }
+
+  protected drawPixelSprite(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    sprite: PixelGrid,
+    color: string,
+    opacity: number = 1
+  ): void {
+    const rows = sprite.length;
+    if (rows === 0) return;
+    const firstRow = sprite[0];
+    if (!firstRow) return;
+    const cols = firstRow.length;
+    const pixelW = width / cols;
+    const pixelH = height / rows;
+
+    const startX = x - width / 2;
+    const startY = y - height / 2;
+
+    // Use a buffer to draw the semi-transparent body parts as a single coherent shape
+    // This prevents internal "grid lines" where semi-transparent pixels overlap
+    const { canvas: buffer, ctx: bCtx } = AlienBall.getBuffer(width, height);
+
+    // Clear buffer
+    bCtx.clearRect(0, 0, width, height);
+
+    // First pass: Draw body (Type 1) to buffer at full opacity
+    bCtx.fillStyle = color;
+    let hasBody = false;
+
+    for (let r = 0; r < rows; r++) {
+      const row = sprite[r];
+      if (!row) continue;
+      for (let c = 0; c < cols; c++) {
+        if (row[c] === 1) { // Body
+          // Draw with slight overlap to prevent gaps
+          bCtx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          hasBody = true;
+        }
+      }
+    }
+
+    if (hasBody) {
+      ctx.save();
+      ctx.globalAlpha = opacity * 0.4; // Body opacity
+      // Draw the buffered body shape
+      ctx.drawImage(buffer, 0, 0, width, height, startX, startY, width, height);
+      ctx.restore();
+    }
+
+    // Clear buffer for next layer
+    bCtx.clearRect(0, 0, width, height);
+
+    // Second pass: Draw shade/rim (Type 2) to buffer
+    const shadeColor = this.adjustColor(color, -60);
+    bCtx.fillStyle = shadeColor;
+    let hasShade = false;
+
+    for (let r = 0; r < rows; r++) {
+      const row = sprite[r];
+      if (!row) continue;
+      for (let c = 0; c < cols; c++) {
+        if (row[c] === 2) { // Shade
+          bCtx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          hasShade = true;
+        }
+      }
+    }
+
+    if (hasShade) {
+      ctx.save();
+      ctx.globalAlpha = opacity * 0.6; // Shade opacity
+      ctx.drawImage(buffer, 0, 0, width, height, startX, startY, width, height);
+      ctx.restore();
+    }
+
+    // Highlights (Type 3) and Eyes (Type 4) are drawn directly for sharpness
+    for (let r = 0; r < rows; r++) {
+      const row = sprite[r];
+      if (!row) continue;
+      for (let c = 0; c < cols; c++) {
+        const pixelType = row[c];
+        if (pixelType === 3) {
+          // Highlight - bright white and opaque
+          ctx.save();
+          ctx.globalAlpha = opacity * 0.9;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(startX + c * pixelW, startY + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          ctx.restore();
+        } else if (pixelType === 4) {
+          // Eye - black/dark - solid
+          ctx.save();
+          ctx.globalAlpha = opacity;
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(startX + c * pixelW, startY + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          ctx.restore();
+        }
       }
     }
   }
@@ -591,9 +686,9 @@ export class AlienBall {
     const deformationX = this.deformationDirection.x * pushDistance;
     const deformationY = this.deformationDirection.y * pushDistance;
 
-    // Subtle squash and stretch effect
-    const squashAmount = deformationAmount * 0.15; // Much less squash
-    const stretchAmount = deformationAmount * 0.1; // Much less stretch
+    // Enhanced squash and stretch effect
+    const squashAmount = deformationAmount * 0.25; // Increased from 0.15
+    const stretchAmount = deformationAmount * 0.2; // Increased from 0.1
 
     // Calculate scale factors - subtle
     const perpendicularScale = 1 - squashAmount;
@@ -616,324 +711,26 @@ export class AlienBall {
       scaleY = parallelScale;
     }
 
-    // Draw simple bubble
-    const centerX = this.x + deformationX;
-    const centerY = this.y + deformationY;
+    const centerX = this.x + deformationX + (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
+    const centerY = this.y + deformationY + (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
 
     // Subtle pulsing animation
     const pulseValue =
       Math.sin(this.animationTime * 1.5 + this.rotationOffset) * 0.02;
     const currentRadius = this.radius * (1 + pulseValue);
 
-    const deformedRadiusX = currentRadius * scaleX;
-    const deformedRadiusY = currentRadius * scaleY;
+    const spriteWidth = currentRadius * 2 * scaleX;
+    const spriteHeight = currentRadius * 2 * scaleY;
 
-    // Color values
-    const r = parseInt(this.color.fill.substring(1, 3), 16);
-    const g = parseInt(this.color.fill.substring(3, 5), 16);
-    const b = parseInt(this.color.fill.substring(5, 7), 16);
-
-    // Lordakia-inspired gel-like outer glow - enhanced translucent aura
-    const glowRadius = Math.max(deformedRadiusX, deformedRadiusY) * 1.25;
-    const glowPulse =
-      Math.sin(this.animationTime * 1.2 + this.rotationOffset) * 0.05;
-    const glowGradient = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      0,
-      centerX,
-      centerY,
-      glowRadius,
-    );
-    glowGradient.addColorStop(
-      0,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, ${String(0.2 + glowPulse)})`,
-    );
-    glowGradient.addColorStop(
-      0.3,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, ${String(0.12 + glowPulse * 0.5)})`,
-    );
-    glowGradient.addColorStop(
-      0.6,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.06)`,
-    );
-    glowGradient.addColorStop(
-      1,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0)`,
-    );
-    ctx.fillStyle = glowGradient;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Main gel-like body - Lordakia translucent bubble with inner structure
-    // Outer gel layer
-    const outerGradient = ctx.createRadialGradient(
-      centerX - deformedRadiusX * 0.25,
-      centerY - deformedRadiusY * 0.25,
-      Math.min(deformedRadiusX, deformedRadiusY) * 0.05,
-      centerX,
-      centerY,
-      Math.max(deformedRadiusX, deformedRadiusY),
-    );
-    // Translucent center
-    outerGradient.addColorStop(
-      0,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.4)`,
-    );
-    // More opaque mid-section (gel-like)
-    outerGradient.addColorStop(
-      0.3,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.55)`,
-    );
-    outerGradient.addColorStop(
-      0.5,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.65)`,
-    );
-    // Edge transparency
-    const strokeR = parseInt(this.color.stroke.substring(1, 3), 16);
-    const strokeG = parseInt(this.color.stroke.substring(3, 5), 16);
-    const strokeB = parseInt(this.color.stroke.substring(5, 7), 16);
-    outerGradient.addColorStop(
-      0.75,
-      `rgba(${String(strokeR)}, ${String(strokeG)}, ${String(strokeB)}, 0.75)`,
-    );
-    outerGradient.addColorStop(
-      0.9,
-      `rgba(${String(strokeR)}, ${String(strokeG)}, ${String(strokeB)}, 0.6)`,
-    );
-    outerGradient.addColorStop(
-      1,
-      `rgba(${String(strokeR)}, ${String(strokeG)}, ${String(strokeB)}, 0.45)`,
-    );
-
-    ctx.fillStyle = outerGradient;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.fill();
-
-    // Inner gel core - visible through translucent shell (Lordakia inner structure)
-    const innerCoreRadius = currentRadius * 0.35;
-    const corePulse =
-      Math.sin(this.animationTime * 2 + this.rotationOffset) * 0.1;
-    const innerGradient = ctx.createRadialGradient(
-      centerX - innerCoreRadius * 0.4,
-      centerY - innerCoreRadius * 0.4,
-      innerCoreRadius * 0.1,
-      centerX,
-      centerY,
-      innerCoreRadius * (1 + corePulse),
-    );
-    innerGradient.addColorStop(0, `rgba(255, 255, 255, 0.7)`);
-    innerGradient.addColorStop(
-      0.4,
-      `rgba(${String(r + 30)}, ${String(g + 30)}, ${String(b + 30)}, 0.5)`,
-    );
-    innerGradient.addColorStop(
-      0.7,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.4)`,
-    );
-    innerGradient.addColorStop(
-      1,
-      `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.2)`,
-    );
-
-    ctx.fillStyle = innerGradient;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, innerCoreRadius * (1 + corePulse), 0, Math.PI * 2);
-    ctx.restore();
-    ctx.fill();
-
-    // Organic inner structures - visible through gel (Lordakia organ-like details)
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.rotate(this.animationTime * 0.3 + this.rotationOffset);
-
-    // Draw organic patterns inside the gel
-    for (let i = 0; i < 3; i++) {
-      const angle = (i / 3) * Math.PI * 2;
-      const patternRadius =
-        currentRadius * (0.4 + Math.sin(this.animationTime * 1.5 + i) * 0.1);
-      const patternX = Math.cos(angle) * patternRadius;
-      const patternY = Math.sin(angle) * patternRadius;
-      const patternSize =
-        currentRadius * (0.08 + Math.sin(this.animationTime * 2 + i) * 0.03);
-      const patternAlpha = 0.25 + Math.sin(this.animationTime * 2.5 + i) * 0.15;
-
-      const patternGradient = ctx.createRadialGradient(
-        patternX,
-        patternY,
-        0,
-        patternX,
-        patternY,
-        patternSize,
-      );
-      patternGradient.addColorStop(
-        0,
-        `rgba(${String(r + 20)}, ${String(g + 20)}, ${String(b + 20)}, ${String(patternAlpha)})`,
-      );
-      patternGradient.addColorStop(
-        0.5,
-        `rgba(${String(r)}, ${String(g)}, ${String(b)}, ${String(patternAlpha * 0.6)})`,
-      );
-      patternGradient.addColorStop(
-        1,
-        `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0)`,
-      );
-
-      ctx.fillStyle = patternGradient;
-      ctx.beginPath();
-      ctx.arc(patternX, patternY, patternSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // Tentacle-like appendages (Lordakia characteristic feature)
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.rotate(this.animationTime * 0.5 + this.rotationOffset);
-
-    const tentacleCount = 4;
-    for (let i = 0; i < tentacleCount; i++) {
-      const tentacleAngle = (i / tentacleCount) * Math.PI * 2;
-      const tentacleSway = Math.sin(this.animationTime * 1.8 + i) * 0.2;
-      const baseAngle = tentacleAngle + tentacleSway;
-
-      // Tentacle base (attached to body)
-      const baseX = Math.cos(baseAngle) * currentRadius * 0.85;
-      const baseY = Math.sin(baseAngle) * currentRadius * 0.85;
-      const tentacleLength =
-        currentRadius * (0.25 + Math.sin(this.animationTime * 2 + i) * 0.1);
-      const tentacleTipX = baseX + Math.cos(baseAngle) * tentacleLength;
-      const tentacleTipY = baseY + Math.sin(baseAngle) * tentacleLength;
-      const tentacleWidth = currentRadius * 0.08;
-
-      // Tentacle gradient (gel-like)
-      const tentacleGradient = ctx.createLinearGradient(
-        baseX,
-        baseY,
-        tentacleTipX,
-        tentacleTipY,
-      );
-      tentacleGradient.addColorStop(
-        0,
-        `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.6)`,
-      );
-      tentacleGradient.addColorStop(
-        0.5,
-        `rgba(${String(r + 15)}, ${String(g + 15)}, ${String(b + 15)}, 0.5)`,
-      );
-      tentacleGradient.addColorStop(
-        1,
-        `rgba(${String(r + 30)}, ${String(g + 30)}, ${String(b + 30)}, 0.4)`,
-      );
-
-      ctx.strokeStyle = tentacleGradient;
-      ctx.lineWidth = Math.floor(tentacleWidth);
-      ctx.lineCap = 'square';
-      ctx.shadowBlur = 0;
-      ctx.shadowColor = 'transparent';
-      ctx.beginPath();
-      ctx.moveTo(baseX, baseY);
-      ctx.lineTo(tentacleTipX, tentacleTipY);
-      ctx.stroke();
-
-      // Tentacle tip (glowing)
-      const tipGlow = ctx.createRadialGradient(
-        tentacleTipX,
-        tentacleTipY,
-        0,
-        tentacleTipX,
-        tentacleTipY,
-        tentacleWidth * 1.5,
-      );
-      tipGlow.addColorStop(
-        0,
-        `rgba(${String(r + 40)}, ${String(g + 40)}, ${String(b + 40)}, 0.8)`,
-      );
-      tipGlow.addColorStop(
-        0.5,
-        `rgba(${String(r + 20)}, ${String(g + 20)}, ${String(b + 20)}, 0.5)`,
-      );
-      tipGlow.addColorStop(
-        1,
-        `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0)`,
-      );
-
-      ctx.fillStyle = tipGlow;
-      ctx.beginPath();
-      ctx.arc(tentacleTipX, tentacleTipY, tentacleWidth * 1.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.shadowBlur = 0;
-    ctx.restore();
-
-    // Enhanced glossy highlight - Lordakia reflective gel surface
-    const highlightSize = currentRadius * 0.4;
-    const highlightAlpha =
-      0.6 + Math.sin(this.animationTime * 1.5 + this.rotationOffset) * 0.1;
-
-    // Main highlight
-    const highlightX1 = -currentRadius * 0.35;
-    const highlightY1 = -currentRadius * 0.35;
-    ctx.fillStyle = `rgba(255, 255, 255, ${String(highlightAlpha)})`;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(highlightX1, highlightY1, highlightSize, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.fill();
-
-    // Secondary smaller highlight for extra gloss
-    const highlightX2 = -currentRadius * 0.25;
-    const highlightY2 = -currentRadius * 0.25;
-    const highlightSize2 = highlightSize * 0.5;
-    ctx.fillStyle = `rgba(255, 255, 255, ${String(highlightAlpha * 0.5)})`;
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(highlightX2, highlightY2, highlightSize2, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.fill();
-
-    // Gel-like border outline
-    ctx.strokeStyle = `rgba(${String(strokeR)}, ${String(strokeG)}, ${String(strokeB)}, 0.8)`;
-    ctx.lineWidth = 2;
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = 'transparent';
-    ctx.beginPath();
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(scaleX, scaleY);
-    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
-    ctx.restore();
-    ctx.stroke();
-
-    // Draw speech bubble if visible
-    if (this.speechBubbleVisible && this.currentHp > 0) {
-      this.drawSpeechBubble(
-        ctx,
-        centerX,
-        centerY,
-        Math.max(deformedRadiusX, deformedRadiusY),
-      );
-    }
+    // Draw pixel sprite (default normal)
+    const sprite = getSpriteForType('normal');
+    this.drawPixelSprite(ctx, centerX, centerY, spriteWidth, spriteHeight, sprite, this.color.fill);
 
     // Health bar (bubble integrity) - position relative to deformed center
+    // Draw HP bar before speech bubble so bubble appears on top
     const hpBarWidth = this.radius * 2;
     const hpBarHeight = 6;
-    const hpBarY = centerY - Math.max(deformedRadiusX, deformedRadiusY) - 18;
+    const hpBarY = centerY - spriteHeight / 2 - 18;
     const hpBarX = centerX - hpBarWidth / 2;
     const hpPercent = this.currentHp / this.maxHp;
 
@@ -951,23 +748,20 @@ export class AlienBall {
     const fillWidth = hpBarWidth * hpPercent;
     ctx.fillRect(hpBarX, hpBarY, fillWidth, hpBarHeight);
 
-    // No border - removed container
+    // Draw speech bubble if visible (after HP bar so it appears on top)
+    if (this.speechBubbleVisible && this.currentHp > 0) {
+      this.drawSpeechBubble(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    }
 
     // Simple flash effect when damaged
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      const flashRadius =
-        Math.max(deformedRadiusX, deformedRadiusY) *
-        (1 + (1 - flashAlpha) * 0.2);
-
-      drawer.setAlpha(flashAlpha * 0.6);
-      drawer.setStroke(
-        `rgba(${String(r)}, ${String(g)}, ${String(b)}, 0.9)`,
-        4,
-      );
-      drawer.circle(centerX, centerY, flashRadius, false);
-
-      drawer.resetAlpha();
+      this.drawPixelSprite(ctx, centerX, centerY, spriteWidth, spriteHeight, sprite, '#ffffff', flashAlpha * 0.7);
     }
   }
 }

@@ -45,6 +45,14 @@ export class Store {
     return { ...this.state };
   }
 
+  /**
+   * Get state reference without cloning (for performance in hot loops)
+   * WARNING: Do not mutate the returned state directly!
+   */
+  getReadonlyState(): Readonly<GameState> {
+    return this.state;
+  }
+
   setState(updates: Partial<GameState>): void {
     this.state = { ...this.state, ...updates };
     this.notifyListeners();

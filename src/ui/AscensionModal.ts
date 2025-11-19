@@ -215,7 +215,14 @@ export class AscensionModal {
         }
       } else {
         ascendBtn.disabled = true;
-        ascendBtn.textContent = `REACH LEVEL 100 TO ASCEND (Current: ${state.level.toString()})`;
+        // Check if blocked by boss at level 100
+        if (state.level === 100 && state.blockedOnBossLevel === 100) {
+          ascendBtn.textContent = 'DEFEAT THE BOSS TO ASCEND';
+        } else if (state.subUpgrades['meaning_of_life'] !== true && state.prestigeLevel === 0) {
+          ascendBtn.textContent = 'PURCHASE "MEANING OF LIFE" UPGRADE TO UNLOCK PRESTIGE';
+        } else {
+          ascendBtn.textContent = `REACH LEVEL 100 TO ASCEND (Current: ${state.level.toString()})`;
+        }
       }
     }
 

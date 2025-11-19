@@ -391,7 +391,12 @@ export class MissionSystem {
       state.shipsCount += finalReward.ships;
     }
     if (finalReward.xp > 0) {
-      state.experience += finalReward.xp;
+      // At level 100, can only gain XP after defeating the boss
+      if (state.level === 100 && state.blockedOnBossLevel === 100) {
+        // No XP from missions until boss is defeated
+      } else {
+        state.experience += finalReward.xp;
+      }
     }
 
     this.store.setState(state);

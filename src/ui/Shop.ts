@@ -194,7 +194,7 @@ export class Shop {
     tooltip.textContent =
       'Automatically purchase affordable upgrades every 0.5 seconds';
     document.body.appendChild(tooltip);
-    
+
     // Update tooltip position on hover
     autoBuyBtn.addEventListener('mouseenter', () => {
       const rect = autoBuyBtn.getBoundingClientRect();
@@ -203,7 +203,7 @@ export class Shop {
       tooltip.style.transform = 'translateX(-50%)';
       tooltip.style.opacity = '1';
     });
-    
+
     autoBuyBtn.addEventListener('mouseleave', () => {
       tooltip.style.opacity = '0';
     });
@@ -304,7 +304,7 @@ export class Shop {
   private updateToggleButtonImage(button: HTMLElement): void {
     const img = button.querySelector('img');
     if (img) {
-      img.src = this.isDesktopCollapsed 
+      img.src = this.isDesktopCollapsed
         ? images.menu.right
         : images.menu.left;
       img.alt = this.isDesktopCollapsed ? 'Open Shop' : 'Close Shop';
@@ -339,7 +339,7 @@ export class Shop {
       } else {
         shopPanel.classList.remove('desktop-collapsed');
       }
-      
+
       // Update button image
       this.updateToggleButtonImage(toggleButton);
 
@@ -354,7 +354,7 @@ export class Shop {
         window.dispatchEvent(new Event('resize'));
       }, 350);
     });
-    
+
     // Initialize button image
     this.updateToggleButtonImage(toggleButton);
   }
@@ -662,7 +662,7 @@ export class Shop {
     this.container.innerHTML = '';
     const state = this.store.getState();
     this.upgradeSystem.updateSubUpgradesFromState(state);
-    
+
     // Always check for discoveries before rendering to ensure visibility is correct
     this.checkForDiscoveries(state);
 
@@ -688,13 +688,13 @@ export class Shop {
   private setBuyButtonContent(buttonElement: HTMLButtonElement, displayQuantity: number): void {
     // Clear existing content
     buttonElement.innerHTML = '';
-    
+
     // Add image
     const img = document.createElement('img');
     img.src = images.menu.buy;
     img.alt = 'Buy';
     buttonElement.appendChild(img);
-    
+
     // Add quantity text if needed
     if (this.buyQuantity === 'max' && displayQuantity > 1) {
       const quantityText = document.createElement('span');
@@ -702,7 +702,7 @@ export class Shop {
       quantityText.style.marginLeft = '4px';
       buttonElement.appendChild(quantityText);
     }
-    
+
     // Add hover text "Buy"
     const hoverText = document.createElement('span');
     hoverText.className = 'buy-hover-text';
@@ -728,19 +728,19 @@ export class Shop {
     // Once discovered, upgrades stay visible even if player drops below 40% cost
     const visibleSubUpgrades = allSubUpgrades.filter((sub) => {
       const subKey = `sub_${sub.id}`;
-      
+
       // Must not be owned
       if (sub.owned) return false;
-      
+
       // Must meet requirements
       if (!sub.requires(state)) return false;
-      
+
       // Must be visible
       if (!sub.isVisible(state)) return false;
-      
+
       // Must be discovered (once discovered, it stays visible)
       return Boolean(state.discoveredUpgrades?.[subKey]);
-    });
+    }).sort((a, b) => a.cost - b.cost);
 
     if (visibleSubUpgrades.length > 0) {
       const specialBox = document.createElement('div');
@@ -785,7 +785,7 @@ export class Shop {
 
       const item = document.createElement('div');
       item.className = 'upgrade-item';
-      
+
       // Enhanced UI: Add visual indicator for ships
       if (upgrade.id === 'ship') {
         item.classList.add('upgrade-item-ship');
@@ -864,8 +864,8 @@ export class Shop {
           }
         }
 
-      displayQuantity = requestedQty;
-      canAffordExact = state.points >= displayCost;
+        displayQuantity = requestedQty;
+        canAffordExact = state.points >= displayCost;
       }
 
       // Simplified cost display - just show the number
@@ -885,10 +885,10 @@ export class Shop {
 
       // Cache the button element for quick updates
       const buttonElement = button.getElement();
-      
+
       // Set button content with image
       this.setBuyButtonContent(buttonElement, displayQuantity);
-      
+
       this.buttonCache.set(upgrade.id, buttonElement);
 
       footer.appendChild(cost);
@@ -980,7 +980,7 @@ export class Shop {
     tooltip.innerHTML = `<strong>${upgradeName}</strong><br>${upgradeDescription}<br><div style="color: #66ccff; font-weight: 500; margin-top: 4px;">${costText}</div><em style="color: rgba(255, 255, 255, 0.6); font-size: 11px; margin-top: 4px; display: block;">${upgradeFlavor}</em>`;
     document.body.appendChild(tooltip);
     this.activeTooltips.add(tooltip);
-    
+
     // Update tooltip position on hover
     const showTooltip = () => {
       const rect = card.getBoundingClientRect();
@@ -989,11 +989,11 @@ export class Shop {
       tooltip.style.transform = 'translateX(-50%)';
       tooltip.style.opacity = '1';
     };
-    
+
     const hideTooltip = () => {
       tooltip.style.opacity = '0';
     };
-    
+
     card.addEventListener('mouseenter', showTooltip);
     card.addEventListener('mouseleave', hideTooltip);
 
@@ -1096,6 +1096,12 @@ export class Shop {
     return { totalCost, quantity };
   }
 
+  private onPurchaseCallback: (() => void) | null = null;
+
+  public setOnPurchase(callback: () => void): void {
+    this.onPurchaseCallback = callback;
+  }
+
   private buyUpgrade(upgrade: UpgradeConfig, quantity: number = 1): void {
     // Prevent concurrent purchases
     if (this.isProcessingPurchase) return;
@@ -1165,6 +1171,11 @@ export class Shop {
         this.soundManager.playPurchase();
       }
 
+      // Notify listener
+      if (this.onPurchaseCallback) {
+        this.onPurchaseCallback();
+      }
+
       // Visual feedback: briefly highlight the purchased upgrade button
       const button = this.buttonCache.get(upgrade.id);
       if (button) {
@@ -1202,6 +1213,8 @@ export class Shop {
     const state = this.store.getState();
     const discountedCost = this.upgradeSystem.getSubUpgradeCost(upgrade);
     if (state.points >= discountedCost) {
+      const wasMeaningOfLife = upgrade.id === 'meaning_of_life' && !state.subUpgrades['meaning_of_life'];
+      
       state.points -= discountedCost;
       upgrade.buy(state);
       this.store.incrementSubUpgrade();
@@ -1216,12 +1229,97 @@ export class Shop {
         this.soundManager.playPurchase();
       }
 
+      // Special animation for meaning_of_life upgrade
+      if (wasMeaningOfLife) {
+        // Trigger store update to show prestige button animation
+        this.store.setState(state);
+        
+        // Add visual effect to the upgrade card
+        const upgradeCard = document.querySelector(`[data-upgrade-id="${upgrade.id}"]`);
+        if (upgradeCard instanceof HTMLElement) {
+          // Create pulsing glow animation
+          upgradeCard.style.transition = 'all 0.3s ease-out';
+          upgradeCard.style.transform = 'scale(1.15)';
+          upgradeCard.style.boxShadow = '0 0 50px rgba(255, 215, 0, 1), 0 0 100px rgba(255, 215, 0, 0.6), inset 0 0 40px rgba(255, 215, 0, 0.5)';
+          upgradeCard.style.zIndex = '1000';
+          upgradeCard.style.filter = 'brightness(1.3)';
+          
+          // Pulsing effect
+          let pulseCount = 0;
+          const pulseInterval = setInterval(() => {
+            pulseCount++;
+            if (pulseCount >= 3) {
+              clearInterval(pulseInterval);
+              upgradeCard.style.transition = 'all 0.5s ease-out';
+              upgradeCard.style.transform = '';
+              upgradeCard.style.boxShadow = '';
+              upgradeCard.style.zIndex = '';
+              upgradeCard.style.filter = '';
+            } else {
+              upgradeCard.style.transform = pulseCount % 2 === 0 ? 'scale(1.2)' : 'scale(1.15)';
+            }
+          }, 200);
+        }
+      }
+
+      // Notify listener
+      if (this.onPurchaseCallback) {
+        this.onPurchaseCallback();
+      }
+
       // Force immediate UI update
       this.lastAffordability.clear();
       this.render();
     }
 
     this.isProcessingPurchase = false;
+  }
+
+  /**
+   * Check and buy discovered special upgrades first (prioritized)
+   * Called when there are discovered but unpurchased special upgrades
+   */
+  public checkAndBuyDiscoveredUpgrades(): void {
+    if (this.isProcessingPurchase) return;
+    
+    const state = this.store.getState();
+    if (!state.discoveredUpgrades) return;
+
+    // Only check sub-upgrades (special upgrades), not main upgrades
+    const subUpgrades = this.upgradeSystem.getSubUpgrades();
+    for (const subUpgrade of subUpgrades) {
+      const subKey = `sub_${subUpgrade.id}`;
+      if (
+        state.discoveredUpgrades[subKey] &&
+        !subUpgrade.owned &&
+        subUpgrade.isVisible(state)
+      ) {
+        const currentState = this.store.getState();
+        const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+        if (currentState.points >= cost) {
+          this.buySubUpgrade(subUpgrade);
+          return; // Bought one, done
+        }
+      }
+    }
+  }
+
+  /**
+   * Check if there are discovered but unpurchased special upgrades (sub-upgrades only)
+   */
+  private hasDiscoveredUpgrades(state: GameState): boolean {
+    if (!state.discoveredUpgrades) return false;
+
+    // Only check sub-upgrades (special upgrades), not main upgrades
+    const subUpgrades = this.upgradeSystem.getSubUpgrades();
+    for (const subUpgrade of subUpgrades) {
+      const subKey = `sub_${subUpgrade.id}`;
+      if (state.discoveredUpgrades[subKey] && !subUpgrade.owned) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -1239,6 +1337,14 @@ export class Shop {
     // Save state after discoveries
     this.store.setState(state);
     
+    // If there are discovered special upgrades, don't buy other upgrades - prioritize saving for them
+    const freshState = this.store.getState();
+    if (this.hasDiscoveredUpgrades(freshState)) {
+      return; // Skip buying other upgrades, save money for discovered special upgrades
+    }
+    
+    // If no special upgrades discovered, continue with normal upgrade buying logic below
+
     // Get fresh state after discoveries
     let currentState = this.store.getState();
     const upgrades = this.upgradeSystem.getUpgrades();
@@ -1277,12 +1383,12 @@ export class Shop {
 
       // Get fresh state for each upgrade check (state may have changed)
       currentState = this.store.getState();
-      
+
       // Auto-discover upgrades if player has 75% of the cost (same as manual discovery)
       const currentLevel = upgrade.getLevel(currentState);
       const cost = upgrade.getCost(currentLevel);
       const discoveryThreshold = cost * 0.75;
-      
+
       if (!currentState.discoveredUpgrades?.[upgrade.id] && currentLevel === 0) {
         // Auto-discover if player has 75% of cost
         if (currentState.points >= discoveryThreshold) {
@@ -1306,7 +1412,7 @@ export class Shop {
       const upgradeCost = upgrade.getCost(upgrade.getLevel(currentState));
       const canAfford = currentState.points >= upgradeCost;
       const canBuyResult = upgrade.canBuy(currentState);
-      
+
       if (canBuyResult && canAfford) {
         // Buy one at a time for auto-buy (safer and more predictable)
         this.buyUpgrade(upgrade, 1);

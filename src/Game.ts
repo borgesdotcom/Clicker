@@ -3,6 +3,7 @@
 import { AlienBall } from './entities/AlienBall';
 import { EnhancedAlienBall, selectEnemyType } from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
+import { getPixelHitPoint } from './utils/Raycast';
 import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
 import { Draw } from './render/Draw';
@@ -37,6 +38,8 @@ import { ArtifactsModal } from './ui/ArtifactsModal';
 import { VersionSplash } from './ui/VersionSplash';
 import { CreditsModal } from './ui/CreditsModal';
 import { GameInfoModal } from './ui/GameInfoModal';
+import { StartScreen } from './ui/StartScreen';
+import { TutorialSystem } from './systems/TutorialSystem';
 import { PerformanceMonitor } from './ui/PerformanceMonitor';
 import { ColorManager } from './math/ColorManager';
 import { images } from './assets/images';
@@ -82,6 +85,8 @@ export class Game {
   private notificationSystem: NotificationSystem;
   private hud: Hud;
   private shop: Shop;
+  private startScreen: StartScreen;
+  private tutorialSystem: TutorialSystem;
   private customizationSystem: VisualCustomizationSystem;
   private saveTimer = 0;
   private saveInterval = 3;
@@ -95,6 +100,10 @@ export class Game {
   private titleUpdateTimer = 0;
   private shakeTime = 0;
   private shakeAmount = 0;
+
+  // Active Skill States
+  private midasActive = false;
+  private overclockTimer = 0;
   private mode: GameMode = 'normal';
   private transitionTime = 0;
   private transitionDuration = 2;
@@ -173,13 +182,13 @@ export class Game {
     hitDirection?: Vec2;
     isBeam: boolean;
   } = {
-    damage: 0,
-    isCrit: false,
-    isFromShip: false,
-    clickDamage: 0,
-    hitDirection: undefined,
-    isBeam: false,
-  };
+      damage: 0,
+      isCrit: false,
+      isFromShip: false,
+      clickDamage: 0,
+      hitDirection: undefined,
+      isBeam: false,
+    };
   private batchTimer = 0;
   private batchInterval = 0.05; // Apply damage every 50ms
 
@@ -324,7 +333,7 @@ export class Game {
     // Set initial background based on level (before first render)
     const initialLevel = initialState.level || 1;
     this.updateBackgroundByLevel(initialLevel);
-    
+
     // Set initial background theme colors (keep for star colors, etc.)
     const bgColors = this.customizationSystem.getBackgroundColors();
     const initialThemeId: string = 'default_background';
@@ -409,6 +418,20 @@ export class Game {
       });
     }
     this.hud = new Hud();
+    this.hud.onSkillActivate = (id) => {
+      // Prevent activation during boss mode
+      if (this.mode === 'boss') {
+        this.hud.showMessage('Cannot use skills during boss fights!', '#ff4444', 2000);
+        return;
+      }
+
+      const result = this.artifactSystem.activateArtifact(id);
+      if (result.success && result.effect) {
+        this.handleActiveEffect(result.effect);
+      } else if (result.reason === 'On cooldown') {
+        this.hud.showMessage('Skill is on cooldown!', '#ffaa00', 1500);
+      }
+    };
     // Configure UpgradeSystem to access game state for discounts
     this.upgradeSystem.setGameStateGetter(() => this.store.getState());
 
@@ -416,6 +439,9 @@ export class Game {
     this.shop.setSoundManager(this.soundManager);
     this.shop.setMissionSystem(this.missionSystem);
     this.shop.setAscensionSystem(this.ascensionSystem);
+    this.shop.setOnPurchase(() => {
+      this.handleUpgradePurchase();
+    });
 
     this.achievementSystem.setOnUnlock((achievement) => {
       this.achievementSnackbar.show(achievement);
@@ -489,6 +515,12 @@ export class Game {
       this.resetGame();
     });
     this.settingsModal.setCreditsModal(this.creditsModal);
+
+    this.startScreen = new StartScreen(() => {
+      this.onStartGame();
+    });
+
+    this.tutorialSystem = new TutorialSystem(this.store);
   }
 
   private setupBossDialog(): void {
@@ -630,6 +662,12 @@ export class Game {
       return;
     }
 
+    // Check if boss is already defeated (race condition fix)
+    // If boss is dead, don't process timeout - defeat handler will handle it
+    if (this.bossBall && this.bossBall.currentHp <= 0) {
+      return;
+    }
+
     // Set flag immediately to prevent race conditions
     this.bossTimeoutHandled = true;
 
@@ -720,6 +758,16 @@ export class Game {
   }
 
   start(): void {
+    // Only show start screen on first load (no existing save data)
+    if (!Save.hasSaveData()) {
+      this.startScreen.show();
+    } else {
+      // Skip start screen and directly start the game
+      this.onStartGame();
+    }
+  }
+
+  private onStartGame(): void {
     // Check for offline progress before starting
     this.checkOfflineProgress();
 
@@ -731,6 +779,25 @@ export class Game {
     this.soundManager.startSoundtrack();
 
     this.loop.start();
+
+    // Start tutorial only on first load (no existing save data)
+    if (!Save.hasSaveData()) {
+      setTimeout(() => {
+        this.tutorialSystem.start();
+      }, 600);
+    }
+
+    // Hook up shop toggle for tutorial
+    const shopToggle = document.getElementById('desktop-shop-toggle');
+    if (shopToggle) {
+      shopToggle.addEventListener('click', () => {
+        this.tutorialSystem.onShopOpened();
+      });
+    }
+  }
+
+  private handleUpgradePurchase(): void {
+    this.tutorialSystem.onUpgradeBought();
   }
 
   private checkOfflineProgress(): void {
@@ -821,15 +888,65 @@ export class Game {
         this.ascensionModal.show();
       });
 
+      // Track if prestige was previously unlocked to detect when it gets unlocked
+      let wasPrestigeUnlocked = false;
+      let wasMeaningOfLifeOwned = false;
+
       // Update button visibility based on whether ascension is unlocked
       const updateAscensionBtn = () => {
         const state = this.store.getState();
-        const canAscend = this.ascensionSystem.canAscend(state);
-        ascensionBtn.style.display =
-          canAscend || state.prestigeLevel > 0 ? 'block' : 'none';
+        const hasMeaningOfLife = state.subUpgrades['meaning_of_life'] === true;
+        // Button only appears if meaning_of_life is purchased OR if already prestiged before
+        const isUnlocked = hasMeaningOfLife || state.prestigeLevel > 0;
+        
+        // Check if prestige was just unlocked via meaning_of_life purchase
+        const isNowUnlocked = isUnlocked && !wasPrestigeUnlocked && hasMeaningOfLife && !wasMeaningOfLifeOwned;
+        
+        if (isNowUnlocked) {
+          // Animate the button appearing
+          ascensionBtn.style.display = 'block';
+          ascensionBtn.style.opacity = '0';
+          ascensionBtn.style.transform = 'scale(0.5)';
+          ascensionBtn.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          
+          // Add glow effect
+          ascensionBtn.style.filter = 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))';
+          ascensionBtn.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)';
+          
+          // Trigger animation
+          setTimeout(() => {
+            ascensionBtn.style.opacity = '1';
+            ascensionBtn.style.transform = 'scale(1)';
+            
+            // Remove glow after animation
+            setTimeout(() => {
+              ascensionBtn.style.transition = '';
+              ascensionBtn.style.filter = '';
+              ascensionBtn.style.boxShadow = '';
+            }, 2000);
+          }, 50);
+          
+          // Show notification
+          if (this.notificationSystem) {
+            this.notificationSystem.show(
+              '🌟 Prestige System Unlocked! You can now ascend and gain prestige points!',
+              'success',
+              5000
+            );
+          }
+        } else {
+          ascensionBtn.style.display = isUnlocked ? 'block' : 'none';
+        }
+        
+        wasPrestigeUnlocked = isUnlocked;
+        wasMeaningOfLifeOwned = hasMeaningOfLife;
       };
 
       this.store.subscribe(updateAscensionBtn);
+      // Initialize state
+      const initialState = this.store.getState();
+      wasMeaningOfLifeOwned = initialState.subUpgrades['meaning_of_life'] === true;
+      wasPrestigeUnlocked = wasMeaningOfLifeOwned || initialState.prestigeLevel > 0;
       updateAscensionBtn();
 
       buttonsContainer.appendChild(ascensionBtn);
@@ -837,20 +954,11 @@ export class Game {
   }
 
   private setupSettingsButton(): void {
-    const buttonsContainer = document.getElementById('hud-buttons-container');
-    if (buttonsContainer) {
-      const settingsBtn = document.createElement('button');
-      settingsBtn.id = 'settings-button';
-      settingsBtn.className = 'hud-button';
-      settingsBtn.setAttribute('data-icon', '⚙️');
-      settingsBtn.setAttribute('data-text', 'Settings');
-      settingsBtn.setAttribute('aria-label', 'Open Settings');
-      settingsBtn.setAttribute('aria-keyshortcuts', 'S');
-      settingsBtn.innerHTML = `<img src="${images.menu.settings}" alt="Settings" />`;
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
       settingsBtn.addEventListener('click', () => {
         this.settingsModal.show();
       });
-      buttonsContainer.appendChild(settingsBtn);
     }
   }
 
@@ -1129,14 +1237,14 @@ export class Game {
       const seconds = Math.floor(this.comboPauseDuration % 60);
       timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
       timerEl.style.display = 'block';
-      
+
       const percent = (this.comboPauseDuration / this.COMBO_PAUSE_DURATION) * 100;
       cooldownRing.style.background = `conic-gradient(
         rgba(0, 170, 255, 0.3) ${percent}%,
         transparent ${percent}%
       )`;
       cooldownRing.style.display = 'block';
-      
+
       this.comboPauseButton.classList.add('skill-active');
       this.comboPauseButton.classList.remove('skill-cooldown', 'skill-ready');
       this.comboPauseButton.style.cursor = 'default';
@@ -1146,14 +1254,14 @@ export class Game {
       const seconds = Math.floor(this.comboPauseCooldown % 60);
       timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
       timerEl.style.display = 'block';
-      
+
       const percent = (this.comboPauseCooldown / this.COMBO_PAUSE_COOLDOWN) * 100;
       cooldownRing.style.background = `conic-gradient(
         rgba(100, 100, 100, 0.5) ${percent}%,
         transparent ${percent}%
       )`;
       cooldownRing.style.display = 'block';
-      
+
       this.comboPauseButton.classList.add('skill-cooldown');
       this.comboPauseButton.classList.remove('skill-active', 'skill-ready');
       this.comboPauseButton.style.cursor = 'not-allowed';
@@ -1161,7 +1269,7 @@ export class Game {
       // Ready to use
       timerEl.style.display = 'none';
       cooldownRing.style.display = 'none';
-      
+
       this.comboPauseButton.classList.add('skill-ready');
       this.comboPauseButton.classList.remove('skill-active', 'skill-cooldown');
       this.comboPauseButton.style.cursor = 'pointer';
@@ -1176,11 +1284,11 @@ export class Game {
     // Level 1-100 = space1, 101-200 = space2, etc.
     // Use Math.ceil to ensure level 100 stays in space1, level 101 goes to space2
     const backgroundIndex = Math.min(Math.ceil(level / 100), 9);
-    
+
     // Get the background GIF from the imported images
     const backgroundGifUrl = images.backgroundGifs[backgroundIndex as keyof typeof images.backgroundGifs] || images.backgroundGif;
     const backgroundUrl = `url("${backgroundGifUrl}")`;
-    
+
     // Update game container background
     const gameContainer = document.getElementById('game-container');
     if (gameContainer) {
@@ -1189,10 +1297,10 @@ export class Game {
       gameContainer.style.backgroundRepeat = 'repeat';
       gameContainer.style.backgroundSize = 'auto';
       gameContainer.style.backgroundColor = '#000';
-      
+
       console.log('Background updated by level:', backgroundIndex, backgroundUrl);
     }
-    
+
     // Update shop panel background to match
     const shopPanel = document.getElementById('shop-panel');
     if (shopPanel) {
@@ -1202,7 +1310,7 @@ export class Game {
       }
       // Set black background as base
       shopPanel.style.background = `#000`;
-      
+
       // Create or update shop background overlay div with opacity
       let shopBgOverlay = document.getElementById('shop-background-overlay');
       if (!shopBgOverlay) {
@@ -1312,7 +1420,7 @@ export class Game {
 
     this.store.setState(freshState);
     Save.save(this.store.getState());
-    
+
     // Update background based on new starting level
     this.updateBackgroundByLevel(freshState.level);
 
@@ -1330,7 +1438,7 @@ export class Game {
     this.autoFireSystem.reset();
     this.powerUpSystem.clear();
     this.saveTimer = 0;
-    
+
     // Reset combo pause skill state and update button (to show if unlocked)
     this.comboPauseActive = false;
     this.comboPauseDuration = 0;
@@ -1910,21 +2018,20 @@ export class Game {
   }
 
   private calculateHitPoint(origin: Vec2, center: Vec2, radius: number): Vec2 {
-    const dx = center.x - origin.x;
-    const dy = center.y - origin.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    // Use pixel-perfect raycasting
+    // We need to determine the sprite type.
+    // Since this method is generic for any target, and we don't pass the entity itself easily here without refactoring,
+    // we can assume 'normal' for now or try to infer.
+    // Ideally, we should pass the entity to this method, but to avoid breaking changes, we'll use the default sprite.
+    // Most aliens use the same 11x11 grid structure roughly, so ALIEN_SPRITE_NORMAL is a good approximation for all.
+    // If we have the target entity available in scope (which we do in fireSingleShip), we could pass it.
 
-    if (distance <= radius) {
-      return center;
-    }
-
-    const nx = dx / distance;
-    const ny = dy / distance;
-
-    return {
-      x: center.x - nx * radius,
-      y: center.y - ny * radius,
-    };
+    // However, looking at fireSingleShip, we call this with targetEntity.radius.
+    // Let's stick to the new utility function.
+    
+    // Determine sprite based on context if possible, otherwise default
+    // For now, using the default normal sprite covers most cases well enough for "shape"
+    return getPixelHitPoint(origin, center, radius);
   }
 
   private getLaserVisuals(state: import('./types').GameState): {
@@ -2121,6 +2228,11 @@ export class Game {
     hitDirection?: Vec2,
     isBeam?: boolean,
   ): void {
+    // Notify tutorial system of click/damage
+    if (!isFromShip && !isBeam) {
+      this.tutorialSystem.onAlienClicked();
+    }
+
     let finalDamage = damage;
     const state = this.store.getState();
 
@@ -2282,12 +2394,29 @@ export class Game {
       }
 
       if (broken) {
+        // Spawn explosion particles
+        if (this.userSettings.highGraphics) {
+          this.particleSystem.spawnExplosion(
+            this.ball.x,
+            this.ball.y,
+            this.ball.color.fill,
+            true,
+            this.customizationSystem.getParticleStyle().style as any,
+          );
+        }
+
         let killReward = this.ball.maxHp;
         if (this.ball instanceof EnhancedAlienBall) {
           killReward = this.ball.getPointsReward(killReward);
         }
         // Apply artifact points bonus
         killReward *= 1 + this.artifactSystem.getPointsBonus();
+
+        if (this.midasActive) {
+          killReward *= 10;
+          this.midasActive = false;
+          this.hud.showMessage('MIDAS BONUS!', '#ffd700');
+        }
         killReward *= this.powerUpSystem.getPointsMultiplier();
         const roundedReward = Math.max(1, Math.floor(killReward));
         // Record kill reward for points per second calculation
@@ -2405,7 +2534,10 @@ export class Game {
     let bonusXP = upgradeBonus * baseXP * xpScaling;
     bonusXP *= 1 + artifactBonus;
 
-    if (this.blockedOnBossLevel !== null) {
+    // At level 100, can only gain XP after defeating the boss
+    if (state.level === 100 && this.blockedOnBossLevel === 100) {
+      bonusXP = 0; // No XP until boss is defeated
+    } else if (this.blockedOnBossLevel !== null) {
       bonusXP *= 0.1;
     }
 
@@ -2432,7 +2564,7 @@ export class Game {
     if (leveledUp) {
       // Update background immediately when level changes
       this.updateBackgroundByLevel(newLevel);
-      
+
       this.soundManager.playLevelUp();
 
       if (ColorManager.isBossLevel(state.level)) {
@@ -2463,6 +2595,10 @@ export class Game {
       return;
     }
 
+    // Prevent timeout handler from running if boss is defeated
+    // This fixes race condition when boss is killed near timer expiration
+    this.bossTimeoutHandled = true;
+
     const state = this.store.getState();
     const defeatedBossLevel = state.level;
     this.store.incrementBossKill();
@@ -2487,15 +2623,33 @@ export class Game {
 
     const artifactXPBonus = this.artifactSystem.getXPBonus();
 
-    let bossXP = Math.floor(state.level * 50);
+    // Reduced from level * 50 to level * 5 to prevent excessive leveling
+    // Boss should give roughly 10-20x normal enemy XP, not 100x+
+    let bossXP = Math.floor(state.level * 5);
     bossXP *= 1 + artifactXPBonus;
     bossXP *= this.getEnemyXpScaling(state.level);
-    
+
     // Apply XP multiplier upgrades (same as regular enemies)
     const upgradeBonus = this.upgradeSystem.getBonusXP(state);
     bossXP *= upgradeBonus;
-    
+
     bossXP = Math.max(1, Math.floor(bossXP));
+
+    // Special handling for level 100 boss - limit XP to only allow leveling to 101-105
+    if (state.level === 100) {
+      // Calculate XP needed to reach level 105 from level 100
+      let xpNeededFor105 = 0;
+      for (let level = 100; level < 105; level++) {
+        xpNeededFor105 += ColorManager.getExpRequired(level);
+      }
+      
+      // Calculate how much XP the player currently has towards next level
+      const currentXPProgress = state.experience;
+      
+      // Limit boss XP so total XP doesn't exceed what's needed for level 105
+      const maxAllowedXP = Math.max(0, xpNeededFor105 - currentXPProgress);
+      bossXP = Math.min(bossXP, maxAllowedXP);
+    }
 
     state.experience += bossXP;
 
@@ -2514,12 +2668,15 @@ export class Game {
       this.artifactsModal.show();
     }
 
-    while (state.experience >= ColorManager.getExpRequired(state.level)) {
+    // Limit leveling after level 100 boss defeat
+    const maxLevelAfterBoss = state.level === 100 ? 105 : Infinity;
+    
+    while (state.experience >= ColorManager.getExpRequired(state.level) && state.level < maxLevelAfterBoss) {
       const expRequired = ColorManager.getExpRequired(state.level);
       state.experience -= expRequired;
       state.level++;
       this.store.updateMaxLevel();
-      
+
       // Update background immediately when level changes
       this.updateBackgroundByLevel(state.level);
 
@@ -2691,6 +2848,96 @@ export class Game {
     this.batchTimer = 0;
   }
 
+  private handleActiveEffect(effect: string): void {
+    // Double-check we're not in boss mode (safety check)
+    if (this.mode === 'boss') {
+      return;
+    }
+
+    switch (effect) {
+      case 'nuke':
+        if (this.ball && this.ball.currentHp > 0) {
+          const dmg = this.ball.maxHp * 0.5;
+          const broken = this.ball.takeDamage(dmg);
+
+          // Award points for damage dealt
+          let pointsEarned = dmg;
+          if (this.ball instanceof EnhancedAlienBall) {
+            pointsEarned = this.ball.getPointsReward(pointsEarned);
+          }
+          pointsEarned *= this.powerUpSystem.getPointsMultiplier();
+          this.store.addPoints(pointsEarned);
+
+          this.damageNumberSystem.spawnDamageNumber(
+            this.ball.x,
+            this.ball.y,
+            dmg,
+            true,
+          );
+          // Big explosion particles
+          if (this.userSettings.highGraphics) {
+            this.particleSystem.spawnParticles({
+              x: this.ball.x,
+              y: this.ball.y,
+              count: 50,
+              color: '#ff0000',
+              speed: 200,
+              size: 5,
+              life: 1.0,
+              glow: true,
+            });
+          }
+
+          // Handle kill if alien was destroyed
+          if (broken) {
+            let killReward = this.ball.maxHp;
+            if (this.ball instanceof EnhancedAlienBall) {
+              killReward = this.ball.getPointsReward(killReward);
+            }
+            // Apply artifact points bonus
+            killReward *= 1 + this.artifactSystem.getPointsBonus();
+
+            if (this.midasActive) {
+              killReward *= 10;
+              this.midasActive = false;
+              this.hud.showMessage('MIDAS BONUS!', '#ffd700');
+            }
+            killReward *= this.powerUpSystem.getPointsMultiplier();
+            const roundedReward = Math.max(1, Math.floor(killReward));
+            // Record kill reward for points per second calculation
+            this.hud.recordKillReward(roundedReward);
+            this.store.addPoints(roundedReward);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.hud.showPointsGain(roundedReward);
+
+            // Chance to spawn power-up (1% chance - very rare, like Cookie Clicker golden cookies)
+            let spawnPowerUp = Math.random() < 0.01;
+            if (
+              this.ball instanceof EnhancedAlienBall &&
+              this.ball.enemyType === 'hoarder'
+            ) {
+              spawnPowerUp = true;
+            }
+            if (spawnPowerUp) {
+              const powerUpX = this.ball.x + (Math.random() - 0.5) * 100;
+              const powerUpY = this.ball.y + (Math.random() - 0.5) * 100;
+              this.spawnPowerUp(powerUpX, powerUpY);
+            }
+            this.onBallDestroyed();
+          }
+        }
+        break;
+      case 'midas':
+        this.midasActive = true;
+        this.hud.showMessage('MIDAS TOUCH ACTIVE!', '#ffd700', 3000);
+        break;
+      case 'overclock':
+        this.overclockTimer = 5; // 5 seconds
+        this.hud.showMessage('OVERCLOCK ACTIVE!', '#00ffff', 3000);
+        break;
+    }
+  }
+
   private update(dt: number): void {
     const realDt = dt;
     dt = dt * this.gameSpeed;
@@ -2705,7 +2952,8 @@ export class Game {
       webglRenderer.updateTime(dt);
     }
 
-    const state = this.store.getState();
+    // Use getReadonlyState for performance (avoids cloning)
+    const state = this.store.getReadonlyState();
 
     // Update combo pause skill
     if (this.comboPauseActive) {
@@ -2717,20 +2965,22 @@ export class Game {
         this.comboPauseDuration = 0;
         this.comboPauseCooldown = this.COMBO_PAUSE_COOLDOWN;
         this.comboSystem.resume();
-        
+
         // Update state
-        state.comboPauseActive = false;
-        state.comboPauseEndTime = 0;
-        state.comboPauseCooldownEndTime = now + this.COMBO_PAUSE_COOLDOWN * 1000;
-        this.store.setState({ ...state });
-        
+        this.store.setState({
+          comboPauseActive: false,
+          comboPauseEndTime: 0,
+          comboPauseCooldownEndTime: now + this.COMBO_PAUSE_COOLDOWN * 1000
+        });
+
         this.updateComboPauseButton();
       } else {
         // Update end time in state to reflect current duration
         const now = Date.now();
-        state.comboPauseEndTime = now + this.comboPauseDuration * 1000;
-        this.store.setState({ ...state });
-        
+        this.store.setState({
+          comboPauseEndTime: now + this.comboPauseDuration * 1000
+        });
+
         // Update button display every second
         if (Math.floor(this.comboPauseDuration) !== Math.floor(this.comboPauseDuration + dt)) {
           this.updateComboPauseButton();
@@ -2740,18 +2990,20 @@ export class Game {
       this.comboPauseCooldown -= dt;
       if (this.comboPauseCooldown <= 0) {
         this.comboPauseCooldown = 0;
-        
+
         // Update state
-        state.comboPauseCooldownEndTime = 0;
-        this.store.setState({ ...state });
-        
+        this.store.setState({
+          comboPauseCooldownEndTime: 0
+        });
+
         this.updateComboPauseButton();
       } else {
         // Update cooldown end time in state
         const now = Date.now();
-        state.comboPauseCooldownEndTime = now + this.comboPauseCooldown * 1000;
-        this.store.setState({ ...state });
-        
+        this.store.setState({
+          comboPauseCooldownEndTime: now + this.comboPauseCooldown * 1000
+        });
+
         // Update button display every second
         if (Math.floor(this.comboPauseCooldown) !== Math.floor(this.comboPauseCooldown + dt)) {
           this.updateComboPauseButton();
@@ -2943,6 +3195,16 @@ export class Game {
     this.damageNumberSystem.update(dt);
     this.comboSystem.update(dt);
     this.powerUpSystem.update(dt);
+    this.artifactSystem.update(dt);
+
+    // Update Skill Bar
+    this.hud.updateSkillBar(this.artifactSystem.getEquippedArtifacts());
+
+    // Overclock Logic
+    if (this.overclockTimer > 0) {
+      this.overclockTimer -= dt;
+      if (this.overclockTimer < 0) this.overclockTimer = 0;
+    }
 
     this.batchTimer += dt;
     if (this.batchTimer >= this.batchInterval) {
@@ -3038,10 +3300,14 @@ export class Game {
     }
 
     // Reuse already-calculated cooldown (already includes speed multiplier)
+    let effectiveCooldown = cooldown;
+    if (this.overclockTimer > 0) {
+      effectiveCooldown /= 3; // 3x speed during overclock
+    }
     this.autoFireSystem.update(
       dt,
       true, // Auto-fire always enabled for non-main ships
-      cooldown,
+      effectiveCooldown,
       (shipIndex) => {
         if (shipIndex > 0) {
           return this.fireSingleShip(shipIndex);
@@ -3070,7 +3336,7 @@ export class Game {
         this.shop.checkAndBuyAffordableUpgrades();
       } else if (!isUnlocked && state.autoBuyEnabled) {
         // Disable auto-buy if it was enabled but unlock was lost (shouldn't happen, but safety check)
-        state.autoBuyEnabled = false;
+        this.store.setState({ autoBuyEnabled: false });
       }
       this.autoBuyTimer = 0;
     }
@@ -3129,7 +3395,7 @@ export class Game {
     const bgColors = this.customizationSystem.getBackgroundColors();
     const themeId: string = 'default_background';
     this.background.setThemeColors(bgColors, themeId);
-    
+
     // Background GIF is updated automatically by level in updateBackgroundByLevel()
 
     // Clear canvas (WebGL or 2D)
@@ -3218,10 +3484,11 @@ export class Game {
 
     // Render ships (batch by entity type)
     // Use 2D canvas rendering for ships (better performance than DOM overlays)
-    const state = this.store.getState();
+    const state = this.store.getReadonlyState();
+    // Calculate visuals once per frame instead of per ship
+    const visuals = this.customizationSystem.getShipColors(state);
+
     for (const ship of this.ships) {
-      // Apply customization
-      const visuals = this.customizationSystem.getShipColors(state);
       // Store visuals for ship to use (for fallback triangle rendering)
       (ship as any).customVisuals = visuals;
       ship.draw(this.draw);
@@ -3243,7 +3510,7 @@ export class Game {
 
     // Render power-ups
     if (hasPowerUps) {
-      this.powerUpSystem.render(ctx);
+      this.powerUpSystem.render(ctx, this.draw);
     }
   }
 
@@ -3478,6 +3745,13 @@ export class Game {
       this.runGodModeClicking(agent);
     }
 
+    // Check for discovered but unpurchased upgrades - prioritize saving money for them
+    const hasDiscoveredUpgrades = this.checkForDiscoveredUpgrades();
+    if (hasDiscoveredUpgrades) {
+      // Reduce upgrade check timer to check more frequently when saving for discovered upgrades
+      agent.upgradeTimer = Math.min(agent.upgradeTimer, this.getRandomInRange(0.3, 0.6));
+    }
+    
     if (agent.upgradeTimer <= 0) {
       this.runGodModeUpgrades(agent);
     }
@@ -3557,14 +3831,20 @@ export class Game {
     );
     this.handleClick(clickPos);
 
+    // Check if saving for discovered upgrades - use faster click intervals
+    const hasDiscovered = this.checkForDiscoveredUpgrades();
+    const clickIntervalMin = hasDiscovered 
+      ? agent.clickIntervalRange.min * 0.7  // 30% faster
+      : agent.clickIntervalRange.min;
+    const clickIntervalMax = hasDiscovered
+      ? agent.clickIntervalRange.max * 0.7   // 30% faster
+      : agent.clickIntervalRange.max;
+
     if (agent.burstShotsRemaining > 0) {
       agent.burstShotsRemaining--;
       agent.clickTimer = agent.burstShotsRemaining
         ? this.getRandomInRange(0.05, 0.1)
-        : this.getRandomInRange(
-            agent.clickIntervalRange.min,
-            agent.clickIntervalRange.max,
-          );
+        : this.getRandomInRange(clickIntervalMin, clickIntervalMax);
     } else if (
       agent.burstCooldownTimer <= 0 &&
       Math.random() < agent.burstChance
@@ -3577,11 +3857,25 @@ export class Game {
       );
       agent.lastAction = 'Executed rapid click burst';
     } else {
-      agent.clickTimer = this.getRandomInRange(
-        agent.clickIntervalRange.min,
-        agent.clickIntervalRange.max,
-      );
+      agent.clickTimer = this.getRandomInRange(clickIntervalMin, clickIntervalMax);
     }
+  }
+
+  private checkForDiscoveredUpgrades(): boolean {
+    const state = this.store.getState();
+    if (!state.discoveredUpgrades) return false;
+
+    // Only check sub-upgrades (special upgrades), not main upgrades
+    const subUpgrades = this.upgradeSystem.getSubUpgrades();
+    for (const subUpgrade of subUpgrades) {
+      const subKey = `sub_${subUpgrade.id}`;
+      if (state.discoveredUpgrades[subKey] && !subUpgrade.owned) {
+        // Discovered but not purchased
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private runGodModeUpgrades(
@@ -3590,6 +3884,13 @@ export class Game {
     const beforeState = this.store.getState();
     const beforeUpgrades = beforeState.stats.totalUpgrades;
     const beforeSubUpgrades = beforeState.stats.totalSubUpgrades;
+
+    // Prioritize discovered upgrades
+    const hasDiscovered = this.checkForDiscoveredUpgrades();
+    if (hasDiscovered) {
+      // Try to buy discovered upgrades first
+      this.shop.checkAndBuyDiscoveredUpgrades();
+    }
 
     this.shop.checkAndBuyAffordableUpgrades(true);
 
@@ -3600,12 +3901,20 @@ export class Game {
         diff > 1 ? `Bought ${String(diff)} upgrades` : 'Bought upgrade';
     } else if (afterState.stats.totalSubUpgrades > beforeSubUpgrades) {
       agent.lastAction = 'Unlocked special upgrade';
+    } else if (hasDiscovered) {
+      agent.lastAction = 'Saving for discovered upgrade';
     }
 
-    agent.upgradeTimer = this.getRandomInRange(
-      agent.upgradeIntervalRange.min,
-      agent.upgradeIntervalRange.max,
-    );
+    // Adjust timer based on whether we're saving for discovered upgrades
+    if (hasDiscovered) {
+      // Check more frequently when saving for discovered upgrades
+      agent.upgradeTimer = this.getRandomInRange(0.3, 0.6);
+    } else {
+      agent.upgradeTimer = this.getRandomInRange(
+        agent.upgradeIntervalRange.min,
+        agent.upgradeIntervalRange.max,
+      );
+    }
   }
 
   private handleGodModeBossFlow(
@@ -3786,8 +4095,8 @@ export class Game {
       : 0;
     const bossEventText = lastHistoryEntry
       ? `${lastHistoryEntry.detail} (${this.formatDuration(
-          secondsSinceBossEvent,
-        )} ago)`
+        secondsSinceBossEvent,
+      )} ago)`
       : 'No boss activity yet';
     const nextRetryText =
       agent.bossRetryTimer > 0
@@ -3861,9 +4170,8 @@ export class Game {
 
     const bossLogEl = overlay.querySelector('[data-metric="boss-log"]');
     if (bossLogEl) {
-      bossLogEl.textContent = `Boss log: ${
-        metrics.bossLogText ? metrics.bossLogText : '—'
-      }`;
+      bossLogEl.textContent = `Boss log: ${metrics.bossLogText ? metrics.bossLogText : '—'
+        }`;
     }
 
     const formatValue = (value: number, fractionDigits = 1): string => {
@@ -3908,9 +4216,8 @@ export class Game {
 
     const actionEl = overlay.querySelector('[data-metric="last-action"]');
     if (actionEl) {
-      actionEl.textContent = `Last action: ${
-        metrics.lastAction ? metrics.lastAction : '—'
-      }`;
+      actionEl.textContent = `Last action: ${metrics.lastAction ? metrics.lastAction : '—'
+        }`;
     }
   }
 

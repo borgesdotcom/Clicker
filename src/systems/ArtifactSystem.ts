@@ -5,7 +5,8 @@ export type ArtifactType =
   | 'critical'
   | 'points'
   | 'xp'
-  | 'special';
+  | 'special'
+  | 'active';
 
 export interface Artifact {
   id: string;
@@ -18,6 +19,11 @@ export interface Artifact {
   level: number;
   maxLevel: number;
   equipped: boolean;
+  // Active skill properties
+  activeEffect?: string;
+  cooldown?: number; // Total cooldown in seconds
+  cooldownTimer?: number; // Current cooldown remaining (runtime only)
+  cooldownEndTime?: number; // Timestamp when cooldown ends (for persistence)
 }
 
 interface ArtifactTemplate {
@@ -27,6 +33,9 @@ interface ArtifactTemplate {
   baseBonus: number;
   icon: string;
   maxLevel: number;
+  // Active skill properties
+  activeEffect?: string;
+  cooldown?: number;
 }
 
 const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
@@ -193,6 +202,17 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       icon: '/src/icons/artifacts/moon.png',
       maxLevel: 15,
     },
+    // New Active Artifact: Overclocker
+    {
+      name: 'Overclocker Module',
+      description: 'Active: +200% Attack Speed for 5s (60s CD)',
+      type: 'active',
+      baseBonus: 0,
+      icon: '/src/icons/artifacts/battery.png',
+      maxLevel: 5,
+      activeEffect: 'overclock',
+      cooldown: 60,
+    },
   ],
   epic: [
     {
@@ -251,6 +271,17 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       icon: '/src/icons/artifacts/nuke.png',
       maxLevel: 20,
     },
+    // New Active Artifact: Midas Hand
+    {
+      name: 'Midas Chip',
+      description: 'Active: Next kill gives 10x Points (15m CD)',
+      type: 'active',
+      baseBonus: 0,
+      icon: '/src/icons/artifacts/gold_bar.png',
+      maxLevel: 5,
+      activeEffect: 'midas',
+      cooldown: 900, // 15 minutes
+    },
   ],
   legendary: [
     {
@@ -285,6 +316,17 @@ const ARTIFACT_TEMPLATES: Record<ArtifactRarity, ArtifactTemplate[]> = {
       icon: '/src/icons/artifacts/constelation_map.png',
       maxLevel: 25,
     },
+    // New Active Artifact: Doomsday Device
+    {
+      name: 'Doomsday Device',
+      description: 'Active: Deals 50% of Enemy Max HP (5m CD)',
+      type: 'active',
+      baseBonus: 0,
+      icon: '/src/icons/artifacts/nuke.png',
+      maxLevel: 5,
+      activeEffect: 'nuke',
+      cooldown: 300, // 5 minutes
+    },
   ],
 };
 
@@ -310,6 +352,20 @@ export class ArtifactSystem {
       try {
         const data = JSON.parse(saved) as { artifacts?: Artifact[] };
         this.artifacts = data.artifacts ?? [];
+        // Restore cooldowns based on saved end times
+        const now = Date.now();
+        this.artifacts.forEach((a) => {
+          if (a.type === 'active' && a.cooldownEndTime) {
+            const remaining = (a.cooldownEndTime - now) / 1000; // Convert to seconds
+            a.cooldownTimer = Math.max(0, remaining);
+            // Clear end time if cooldown expired
+            if (remaining <= 0) {
+              a.cooldownEndTime = undefined;
+            }
+          } else if (a.type === 'active') {
+            a.cooldownTimer = 0;
+          }
+        });
         this.equippedArtifacts = this.artifacts.filter((a) => a.equipped);
       } catch (e) {
         console.error('Failed to load artifacts:', e);
@@ -318,10 +374,79 @@ export class ArtifactSystem {
   }
 
   private save(): void {
+    // Save artifacts with cooldown end times (not timers)
     const data = {
-      artifacts: this.artifacts,
+      artifacts: this.artifacts.map((a) => {
+        const artifact = { ...a };
+        // Don't save runtime timer, only end time
+        if (a.type === 'active') {
+          delete (artifact as any).cooldownTimer;
+        }
+        return artifact;
+      }),
     };
     localStorage.setItem('artifacts', JSON.stringify(data));
+  }
+
+  public update(dt: number): void {
+    const now = Date.now();
+    for (const artifact of this.equippedArtifacts) {
+      if (artifact.type === 'active') {
+        // Update timer from end time if available (for persistence)
+        if (artifact.cooldownEndTime) {
+          const remaining = (artifact.cooldownEndTime - now) / 1000;
+          artifact.cooldownTimer = Math.max(0, remaining);
+          // Clear end time if expired
+          if (remaining <= 0) {
+            artifact.cooldownEndTime = undefined;
+            // Save when cooldown expires
+            this.save();
+          }
+        } else if (
+          artifact.cooldownTimer !== undefined &&
+          artifact.cooldownTimer > 0
+        ) {
+          // Fallback: update timer directly if no end time
+          artifact.cooldownTimer -= dt;
+          if (artifact.cooldownTimer < 0) artifact.cooldownTimer = 0;
+        }
+      }
+    }
+  }
+
+  public activateArtifact(
+    artifactId: string,
+  ): { success: boolean; effect?: string; duration?: number; reason?: string } {
+    const artifact = this.equippedArtifacts.find((a) => a.id === artifactId);
+    if (!artifact || artifact.type !== 'active') {
+      return { success: false, reason: 'Invalid artifact' };
+    }
+
+    // Check cooldown
+    const now = Date.now();
+    if (artifact.cooldownEndTime && artifact.cooldownEndTime > now) {
+      return { success: false, reason: 'On cooldown' };
+    }
+
+    // Check if cooldown timer is still active (runtime check)
+    if (artifact.cooldownTimer && artifact.cooldownTimer > 0) {
+      return { success: false, reason: 'On cooldown' };
+    }
+
+    // Apply cooldown
+    // Cooldown reduction based on level: 5% per level
+    const baseCooldown = artifact.cooldown || 60;
+    const reduction = Math.min(0.5, (artifact.level - 1) * 0.05);
+    const cooldownSeconds = baseCooldown * (1 - reduction);
+
+    // Set both timer (for runtime) and end time (for persistence)
+    artifact.cooldownTimer = cooldownSeconds;
+    artifact.cooldownEndTime = now + cooldownSeconds * 1000;
+
+    // Save immediately to persist cooldown
+    this.save();
+
+    return { success: true, effect: artifact.activeEffect };
   }
 
   public generateArtifact(rarity?: ArtifactRarity): Artifact {
@@ -356,6 +481,9 @@ export class ArtifactSystem {
       level: 1,
       maxLevel: template.maxLevel,
       equipped: false,
+      activeEffect: template.activeEffect,
+      cooldown: template.cooldown,
+      cooldownTimer: 0,
     };
 
     this.artifacts.push(artifact);
@@ -396,10 +524,18 @@ export class ArtifactSystem {
 
     artifact.level++;
     artifact.bonus = this.calculateBonus(artifact);
-    artifact.description = artifact.description.replace(
-      /\d+/,
-      artifact.bonus.toString(),
-    );
+
+    // Update description for stat artifacts
+    if (artifact.type !== 'active') {
+      artifact.description = artifact.description.replace(
+        /\d+/,
+        artifact.bonus.toString(),
+      );
+    } else {
+      // For active artifacts, update cooldown description if it was dynamic (optional)
+      // For now keeping description static for active artifacts
+    }
+
     this.save();
 
     return { success: true, cost };
@@ -627,5 +763,73 @@ export class ArtifactSystem {
     }
 
     return Math.floor(baseValue * 0.5 + totalUpgradeCost * 0.3);
+  }
+
+  public getFusionCost(rarity: ArtifactRarity): number {
+    // PP cost based on rarity - higher rarity costs more
+    const costs: Record<ArtifactRarity, number> = {
+      common: 5,      // 5 PP to fuse 3 common -> 1 rare
+      rare: 15,       // 15 PP to fuse 3 rare -> 1 epic
+      epic: 50,       // 50 PP to fuse 3 epic -> 1 legendary
+      legendary: 0,   // Cannot fuse legendary
+    };
+    return costs[rarity] || 0;
+  }
+
+  public fuseArtifacts(
+    artifactIds: string[],
+    prestigePoints: number,
+  ): { success: boolean; newArtifact?: Artifact; cost?: number; reason?: string } {
+    if (artifactIds.length !== 3) {
+      return { success: false, reason: 'Need exactly 3 artifacts' };
+    }
+
+    const artifactsToFuse = this.artifacts.filter((a) =>
+      artifactIds.includes(a.id),
+    );
+
+    if (artifactsToFuse.length !== 3) {
+      return { success: false, reason: 'Artifacts not found' };
+    }
+
+    // Check if any is equipped
+    if (artifactsToFuse.some((a) => a.equipped)) {
+      return { success: false, reason: 'Cannot fuse equipped artifacts' };
+    }
+
+    // Check rarities
+    const firstArtifact = artifactsToFuse[0];
+    if (!firstArtifact) {
+        return { success: false, reason: 'System error' };
+    }
+    const rarity = firstArtifact.rarity;
+    if (artifactsToFuse.some((a) => a.rarity !== rarity)) {
+      return { success: false, reason: 'Must be same rarity' };
+    }
+
+    if (rarity === 'legendary') {
+      return { success: false, reason: 'Cannot fuse Legendary artifacts' };
+    }
+
+    // Check PP cost
+    const cost = this.getFusionCost(rarity);
+    if (prestigePoints < cost) {
+      return { success: false, cost, reason: `Not enough Prestige Points. Need ${cost} PP.` };
+    }
+
+    // Determine next rarity
+    let nextRarity: ArtifactRarity;
+    if (rarity === 'common') nextRarity = 'rare';
+    else if (rarity === 'rare') nextRarity = 'epic';
+    else nextRarity = 'legendary';
+
+    // Remove old artifacts
+    this.artifacts = this.artifacts.filter((a) => !artifactIds.includes(a.id));
+
+    // Generate new artifact
+    const newArtifact = this.generateArtifact(nextRarity);
+
+    this.save();
+    return { success: true, newArtifact, cost };
   }
 }

@@ -7,6 +7,7 @@
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { t } from '../core/I18n';
 import { IconGenerator } from '../utils/IconGenerator';
+import type { Artifact } from '../systems/ArtifactSystem';
 
 export class Hud {
   private pointsDisplay: HTMLElement;
@@ -16,6 +17,7 @@ export class Hud {
   private totalIncomeDisplay: HTMLElement | null = null; // Combined income display
   private combatStatsContainer: HTMLElement | null = null; // Always visible combat stats
   private dpsFullDisplay: HTMLElement | null = null;
+  private skillBarContainer: HTMLElement | null = null; // New Skill Bar
 
   private damageHistory: Array<{ damage: number; time: number }> = [];
   private killRewardHistory: Array<{ reward: number; time: number }> = [];
@@ -25,6 +27,8 @@ export class Hud {
   private lastPointsText = '';
   private lastStatsText = { totalIncome: '' };
   private lastLevelText = { level: '', exp: '', percent: -1 };
+  
+  public onSkillActivate: ((artifactId: string) => void) | null = null;
 
   constructor() {
     const pointsEl = document.getElementById('points-display');
@@ -53,6 +57,142 @@ export class Hud {
 
     this.createStatsDisplay();
     this.createPowerUpBuffsDisplay();
+    this.createSkillBar();
+  }
+
+  private createSkillBar(): void {
+    const gameContainer = document.getElementById('game-container');
+    if (!gameContainer) return;
+
+    this.skillBarContainer = document.createElement('div');
+    this.skillBarContainer.id = 'skill-bar';
+    this.skillBarContainer.style.cssText = `
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 90;
+      pointer-events: auto;
+    `;
+
+    gameContainer.appendChild(this.skillBarContainer);
+  }
+
+  public updateSkillBar(equippedArtifacts: Artifact[]): void {
+    if (!this.skillBarContainer) return;
+
+    const activeArtifacts = equippedArtifacts.filter(a => a.type === 'active');
+    
+    if (activeArtifacts.length === 0) {
+      this.skillBarContainer.style.display = 'none';
+      return;
+    }
+
+    this.skillBarContainer.style.display = 'flex';
+
+    // Clear and rebuild if count changed (simple approach)
+    if (this.skillBarContainer.children.length !== activeArtifacts.length) {
+      this.skillBarContainer.innerHTML = '';
+      activeArtifacts.forEach((artifact, index) => {
+        const btn = document.createElement('div');
+        btn.className = 'skill-slot';
+        btn.style.cssText = `
+          width: 50px;
+          height: 50px;
+          background: rgba(0, 0, 0, 0.8);
+          border: 2px solid #444;
+          border-radius: 5px;
+          position: relative;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        `;
+        btn.onclick = () => {
+          if (this.onSkillActivate) this.onSkillActivate(artifact.id);
+        };
+
+        const icon = document.createElement('img');
+        icon.src = artifact.icon;
+        icon.style.cssText = 'width: 40px; height: 40px; object-fit: contain;';
+        btn.appendChild(icon);
+
+        const hotkey = document.createElement('div');
+        hotkey.textContent = (index + 1).toString();
+        hotkey.style.cssText = `
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          font-size: 10px;
+          color: #fff;
+          background: rgba(0,0,0,0.5);
+          padding: 1px 4px;
+          border-radius: 3px;
+        `;
+        btn.appendChild(hotkey);
+
+        const cooldownOverlay = document.createElement('div');
+        cooldownOverlay.className = 'cooldown-overlay';
+        cooldownOverlay.style.cssText = `
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 0%;
+          background: rgba(0, 0, 0, 0.7);
+          transition: height 0.1s linear;
+        `;
+        btn.appendChild(cooldownOverlay);
+
+        const cooldownText = document.createElement('div');
+        cooldownText.className = 'cooldown-text';
+        cooldownText.style.cssText = `
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: #fff;
+          font-weight: bold;
+          text-shadow: 0 0 3px #000;
+          display: none;
+        `;
+        btn.appendChild(cooldownText);
+
+        // Add tooltip logic (basic)
+        btn.title = `${artifact.name}: ${artifact.description}`;
+
+        this.skillBarContainer!.appendChild(btn);
+      });
+    }
+
+    // Update state (cooldowns)
+    const slots = this.skillBarContainer.children;
+    activeArtifacts.forEach((artifact, index) => {
+      const slot = slots[index] as HTMLElement;
+      const overlay = slot.querySelector('.cooldown-overlay') as HTMLElement;
+      const text = slot.querySelector('.cooldown-text') as HTMLElement;
+      
+      if (artifact.cooldownTimer && artifact.cooldown && artifact.cooldownTimer > 0) {
+        const percent = (artifact.cooldownTimer / artifact.cooldown) * 100;
+        overlay.style.height = `${percent}%`;
+        text.style.display = 'block';
+        text.textContent = Math.ceil(artifact.cooldownTimer).toString();
+        slot.style.borderColor = '#444';
+        slot.style.cursor = 'default';
+      } else {
+        overlay.style.height = '0%';
+        text.style.display = 'none';
+        slot.style.borderColor = '#00ff88'; // Ready color
+        slot.style.cursor = 'pointer';
+      }
+    });
   }
 
   private createPowerUpBuffsDisplay(): void {
@@ -646,36 +786,72 @@ export class Hud {
     color: string = '#ffffff',
     duration: number = 2000,
   ): void {
-    // Create message element
+    // Create message element with modern UI styling
     const messageEl = document.createElement('div');
     messageEl.textContent = message;
+    
+    // Create glow color with reduced opacity for box-shadow
+    let glowColor: string;
+    if (color.includes('rgba')) {
+      glowColor = color.replace(/[\d.]+\)$/, '0.3)');
+    } else if (color.startsWith('#')) {
+      // Convert hex to rgba with opacity
+      const hex = color.slice(1);
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      glowColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+    } else {
+      glowColor = `${color}4D`; // Fallback
+    }
+    
     messageEl.style.cssText = `
       position: fixed;
-      top: 50%;
+      top: 20px;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -100px);
       background: rgba(0, 0, 0, 0.9);
-      color: ${color};
-      padding: 20px 40px;
-      border: 3px solid ${color};
-      border-radius: 10px;
-      font-size: 24px;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 6px;
+      border: 2px solid ${color};
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.5),
+        0 0 8px ${glowColor},
+        inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+      font-size: 16px;
       font-weight: bold;
+      font-family: 'Courier New', monospace;
       z-index: 10000;
-      text-shadow: 0 0 10px ${color};
-      animation: pulse 0.5s ease-in-out;
+      text-shadow: 
+        0 1px 0 rgba(0, 0, 0, 1),
+        0 -1px 0 rgba(0, 0, 0, 1),
+        0 0 8px ${glowColor};
       pointer-events: none;
+      white-space: nowrap;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     `;
 
     document.body.appendChild(messageEl);
 
+    // Animate in
+    requestAnimationFrame(() => {
+      messageEl.style.opacity = '1';
+      messageEl.style.transform = 'translate(-50%, 0)';
+    });
+
     // Remove after duration
     setTimeout(() => {
       messageEl.style.opacity = '0';
-      messageEl.style.transition = 'opacity 0.3s';
+      messageEl.style.transform = 'translate(-50%, -30px)';
       setTimeout(() => {
-        document.body.removeChild(messageEl);
-      }, 300);
+        if (messageEl.parentElement) {
+          document.body.removeChild(messageEl);
+        }
+      }, 400);
     }, duration);
   }
 }
