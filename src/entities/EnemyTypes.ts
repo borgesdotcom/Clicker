@@ -288,20 +288,61 @@ export class EnhancedAlienBall extends AlienBall {
     const basePulseValue = Math.sin((this as any).animationTime * 1.5) * 0.02;
     const currentRadius = this.radius * (1 + basePulseValue);
 
-    const centerX = this.x + deformationX + (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
-    const centerY = this.y + deformationY + (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
+    const centerX =
+      this.x +
+      deformationX +
+      (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
+    const centerY =
+      this.y +
+      deformationY +
+      (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
 
     const spriteWidth = currentRadius * 2 * scaleX;
     const spriteHeight = currentRadius * 2 * scaleY;
 
+    // Draw special effects based on enemy type (Background/Underlay)
+    // Some effects look better behind the alien
+    if (this.enemyType === 'tank') {
+      this.drawTankEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'healer') {
+      this.drawHealerEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    }
+
     // Draw Sprite
     const sprite = getSpriteForType(this.enemyType);
-    this.drawPixelSprite(ctx, centerX, centerY, spriteWidth, spriteHeight, sprite, this.stats.color);
+    this.drawPixelSprite(
+      ctx,
+      centerX,
+      centerY,
+      spriteWidth,
+      spriteHeight,
+      sprite,
+      this.stats.color,
+    );
 
     // Flash effect
     if ((this as any).flashTime > 0) {
       const flashAlpha = (this as any).flashTime / (this as any).flashDuration;
-      this.drawPixelSprite(ctx, centerX, centerY, spriteWidth, spriteHeight, sprite, '#ffffff', flashAlpha * 0.7);
+      this.drawPixelSprite(
+        ctx,
+        centerX,
+        centerY,
+        spriteWidth,
+        spriteHeight,
+        sprite,
+        '#ffffff',
+        flashAlpha * 0.7,
+      );
     }
 
     // Draw speech bubble if visible
@@ -314,13 +355,38 @@ export class EnhancedAlienBall extends AlienBall {
       );
     }
 
-    // Draw special effects based on enemy type
+    // Draw special effects based on enemy type (Foreground/Overlay)
     if (this.enemyType === 'guardian') {
-      this.drawShieldEffect(ctx, centerX, centerY, Math.max(spriteWidth, spriteHeight) / 2);
+      this.drawShieldEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'scout') {
+      this.drawScoutEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'hoarder') {
+      this.drawHoarderEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
     }
 
     // Draw Health Bar
-    this.drawHealthBar(ctx, centerX, centerY, spriteWidth / 2, spriteHeight / 2);
+    this.drawHealthBar(
+      ctx,
+      centerX,
+      centerY,
+      spriteWidth / 2,
+      spriteHeight / 2,
+    );
   }
 
   private drawShieldEffect(
@@ -339,16 +405,17 @@ export class EnhancedAlienBall extends AlienBall {
     const pulse = Math.sin((this as any).animationTime * 3) * 0.15 + 0.85;
     const outerRadius = radius * 1.4 * pulse;
 
+    // Enhanced visibility: Brighter, thicker lines
     ctx.strokeStyle = this.stats.glowColor;
-    ctx.lineWidth = 3;
-    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = 4; // Thicker
+    ctx.globalAlpha = 0.8; // More opaque
 
     // Draw rotating shield segments
     const segments = 8;
     for (let i = 0; i < segments; i++) {
       const angle = (i / segments) * Math.PI * 2 + rotation;
-      const startAngle = angle - Math.PI / segments * 0.8;
-      const endAngle = angle + Math.PI / segments * 0.8;
+      const startAngle = angle - (Math.PI / segments) * 0.8;
+      const endAngle = angle + (Math.PI / segments) * 0.8;
 
       ctx.beginPath();
       ctx.arc(x, y, outerRadius, startAngle, endAngle);
@@ -359,25 +426,221 @@ export class EnhancedAlienBall extends AlienBall {
     const innerRotation = -rotation * 0.7;
     const innerRadius = radius * 1.2;
 
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 3; // Thicker
+    ctx.globalAlpha = 0.6; // More opaque
 
     for (let i = 0; i < segments; i++) {
       const angle = (i / segments) * Math.PI * 2 + innerRotation;
-      const startAngle = angle - Math.PI / segments * 0.6;
-      const endAngle = angle + Math.PI / segments * 0.6;
+      const startAngle = angle - (Math.PI / segments) * 0.6;
+      const endAngle = angle + (Math.PI / segments) * 0.6;
 
       ctx.beginPath();
       ctx.arc(x, y, innerRadius, startAngle, endAngle);
       ctx.stroke();
     }
 
-    // Central glow
+    // Central glow - stronger
     const glowPulse = Math.sin((this as any).animationTime * 4) * 0.2 + 0.8;
-    ctx.globalAlpha = 0.3 * glowPulse;
+    ctx.globalAlpha = 0.4 * glowPulse;
     ctx.fillStyle = this.stats.glowColor;
     ctx.beginPath();
-    ctx.arc(x, y, radius * 0.3, 0, Math.PI * 2);
+    ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  private drawScoutEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+
+    // Radar/Sonar pulse effect
+    // Multiple expanding rings
+    const pulseSpeed = 2.0;
+    const numRings = 3;
+
+    for (let i = 0; i < numRings; i++) {
+      // Offset each ring
+      const offset = i / numRings;
+      const t = ((this as any).animationTime * pulseSpeed + offset) % 1;
+
+      // Radius expands from 1.0 to 2.5x
+      const ringRadius = radius * (1.0 + t * 1.5);
+      // Alpha fades out as it expands
+      const alpha = (1 - t) * 0.6;
+
+      ctx.beginPath();
+      ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = this.stats.glowColor;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = alpha;
+      ctx.stroke();
+    }
+
+    // Scanning line
+    const scanRotation = (this as any).animationTime * 3 * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.arc(x, y, radius * 2.0, scanRotation, scanRotation + 0.5);
+    ctx.lineTo(x, y);
+    ctx.fillStyle = this.stats.glowColor;
+    ctx.globalAlpha = 0.15;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  private drawTankEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+
+    // Heavy Armor / Forcefield effect
+    // Rotating hexagon barrier
+    const rotation = (this as any).animationTime * 0.5; // Slow rotation
+    const sides = 6;
+    const armorRadius = radius * 1.3;
+
+    ctx.strokeStyle = this.stats.glowColor;
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = 0.7;
+
+    ctx.beginPath();
+    for (let i = 0; i <= sides; i++) {
+      const angle = (i / sides) * Math.PI * 2 + rotation;
+      const px = x + Math.cos(angle) * armorRadius;
+      const py = y + Math.sin(angle) * armorRadius;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // Inner solid structure
+    ctx.fillStyle = this.stats.glowColor;
+    ctx.globalAlpha = 0.15;
+    ctx.fill();
+
+    // Reinforcement nodes at corners
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.9;
+    for (let i = 0; i < sides; i++) {
+      const angle = (i / sides) * Math.PI * 2 + rotation;
+      const px = x + Math.cos(angle) * armorRadius;
+      const py = y + Math.sin(angle) * armorRadius;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  private drawHealerEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+
+    // Healing Aura
+    // Soft glowing pulse background
+    const pulse = Math.sin((this as any).animationTime * 2) * 0.1 + 1.0;
+    const auraRadius = radius * 1.5 * pulse;
+
+    const gradient = ctx.createRadialGradient(x, y, radius, x, y, auraRadius);
+    gradient.addColorStop(0, 'rgba(102, 255, 153, 0.0)');
+    gradient.addColorStop(0.5, 'rgba(102, 255, 153, 0.2)');
+    gradient.addColorStop(1, 'rgba(102, 255, 153, 0.0)');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, auraRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Floating Crosses (+)
+    const numCrosses = 4;
+    for (let i = 0; i < numCrosses; i++) {
+      // Each cross orbits at different speed/phase
+      const phase = (i / numCrosses) * Math.PI * 2;
+      const orbitSpeed = 0.8;
+      const orbitRadius = radius * 1.4;
+      const angle = (this as any).animationTime * orbitSpeed + phase;
+
+      // Bobbing motion
+      const bob = Math.sin((this as any).animationTime * 3 + i) * 5;
+
+      const cx = x + Math.cos(angle) * orbitRadius;
+      const cy = y + Math.sin(angle) * orbitRadius + bob;
+
+      // Draw Cross
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.8;
+      const size = 6;
+
+      ctx.beginPath();
+      ctx.moveTo(cx - size, cy);
+      ctx.lineTo(cx + size, cy);
+      ctx.moveTo(cx, cy - size);
+      ctx.lineTo(cx, cy + size);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  private drawHoarderEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+
+    // Treasure Glow / Sparkles
+    // Orbiting gold coins/particles
+    const numCoins = 5;
+    const orbitSpeed = 1.2;
+
+    for (let i = 0; i < numCoins; i++) {
+      const phase = (i / numCoins) * Math.PI * 2;
+      // Elliptical orbit for 3D feel
+      const angle = (this as any).animationTime * orbitSpeed + phase;
+      const orbitRadiusX = radius * 1.6;
+      const orbitRadiusY = radius * 0.6;
+
+      const cx = x + Math.cos(angle) * orbitRadiusX;
+      const cy = y + Math.sin(angle) * orbitRadiusY;
+
+      // Sparkle/Coin
+      ctx.fillStyle = '#ffd700'; // Gold
+      ctx.shadowColor = '#ffaa00';
+      ctx.shadowBlur = 5;
+      ctx.globalAlpha = 0.9;
+
+      // Twinkle size
+      const twinkle = Math.sin((this as any).animationTime * 10 + i) * 0.3 + 0.7;
+      const size = 4 * twinkle;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Central shine
+    ctx.globalAlpha = 0.3 + Math.sin((this as any).animationTime * 5) * 0.2;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
