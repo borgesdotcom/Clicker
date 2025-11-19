@@ -1,5 +1,12 @@
 import type { Draw } from '../render/Draw';
 import type { Vec2 } from '../types';
+import {
+  BOSS_SPRITE_COLOSSUS,
+  BOSS_SPRITE_SWARM_QUEEN,
+  BOSS_SPRITE_VOID_CONSTRUCT,
+  BOSS_SPRITE_OMEGA_CORE,
+  PixelGrid,
+} from '../render/AlienSprites';
 
 export class BossBall {
   private flashTime = 0;
@@ -7,7 +14,7 @@ export class BossBall {
   public currentHp: number;
   public maxHp: number;
   private breakAnimTime = 0;
-  private breakAnimDuration = 1.2; // Longer for epic death
+  private breakAnimDuration = 2.0; // Longer for epic death
   public x: number;
   public y: number;
   private attackTimer = 0;
@@ -15,40 +22,163 @@ export class BossBall {
   private phase = 1;
   private pulseTime = 0;
   private chargeTime = 0;
-  private tentacleAngles: number[] = [];
-  private tentacleLengths: number[] = [];
-  private tentacleWaves: number[] = [];
-  private eyeBlink = 0;
-  private shieldPulse = 0;
   private entranceTime = 0;
   private phaseTransitionTime = 0;
-  private innerOrgansRotation = 0;
   private particleEmitTimer = 0;
+  private shakeTime = 0;
+  private shakeIntensity = 0;
+
+  // Variant specific properties
+  private variant: number; // 0=Colossus, 1=Swarm, 2=Void, 3=Omega
+  private sprite: PixelGrid;
+  private color: string;
+  private glowColor: string;
+  private secondaryColor: string;
+  private accentColor: string;
+
+  // Effect specific properties
+  private drones: Array<{ angle: number; dist: number; speed: number }> = [];
+  private shields: Array<{ angle: number; size: number; speed: number; dist: number }> = [];
+  private rings: Array<{ angle: number; radius: number; speed: number; width: number }> = [];
+  private arcs: Array<{ angle: number; radius: number; speed: number; length: number }> = [];
+  private cracks: Array<Array<{ x: number, y: number }>> = []; // Array of crack paths
+  private glitchTime = 0;
 
   constructor(
     x: number,
     y: number,
     public radius: number,
     hp: number,
+    variant: number = 0,
   ) {
     this.x = x;
     this.y = y;
     this.maxHp = hp;
     this.currentHp = this.maxHp;
-    this.entranceTime = 1; // Start with entrance animation
+    this.entranceTime = 1.5; // Epic entrance
+    this.variant = variant;
 
-    // Initialize tentacles - more organized
-    const tentacleCount = 8;
-    for (let i = 0; i < tentacleCount; i++) {
-      this.tentacleAngles.push((i / tentacleCount) * Math.PI * 2);
-      this.tentacleLengths.push(this.radius * (1.3 + Math.random() * 0.2));
-      this.tentacleWaves.push(Math.random() * Math.PI * 2);
+    // Generate random cracks for the bubble based on variant
+    this.generateCracks();
+
+    // Initialize based on variant
+    switch (this.variant) {
+      case 0: // Colossus (Lvl 25)
+        this.sprite = BOSS_SPRITE_COLOSSUS;
+        this.color = '#8B0000'; // Dark Red
+        this.glowColor = '#FF4500'; // Orange Red
+        this.secondaryColor = '#2F4F4F'; // Dark Slate Gray
+        this.accentColor = '#FFD700'; // Gold
+        // Init Shields
+        for (let i = 0; i < 3; i++) {
+          this.shields.push({
+            angle: (i / 3) * Math.PI * 2,
+            size: 12,
+            speed: 0.5,
+            dist: 1.4
+          });
+        }
+        break;
+      case 1: // Swarm Queen (Lvl 50)
+        this.sprite = BOSS_SPRITE_SWARM_QUEEN;
+        this.color = '#4B0082'; // Indigo
+        this.glowColor = '#9370DB'; // Medium Purple
+        this.secondaryColor = '#00FF00'; // Lime (Toxic)
+        this.accentColor = '#FF00FF'; // Magenta
+        // Init drones
+        for (let i = 0; i < 6; i++) {
+          this.drones.push({
+            angle: (i / 6) * Math.PI * 2,
+            dist: 1.5,
+            speed: 1 + Math.random(),
+          });
+        }
+        break;
+      case 2: // Void Construct (Lvl 75)
+        this.sprite = BOSS_SPRITE_VOID_CONSTRUCT;
+        this.color = '#000000'; // Black
+        this.glowColor = '#00FFFF'; // Cyan
+        this.secondaryColor = '#191970'; // Midnight Blue
+        this.accentColor = '#FFFFFF'; // White
+        // Init Rings
+        this.rings.push({ angle: 0, radius: 1.3, speed: 0.8, width: 3 });
+        this.rings.push({ angle: Math.PI, radius: 1.6, speed: -0.6, width: 2 });
+        break;
+      case 3: // Omega Core (Lvl 100)
+        this.sprite = BOSS_SPRITE_OMEGA_CORE;
+        this.color = '#FF0000'; // Red
+        this.glowColor = '#FF0000'; // Red Glow
+        this.secondaryColor = '#FFFF00'; // Yellow
+        this.accentColor = '#FFA500'; // Orange
+        // Init Arcs
+        for (let i = 0; i < 4; i++) {
+          this.arcs.push({
+            angle: (i / 4) * Math.PI * 2,
+            radius: 1.4,
+            speed: 2 + Math.random() * 2,
+            length: Math.PI * 0.5
+          });
+        }
+        break;
+      default:
+        this.sprite = BOSS_SPRITE_COLOSSUS;
+        this.color = '#8B0000';
+        this.glowColor = '#FF4500';
+        this.secondaryColor = '#2F4F4F';
+        this.accentColor = '#FFD700';
+    }
+  }
+
+  private generateCracks(): void {
+    this.cracks = [];
+    const numCracks = 6 + Math.floor(Math.random() * 4);
+
+    for (let i = 0; i < numCracks; i++) {
+      const crack: Array<{ x: number, y: number }> = [];
+      const angle = Math.random() * Math.PI * 2;
+      // Start closer to center for some, edge for others
+      const startDist = this.radius * (0.3 + Math.random() * 0.6);
+      let cx = Math.cos(angle) * startDist;
+      let cy = Math.sin(angle) * startDist;
+      crack.push({ x: cx, y: cy });
+
+      const segments = 4 + Math.floor(Math.random() * 5);
+
+      for (let j = 0; j < segments; j++) {
+        if (this.variant === 0) {
+          // Colossus: Shattered Glass (Straight, sharp angles)
+          cx += (Math.random() - 0.5) * this.radius * 0.6;
+          cy += (Math.random() - 0.5) * this.radius * 0.6;
+        } else if (this.variant === 1) {
+          // Swarm: Organic/Web (Curved, smaller steps)
+          cx += (Math.random() - 0.5) * this.radius * 0.3;
+          cy += (Math.random() - 0.5) * this.radius * 0.3;
+        } else if (this.variant === 2) {
+          // Void: Digital Glitch (Orthogonal lines)
+          if (Math.random() > 0.5) {
+            cx += (Math.random() > 0.5 ? 1 : -1) * this.radius * 0.2;
+          } else {
+            cy += (Math.random() > 0.5 ? 1 : -1) * this.radius * 0.2;
+          }
+        } else {
+          // Omega: Energy Fissures (Chaotic, jagged)
+          cx += (Math.random() - 0.5) * this.radius * 0.5;
+          cy += (Math.random() - 0.5) * this.radius * 0.5;
+        }
+
+        // Keep inside radius roughly
+        if (Math.sqrt(cx * cx + cy * cy) < this.radius * 0.95) {
+          crack.push({ x: cx, y: cy });
+        }
+      }
+      this.cracks.push(crack);
     }
   }
 
   isPointInside(point: Vec2): boolean {
     const dx = point.x - this.x;
     const dy = point.y - this.y;
+    // Pixel sprites are square, but hit detection can remain circular for fairness
     return Math.sqrt(dx * dx + dy * dy) <= this.radius;
   }
 
@@ -68,12 +198,21 @@ export class BossBall {
     // Trigger phase transition animation
     if (oldPhase !== this.phase) {
       this.phaseTransitionTime = 1;
+      this.shakeTime = 0.5;
+      this.shakeIntensity = 10;
     }
 
-    // Only flash on significant damage (>2% of max HP) or if not already flashing
-    if (this.flashTime <= 0 || amount > this.maxHp * 0.02) {
+    // Flash on damage
+    if (this.flashTime <= 0 || amount > this.maxHp * 0.01) {
       this.triggerFlash();
     }
+
+    // Colossus shakes on every hit
+    if (this.variant === 0 && amount > this.maxHp * 0.005) {
+      this.shakeTime = 0.1;
+      this.shakeIntensity = 3;
+    }
+
     if (this.currentHp <= 0 && wasAlive) {
       this.breakAnimTime = this.breakAnimDuration;
       return true;
@@ -98,14 +237,19 @@ export class BossBall {
       return;
     }
 
-    // Entrance animation
+    // Entrance animation - Smooth ease out
     if (this.entranceTime > 0) {
-      this.entranceTime = Math.max(0, this.entranceTime - dt * 2);
+      this.entranceTime = Math.max(0, this.entranceTime - dt);
     }
 
     // Phase transition animation
     if (this.phaseTransitionTime > 0) {
-      this.phaseTransitionTime = Math.max(0, this.phaseTransitionTime - dt * 3);
+      this.phaseTransitionTime = Math.max(0, this.phaseTransitionTime - dt);
+    }
+
+    // Shake effect
+    if (this.shakeTime > 0) {
+      this.shakeTime = Math.max(0, this.shakeTime - dt);
     }
 
     // Update phase based on HP
@@ -121,32 +265,37 @@ export class BossBall {
     // Update attack timer
     this.attackTimer += dt;
 
-    // Update visual effects - phase affects speed
-    const phaseSpeedMultiplier = 1 + (this.phase - 1) * 0.3;
+    // Update visual effects
+    const phaseSpeedMultiplier = 1 + (this.phase - 1) * 0.5;
     this.pulseTime += dt * 2 * phaseSpeedMultiplier;
-    this.shieldPulse += dt * 3 * phaseSpeedMultiplier;
-    this.innerOrgansRotation += dt * 0.5 * phaseSpeedMultiplier;
     this.particleEmitTimer += dt;
 
-    // Tentacle animation - more organic and fluid
-    for (let i = 0; i < this.tentacleAngles.length; i++) {
-      const currentAngle = this.tentacleAngles[i];
-      const wave = this.tentacleWaves[i];
-      if (currentAngle !== undefined && wave !== undefined) {
-        // Rotate tentacles
-        this.tentacleAngles[i] =
-          currentAngle +
-          dt * 0.4 * (i % 2 === 0 ? 1 : -1) * phaseSpeedMultiplier;
-        // Update wave offset
-        this.tentacleWaves[i] = wave + dt * 2 * phaseSpeedMultiplier;
-      }
-    }
+    // Variant specific updates
+    if (this.variant === 0) { // Colossus Shields
+      this.shields.forEach(shield => {
+        shield.angle += dt * shield.speed * phaseSpeedMultiplier;
+      });
+    } else if (this.variant === 1) { // Swarm Queen drones
+      this.drones.forEach(drone => {
+        drone.angle += dt * drone.speed * phaseSpeedMultiplier;
+      });
+    } else if (this.variant === 2) { // Void Construct glitch & Rings
+      // Rings
+      this.rings.forEach(ring => {
+        ring.angle += dt * ring.speed * phaseSpeedMultiplier;
+      });
 
-    // Eye blink - more frequent when damaged
-    this.eyeBlink = Math.max(0, this.eyeBlink - dt * 5);
-    const blinkChance = this.phase === 3 ? 0.02 : 0.01;
-    if (Math.random() < blinkChance) {
-      this.eyeBlink = 1;
+      // Reduced glitch frequency and duration
+      if (this.glitchTime > 0) {
+        this.glitchTime -= dt;
+      } else if (Math.random() < 0.02 * phaseSpeedMultiplier) {
+        this.glitchTime = 0.15;
+      }
+    } else if (this.variant === 3) { // Omega Core chaotic pulsing & Arcs
+      this.pulseTime += dt * 3;
+      this.arcs.forEach(arc => {
+        arc.angle += dt * arc.speed * phaseSpeedMultiplier;
+      });
     }
 
     // Charge effect before attacking
@@ -177,612 +326,456 @@ export class BossBall {
 
   draw(drawer: Draw): void {
     const ctx = drawer.getContext();
-    const hpPercent = this.currentHp / this.maxHp;
 
     // Epic death animation
     if (this.breakAnimTime > 0) {
-      const progress = 1 - this.breakAnimTime / this.breakAnimDuration;
-      const alpha = 1 - progress;
-      const scale = 1 + progress * 1.2;
-      const rotation = progress * Math.PI * 4;
-
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(rotation);
-      ctx.scale(scale, scale);
-
-      // Explosion layers
-      for (let layer = 0; layer < 3; layer++) {
-        const layerProgress = Math.min(1, progress * 1.5 - layer * 0.3);
-        if (layerProgress <= 0) continue;
-
-        const layerAlpha = alpha * (1 - layer * 0.3) * layerProgress;
-        const layerRadius = this.radius * (0.8 + layer * 0.3);
-        const colors = ['#ff0000', '#ff6600', '#ffff00'];
-
-        drawer.setAlpha(layerAlpha);
-        drawer.setGlow(colors[layer] ?? '#ff0000', 30 + layer * 10);
-        drawer.setFill(colors[layer] ?? '#ff0000');
-        drawer.circle(0, 0, layerRadius);
-        drawer.clearGlow();
-      }
-
-      drawer.resetAlpha();
-      ctx.restore();
+      this.drawDeathAnimation(ctx);
       return;
     }
 
-    // Entrance animation scale
-    const entranceScale =
-      this.entranceTime > 0 ? 1 - this.entranceTime * 0.3 : 1;
-    const currentRadius = this.radius * entranceScale;
-
-    // Phase-based colors - Lordakia-inspired gel but more menacing
-    let bodyColor = '#1a3a5a';
-    let accentColor = '#00d4ff';
-    let eyeColor = '#ff0066';
-    let innerCoreColor = '#004488';
-
-    if (this.phase === 3) {
-      bodyColor = '#5a0000';
-      accentColor = '#ff0044';
-      eyeColor = '#ffff00';
-      innerCoreColor = '#880000';
-    } else if (this.phase === 2) {
-      bodyColor = '#3a2a00';
-      accentColor = '#ff8800';
-      eyeColor = '#ff4400';
-      innerCoreColor = '#664400';
+    // Entrance animation - Elastic pop-in
+    let scale = 1;
+    if (this.entranceTime > 0) {
+      const t = 1 - (this.entranceTime / 1.5); // 0 to 1
+      // EaseOutBack
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      scale = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      // Clamp to avoid weird visual artifacts at start
+      scale = Math.max(0, scale);
     }
 
-    // Phase transition flash
-    const phaseFlash =
-      this.phaseTransitionTime > 0
-        ? Math.sin(this.phaseTransitionTime * Math.PI * 10) * 0.5 + 0.5
-        : 0;
-
-    // Extract RGB values for gradients
-    const parseColor = (hex: string) => {
-      const r = parseInt(hex.substring(1, 3), 16);
-      const g = parseInt(hex.substring(3, 5), 16);
-      const b = parseInt(hex.substring(5, 7), 16);
-      return { r, g, b };
-    };
-
-    const bodyRgb = parseColor(bodyColor);
-    const accentRgb = parseColor(accentColor);
-
-    // Outer energy shield - multi-layered pulsing aura
-    const shieldPulse = Math.sin(this.shieldPulse) * 0.5 + 0.5;
-    const shieldLayers = 3;
-    for (let layer = 0; layer < shieldLayers; layer++) {
-      const layerRadius = currentRadius * (1.35 + layer * 0.15);
-      const layerAlpha =
-        0.15 - layer * 0.04 + shieldPulse * (0.1 - layer * 0.02);
-      const layerGlow = ctx.createRadialGradient(
-        this.x,
-        this.y,
-        0,
-        this.x,
-        this.y,
-        layerRadius,
-      );
-      layerGlow.addColorStop(
-        0,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha)})`,
-      );
-      layerGlow.addColorStop(
-        0.5,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(layerAlpha * 0.5)})`,
-      );
-      layerGlow.addColorStop(
-        1,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`,
-      );
-
-      ctx.fillStyle = layerGlow;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, layerRadius, 0, Math.PI * 2);
-      ctx.fill();
+    // Hit Effect: Scale Punch (Squash) - SUBTLE
+    // Uses flashTime as the driver for the animation
+    if (this.flashTime > 0) {
+      const t = 1 - (this.flashTime / this.flashDuration); // 0 to 1
+      // Sine wave for a quick squash and recover
+      // Reduced from 0.15 to 0.05 for subtlety
+      const squash = Math.sin(t * Math.PI) * 0.05;
+      scale -= squash;
     }
 
-    // Draw writhing tentacles - Lordakia-style gel tentacles
+    // Apply shake - Reduced intensity
+    let drawX = this.x;
+    let drawY = this.y;
+    if (this.shakeTime > 0) {
+      const intensity = this.shakeIntensity * (this.shakeTime / 0.5); // Fade out shake
+      drawX += (Math.random() - 0.5) * intensity;
+      drawY += (Math.random() - 0.5) * intensity;
+    }
+
+    const size = this.radius * 2 * scale;
+
+    // Draw Background Effects (Auras, Drones)
+    this.drawBackgroundEffects(ctx, drawX, drawY, this.radius * scale);
+
+    // Draw Bubble Shell (The "Ball" look)
+    // Pass 'scale' so cracks can align with squash/stretch
+    this.drawBubbleShell(ctx, drawX, drawY, this.radius * scale, scale);
+
+    // Draw Pixel Sprite (Inside the bubble)
+    // Bobbing animation for floating effect
+    const bobY = Math.sin(this.pulseTime) * (this.radius * 0.05);
+
+    // Void Construct RGB Split Effect
+    if (this.variant === 2 && this.glitchTime > 0) {
+      // Red channel offset
+      this.drawPixelSprite(ctx, drawX - 4, drawY + bobY, size * 0.8, size * 0.8, '#ff0000', 0.7);
+      // Blue channel offset
+      this.drawPixelSprite(ctx, drawX + 4, drawY + bobY, size * 0.8, size * 0.8, '#0000ff', 0.7);
+      // Main sprite
+      this.drawPixelSprite(ctx, drawX, drawY + bobY, size * 0.8, size * 0.8, undefined, 0.8);
+    } else {
+      this.drawPixelSprite(ctx, drawX, drawY + bobY, size * 0.8, size * 0.8);
+    }
+
+    // Draw Foreground Effects (Shields, Charge)
+    this.drawForegroundEffects(ctx, drawX, drawY, this.radius * scale);
+
+    // Draw Health Bar
+    this.drawHealthBar(ctx, drawX, drawY, size);
+  }
+
+  private drawBubbleShell(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, scale: number = 1): void {
     ctx.save();
-    for (let i = 0; i < this.tentacleAngles.length; i++) {
-      const angle = this.tentacleAngles[i];
-      const length = this.tentacleLengths[i];
-      const wave = this.tentacleWaves[i];
-      if (angle === undefined || length === undefined || wave === undefined)
-        continue;
 
-      const waveAmount = Math.sin(wave) * 12;
-      const waveAmount2 = Math.sin(wave * 1.5) * 8;
-
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(angle);
-
-      // Tentacle path with smooth curves
-      const segments = 8;
-      ctx.beginPath();
-      ctx.moveTo(currentRadius * 0.85, 0);
-
-      for (let seg = 1; seg <= segments; seg++) {
-        const t = seg / segments;
-        const segWave =
-          Math.sin(wave + t * Math.PI * 2) * waveAmount * (1 - t * 0.5);
-        const segWave2 =
-          Math.sin(wave * 1.5 + t * Math.PI * 3) * waveAmount2 * (1 - t * 0.7);
-        const x = currentRadius * 0.85 + (currentRadius * 0.15 + length * t);
-        const y = segWave + segWave2;
-        ctx.lineTo(x, y);
-      }
-
-      // Tentacle gradient - gel-like
-      const tentacleGradient = ctx.createLinearGradient(
-        currentRadius * 0.85,
-        0,
-        currentRadius * 0.85 + length,
-        waveAmount,
-      );
-      const tentacleWidth =
-        currentRadius * 0.12 * (1 - 0.5 * (Math.sin(wave) * 0.5 + 0.5));
-
-      tentacleGradient.addColorStop(
-        0,
-        `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.8)`,
-      );
-      tentacleGradient.addColorStop(
-        0.5,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.7)`,
-      );
-      tentacleGradient.addColorStop(
-        1,
-        `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`,
-      );
-
-      ctx.strokeStyle = tentacleGradient;
-      ctx.lineWidth = tentacleWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.6)`;
-      ctx.stroke();
-
-      // Tentacle tip glow
-      const tipX = currentRadius * 0.85 + length;
-      const tipY =
-        Math.sin(wave) * waveAmount + Math.sin(wave * 1.5) * waveAmount2;
-      const tipGlow = ctx.createRadialGradient(
-        tipX,
-        tipY,
-        0,
-        tipX,
-        tipY,
-        tentacleWidth * 1.5,
-      );
-      tipGlow.addColorStop(
-        0,
-        `rgba(${String(accentRgb.r + 60)}, ${String(accentRgb.g + 60)}, ${String(accentRgb.b + 60)}, 0.9)`,
-      );
-      tipGlow.addColorStop(
-        0.5,
-        `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, 0.6)`,
-      );
-      tipGlow.addColorStop(
-        1,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`,
-      );
-
-      ctx.fillStyle = tipGlow;
-      ctx.beginPath();
-      ctx.arc(tipX, tipY, tentacleWidth * 1.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.shadowBlur = 0;
-      ctx.restore();
-    }
-    ctx.restore();
-
-    // Main gel-like body - Lordakia inspired but more menacing
-    const pulse = Math.sin(this.pulseTime) * 0.05 + 0.95;
-    const bodyRadius = currentRadius * pulse;
-
-    // Outer gel shell - translucent with depth
-    const outerGradient = ctx.createRadialGradient(
-      this.x - bodyRadius * 0.25,
-      this.y - bodyRadius * 0.25,
-      bodyRadius * 0.05,
-      this.x,
-      this.y,
-      bodyRadius,
-    );
-    outerGradient.addColorStop(
-      0,
-      `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.5)`,
-    );
-    outerGradient.addColorStop(
-      0.3,
-      `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.7)`,
-    );
-    outerGradient.addColorStop(
-      0.6,
-      `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.75)`,
-    );
-    outerGradient.addColorStop(
-      0.85,
-      `rgba(${String(bodyRgb.r - 20)}, ${String(bodyRgb.g - 20)}, ${String(bodyRgb.b - 20)}, 0.8)`,
-    );
-    outerGradient.addColorStop(
-      1,
-      `rgba(${String(bodyRgb.r - 30)}, ${String(bodyRgb.g - 30)}, ${String(bodyRgb.b - 30)}, 0.7)`,
-    );
-
-    ctx.fillStyle = outerGradient;
+    // Main bubble body
     ctx.beginPath();
-    ctx.arc(this.x, this.y, bodyRadius, 0, Math.PI * 2);
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+
+    // Gradient for 3D sphere look
+    const gradient = ctx.createRadialGradient(
+      x - radius * 0.3, y - radius * 0.3, radius * 0.1,
+      x, y, radius
+    );
+    // Outer color matches boss theme, inner is transparent/whiteish
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+    gradient.addColorStop(0.8, this.hexToRgba(this.secondaryColor, 0.3));
+    gradient.addColorStop(1, this.hexToRgba(this.color, 0.6));
+
+    ctx.fillStyle = gradient;
     ctx.fill();
 
-    // Inner core - visible through gel (pulsing)
-    const corePulse = Math.sin(this.pulseTime * 1.5) * 0.1 + 0.9;
-    const coreRadius = bodyRadius * 0.4 * corePulse;
-    const innerRgb = parseColor(innerCoreColor);
-
-    const innerGradient = ctx.createRadialGradient(
-      this.x - coreRadius * 0.3,
-      this.y - coreRadius * 0.3,
-      coreRadius * 0.1,
-      this.x,
-      this.y,
-      coreRadius,
-    );
-    innerGradient.addColorStop(0, `rgba(255, 255, 255, 0.8)`);
-    innerGradient.addColorStop(
-      0.3,
-      `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.6)`,
-    );
-    innerGradient.addColorStop(
-      0.6,
-      `rgba(${String(innerRgb.r)}, ${String(innerRgb.g)}, ${String(innerRgb.b)}, 0.5)`,
-    );
-    innerGradient.addColorStop(
-      1,
-      `rgba(${String(innerRgb.r)}, ${String(innerRgb.b)}, ${String(innerRgb.b)}, 0.3)`,
-    );
-
-    ctx.fillStyle = innerGradient;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, coreRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Rotating organic structures inside - visible through gel
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.innerOrgansRotation);
-
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2;
-      const orgRadius =
-        bodyRadius * (0.5 + Math.sin(this.pulseTime * 2 + i) * 0.1);
-      const orgX = Math.cos(angle) * orgRadius;
-      const orgY = Math.sin(angle) * orgRadius;
-      const orgSize =
-        bodyRadius * (0.1 + Math.sin(this.pulseTime * 3 + i) * 0.03);
-      const orgAlpha = 0.3 + Math.sin(this.pulseTime * 2.5 + i) * 0.2;
-
-      const orgGradient = ctx.createRadialGradient(
-        orgX,
-        orgY,
-        0,
-        orgX,
-        orgY,
-        orgSize,
-      );
-      orgGradient.addColorStop(
-        0,
-        `rgba(${String(accentRgb.r + 30)}, ${String(accentRgb.g + 30)}, ${String(accentRgb.b + 30)}, ${String(orgAlpha)})`,
-      );
-      orgGradient.addColorStop(
-        0.5,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, ${String(orgAlpha * 0.6)})`,
-      );
-      orgGradient.addColorStop(
-        1,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0)`,
-      );
-
-      ctx.fillStyle = orgGradient;
-      ctx.beginPath();
-      ctx.arc(orgX, orgY, orgSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // Defensive spikes/armor plates - phase affects intensity
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.pulseTime * 0.3);
-
-    const spikeCount = 12;
-    const spikeIntensity = 0.15 + (this.phase - 1) * 0.1;
-
-    for (let i = 0; i < spikeCount; i++) {
-      const angle = (i / spikeCount) * Math.PI * 2;
-      const spikeLength = bodyRadius * spikeIntensity;
-      const spikePulse = Math.sin(this.pulseTime * 2 + i) * 0.3 + 0.7;
-
-      const x1 = Math.cos(angle) * bodyRadius;
-      const y1 = Math.sin(angle) * bodyRadius;
-      const x2 = Math.cos(angle) * (bodyRadius + spikeLength * spikePulse);
-      const y2 = Math.sin(angle) * (bodyRadius + spikeLength * spikePulse);
-      const x3 = Math.cos(angle + 0.15) * bodyRadius;
-      const y3 = Math.sin(angle + 0.15) * bodyRadius;
-
-      // Spike gradient
-      const spikeGradient = ctx.createLinearGradient(x1, y1, x2, y2);
-      spikeGradient.addColorStop(
-        0,
-        `rgba(${String(bodyRgb.r)}, ${String(bodyRgb.g)}, ${String(bodyRgb.b)}, 0.9)`,
-      );
-      spikeGradient.addColorStop(
-        0.5,
-        `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.8)`,
-      );
-      spikeGradient.addColorStop(
-        1,
-        `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 0.9)`,
-      );
-
-      ctx.fillStyle = spikeGradient;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.lineTo(x3, y3);
-      ctx.closePath();
-      ctx.fill();
-
-      // Spike glow
-      ctx.strokeStyle = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.6)`;
-      ctx.lineWidth = 2;
-      ctx.shadowBlur = 4;
-      ctx.shadowColor = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.5)`;
-      ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
-    ctx.restore();
-
-    // Multiple glowing eyes - menacing and tracking
-    const eyePositions = [
-      { x: -0.35, y: -0.25 },
-      { x: 0.35, y: -0.25 },
-      { x: 0, y: -0.45 },
-    ];
-
-    const eyeRgb = parseColor(eyeColor);
-
-    for (const pos of eyePositions) {
-      const eyeX = this.x + pos.x * bodyRadius;
-      const eyeY = this.y + pos.y * bodyRadius;
-      const eyeSize = bodyRadius * 0.16;
-      const eyePulse = Math.sin(this.pulseTime * 3) * 0.1 + 0.9;
-
-      // Eye socket glow
-      const socketGlow = ctx.createRadialGradient(
-        eyeX,
-        eyeY,
-        0,
-        eyeX,
-        eyeY,
-        eyeSize * 1.5,
-      );
-      socketGlow.addColorStop(0, `rgba(0, 0, 0, 0.8)`);
-      socketGlow.addColorStop(0.5, `rgba(0, 0, 0, 0.6)`);
-      socketGlow.addColorStop(1, `rgba(0, 0, 0, 0)`);
-      ctx.fillStyle = socketGlow;
-      ctx.beginPath();
-      ctx.arc(eyeX, eyeY, eyeSize * 1.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Eye socket
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-      ctx.beginPath();
-      ctx.arc(eyeX, eyeY, eyeSize, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Iris with glow
-      const irisSize =
-        this.eyeBlink > 0
-          ? eyeSize * (1 - this.eyeBlink) * 0.65
-          : eyeSize * 0.65 * eyePulse;
-      const irisGlow = ctx.createRadialGradient(
-        eyeX,
-        eyeY,
-        0,
-        eyeX,
-        eyeY,
-        irisSize * 2,
-      );
-      irisGlow.addColorStop(
-        0,
-        `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.9)`,
-      );
-      irisGlow.addColorStop(
-        0.3,
-        `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.7)`,
-      );
-      irisGlow.addColorStop(
-        1,
-        `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`,
-      );
-
-      ctx.fillStyle = irisGlow;
-      ctx.beginPath();
-      ctx.arc(eyeX, eyeY, irisSize * 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.95)`;
-      ctx.beginPath();
-      ctx.arc(eyeX, eyeY, irisSize, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pupil
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
-      ctx.beginPath();
-      ctx.arc(eyeX, eyeY, irisSize * 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Menacing maw/mouth - opens more in later phases
-    const mouthY = this.y + bodyRadius * 0.4;
-    const mouthWidth = bodyRadius * 0.65;
-    const mouthOpen =
-      (this.phase * 0.2 + Math.sin(this.pulseTime) * 0.05) * pulse;
-    const mouthHeight = bodyRadius * mouthOpen;
-
-    ctx.save();
-    ctx.translate(this.x, mouthY);
-
-    // Mouth glow
-    const mouthGlow = ctx.createRadialGradient(
-      0,
-      0,
-      0,
-      0,
-      0,
-      Math.max(mouthWidth, mouthHeight),
-    );
-    mouthGlow.addColorStop(
-      0,
-      `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`,
-    );
-    mouthGlow.addColorStop(
-      0.5,
-      `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.3)`,
-    );
-    mouthGlow.addColorStop(
-      1,
-      `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0)`,
-    );
-
-    ctx.fillStyle = mouthGlow;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, mouthWidth * 1.2, mouthHeight * 1.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Mouth opening
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
-    ctx.strokeStyle = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.8)`;
+    // Rim glow
+    ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.5);
     ctx.lineWidth = 3;
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = `rgba(${String(eyeRgb.r)}, ${String(eyeRgb.g)}, ${String(eyeRgb.b)}, 0.6)`;
-
-    ctx.beginPath();
-    ctx.ellipse(0, 0, mouthWidth, mouthHeight, 0, 0, Math.PI * 2);
-    ctx.fill();
     ctx.stroke();
 
-    ctx.shadowBlur = 0;
+    // Specular highlight (shiny reflection)
+    ctx.beginPath();
+    ctx.ellipse(x - radius * 0.4, y - radius * 0.4, radius * 0.2, radius * 0.1, Math.PI / 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fill();
+
+    // Draw Cracks based on HP
+    const hpPercent = this.currentHp / this.maxHp;
+    const crackOpacity = 1 - hpPercent;
+
+    if (crackOpacity > 0.1) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // Apply variant specific styles
+      if (this.variant === 2) { // Void
+        ctx.strokeStyle = 'rgba(0, 255, 255, ' + crackOpacity + ')';
+        ctx.lineWidth = 2;
+      } else if (this.variant === 3) { // Omega
+        ctx.strokeStyle = 'rgba(255, 255, 0, ' + crackOpacity + ')';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 5;
+        ctx.lineWidth = 2;
+      } else {
+        ctx.strokeStyle = 'rgba(255, 255, 255, ' + crackOpacity * 0.8 + ')';
+        ctx.lineWidth = 2;
+      }
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      this.cracks.forEach(crack => {
+        if (crack.length < 2) return;
+        const firstPoint = crack[0];
+        if (!firstPoint) return;
+        ctx.beginPath();
+        // Scale crack points to match bubble squash
+        ctx.moveTo(firstPoint.x * scale, firstPoint.y * scale);
+        for (let i = 1; i < crack.length; i++) {
+          const point = crack[i];
+          if (point) {
+            ctx.lineTo(point.x * scale, point.y * scale);
+          }
+        }
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
     ctx.restore();
+  }
 
-    // Phase transition flash effect
-    if (phaseFlash > 0) {
-      drawer.setAlpha(phaseFlash * 0.4);
-      drawer.setGlow(accentColor, 40);
-      drawer.setStroke(accentColor, 6);
-      drawer.circle(this.x, this.y, bodyRadius * 1.3, false);
-      drawer.clearGlow();
-      drawer.resetAlpha();
+  private drawPixelSprite(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    colorOverride?: string,
+    alphaOverride?: number,
+  ): void {
+    const grid = this.sprite;
+    if (!grid || grid.length === 0 || !grid[0]) return;
+
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const pixelSize = width / cols;
+
+    const startX = x - width / 2;
+    const startY = y - height / 2;
+
+    ctx.save();
+    if (alphaOverride !== undefined) ctx.globalAlpha = alphaOverride;
+
+    // Phase color shift
+    let mainColor = this.color;
+    if (this.phase === 3 && this.variant === 3) mainColor = this.getRandomColor(); // Omega Core chaos
+
+    for (let r = 0; r < rows; r++) {
+      const row = grid[r];
+      if (!row) continue;
+
+      for (let c = 0; c < cols; c++) {
+        const pixelType = row[c];
+        if (pixelType === 0) continue;
+
+        let fillStyle = mainColor;
+        if (pixelType === 2) fillStyle = this.secondaryColor;
+        if (pixelType === 3) fillStyle = this.accentColor;
+        if (pixelType === 4) fillStyle = this.glowColor;
+
+        if (colorOverride) fillStyle = colorOverride;
+
+        // REMOVED: Flash effect color override
+        // if (this.flashTime > 0 && !colorOverride) { ... }
+
+        ctx.fillStyle = fillStyle;
+
+        // Slight gap for pixel art look
+        ctx.fillRect(
+          startX + c * pixelSize,
+          startY + r * pixelSize,
+          pixelSize + 0.5,
+          pixelSize + 0.5
+        );
+      }
+    }
+    ctx.restore();
+  }
+
+  private drawBackgroundEffects(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
+    ctx.save();
+
+    // Pulse Aura - Subtler
+    const pulse = 1 + Math.sin(this.pulseTime) * 0.05;
+    const auraRadius = radius * 1.1 * pulse;
+
+    const gradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, auraRadius);
+    gradient.addColorStop(0, this.hexToRgba(this.glowColor, 0.0));
+    gradient.addColorStop(1, this.hexToRgba(this.glowColor, 0.2));
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, auraRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Swarm Queen Drones - Orbiting the bubble
+    if (this.variant === 1) {
+      this.drones.forEach(drone => {
+        const orbitRadius = radius * 1.3; // Orbit outside bubble
+        const dx = x + Math.cos(drone.angle) * orbitRadius;
+        const dy = y + Math.sin(drone.angle) * orbitRadius;
+
+        ctx.fillStyle = this.secondaryColor;
+        ctx.beginPath();
+        ctx.arc(dx, dy, radius * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Trail
+        ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.3);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, orbitRadius, drone.angle - 0.3, drone.angle);
+        ctx.stroke();
+      });
     }
 
-    // Charge attack effect - more intense
+    // Void Construct Rings (Back half)
+    if (this.variant === 2) {
+      this.rings.forEach(ring => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ring.angle);
+        ctx.scale(1, 0.3); // Flatten to look like 3D ring
+
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * ring.radius, Math.PI, 0); // Back half
+        ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.3);
+        ctx.lineWidth = ring.width;
+        ctx.stroke();
+
+        ctx.restore();
+      });
+    }
+
+    ctx.restore();
+  }
+
+  private drawForegroundEffects(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
+    ctx.save();
+
+    // Phase Transition Shield
+    if (this.phaseTransitionTime > 0) {
+      const alpha = Math.sin(this.phaseTransitionTime * Math.PI * 5) * 0.5 + 0.5;
+      ctx.strokeStyle = this.accentColor;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 1.1, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Charge Attack
     if (this.chargeTime > 0) {
-      const chargeAlpha = Math.min(this.chargeTime, 1) * 0.6;
-      const chargePulse = Math.sin(this.chargeTime * Math.PI * 10) * 0.2 + 0.8;
-
-      drawer.setAlpha(chargeAlpha);
-      drawer.setGlow(accentColor, 40);
-      drawer.setStroke(accentColor, 5);
-
-      for (let ring = 0; ring < 3; ring++) {
-        const ringRadius =
-          bodyRadius * (1.1 + ring * 0.2 + this.chargeTime * 0.3 * chargePulse);
-        drawer.circle(this.x, this.y, ringRadius, false);
-      }
-
-      drawer.clearGlow();
-      drawer.resetAlpha();
+      const chargeProgress = Math.min(1, this.chargeTime / 1.0);
+      ctx.fillStyle = this.glowColor;
+      ctx.globalAlpha = 0.3 * chargeProgress;
+      ctx.beginPath();
+      ctx.arc(x, y, radius * chargeProgress, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Enhanced HP bar with phase indicator
-    const hpBarWidth = bodyRadius * 2.8;
-    const hpBarHeight = 14;
-    const hpBarY = this.y - bodyRadius - 55;
+    // Colossus Shields
+    if (this.variant === 0) {
+      this.shields.forEach(shield => {
+        const orbitRadius = radius * shield.dist;
+        const dx = x + Math.cos(shield.angle) * orbitRadius;
+        const dy = y + Math.sin(shield.angle) * orbitRadius;
 
-    // HP bar background with glow
+        ctx.save();
+        ctx.translate(dx, dy);
+        ctx.rotate(shield.angle); // Face inward
+
+        ctx.fillStyle = this.secondaryColor;
+        ctx.strokeStyle = this.accentColor;
+        ctx.lineWidth = 2;
+
+        // Draw Shield Plate
+        ctx.fillRect(-shield.size, -shield.size * 1.5, shield.size * 2, shield.size * 3);
+        ctx.strokeRect(-shield.size, -shield.size * 1.5, shield.size * 2, shield.size * 3);
+
+        ctx.restore();
+      });
+    }
+
+    // Void Construct Rings (Front half)
+    if (this.variant === 2) {
+      this.rings.forEach(ring => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ring.angle);
+        ctx.scale(1, 0.3); // Flatten to look like 3D ring
+
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * ring.radius, 0, Math.PI); // Front half
+        ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.8);
+        ctx.lineWidth = ring.width;
+        ctx.stroke();
+
+        ctx.restore();
+      });
+    }
+
+    // Omega Core Arcs
+    if (this.variant === 3) {
+      this.arcs.forEach(arc => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(arc.angle);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * arc.radius, 0, arc.length);
+        ctx.strokeStyle = this.accentColor;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = this.glowColor;
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
+      });
+    }
+
+    // Omega Core Lightning - Contained within bubble mostly
+    if (this.variant === 3 && Math.random() < 0.1) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = radius * 0.9;
+      ctx.strokeStyle = this.accentColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  private drawDeathAnimation(ctx: CanvasRenderingContext2D): void {
+    const progress = 1 - this.breakAnimTime / this.breakAnimDuration;
+    const scale = 1 + progress * 2;
+    const alpha = 1 - progress;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(scale, scale);
+    ctx.rotate(progress * Math.PI * 2);
+
+    // Pixel explosion
+    const pixels = 8;
+    for (let i = 0; i < pixels; i++) {
+      const angle = (i / pixels) * Math.PI * 2;
+      const dist = progress * 100;
+      const px = Math.cos(angle) * dist;
+      const py = Math.sin(angle) * dist;
+
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(px, py, 10, 10);
+    }
+
+    ctx.restore();
+  }
+
+  private drawHealthBar(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    size: number,
+  ): void {
+    const barWidth = size * 1.2;
+    const barHeight = 12;
+    const barY = centerY - size / 2 - 30;
+
+    // Background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.strokeStyle = accentColor;
+    ctx.strokeStyle = this.glowColor;
     ctx.lineWidth = 2;
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = `rgba(${String(accentRgb.r)}, ${String(accentRgb.g)}, ${String(accentRgb.b)}, 0.6)`;
-    ctx.fillRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
-    ctx.strokeRect(this.x - hpBarWidth / 2, hpBarY, hpBarWidth, hpBarHeight);
+    ctx.fillRect(centerX - barWidth / 2, barY, barWidth, barHeight);
+    ctx.strokeRect(centerX - barWidth / 2, barY, barWidth, barHeight);
 
-    // HP fill with gradient
-    const hpFillWidth = (hpBarWidth - 4) * hpPercent;
-    if (hpFillWidth > 0) {
-      const hpGradient = ctx.createLinearGradient(
-        this.x - hpBarWidth / 2 + 2,
-        hpBarY + 2,
-        this.x - hpBarWidth / 2 + 2 + hpFillWidth,
-        hpBarY + 2,
+    // Fill
+    const hpPercent = this.currentHp / this.maxHp;
+    if (hpPercent > 0) {
+      const gradient = ctx.createLinearGradient(
+        centerX - barWidth / 2, barY,
+        centerX - barWidth / 2 + barWidth * hpPercent, barY
       );
-      hpGradient.addColorStop(0, accentColor);
-      hpGradient.addColorStop(
-        0.5,
-        `rgba(${String(accentRgb.r + 40)}, ${String(accentRgb.g + 40)}, ${String(accentRgb.b + 40)}, 1)`,
-      );
-      hpGradient.addColorStop(1, accentColor);
+      gradient.addColorStop(0, this.color);
+      gradient.addColorStop(1, this.glowColor);
 
-      ctx.fillStyle = hpGradient;
-      ctx.fillRect(
-        this.x - hpBarWidth / 2 + 2,
-        hpBarY + 2,
-        hpFillWidth,
-        hpBarHeight - 4,
-      );
+      ctx.fillStyle = gradient;
+      ctx.fillRect(centerX - barWidth / 2 + 2, barY + 2, (barWidth - 4) * hpPercent, barHeight - 4);
     }
 
-    // Phase indicator text
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = accentColor;
-    ctx.font = 'bold 12px monospace';
+    // Name
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`PHASE ${String(this.phase)}`, this.x, hpBarY - 8);
+    ctx.shadowColor = this.glowColor;
+    ctx.shadowBlur = 4;
 
+    let name = "BOSS";
+    if (this.variant === 0) name = "COLOSSUS";
+    if (this.variant === 1) name = "SWARM QUEEN";
+    if (this.variant === 2) name = "VOID CONSTRUCT";
+    if (this.variant === 3) name = "OMEGA CORE";
+
+    ctx.fillText(name, centerX, barY - 8);
     ctx.shadowBlur = 0;
+  }
 
-    // Flash effect on hit - enhanced
-    if (this.flashTime > 0) {
-      const flashAlpha = this.flashTime / this.flashDuration;
-      const flashPulse = Math.sin(flashAlpha * Math.PI * 20) * 0.3 + 0.7;
+  private hexToRgba(hex: string | undefined, alpha: number): string {
+    if (!hex) return `rgba(0, 0, 0, ${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
 
-      drawer.setAlpha(flashAlpha * 0.7 * flashPulse);
-      drawer.setGlow('#ffffff', 40);
-      drawer.setStroke('#ffffff', 10);
-      drawer.circle(this.x, this.y, bodyRadius * 1.25, false);
-
-      // Impact shockwaves
-      for (let i = 0; i < 4; i++) {
-        const waveRadius =
-          bodyRadius * (1.25 + i * 0.25 + (1 - flashAlpha) * 0.6);
-        const waveAlpha = flashAlpha * (0.5 - i * 0.1);
-        drawer.setAlpha(waveAlpha);
-        drawer.circle(this.x, this.y, waveRadius, false);
-      }
-
-      drawer.clearGlow();
-      drawer.resetAlpha();
-    }
+  private getRandomColor(): string {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    return color ?? '#ff0000'; // Fallback to red if undefined
   }
 
   getPosition(): Vec2 {

@@ -898,26 +898,26 @@ export class Game {
         const hasMeaningOfLife = state.subUpgrades['meaning_of_life'] === true;
         // Button only appears if meaning_of_life is purchased OR if already prestiged before
         const isUnlocked = hasMeaningOfLife || state.prestigeLevel > 0;
-        
+
         // Check if prestige was just unlocked via meaning_of_life purchase
         const isNowUnlocked = isUnlocked && !wasPrestigeUnlocked && hasMeaningOfLife && !wasMeaningOfLifeOwned;
-        
+
         if (isNowUnlocked) {
           // Animate the button appearing
           ascensionBtn.style.display = 'block';
           ascensionBtn.style.opacity = '0';
           ascensionBtn.style.transform = 'scale(0.5)';
           ascensionBtn.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
-          
+
           // Add glow effect
           ascensionBtn.style.filter = 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))';
           ascensionBtn.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)';
-          
+
           // Trigger animation
           setTimeout(() => {
             ascensionBtn.style.opacity = '1';
             ascensionBtn.style.transform = 'scale(1)';
-            
+
             // Remove glow after animation
             setTimeout(() => {
               ascensionBtn.style.transition = '';
@@ -925,7 +925,7 @@ export class Game {
               ascensionBtn.style.boxShadow = '';
             }, 2000);
           }, 50);
-          
+
           // Show notification
           if (this.notificationSystem) {
             this.notificationSystem.show(
@@ -937,7 +937,7 @@ export class Game {
         } else {
           ascensionBtn.style.display = isUnlocked ? 'block' : 'none';
         }
-        
+
         wasPrestigeUnlocked = isUnlocked;
         wasMeaningOfLifeOwned = hasMeaningOfLife;
       };
@@ -1699,7 +1699,20 @@ export class Game {
     // Make bosses 3x harder than before to match time limit challenge
     const baseHp = ColorManager.getBossHp(state.level);
     const hp = Math.floor(baseHp * 3);
-    this.bossBall = new BossBall(cx, cy, radius, hp);
+
+    // Determine boss variant based on level
+    // Level 25 -> 0 (Colossus)
+    // Level 50 -> 1 (Swarm Queen)
+    // Level 75 -> 2 (Void Construct)
+    // Level 100 -> 3 (Omega Core)
+    // Level 125 -> 0 (Cycle)
+    let bossVariant = 0;
+    if (state.level >= 25) {
+      const bossIndex = Math.floor((state.level - 25) / 25);
+      bossVariant = bossIndex % 4;
+    }
+
+    this.bossBall = new BossBall(cx, cy, radius, hp, bossVariant);
     this.ball = null;
   }
 
@@ -2028,7 +2041,7 @@ export class Game {
 
     // However, looking at fireSingleShip, we call this with targetEntity.radius.
     // Let's stick to the new utility function.
-    
+
     // Determine sprite based on context if possible, otherwise default
     // For now, using the default normal sprite covers most cases well enough for "shape"
     return getPixelHitPoint(origin, center, radius);
@@ -2372,11 +2385,11 @@ export class Game {
           // Use click damage if available, otherwise use total damage
           // Spawn more particles for clicks, fewer for pure auto-fire
           const damageForParticles = hasClickDamage ? clickDamage : finalDamage;
-          const baseCount = hasClickDamage ? 8 : 3; // More for clicks
-          const damageCount = Math.floor(damageForParticles / 50); // Lower threshold
+          const baseCount = hasClickDamage ? 2 : 1; // Reduced particle count
+          const damageCount = Math.floor(damageForParticles / 200); // Higher threshold (less particles)
           const particleCount = Math.max(
             baseCount,
-            Math.min(25, baseCount + damageCount),
+            Math.min(5, baseCount + damageCount), // Much lower max
           );
 
           this.particleSystem.spawnParticles({
@@ -2385,8 +2398,8 @@ export class Game {
             count: particleCount,
             color: themeParticleColor,
             speed: 80,
-            size: 3,
-            life: 0.8,
+            size: 1.5, // Smaller particles
+            life: 0.5, // Shorter life
             glow: useGlow,
             style: particleStyle,
           });
@@ -2642,10 +2655,10 @@ export class Game {
       for (let level = 100; level < 105; level++) {
         xpNeededFor105 += ColorManager.getExpRequired(level);
       }
-      
+
       // Calculate how much XP the player currently has towards next level
       const currentXPProgress = state.experience;
-      
+
       // Limit boss XP so total XP doesn't exceed what's needed for level 105
       const maxAllowedXP = Math.max(0, xpNeededFor105 - currentXPProgress);
       bossXP = Math.min(bossXP, maxAllowedXP);
@@ -2670,7 +2683,7 @@ export class Game {
 
     // Limit leveling after level 100 boss defeat
     const maxLevelAfterBoss = state.level === 100 ? 105 : Infinity;
-    
+
     while (state.experience >= ColorManager.getExpRequired(state.level) && state.level < maxLevelAfterBoss) {
       const expRequired = ColorManager.getExpRequired(state.level);
       state.experience -= expRequired;
@@ -3751,7 +3764,7 @@ export class Game {
       // Reduce upgrade check timer to check more frequently when saving for discovered upgrades
       agent.upgradeTimer = Math.min(agent.upgradeTimer, this.getRandomInRange(0.3, 0.6));
     }
-    
+
     if (agent.upgradeTimer <= 0) {
       this.runGodModeUpgrades(agent);
     }
@@ -3833,7 +3846,7 @@ export class Game {
 
     // Check if saving for discovered upgrades - use faster click intervals
     const hasDiscovered = this.checkForDiscoveredUpgrades();
-    const clickIntervalMin = hasDiscovered 
+    const clickIntervalMin = hasDiscovered
       ? agent.clickIntervalRange.min * 0.7  // 30% faster
       : agent.clickIntervalRange.min;
     const clickIntervalMax = hasDiscovered

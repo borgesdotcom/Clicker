@@ -26,7 +26,7 @@ export class Particle {
   private maxLife!: number;
   private decay!: number;
   private glow!: boolean;
-  private style!: 'classic' | 'glow' | 'sparkle' | 'trail';
+  public style!: 'classic' | 'glow' | 'sparkle' | 'trail';
   private creationTime!: number;
 
   constructor(config?: ParticleConfig) {
@@ -345,6 +345,7 @@ export class ParticleSystem {
       style,
     });
   }
+
 
   update(dt: number): void {
     const particles = this.particlePool.getActive();

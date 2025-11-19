@@ -26,6 +26,7 @@ import trophy from '@/icons/trophy.png';
 import books from '@/icons/books.png';
 import settings from '@/icons/settings.png';
 import art from '@/icons/art.png';
+import hitmarker from '@/icons/hitmarker.png';
 
 // Artifact icons
 import artifactRustyCoil from '@/icons/artifacts/rusty_coil.png';
@@ -94,6 +95,7 @@ export const images = {
   books,
   settings,
   art,
+  hitmarker,
   artifacts: {
     rusty_coil: artifactRustyCoil,
     baisc_targeting_system: artifactBasicTargeting,
@@ -166,12 +168,12 @@ export function resolveArtifactIcon(iconPath: string): string {
   if (iconPath.startsWith('http') || iconPath.startsWith('data:')) {
     return iconPath;
   }
-  
+
   // If it's an emoji or non-path string, return as-is
   if (!iconPath.startsWith('/') && !iconPath.startsWith('./') && !iconPath.startsWith('@/')) {
     return iconPath;
   }
-  
+
   // Extract filename from path
   let filename: string;
   if (iconPath.startsWith('/src/icons/artifacts/')) {
@@ -185,7 +187,7 @@ export function resolveArtifactIcon(iconPath: string): string {
     const parts = iconPath.split('/');
     filename = parts[parts.length - 1] || iconPath;
   }
-  
+
   // Map filename to imported image
   const artifactMap: Record<string, string> = {
     'rusty_coil.png': images.artifacts.rusty_coil,
@@ -220,7 +222,7 @@ export function resolveArtifactIcon(iconPath: string): string {
     'cosmic_harmonizer.png': images.artifacts.cosmic_harmonizer,
     'constelation_map.png': images.artifacts.constelation_map,
   };
-  
+
   // Return mapped image or fallback to original path
   return artifactMap[filename] || iconPath;
 }
