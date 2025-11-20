@@ -7,6 +7,7 @@
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { t } from '../core/I18n';
 import { IconGenerator } from '../utils/IconGenerator';
+import { resolveArtifactIcon } from '../assets/images';
 import type { Artifact } from '../systems/ArtifactSystem';
 
 export class Hud {
@@ -122,7 +123,7 @@ export class Hud {
         };
 
         const icon = document.createElement('img');
-        icon.src = artifact.icon;
+        icon.src = resolveArtifactIcon(artifact.icon);
         icon.style.cssText = 'width: 40px; height: 40px; object-fit: contain;';
         btn.appendChild(icon);
 
