@@ -1,4 +1,3 @@
-
 // 1 = primary color (body)
 // 2 = secondary color (shade/outline)
 // 3 = highlight (white/light)
@@ -21,7 +20,8 @@ export const ALIEN_SPRITE_NORMAL: PixelGrid = [
   [0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0],
 ];
 
-export const ALIEN_SPRITE_SCOUT: PixelGrid = [ // Smaller, more aerodynamic
+export const ALIEN_SPRITE_SCOUT: PixelGrid = [
+  // Smaller, more aerodynamic
   [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
   [0, 0, 0, 1, 3, 3, 1, 1, 0, 0, 0],
   [0, 0, 1, 3, 1, 1, 1, 1, 1, 0, 0],
@@ -35,7 +35,8 @@ export const ALIEN_SPRITE_SCOUT: PixelGrid = [ // Smaller, more aerodynamic
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const ALIEN_SPRITE_TANK: PixelGrid = [ // Bulky, round, reinforced
+export const ALIEN_SPRITE_TANK: PixelGrid = [
+  // Bulky, round, reinforced
   [0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0],
   [0, 0, 2, 1, 1, 1, 1, 1, 2, 0, 0],
   [0, 2, 1, 1, 3, 3, 1, 1, 1, 2, 0],
@@ -49,7 +50,8 @@ export const ALIEN_SPRITE_TANK: PixelGrid = [ // Bulky, round, reinforced
   [0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0],
 ];
 
-export const ALIEN_SPRITE_HEALER: PixelGrid = [ // Cross shape or similar
+export const ALIEN_SPRITE_HEALER: PixelGrid = [
+  // Cross shape or similar
   [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
   [0, 0, 0, 1, 3, 3, 1, 1, 0, 0, 0],
   [0, 0, 1, 1, 3, 3, 1, 1, 1, 0, 0],
@@ -63,7 +65,8 @@ export const ALIEN_SPRITE_HEALER: PixelGrid = [ // Cross shape or similar
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const ALIEN_SPRITE_GUARDIAN: PixelGrid = [ // Round with shield core
+export const ALIEN_SPRITE_GUARDIAN: PixelGrid = [
+  // Round with shield core
   [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
   [0, 0, 1, 1, 3, 3, 1, 1, 1, 0, 0],
   [0, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0],
@@ -77,7 +80,8 @@ export const ALIEN_SPRITE_GUARDIAN: PixelGrid = [ // Round with shield core
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const ALIEN_SPRITE_HOARDER: PixelGrid = [ // Bag-like
+export const ALIEN_SPRITE_HOARDER: PixelGrid = [
+  // Bag-like
   [0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0],
   [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
   [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
@@ -93,7 +97,8 @@ export const ALIEN_SPRITE_HOARDER: PixelGrid = [ // Bag-like
 
 // --- Power-Up Sprites ---
 
-export const POWERUP_SPRITE_POINTS: PixelGrid = [ // Coin
+export const POWERUP_SPRITE_POINTS: PixelGrid = [
+  // Coin
   [0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0],
   [0, 0, 2, 1, 1, 1, 1, 1, 2, 0, 0],
   [0, 2, 1, 3, 3, 3, 1, 1, 1, 2, 0],
@@ -107,7 +112,8 @@ export const POWERUP_SPRITE_POINTS: PixelGrid = [ // Coin
   [0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0],
 ];
 
-export const POWERUP_SPRITE_DAMAGE: PixelGrid = [ // Sword/Dagger
+export const POWERUP_SPRITE_DAMAGE: PixelGrid = [
+  // Sword/Dagger
   [0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0],
   [0, 0, 0, 0, 1, 3, 1, 2, 0, 0, 0],
   [0, 0, 0, 1, 3, 1, 1, 1, 2, 0, 0],
@@ -121,7 +127,8 @@ export const POWERUP_SPRITE_DAMAGE: PixelGrid = [ // Sword/Dagger
   [0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0],
 ];
 
-export const POWERUP_SPRITE_SPEED: PixelGrid = [ // Lightning Bolt
+export const POWERUP_SPRITE_SPEED: PixelGrid = [
+  // Lightning Bolt
   [0, 0, 0, 0, 0, 3, 1, 1, 0, 0, 0],
   [0, 0, 0, 0, 3, 1, 1, 0, 0, 0, 0],
   [0, 0, 0, 3, 1, 1, 0, 0, 0, 0, 0],
@@ -135,7 +142,8 @@ export const POWERUP_SPRITE_SPEED: PixelGrid = [ // Lightning Bolt
   [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const POWERUP_SPRITE_MULTISHOT: PixelGrid = [ // Triple Shot
+export const POWERUP_SPRITE_MULTISHOT: PixelGrid = [
+  // Triple Shot
   [0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0],
   [0, 1, 3, 1, 0, 0, 0, 1, 3, 1, 0],
   [0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0],
@@ -149,7 +157,8 @@ export const POWERUP_SPRITE_MULTISHOT: PixelGrid = [ // Triple Shot
   [0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0],
 ];
 
-export const POWERUP_SPRITE_CRITICAL: PixelGrid = [ // Target/Crosshair
+export const POWERUP_SPRITE_CRITICAL: PixelGrid = [
+  // Target/Crosshair
   [0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0],
   [0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0],
   [0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0],
@@ -165,28 +174,40 @@ export const POWERUP_SPRITE_CRITICAL: PixelGrid = [ // Target/Crosshair
 
 export function getSpriteForType(type: string): PixelGrid {
   switch (type) {
-    case 'scout': return ALIEN_SPRITE_SCOUT;
-    case 'tank': return ALIEN_SPRITE_TANK;
-    case 'healer': return ALIEN_SPRITE_HEALER;
-    case 'guardian': return ALIEN_SPRITE_GUARDIAN;
-    case 'hoarder': return ALIEN_SPRITE_HOARDER;
-    default: return ALIEN_SPRITE_NORMAL;
+    case 'scout':
+      return ALIEN_SPRITE_SCOUT;
+    case 'tank':
+      return ALIEN_SPRITE_TANK;
+    case 'healer':
+      return ALIEN_SPRITE_HEALER;
+    case 'guardian':
+      return ALIEN_SPRITE_GUARDIAN;
+    case 'hoarder':
+      return ALIEN_SPRITE_HOARDER;
+    default:
+      return ALIEN_SPRITE_NORMAL;
   }
 }
 
 export function getPowerUpSprite(type: string): PixelGrid {
   switch (type) {
-    case 'points': return POWERUP_SPRITE_POINTS;
-    case 'damage': return POWERUP_SPRITE_DAMAGE;
-    case 'speed': return POWERUP_SPRITE_SPEED;
-    case 'multishot': return POWERUP_SPRITE_MULTISHOT;
-    case 'critical': return POWERUP_SPRITE_CRITICAL;
-    default: return POWERUP_SPRITE_POINTS;
+    case 'points':
+      return POWERUP_SPRITE_POINTS;
+    case 'damage':
+      return POWERUP_SPRITE_DAMAGE;
+    case 'speed':
+      return POWERUP_SPRITE_SPEED;
+    case 'multishot':
+      return POWERUP_SPRITE_MULTISHOT;
+    case 'critical':
+      return POWERUP_SPRITE_CRITICAL;
+    default:
+      return POWERUP_SPRITE_POINTS;
   }
 }
 
-
-export const BOSS_SPRITE_COLOSSUS: PixelGrid = [ // Level 25: Tank-like, heavy
+export const BOSS_SPRITE_COLOSSUS: PixelGrid = [
+  // Level 25: Tank-like, heavy
   [0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0],
   [0, 0, 0, 2, 1, 1, 3, 3, 3, 1, 1, 2, 0, 0, 0, 0],
@@ -205,7 +226,8 @@ export const BOSS_SPRITE_COLOSSUS: PixelGrid = [ // Level 25: Tank-like, heavy
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const BOSS_SPRITE_SWARM_QUEEN: PixelGrid = [ // Level 50: Insectoid
+export const BOSS_SPRITE_SWARM_QUEEN: PixelGrid = [
+  // Level 50: Insectoid
   [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 1, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 1, 0, 0],
   [0, 0, 1, 1, 0, 1, 1, 3, 3, 1, 1, 0, 1, 1, 0, 0],
@@ -224,7 +246,8 @@ export const BOSS_SPRITE_SWARM_QUEEN: PixelGrid = [ // Level 50: Insectoid
   [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const BOSS_SPRITE_VOID_CONSTRUCT: PixelGrid = [ // Level 75: Geometric/Dark
+export const BOSS_SPRITE_VOID_CONSTRUCT: PixelGrid = [
+  // Level 75: Geometric/Dark
   [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 1, 3, 3, 1, 1, 3, 3, 1, 0, 0, 0, 0],
   [0, 0, 0, 1, 3, 1, 1, 1, 1, 1, 1, 3, 1, 0, 0, 0],
@@ -243,7 +266,8 @@ export const BOSS_SPRITE_VOID_CONSTRUCT: PixelGrid = [ // Level 75: Geometric/Da
   [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-export const BOSS_SPRITE_OMEGA_CORE: PixelGrid = [ // Level 100: Chaotic Energy
+export const BOSS_SPRITE_OMEGA_CORE: PixelGrid = [
+  // Level 100: Chaotic Energy
   [0, 0, 0, 0, 0, 2, 1, 4, 4, 1, 2, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 2, 1, 4, 3, 3, 4, 1, 2, 0, 0, 0, 0],
   [0, 0, 0, 2, 1, 4, 3, 1, 1, 3, 4, 1, 2, 0, 0, 0],

@@ -26,26 +26,37 @@ export class Draw {
     if (!color.startsWith('#')) return color;
     const num = parseInt(color.slice(1), 16);
     let r = (num >> 16) + amount;
-    let g = ((num >> 8) & 0x00FF) + amount;
-    let b = (num & 0x0000FF) + amount;
+    let g = ((num >> 8) & 0x00ff) + amount;
+    let b = (num & 0x0000ff) + amount;
 
     r = Math.max(Math.min(255, r), 0);
     g = Math.max(Math.min(255, g), 0);
     b = Math.max(Math.min(255, b), 0);
 
-    return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
   }
 
-  private static getBuffer(width: number, height: number): { canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D } {
+  private static getBuffer(
+    width: number,
+    height: number,
+  ): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
     if (!Draw.bufferCanvas) {
       Draw.bufferCanvas = document.createElement('canvas');
-      Draw.bufferCtx = Draw.bufferCanvas.getContext('2d', { willReadFrequently: false })!;
+      Draw.bufferCtx = Draw.bufferCanvas.getContext('2d', {
+        willReadFrequently: false,
+      })!;
     }
 
     // Resize if necessary (grow only to avoid thrashing)
     if (Draw.bufferCanvas.width < width || Draw.bufferCanvas.height < height) {
-      Draw.bufferCanvas.width = Math.max(Draw.bufferCanvas.width, Math.ceil(width));
-      Draw.bufferCanvas.height = Math.max(Draw.bufferCanvas.height, Math.ceil(height));
+      Draw.bufferCanvas.width = Math.max(
+        Draw.bufferCanvas.width,
+        Math.ceil(width),
+      );
+      Draw.bufferCanvas.height = Math.max(
+        Draw.bufferCanvas.height,
+        Math.ceil(height),
+      );
     }
 
     return { canvas: Draw.bufferCanvas, ctx: Draw.bufferCtx! };
@@ -58,7 +69,7 @@ export class Draw {
     height: number,
     sprite: PixelGrid,
     color: string,
-    opacity: number = 1
+    opacity: number = 1,
   ): void {
     const rows = sprite.length;
     if (rows === 0) return;
@@ -85,7 +96,8 @@ export class Draw {
       const row = sprite[r];
       if (!row) continue;
       for (let c = 0; c < cols; c++) {
-        if (row[c] === 1) { // Body
+        if (row[c] === 1) {
+          // Body
           // Draw with slight overlap to prevent gaps
           bCtx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
           hasBody = true;
@@ -97,7 +109,17 @@ export class Draw {
       this.ctx.save();
       this.ctx.globalAlpha = opacity * 0.9; // Body opacity (higher for power-ups)
       // Draw the buffered body shape
-      this.ctx.drawImage(buffer, 0, 0, width, height, startX, startY, width, height);
+      this.ctx.drawImage(
+        buffer,
+        0,
+        0,
+        width,
+        height,
+        startX,
+        startY,
+        width,
+        height,
+      );
       this.ctx.restore();
     }
 
@@ -113,7 +135,8 @@ export class Draw {
       const row = sprite[r];
       if (!row) continue;
       for (let c = 0; c < cols; c++) {
-        if (row[c] === 2) { // Shade
+        if (row[c] === 2) {
+          // Shade
           bCtx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
           hasShade = true;
         }
@@ -123,7 +146,17 @@ export class Draw {
     if (hasShade) {
       this.ctx.save();
       this.ctx.globalAlpha = opacity; // Shade opacity
-      this.ctx.drawImage(buffer, 0, 0, width, height, startX, startY, width, height);
+      this.ctx.drawImage(
+        buffer,
+        0,
+        0,
+        width,
+        height,
+        startX,
+        startY,
+        width,
+        height,
+      );
       this.ctx.restore();
     }
 
@@ -138,14 +171,24 @@ export class Draw {
           this.ctx.save();
           this.ctx.globalAlpha = opacity;
           this.ctx.fillStyle = '#ffffff';
-          this.ctx.fillRect(startX + c * pixelW, startY + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          this.ctx.fillRect(
+            startX + c * pixelW,
+            startY + r * pixelH,
+            pixelW + 0.5,
+            pixelH + 0.5,
+          );
           this.ctx.restore();
         } else if (pixelType === 4) {
           // Accent/Eye - dark contrast
           this.ctx.save();
           this.ctx.globalAlpha = opacity;
           this.ctx.fillStyle = '#000000'; // Or darker shade of color
-          this.ctx.fillRect(startX + c * pixelW, startY + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          this.ctx.fillRect(
+            startX + c * pixelW,
+            startY + r * pixelH,
+            pixelW + 0.5,
+            pixelH + 0.5,
+          );
           this.ctx.restore();
         }
       }

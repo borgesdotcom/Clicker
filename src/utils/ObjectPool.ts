@@ -70,7 +70,7 @@ export class ObjectPool<T> {
       }
       // Remove the last element
       this.active.pop();
-      
+
       this.activeSet.delete(obj);
       this.reset(obj);
 

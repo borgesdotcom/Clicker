@@ -265,15 +265,16 @@ export class AscensionSystem {
   canAscend(state: GameState): boolean {
     // Can ascend only if meaning_of_life upgrade is purchased (required to unlock prestige system)
     // OR if already prestiged before (prestigeLevel > 0)
-    const hasUnlock = state.subUpgrades['meaning_of_life'] === true || state.prestigeLevel > 0;
-    
+    const hasUnlock =
+      state.subUpgrades['meaning_of_life'] === true || state.prestigeLevel > 0;
+
     if (!hasUnlock) return false;
-    
+
     // At level 100, can only ascend after defeating the boss
     if (state.level === 100 && state.blockedOnBossLevel === 100) {
       return false; // Must defeat boss first
     }
-    
+
     return true;
   }
 

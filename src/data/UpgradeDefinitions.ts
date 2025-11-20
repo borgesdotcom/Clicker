@@ -377,8 +377,7 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
     id: 'quantum_entanglement',
     name: 'Quantum Entanglement Core',
     description: 'Critical hits +3%, Damage x1.5',
-    flavor:
-      "Spooky action at a distance. Einstein hated it. You'll love it.",
+    flavor: "Spooky action at a distance. Einstein hated it. You'll love it.",
     cost: 20000000,
     owned: false,
     requires: (state) => state.critChanceLevel >= 20,
@@ -511,7 +510,8 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
     id: 'fleet_command_center',
     name: 'Fleet Command Center',
     description: 'Attack damage x1.4',
-    flavor: 'Centralized coordination multiplies fleet effectiveness. Every ship fires in perfect harmony.',
+    flavor:
+      'Centralized coordination multiplies fleet effectiveness. Every ship fires in perfect harmony.',
     cost: 500000000,
     owned: false,
     requires: (state) => state.level >= 75 && state.shipsCount >= 70,
@@ -1291,4 +1291,3 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
     },
   },
 ];
-

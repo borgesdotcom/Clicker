@@ -574,7 +574,8 @@ export class UpgradeSystem {
         id: 'fleet_command_center',
         name: 'Fleet Command Center',
         description: 'Attack damage x1.4',
-        flavor: 'Centralized coordination multiplies fleet effectiveness. Every ship fires in perfect harmony.',
+        flavor:
+          'Centralized coordination multiplies fleet effectiveness. Every ship fires in perfect harmony.',
         cost: 4800000000,
         owned: false,
         requires: (state) => state.level >= 75 && state.shipsCount >= 70,
@@ -654,7 +655,8 @@ export class UpgradeSystem {
         id: 'void_prism',
         name: 'Void Prism',
         description: 'Gain 0.1% of Passive Gen as Base Click Damage',
-        flavor: 'Refracts void energy into raw power. Your idle engines now fuel your attacks.',
+        flavor:
+          'Refracts void energy into raw power. Your idle engines now fuel your attacks.',
         cost: 18000000000, // 18B
         owned: false,
         requires: (state) => state.level >= 81,
@@ -667,7 +669,8 @@ export class UpgradeSystem {
         id: 'chronal_dust',
         name: 'Chronal Dust',
         description: 'XP Gain x1.2',
-        flavor: "Time residue. Snort it for knowledge. (Don't actually snort it).",
+        flavor:
+          "Time residue. Snort it for knowledge. (Don't actually snort it).",
         cost: 21000000000, // 21B
         owned: false,
         requires: (state) => state.level >= 82,
@@ -693,7 +696,8 @@ export class UpgradeSystem {
         id: 'entropy_injector',
         name: 'Entropy Injector',
         description: 'Click Damage x1.5',
-        flavor: 'Accelerates the heat death of the universe, one click at a time.',
+        flavor:
+          'Accelerates the heat death of the universe, one click at a time.',
         cost: 54000000000, // 54B
         owned: false,
         requires: (state) => state.level >= 86,
@@ -1571,7 +1575,13 @@ export class UpgradeSystem {
   getUpgrades(): UpgradeConfig[] {
     // Ship-related sub-upgrades
     const shipSubUpgrades = this.subUpgrades.filter((u) =>
-      ['death_pact', 'ship_swarm', 'perfect_precision', 'fleet_command_center', 'armada_command'].includes(u.id),
+      [
+        'death_pact',
+        'ship_swarm',
+        'perfect_precision',
+        'fleet_command_center',
+        'armada_command',
+      ].includes(u.id),
     );
 
     // Attack speed related sub-upgrades
@@ -1684,20 +1694,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             15 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.15,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             15 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.15,
-              state.shipsCount,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                state.shipsCount,
+              ),
           ),
         );
         return state.points >= cost;
@@ -1721,20 +1731,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             70 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.22,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.22,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             70 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.22,
-              state.attackSpeedLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.22,
+                state.attackSpeedLevel,
+              ),
           ),
         );
         const cooldown = this.getFireCooldown(state);
@@ -1772,20 +1782,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             140 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.3,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             140 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.3,
-              state.pointMultiplierLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                state.pointMultiplierLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -1833,20 +1843,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             200 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.5,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.5,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             150 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor,
-              state.critChanceLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor,
+                state.critChanceLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -1869,20 +1879,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             200 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.3,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             200 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.3,
-              state.resourceGenLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                state.resourceGenLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -1911,17 +1921,17 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             180 *
-            Math.pow(Config.upgrades.costScaling.exponentialFactor, level),
+              Math.pow(Config.upgrades.costScaling.exponentialFactor, level),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             180 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor,
-              state.xpBoostLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor,
+                state.xpBoostLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -1960,20 +1970,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             30000 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.5,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.5,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             30000 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.5,
-              state.mutationEngineLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.5,
+                state.mutationEngineLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -2012,20 +2022,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             1200 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.3,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             1200 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.3,
-              state.energyCoreLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.3,
+                state.energyCoreLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -2070,20 +2080,20 @@ export class UpgradeSystem {
         this.applyDiscount(
           Math.ceil(
             2500 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.15,
-              level,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                level,
+              ),
           ),
         ),
       canBuy: (state: GameState) => {
         const cost = this.applyDiscount(
           Math.ceil(
             2500 *
-            Math.pow(
-              Config.upgrades.costScaling.exponentialFactor + 0.15,
-              state.cosmicKnowledgeLevel,
-            ),
+              Math.pow(
+                Config.upgrades.costScaling.exponentialFactor + 0.15,
+                state.cosmicKnowledgeLevel,
+              ),
           ),
         );
         return state.points >= cost;
@@ -2103,7 +2113,7 @@ export class UpgradeSystem {
       description: t('upgrades.main.misc.description'),
       getCost: () => 0,
       canBuy: () => false,
-      buy: () => { },
+      buy: () => {},
       getLevel: () => 0,
       getDisplayText: () => 'Special Technologies',
       subUpgrades: miscSubUpgrades,

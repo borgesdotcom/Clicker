@@ -182,13 +182,13 @@ export class Game {
     hitDirection?: Vec2;
     isBeam: boolean;
   } = {
-      damage: 0,
-      isCrit: false,
-      isFromShip: false,
-      clickDamage: 0,
-      hitDirection: undefined,
-      isBeam: false,
-    };
+    damage: 0,
+    isCrit: false,
+    isFromShip: false,
+    clickDamage: 0,
+    hitDirection: undefined,
+    isBeam: false,
+  };
   private batchTimer = 0;
   private batchInterval = 0.05; // Apply damage every 50ms
 
@@ -421,7 +421,11 @@ export class Game {
     this.hud.onSkillActivate = (id) => {
       // Prevent activation during boss mode
       if (this.mode === 'boss') {
-        this.hud.showMessage('Cannot use skills during boss fights!', '#ff4444', 2000);
+        this.hud.showMessage(
+          'Cannot use skills during boss fights!',
+          '#ff4444',
+          2000,
+        );
         return;
       }
 
@@ -900,18 +904,25 @@ export class Game {
         const isUnlocked = hasMeaningOfLife || state.prestigeLevel > 0;
 
         // Check if prestige was just unlocked via meaning_of_life purchase
-        const isNowUnlocked = isUnlocked && !wasPrestigeUnlocked && hasMeaningOfLife && !wasMeaningOfLifeOwned;
+        const isNowUnlocked =
+          isUnlocked &&
+          !wasPrestigeUnlocked &&
+          hasMeaningOfLife &&
+          !wasMeaningOfLifeOwned;
 
         if (isNowUnlocked) {
           // Animate the button appearing
           ascensionBtn.style.display = 'block';
           ascensionBtn.style.opacity = '0';
           ascensionBtn.style.transform = 'scale(0.5)';
-          ascensionBtn.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          ascensionBtn.style.transition =
+            'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
           // Add glow effect
-          ascensionBtn.style.filter = 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))';
-          ascensionBtn.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)';
+          ascensionBtn.style.filter =
+            'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))';
+          ascensionBtn.style.boxShadow =
+            '0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3)';
 
           // Trigger animation
           setTimeout(() => {
@@ -931,7 +942,7 @@ export class Game {
             this.notificationSystem.show(
               '🌟 Prestige System Unlocked! You can now ascend and gain prestige points!',
               'success',
-              5000
+              5000,
             );
           }
         } else {
@@ -945,8 +956,10 @@ export class Game {
       this.store.subscribe(updateAscensionBtn);
       // Initialize state
       const initialState = this.store.getState();
-      wasMeaningOfLifeOwned = initialState.subUpgrades['meaning_of_life'] === true;
-      wasPrestigeUnlocked = wasMeaningOfLifeOwned || initialState.prestigeLevel > 0;
+      wasMeaningOfLifeOwned =
+        initialState.subUpgrades['meaning_of_life'] === true;
+      wasPrestigeUnlocked =
+        wasMeaningOfLifeOwned || initialState.prestigeLevel > 0;
       updateAscensionBtn();
 
       buttonsContainer.appendChild(ascensionBtn);
@@ -996,7 +1009,6 @@ export class Game {
     }
   }
 
-
   private setupDiscordButton(): void {
     const shopPanel = document.getElementById('shop-panel');
     if (shopPanel) {
@@ -1014,8 +1026,10 @@ export class Game {
       discordBtn.style.fontFamily = 'var(--font-family)';
       discordBtn.style.fontWeight = 'bold';
       discordBtn.style.letterSpacing = '2px';
-      discordBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
-      discordBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      discordBtn.style.textShadow =
+        '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+      discordBtn.style.boxShadow =
+        '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
       discordBtn.style.transition = 'all 0.1s linear';
       discordBtn.style.cursor = 'pointer';
       discordBtn.addEventListener('click', () => {
@@ -1023,11 +1037,13 @@ export class Game {
       });
       discordBtn.addEventListener('mouseenter', () => {
         discordBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
-        discordBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+        discordBtn.style.boxShadow =
+          '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
       });
       discordBtn.addEventListener('mouseleave', () => {
         discordBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
-        discordBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+        discordBtn.style.boxShadow =
+          '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
       });
 
       shopPanel.appendChild(discordBtn);
@@ -1046,8 +1062,10 @@ export class Game {
       creditsBtn.style.fontFamily = 'var(--font-family)';
       creditsBtn.style.fontWeight = 'bold';
       creditsBtn.style.letterSpacing = '2px';
-      creditsBtn.style.textShadow = '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
-      creditsBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+      creditsBtn.style.textShadow =
+        '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.5)';
+      creditsBtn.style.boxShadow =
+        '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
       creditsBtn.style.transition = 'all 0.1s linear';
       creditsBtn.style.cursor = 'pointer';
       creditsBtn.addEventListener('click', () => {
@@ -1055,11 +1073,13 @@ export class Game {
       });
       creditsBtn.addEventListener('mouseenter', () => {
         creditsBtn.style.borderColor = 'rgba(255, 255, 255, 1)';
-        creditsBtn.style.boxShadow = '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
+        creditsBtn.style.boxShadow =
+          '0 0 6px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.25)';
       });
       creditsBtn.addEventListener('mouseleave', () => {
         creditsBtn.style.borderColor = 'rgba(255, 255, 255, 0.9)';
-        creditsBtn.style.boxShadow = '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
+        creditsBtn.style.boxShadow =
+          '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
       });
 
       shopPanel.appendChild(creditsBtn);
@@ -1137,7 +1157,11 @@ export class Game {
     const now = Date.now();
 
     // Restore active state
-    if (state.comboPauseActive && state.comboPauseEndTime && state.comboPauseEndTime > 0) {
+    if (
+      state.comboPauseActive &&
+      state.comboPauseEndTime &&
+      state.comboPauseEndTime > 0
+    ) {
       const remainingMs = state.comboPauseEndTime - now;
       if (remainingMs > 0) {
         // Still active - restore duration
@@ -1149,19 +1173,26 @@ export class Game {
         this.comboPauseActive = false;
         this.comboPauseDuration = 0;
         // Check if cooldown was already set
-        if (state.comboPauseCooldownEndTime && state.comboPauseCooldownEndTime > 0) {
+        if (
+          state.comboPauseCooldownEndTime &&
+          state.comboPauseCooldownEndTime > 0
+        ) {
           const cooldownRemainingMs = state.comboPauseCooldownEndTime - now;
           this.comboPauseCooldown = Math.max(0, cooldownRemainingMs / 1000);
         } else {
           // Start new cooldown
           this.comboPauseCooldown = this.COMBO_PAUSE_COOLDOWN;
-          state.comboPauseCooldownEndTime = now + this.COMBO_PAUSE_COOLDOWN * 1000;
+          state.comboPauseCooldownEndTime =
+            now + this.COMBO_PAUSE_COOLDOWN * 1000;
         }
         state.comboPauseActive = false;
         state.comboPauseEndTime = 0;
         this.comboSystem.resume();
       }
-    } else if (state.comboPauseCooldownEndTime && state.comboPauseCooldownEndTime > 0) {
+    } else if (
+      state.comboPauseCooldownEndTime &&
+      state.comboPauseCooldownEndTime > 0
+    ) {
       // Restore cooldown state
       const cooldownRemainingMs = state.comboPauseCooldownEndTime - now;
       if (cooldownRemainingMs > 0) {
@@ -1225,9 +1256,15 @@ export class Game {
 
     this.comboPauseButton.style.display = 'block';
 
-    const iconEl = this.comboPauseButton.querySelector('.skill-icon') as HTMLElement;
-    const cooldownRing = this.comboPauseButton.querySelector('.skill-cooldown-ring') as HTMLElement;
-    const timerEl = this.comboPauseButton.querySelector('.skill-timer') as HTMLElement;
+    const iconEl = this.comboPauseButton.querySelector(
+      '.skill-icon',
+    ) as HTMLElement;
+    const cooldownRing = this.comboPauseButton.querySelector(
+      '.skill-cooldown-ring',
+    ) as HTMLElement;
+    const timerEl = this.comboPauseButton.querySelector(
+      '.skill-timer',
+    ) as HTMLElement;
 
     if (!iconEl || !cooldownRing || !timerEl) return;
 
@@ -1238,7 +1275,8 @@ export class Game {
       timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
       timerEl.style.display = 'block';
 
-      const percent = (this.comboPauseDuration / this.COMBO_PAUSE_DURATION) * 100;
+      const percent =
+        (this.comboPauseDuration / this.COMBO_PAUSE_DURATION) * 100;
       cooldownRing.style.background = `conic-gradient(
         rgba(0, 170, 255, 0.3) ${percent}%,
         transparent ${percent}%
@@ -1255,7 +1293,8 @@ export class Game {
       timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
       timerEl.style.display = 'block';
 
-      const percent = (this.comboPauseCooldown / this.COMBO_PAUSE_COOLDOWN) * 100;
+      const percent =
+        (this.comboPauseCooldown / this.COMBO_PAUSE_COOLDOWN) * 100;
       cooldownRing.style.background = `conic-gradient(
         rgba(100, 100, 100, 0.5) ${percent}%,
         transparent ${percent}%
@@ -1286,7 +1325,10 @@ export class Game {
     const backgroundIndex = Math.min(Math.ceil(level / 100), 9);
 
     // Get the background GIF from the imported images
-    const backgroundGifUrl = images.backgroundGifs[backgroundIndex as keyof typeof images.backgroundGifs] || images.backgroundGif;
+    const backgroundGifUrl =
+      images.backgroundGifs[
+        backgroundIndex as keyof typeof images.backgroundGifs
+      ] || images.backgroundGif;
     const backgroundUrl = `url("${backgroundGifUrl}")`;
 
     // Update game container background
@@ -1298,7 +1340,11 @@ export class Game {
       gameContainer.style.backgroundSize = 'auto';
       gameContainer.style.backgroundColor = '#000';
 
-      console.log('Background updated by level:', backgroundIndex, backgroundUrl);
+      console.log(
+        'Background updated by level:',
+        backgroundIndex,
+        backgroundUrl,
+      );
     }
 
     // Update shop panel background to match
@@ -1446,9 +1492,7 @@ export class Game {
     this.updateComboPauseButton();
   }
 
-  private calculateRetainedUpgrades(
-    state: import('./types').GameState,
-  ): {
+  private calculateRetainedUpgrades(state: import('./types').GameState): {
     shipsCount: number;
     attackSpeedLevel: number;
     pointMultiplierLevel: number;
@@ -2684,7 +2728,10 @@ export class Game {
     // Limit leveling after level 100 boss defeat
     const maxLevelAfterBoss = state.level === 100 ? 105 : Infinity;
 
-    while (state.experience >= ColorManager.getExpRequired(state.level) && state.level < maxLevelAfterBoss) {
+    while (
+      state.experience >= ColorManager.getExpRequired(state.level) &&
+      state.level < maxLevelAfterBoss
+    ) {
       const expRequired = ColorManager.getExpRequired(state.level);
       state.experience -= expRequired;
       state.level++;
@@ -2983,7 +3030,7 @@ export class Game {
         this.store.setState({
           comboPauseActive: false,
           comboPauseEndTime: 0,
-          comboPauseCooldownEndTime: now + this.COMBO_PAUSE_COOLDOWN * 1000
+          comboPauseCooldownEndTime: now + this.COMBO_PAUSE_COOLDOWN * 1000,
         });
 
         this.updateComboPauseButton();
@@ -2991,11 +3038,14 @@ export class Game {
         // Update end time in state to reflect current duration
         const now = Date.now();
         this.store.setState({
-          comboPauseEndTime: now + this.comboPauseDuration * 1000
+          comboPauseEndTime: now + this.comboPauseDuration * 1000,
         });
 
         // Update button display every second
-        if (Math.floor(this.comboPauseDuration) !== Math.floor(this.comboPauseDuration + dt)) {
+        if (
+          Math.floor(this.comboPauseDuration) !==
+          Math.floor(this.comboPauseDuration + dt)
+        ) {
           this.updateComboPauseButton();
         }
       }
@@ -3006,7 +3056,7 @@ export class Game {
 
         // Update state
         this.store.setState({
-          comboPauseCooldownEndTime: 0
+          comboPauseCooldownEndTime: 0,
         });
 
         this.updateComboPauseButton();
@@ -3014,11 +3064,14 @@ export class Game {
         // Update cooldown end time in state
         const now = Date.now();
         this.store.setState({
-          comboPauseCooldownEndTime: now + this.comboPauseCooldown * 1000
+          comboPauseCooldownEndTime: now + this.comboPauseCooldown * 1000,
         });
 
         // Update button display every second
-        if (Math.floor(this.comboPauseCooldown) !== Math.floor(this.comboPauseCooldown + dt)) {
+        if (
+          Math.floor(this.comboPauseCooldown) !==
+          Math.floor(this.comboPauseCooldown + dt)
+        ) {
           this.updateComboPauseButton();
         }
       }
@@ -3069,12 +3122,22 @@ export class Game {
         const hitDamage = this.upgradeSystem.getPointsPerHit(state);
         const fireCooldown = this.upgradeSystem.getFireCooldown(state, true);
         const attackSpeed = fireCooldown > 0 ? 1000 / fireCooldown : 0; // Convert ms to shots per second
-        this.hud.updateStats(dps, passiveGen, critChance, critBonus, hitDamage, attackSpeed);
-
+        this.hud.updateStats(
+          dps,
+          passiveGen,
+          critChance,
+          critBonus,
+          hitDamage,
+          attackSpeed,
+        );
 
         // Update power-up buffs display (include combo pause skill if active)
         const activeBuffs = this.powerUpSystem.getActiveBuffs();
-        const allBuffs: Array<{ type: string; duration: number; maxDuration: number }> = [...activeBuffs];
+        const allBuffs: Array<{
+          type: string;
+          duration: number;
+          maxDuration: number;
+        }> = [...activeBuffs];
         if (this.comboPauseActive) {
           allBuffs.push({
             type: 'combo_pause',
@@ -3648,11 +3711,7 @@ export class Game {
       bossRetryAttempts: 0,
       bossHistory: [],
     };
-    this.notificationSystem.show(
-      'God Mode autopilot engaged.',
-      'info',
-      2400,
-    );
+    this.notificationSystem.show('God Mode autopilot engaged.', 'info', 2400);
   }
 
   private disableGodMode(): void {
@@ -3762,7 +3821,10 @@ export class Game {
     const hasDiscoveredUpgrades = this.checkForDiscoveredUpgrades();
     if (hasDiscoveredUpgrades) {
       // Reduce upgrade check timer to check more frequently when saving for discovered upgrades
-      agent.upgradeTimer = Math.min(agent.upgradeTimer, this.getRandomInRange(0.3, 0.6));
+      agent.upgradeTimer = Math.min(
+        agent.upgradeTimer,
+        this.getRandomInRange(0.3, 0.6),
+      );
     }
 
     if (agent.upgradeTimer <= 0) {
@@ -3798,8 +3860,7 @@ export class Game {
     }
 
     const target =
-      available[Math.floor(Math.random() * available.length)] ??
-      available[0];
+      available[Math.floor(Math.random() * available.length)] ?? available[0];
     if (!target) return false;
 
     const clickPos = this.withJitter({ x: target.x, y: target.y }, 12);
@@ -3847,10 +3908,10 @@ export class Game {
     // Check if saving for discovered upgrades - use faster click intervals
     const hasDiscovered = this.checkForDiscoveredUpgrades();
     const clickIntervalMin = hasDiscovered
-      ? agent.clickIntervalRange.min * 0.7  // 30% faster
+      ? agent.clickIntervalRange.min * 0.7 // 30% faster
       : agent.clickIntervalRange.min;
     const clickIntervalMax = hasDiscovered
-      ? agent.clickIntervalRange.max * 0.7   // 30% faster
+      ? agent.clickIntervalRange.max * 0.7 // 30% faster
       : agent.clickIntervalRange.max;
 
     if (agent.burstShotsRemaining > 0) {
@@ -3870,7 +3931,10 @@ export class Game {
       );
       agent.lastAction = 'Executed rapid click burst';
     } else {
-      agent.clickTimer = this.getRandomInRange(clickIntervalMin, clickIntervalMax);
+      agent.clickTimer = this.getRandomInRange(
+        clickIntervalMin,
+        clickIntervalMax,
+      );
     }
   }
 
@@ -3883,8 +3947,12 @@ export class Game {
     for (const subUpgrade of subUpgrades) {
       const subKey = `sub_${subUpgrade.id}`;
       if (state.discoveredUpgrades[subKey] && !subUpgrade.owned) {
-        // Discovered but not purchased
-        return true;
+        // Only prioritize if we have at least 80% of the cost
+        const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+        const threshold = cost * 0.8;
+        if (state.points >= threshold) {
+          return true;
+        }
       }
     }
 
@@ -3898,14 +3966,16 @@ export class Game {
     const beforeUpgrades = beforeState.stats.totalUpgrades;
     const beforeSubUpgrades = beforeState.stats.totalSubUpgrades;
 
-    // Prioritize discovered upgrades
-    const hasDiscovered = this.checkForDiscoveredUpgrades();
-    if (hasDiscovered) {
-      // Try to buy discovered upgrades first
-      this.shop.checkAndBuyDiscoveredUpgrades();
-    }
+    // Always try to buy discovered upgrades first (if affordable)
+    this.shop.checkAndBuyDiscoveredUpgrades();
 
-    this.shop.checkAndBuyAffordableUpgrades(true);
+    // Check if we're saving for discovered upgrades (80% threshold)
+    const hasDiscovered = this.checkForDiscoveredUpgrades();
+
+    // Only buy normal upgrades if we're not saving for a special upgrade
+    if (!hasDiscovered) {
+      this.shop.checkAndBuyAffordableUpgrades(true);
+    }
 
     const afterState = this.store.getState();
     if (afterState.stats.totalUpgrades > beforeUpgrades) {
@@ -3943,10 +4013,7 @@ export class Game {
     const resolvedBossLevel =
       blockedLevel !== null ? blockedLevel : state.level;
 
-    const ensureAgentReady = (
-      action: string,
-      resetClickTimer = true,
-    ): void => {
+    const ensureAgentReady = (action: string, resetClickTimer = true): void => {
       agent.lastAction = action;
       agent.breakTimer = 0;
       agent.idleTimer = 0;
@@ -4011,7 +4078,9 @@ export class Game {
         agent.bossRetryAttempts = 0;
       }
       ensureAgentReady(
-        blockedLevel !== null ? 'Re-engaging boss fight' : 'Engaging boss fight',
+        blockedLevel !== null
+          ? 'Re-engaging boss fight'
+          : 'Engaging boss fight',
       );
       if (this.bossRetryButton) {
         this.bossRetryButton.style.display = 'none';
@@ -4108,8 +4177,8 @@ export class Game {
       : 0;
     const bossEventText = lastHistoryEntry
       ? `${lastHistoryEntry.detail} (${this.formatDuration(
-        secondsSinceBossEvent,
-      )} ago)`
+          secondsSinceBossEvent,
+        )} ago)`
       : 'No boss activity yet';
     const nextRetryText =
       agent.bossRetryTimer > 0
@@ -4183,8 +4252,9 @@ export class Game {
 
     const bossLogEl = overlay.querySelector('[data-metric="boss-log"]');
     if (bossLogEl) {
-      bossLogEl.textContent = `Boss log: ${metrics.bossLogText ? metrics.bossLogText : '—'
-        }`;
+      bossLogEl.textContent = `Boss log: ${
+        metrics.bossLogText ? metrics.bossLogText : '—'
+      }`;
     }
 
     const formatValue = (value: number, fractionDigits = 1): string => {
@@ -4229,8 +4299,9 @@ export class Game {
 
     const actionEl = overlay.querySelector('[data-metric="last-action"]');
     if (actionEl) {
-      actionEl.textContent = `Last action: ${metrics.lastAction ? metrics.lastAction : '—'
-        }`;
+      actionEl.textContent = `Last action: ${
+        metrics.lastAction ? metrics.lastAction : '—'
+      }`;
     }
   }
 
@@ -4247,8 +4318,7 @@ export class Game {
     const deltaPoints = state.points - agent.baseline.points;
     const deltaClicks = state.stats.totalClicks - agent.baseline.clicks;
     const deltaBosses = state.stats.bossesKilled - agent.baseline.bosses;
-    const deltaUpgrades =
-      state.stats.totalUpgrades - agent.baseline.upgrades;
+    const deltaUpgrades = state.stats.totalUpgrades - agent.baseline.upgrades;
     const deltaSubUpgrades =
       state.stats.totalSubUpgrades - agent.baseline.subUpgrades;
 

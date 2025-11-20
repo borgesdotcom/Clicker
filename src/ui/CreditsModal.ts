@@ -112,7 +112,8 @@ export class CreditsModal {
     const shareButtons = document.createElement('div');
     shareButtons.style.display = 'grid';
     shareButtons.style.gap = '12px';
-    shareButtons.style.gridTemplateColumns = 'repeat(auto-fit, minmax(180px, 1fr))';
+    shareButtons.style.gridTemplateColumns =
+      'repeat(auto-fit, minmax(180px, 1fr))';
 
     // Twitter Share Button
     const twitterBtn = document.createElement('button');
@@ -197,7 +198,6 @@ export class CreditsModal {
     shareSection.appendChild(shareFeedback);
 
     content.appendChild(shareSection);
-
 
     // Steam Section
     const steamSection = document.createElement('div');
@@ -423,8 +423,7 @@ export class CreditsModal {
 
   private copyShareSummary(): void {
     const summary = this.buildShareSummary();
-    const gameUrl =
-      window.location.href.split('?')[0] || window.location.href;
+    const gameUrl = window.location.href.split('?')[0] || window.location.href;
     const shareMessage = `💥 BOBBLE Command Center Update\n${summary.shareText}\n\nPop bubblewrap aliens with me:\n${gameUrl}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -497,8 +496,7 @@ export class CreditsModal {
     const summary = this.buildShareSummary();
     const tweetText = `💥 BOBBLE Command Center Update\n${summary.shareText}\n\nJoin the bubblewrap defense force! 🛡️`;
 
-    const gameUrl =
-      window.location.href.split('?')[0] || window.location.href; // Remove query params
+    const gameUrl = window.location.href.split('?')[0] || window.location.href; // Remove query params
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(gameUrl)}`;
 
     window.open(twitterUrl, '_blank', 'width=550,height=420');

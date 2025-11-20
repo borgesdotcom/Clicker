@@ -399,7 +399,8 @@ export class AlienBall {
     const lineHeight = 20;
     const textWidth = maxWidth;
     const textHeight =
-      lineHeight * lines.length + (lines.length > 1 ? (lines.length - 1) * 2 : 0); // Line height * lines + spacing
+      lineHeight * lines.length +
+      (lines.length > 1 ? (lines.length - 1) * 2 : 0); // Line height * lines + spacing
 
     // Bubble dimensions with rounded corners
     const padding = 12; // Increased padding for better spacing
@@ -455,7 +456,7 @@ export class AlienBall {
       ctx.lineTo(tailBaseLeft, bY + bH);
     } else {
       // Normal line for this section if tail is on other side
-      // We handle the other tail in the next segment? 
+      // We handle the other tail in the next segment?
       // No, we are drawing the bottom edge from right to left.
       // If side is 'right', tail is on bottom-left.
 
@@ -521,29 +522,43 @@ export class AlienBall {
     if (!color.startsWith('#')) return color;
     const num = parseInt(color.slice(1), 16);
     let r = (num >> 16) + amount;
-    let g = ((num >> 8) & 0x00FF) + amount;
-    let b = (num & 0x0000FF) + amount;
+    let g = ((num >> 8) & 0x00ff) + amount;
+    let b = (num & 0x0000ff) + amount;
 
     r = Math.max(Math.min(255, r), 0);
     g = Math.max(Math.min(255, g), 0);
     b = Math.max(Math.min(255, b), 0);
 
-    return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
   }
 
   private static bufferCanvas: HTMLCanvasElement | null = null;
   private static bufferCtx: CanvasRenderingContext2D | null = null;
 
-  private static getBuffer(width: number, height: number): { canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D } {
+  private static getBuffer(
+    width: number,
+    height: number,
+  ): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
     if (!AlienBall.bufferCanvas) {
       AlienBall.bufferCanvas = document.createElement('canvas');
-      AlienBall.bufferCtx = AlienBall.bufferCanvas.getContext('2d', { willReadFrequently: false })!;
+      AlienBall.bufferCtx = AlienBall.bufferCanvas.getContext('2d', {
+        willReadFrequently: false,
+      })!;
     }
 
     // Resize if necessary (grow only to avoid thrashing)
-    if (AlienBall.bufferCanvas.width < width || AlienBall.bufferCanvas.height < height) {
-      AlienBall.bufferCanvas.width = Math.max(AlienBall.bufferCanvas.width, Math.ceil(width));
-      AlienBall.bufferCanvas.height = Math.max(AlienBall.bufferCanvas.height, Math.ceil(height));
+    if (
+      AlienBall.bufferCanvas.width < width ||
+      AlienBall.bufferCanvas.height < height
+    ) {
+      AlienBall.bufferCanvas.width = Math.max(
+        AlienBall.bufferCanvas.width,
+        Math.ceil(width),
+      );
+      AlienBall.bufferCanvas.height = Math.max(
+        AlienBall.bufferCanvas.height,
+        Math.ceil(height),
+      );
     }
 
     return { canvas: AlienBall.bufferCanvas, ctx: AlienBall.bufferCtx! };
@@ -557,7 +572,7 @@ export class AlienBall {
     height: number,
     sprite: PixelGrid,
     color: string,
-    opacity: number = 1
+    opacity: number = 1,
   ): void {
     const rows = sprite.length;
     if (rows === 0) return;
@@ -585,7 +600,8 @@ export class AlienBall {
       const row = sprite[r];
       if (!row) continue;
       for (let c = 0; c < cols; c++) {
-        if (row[c] === 1) { // Body
+        if (row[c] === 1) {
+          // Body
           // Draw with slight overlap to prevent gaps
           bCtx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
           hasBody = true;
@@ -613,7 +629,8 @@ export class AlienBall {
       const row = sprite[r];
       if (!row) continue;
       for (let c = 0; c < cols; c++) {
-        if (row[c] === 2) { // Shade
+        if (row[c] === 2) {
+          // Shade
           bCtx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
           hasShade = true;
         }
@@ -638,14 +655,24 @@ export class AlienBall {
           ctx.save();
           ctx.globalAlpha = opacity * 0.9;
           ctx.fillStyle = '#ffffff';
-          ctx.fillRect(startX + c * pixelW, startY + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          ctx.fillRect(
+            startX + c * pixelW,
+            startY + r * pixelH,
+            pixelW + 0.5,
+            pixelH + 0.5,
+          );
           ctx.restore();
         } else if (pixelType === 4) {
           // Eye - black/dark - solid
           ctx.save();
           ctx.globalAlpha = opacity;
           ctx.fillStyle = '#000000';
-          ctx.fillRect(startX + c * pixelW, startY + r * pixelH, pixelW + 0.5, pixelH + 0.5);
+          ctx.fillRect(
+            startX + c * pixelW,
+            startY + r * pixelH,
+            pixelW + 0.5,
+            pixelH + 0.5,
+          );
           ctx.restore();
         }
       }
@@ -711,8 +738,14 @@ export class AlienBall {
       scaleY = parallelScale;
     }
 
-    const centerX = this.x + deformationX + (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
-    const centerY = this.y + deformationY + (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
+    const centerX =
+      this.x +
+      deformationX +
+      (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
+    const centerY =
+      this.y +
+      deformationY +
+      (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
 
     // Subtle pulsing animation
     const pulseValue =
@@ -724,7 +757,15 @@ export class AlienBall {
 
     // Draw pixel sprite (default normal)
     const sprite = getSpriteForType('normal');
-    this.drawPixelSprite(ctx, centerX, centerY, spriteWidth, spriteHeight, sprite, this.color.fill);
+    this.drawPixelSprite(
+      ctx,
+      centerX,
+      centerY,
+      spriteWidth,
+      spriteHeight,
+      sprite,
+      this.color.fill,
+    );
 
     // Health bar (bubble integrity) - position relative to deformed center
     // Draw HP bar before speech bubble so bubble appears on top
@@ -761,7 +802,16 @@ export class AlienBall {
     // Simple flash effect when damaged
     if (this.flashTime > 0) {
       const flashAlpha = this.flashTime / this.flashDuration;
-      this.drawPixelSprite(ctx, centerX, centerY, spriteWidth, spriteHeight, sprite, '#ffffff', flashAlpha * 0.7);
+      this.drawPixelSprite(
+        ctx,
+        centerX,
+        centerY,
+        spriteWidth,
+        spriteHeight,
+        sprite,
+        '#ffffff',
+        flashAlpha * 0.7,
+      );
     }
   }
 }

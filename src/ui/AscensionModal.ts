@@ -218,8 +218,12 @@ export class AscensionModal {
         // Check if blocked by boss at level 100
         if (state.level === 100 && state.blockedOnBossLevel === 100) {
           ascendBtn.textContent = 'DEFEAT THE BOSS TO ASCEND';
-        } else if (state.subUpgrades['meaning_of_life'] !== true && state.prestigeLevel === 0) {
-          ascendBtn.textContent = 'PURCHASE "MEANING OF LIFE" UPGRADE TO UNLOCK PRESTIGE';
+        } else if (
+          state.subUpgrades['meaning_of_life'] !== true &&
+          state.prestigeLevel === 0
+        ) {
+          ascendBtn.textContent =
+            'PURCHASE "MEANING OF LIFE" UPGRADE TO UNLOCK PRESTIGE';
         } else {
           ascendBtn.textContent = `REACH LEVEL 100 TO ASCEND (Current: ${state.level.toString()})`;
         }
@@ -303,8 +307,10 @@ export class AscensionModal {
       const maxed = currentLevel >= upgrade.maxLevel;
 
       // Try to find existing card to update instead of recreating
-      let card = grid.querySelector(`[data-upgrade-id="${upgrade.id}"]`) as HTMLElement;
-      
+      let card = grid.querySelector(
+        `[data-upgrade-id="${upgrade.id}"]`,
+      ) as HTMLElement;
+
       if (!card) {
         // Create new card if it doesn't exist
         card = document.createElement('div');
@@ -340,7 +346,9 @@ export class AscensionModal {
         if (levelEl.textContent !== levelText) {
           levelEl.textContent = levelText;
         }
-        const costText = maxed ? 'MAX' : `Cost: ${actualCost.toString()} PP${actualCost > upgrade.cost ? ` (base: ${upgrade.cost.toString()})` : ''}`;
+        const costText = maxed
+          ? 'MAX'
+          : `Cost: ${actualCost.toString()} PP${actualCost > upgrade.cost ? ` (base: ${upgrade.cost.toString()})` : ''}`;
         if (costEl.textContent !== costText) {
           costEl.textContent = costText;
         }

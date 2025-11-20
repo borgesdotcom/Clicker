@@ -3,7 +3,7 @@ import type { Vec2 } from '../types';
 
 /**
  * Ray casts against a pixel grid to find the first solid pixel.
- * 
+ *
  * @param origin - The starting point of the ray (world space)
  * @param center - The center of the sprite (world space)
  * @param radius - The visual radius of the sprite
@@ -14,7 +14,7 @@ export function getPixelHitPoint(
   origin: Vec2,
   center: Vec2,
   radius: number,
-  sprite: PixelGrid = ALIEN_SPRITE_NORMAL
+  sprite: PixelGrid = ALIEN_SPRITE_NORMAL,
 ): Vec2 {
   const dx = center.x - origin.x;
   const dy = center.y - origin.y;
@@ -38,18 +38,18 @@ export function getPixelHitPoint(
   // We need to map world coordinates to grid coordinates.
   // The sprite covers a box of width = radius*2, height = radius*2 (roughly, assuming square scaling)
   // Let's assume the sprite is drawn in a square box of size 2*radius.
-  
+
   // We march from the outside towards the center.
   // Start at radius distance (edge of bounding box)
   const startDist = radius;
-  
+
   // Step size for marching (smaller is more precise)
   // Grid is usually 11x11.
   // 2*radius corresponds to 11 pixels.
   // 1 pixel is approx 2*radius/11.
   // Let's step by 1/2 pixel size for good precision.
   const stepSize = (radius * 2) / Math.max(rows, cols) / 2;
-  
+
   // March from the edge inwards
   for (let d = startDist; d >= 0; d -= stepSize) {
     // Point in world space relative to center
@@ -63,7 +63,7 @@ export function getPixelHitPoint(
     // Center of grid is roughly (cols-1)/2, (rows-1)/2
     // x mapped from [-radius, radius] to [0, cols]
     // y mapped from [-radius, radius] to [0, rows]
-    
+
     const u = (px + radius) / (radius * 2);
     const v = (py + radius) / (radius * 2);
 
@@ -79,7 +79,7 @@ export function getPixelHitPoint(
         // Return world position
         return {
           x: center.x + px,
-          y: center.y + py
+          y: center.y + py,
         };
       }
     }
@@ -89,7 +89,6 @@ export function getPixelHitPoint(
   // Return a point on the visual radius (85% rule as fallback)
   return {
     x: center.x - nx * (radius * 0.85),
-    y: center.y - ny * (radius * 0.85)
+    y: center.y - ny * (radius * 0.85),
   };
 }
-

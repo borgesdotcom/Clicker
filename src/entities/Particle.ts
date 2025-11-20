@@ -346,7 +346,6 @@ export class ParticleSystem {
     });
   }
 
-
   update(dt: number): void {
     const particles = this.particlePool.getActive();
     const toRelease: Particle[] = [];

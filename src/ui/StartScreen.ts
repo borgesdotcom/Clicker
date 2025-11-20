@@ -1,5 +1,3 @@
-
-
 export class StartScreen {
   private container: HTMLElement;
   private onStart: () => void;
@@ -63,7 +61,10 @@ export class StartScreen {
     */
 
     window.addEventListener('keydown', (e) => {
-      if (this.container.style.display !== 'none' && (e.code === 'Enter' || e.code === 'Space')) {
+      if (
+        this.container.style.display !== 'none' &&
+        (e.code === 'Enter' || e.code === 'Space')
+      ) {
         this.hide();
         this.onStart();
       }

@@ -492,13 +492,13 @@ const DEFAULT_CONFIG: GameConfigData = {
         { maxLevel: 50, multiplier: 1.18 },
         { maxLevel: 59, multiplier: 1.21 }, // Levels 1-59
         { maxLevel: 65, multiplier: 1.25 }, // Levels 60-70: gradual increase starts
-        { maxLevel: 70, multiplier: 1.30 },
-        { maxLevel: 74, multiplier: 1.40 },
-        { maxLevel: 75, multiplier: 1.50 },
+        { maxLevel: 70, multiplier: 1.3 },
+        { maxLevel: 74, multiplier: 1.4 },
+        { maxLevel: 75, multiplier: 1.5 },
         // { maxLevel: 75, multiplier: 1.31 },
         { maxLevel: 85, multiplier: 1.65 },
-        { maxLevel: 90, multiplier: 1.80 },
-        { maxLevel: 95, multiplier: 2.00 },
+        { maxLevel: 90, multiplier: 1.8 },
+        { maxLevel: 95, multiplier: 2.0 },
         { maxLevel: 99, multiplier: 1.75 },
         { maxLevel: 100, multiplier: 8 },
         { maxLevel: 110, multiplier: 2.4 },

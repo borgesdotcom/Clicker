@@ -61,7 +61,7 @@ export class Laser {
   getCurrentPosition(): Vec2 {
     // Calculate progress - allow > 1.0 when laser has hit to continue into target
     let progress = this.age / this.travelTime;
-    
+
     // If laser has hit, allow it to continue moving into the target (progress > 1.0)
     // This makes the laser "enter" the alien while fading out
     if (this.hasHit && progress > 1.0) {
@@ -102,7 +102,7 @@ export class Laser {
     if (!this.alive) return;
 
     const rawProgress = this.age / this.travelTime;
-    
+
     // Don't render laser if it has hit and is entering the alien (progress > 1.0)
     // This prevents the laser from being visible inside the alien
     if (this.hasHit && rawProgress > 1.0) {
@@ -169,7 +169,12 @@ export class Laser {
       const color2 = colors[colorIndex2] ?? '#ff0080';
 
       // Create gradient for smooth color transition
-      const gradient = ctx.createLinearGradient(boltStartX, boltStartY, current.x, current.y);
+      const gradient = ctx.createLinearGradient(
+        boltStartX,
+        boltStartY,
+        current.x,
+        current.y,
+      );
       gradient.addColorStop(0, color1);
       gradient.addColorStop(0.5, color2);
       gradient.addColorStop(1, color1);
@@ -208,8 +213,16 @@ export class Laser {
       ctx.lineTo(current.x, current.y);
       ctx.stroke();
     } else if (this.themeId === 'plasma_laser') {
-      const plasmaColors = ['#ff4400', '#ff6600', '#ff8800', '#ff4400', '#ff0044'];
-      const colorIndex = Math.floor(now * 0.01 + Math.min(1, rawProgress) * 25.0) % plasmaColors.length;
+      const plasmaColors = [
+        '#ff4400',
+        '#ff6600',
+        '#ff8800',
+        '#ff4400',
+        '#ff0044',
+      ];
+      const colorIndex =
+        Math.floor(now * 0.01 + Math.min(1, rawProgress) * 25.0) %
+        plasmaColors.length;
       const boltColor = plasmaColors[colorIndex] ?? this.color;
 
       // Outer glow - slightly thicker for plasma
@@ -232,7 +245,8 @@ export class Laser {
       ctx.lineTo(current.x, current.y);
       ctx.stroke();
     } else if (this.themeId === 'void_laser') {
-      const voidPulse = Math.sin(now * 0.02 + Math.min(1, rawProgress) * 40.0) * 0.15 + 0.85;
+      const voidPulse =
+        Math.sin(now * 0.02 + Math.min(1, rawProgress) * 40.0) * 0.15 + 0.85;
 
       // Outer void glow - purple
       ctx.globalAlpha = Math.max(fadeInAlpha * voidPulse * 0.6, 0.4);
@@ -295,14 +309,20 @@ export class Laser {
           '#80ff00', // Yellow-green
           '#ffff00', // Back to yellow
         ];
-        const critTimeOffset = critTime * 15.0 + Math.min(1, rawProgress) * 35.0;
+        const critTimeOffset =
+          critTime * 15.0 + Math.min(1, rawProgress) * 35.0;
         const critColorIndex1 = Math.floor(critTimeOffset) % critColors.length;
         const critColorIndex2 = (critColorIndex1 + 1) % critColors.length;
         const critColor1 = critColors[critColorIndex1] ?? '#ffff00';
         const critColor2 = critColors[critColorIndex2] ?? '#ffff00';
 
         // Crit rainbow gradient
-        const critGradient = ctx.createLinearGradient(boltStartX, boltStartY, current.x, current.y);
+        const critGradient = ctx.createLinearGradient(
+          boltStartX,
+          boltStartY,
+          current.x,
+          current.y,
+        );
         critGradient.addColorStop(0, critColor1);
         critGradient.addColorStop(0.5, critColor2);
         critGradient.addColorStop(1, critColor1);
@@ -347,7 +367,8 @@ export class Laser {
         ctx.stroke();
       } else if (this.themeId === 'void_laser') {
         const voidCritPulse =
-          Math.sin(critTime * 20.0 + Math.min(1, rawProgress) * 40.0) * 0.15 + 0.85;
+          Math.sin(critTime * 20.0 + Math.min(1, rawProgress) * 40.0) * 0.15 +
+          0.85;
 
         // Void crit overlay - dual color
         ctx.globalAlpha = fadeInAlpha * voidCritPulse * 0.6;

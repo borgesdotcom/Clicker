@@ -628,7 +628,8 @@ export class EnhancedAlienBall extends AlienBall {
       ctx.globalAlpha = 0.9;
 
       // Twinkle size
-      const twinkle = Math.sin((this as any).animationTime * 10 + i) * 0.3 + 0.7;
+      const twinkle =
+        Math.sin((this as any).animationTime * 10 + i) * 0.3 + 0.7;
       const size = 4 * twinkle;
 
       ctx.beginPath();

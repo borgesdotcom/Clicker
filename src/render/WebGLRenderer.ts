@@ -1250,11 +1250,12 @@ export class WebGLRenderer {
     if (progress > 1.0) {
       return; // Laser disappears immediately when entering the alien
     }
-    
+
     const pulse = Math.sin(this.time * 10.0 + progress * 20.0) * 0.05 + 0.95;
     const normalProgress = Math.min(1, progress);
     // Fade-in only at the very beginning (first 10% of travel), then full opacity
-    const fadeInAlpha = normalProgress < 0.1 ? Math.min(1, normalProgress * 10.0) : 1.0;
+    const fadeInAlpha =
+      normalProgress < 0.1 ? Math.min(1, normalProgress * 10.0) : 1.0;
     const baseAlpha = this.currentAlpha * fadeInAlpha * pulse;
 
     const boltDx = x2 - x1;
@@ -1271,7 +1272,10 @@ export class WebGLRenderer {
 
     // Calculate bolt length (shorter than full distance for projectile effect)
     const angle = Math.atan2(boltDy, boltDx);
-    const boltLength = Math.max(Math.min(boltLen * 0.4, 25 * this.dpr), 8 * this.dpr);
+    const boltLength = Math.max(
+      Math.min(boltLen * 0.4, 25 * this.dpr),
+      8 * this.dpr,
+    );
     const boltStartX = x2 - Math.cos(angle) * boltLength;
     const boltStartY = y2 - Math.sin(angle) * boltLength;
 

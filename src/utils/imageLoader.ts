@@ -48,10 +48,10 @@ export function initializeHtmlImages(): void {
       gameContainer.style.backgroundRepeat = 'repeat';
       gameContainer.style.backgroundSize = 'auto';
       gameContainer.style.backgroundColor = '#000';
-      
+
       // Also set as CSS custom property for fallback
       gameContainer.style.setProperty('--bg-gif-url', `url("${bgUrl}")`);
-      
+
       console.log('Initial background GIF set:', bgUrl);
       return true;
     }
@@ -81,11 +81,12 @@ export function initializeHtmlImages(): void {
     weight: 'normal',
     display: 'swap',
   });
-  fontFace.load().then((loadedFont) => {
-    document.fonts.add(loadedFont);
-  }).catch((error) => {
-    console.warn('Failed to load m5x7 font:', error);
-  });
+  fontFace
+    .load()
+    .then((loadedFont) => {
+      document.fonts.add(loadedFont);
+    })
+    .catch((error) => {
+      console.warn('Failed to load m5x7 font:', error);
+    });
 }
-
-

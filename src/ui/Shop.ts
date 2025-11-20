@@ -238,7 +238,8 @@ export class Shop {
         autoBuyBtn.classList.add('auto-buy-locked');
         autoBuyBtn.style.background = 'rgba(0, 0, 0, 0.5)';
         autoBuyBtn.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-        autoBuyBtn.style.boxShadow = 'inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)';
+        autoBuyBtn.style.boxShadow =
+          'inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)';
         autoBuyBtn.style.cursor = 'not-allowed';
         autoBuyBtn.style.opacity = '0.6';
         autoBuyBtn.setAttribute('aria-checked', 'false');
@@ -304,9 +305,7 @@ export class Shop {
   private updateToggleButtonImage(button: HTMLElement): void {
     const img = button.querySelector('img');
     if (img) {
-      img.src = this.isDesktopCollapsed
-        ? images.menu.right
-        : images.menu.left;
+      img.src = this.isDesktopCollapsed ? images.menu.right : images.menu.left;
       img.alt = this.isDesktopCollapsed ? 'Open Shop' : 'Close Shop';
     }
   }
@@ -685,7 +684,10 @@ export class Shop {
     this.activeTooltips.clear();
   }
 
-  private setBuyButtonContent(buttonElement: HTMLButtonElement, displayQuantity: number): void {
+  private setBuyButtonContent(
+    buttonElement: HTMLButtonElement,
+    displayQuantity: number,
+  ): void {
     // Clear existing content
     buttonElement.innerHTML = '';
 
@@ -726,21 +728,23 @@ export class Shop {
     // Render special upgrades box at the top
     // Filter: must meet requirements, be visible, AND be discovered (40% of cost OR already owned)
     // Once discovered, upgrades stay visible even if player drops below 40% cost
-    const visibleSubUpgrades = allSubUpgrades.filter((sub) => {
-      const subKey = `sub_${sub.id}`;
+    const visibleSubUpgrades = allSubUpgrades
+      .filter((sub) => {
+        const subKey = `sub_${sub.id}`;
 
-      // Must not be owned
-      if (sub.owned) return false;
+        // Must not be owned
+        if (sub.owned) return false;
 
-      // Must meet requirements
-      if (!sub.requires(state)) return false;
+        // Must meet requirements
+        if (!sub.requires(state)) return false;
 
-      // Must be visible
-      if (!sub.isVisible(state)) return false;
+        // Must be visible
+        if (!sub.isVisible(state)) return false;
 
-      // Must be discovered (once discovered, it stays visible)
-      return Boolean(state.discoveredUpgrades?.[subKey]);
-    }).sort((a, b) => a.cost - b.cost);
+        // Must be discovered (once discovered, it stays visible)
+        return Boolean(state.discoveredUpgrades?.[subKey]);
+      })
+      .sort((a, b) => a.cost - b.cost);
 
     if (visibleSubUpgrades.length > 0) {
       const specialBox = document.createElement('div');
@@ -903,8 +907,6 @@ export class Shop {
     }
   }
 
-
-
   private renderOwnedTab(state: GameState): void {
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
     const ownedUpgrades = allSubUpgrades.filter((sub) => sub.owned);
@@ -1015,7 +1017,6 @@ export class Shop {
 
     return card;
   }
-
 
   private calculateBulkCost(
     upgrade: UpgradeConfig,
@@ -1213,8 +1214,10 @@ export class Shop {
     const state = this.store.getState();
     const discountedCost = this.upgradeSystem.getSubUpgradeCost(upgrade);
     if (state.points >= discountedCost) {
-      const wasMeaningOfLife = upgrade.id === 'meaning_of_life' && !state.subUpgrades['meaning_of_life'];
-      
+      const wasMeaningOfLife =
+        upgrade.id === 'meaning_of_life' &&
+        !state.subUpgrades['meaning_of_life'];
+
       state.points -= discountedCost;
       upgrade.buy(state);
       this.store.incrementSubUpgrade();
@@ -1233,17 +1236,20 @@ export class Shop {
       if (wasMeaningOfLife) {
         // Trigger store update to show prestige button animation
         this.store.setState(state);
-        
+
         // Add visual effect to the upgrade card
-        const upgradeCard = document.querySelector(`[data-upgrade-id="${upgrade.id}"]`);
+        const upgradeCard = document.querySelector(
+          `[data-upgrade-id="${upgrade.id}"]`,
+        );
         if (upgradeCard instanceof HTMLElement) {
           // Create pulsing glow animation
           upgradeCard.style.transition = 'all 0.3s ease-out';
           upgradeCard.style.transform = 'scale(1.15)';
-          upgradeCard.style.boxShadow = '0 0 50px rgba(255, 215, 0, 1), 0 0 100px rgba(255, 215, 0, 0.6), inset 0 0 40px rgba(255, 215, 0, 0.5)';
+          upgradeCard.style.boxShadow =
+            '0 0 50px rgba(255, 215, 0, 1), 0 0 100px rgba(255, 215, 0, 0.6), inset 0 0 40px rgba(255, 215, 0, 0.5)';
           upgradeCard.style.zIndex = '1000';
           upgradeCard.style.filter = 'brightness(1.3)';
-          
+
           // Pulsing effect
           let pulseCount = 0;
           const pulseInterval = setInterval(() => {
@@ -1256,7 +1262,8 @@ export class Shop {
               upgradeCard.style.zIndex = '';
               upgradeCard.style.filter = '';
             } else {
-              upgradeCard.style.transform = pulseCount % 2 === 0 ? 'scale(1.2)' : 'scale(1.15)';
+              upgradeCard.style.transform =
+                pulseCount % 2 === 0 ? 'scale(1.2)' : 'scale(1.15)';
             }
           }, 200);
         }
@@ -1281,12 +1288,18 @@ export class Shop {
    */
   public checkAndBuyDiscoveredUpgrades(): void {
     if (this.isProcessingPurchase) return;
-    
+
     const state = this.store.getState();
     if (!state.discoveredUpgrades) return;
 
     // Only check sub-upgrades (special upgrades), not main upgrades
     const subUpgrades = this.upgradeSystem.getSubUpgrades();
+    const affordableUpgrades: Array<{
+      upgrade: (typeof subUpgrades)[0];
+      cost: number;
+    }> = [];
+
+    // Collect all discovered upgrades that are affordable
     for (const subUpgrade of subUpgrades) {
       const subKey = `sub_${subUpgrade.id}`;
       if (
@@ -1297,15 +1310,24 @@ export class Shop {
         const currentState = this.store.getState();
         const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
         if (currentState.points >= cost) {
-          this.buySubUpgrade(subUpgrade);
-          return; // Bought one, done
+          affordableUpgrades.push({ upgrade: subUpgrade, cost });
         }
+      }
+    }
+
+    // Sort by cost (lowest first) and buy the cheapest one
+    if (affordableUpgrades.length > 0) {
+      affordableUpgrades.sort((a, b) => a.cost - b.cost);
+      const cheapestUpgrade = affordableUpgrades[0];
+      if (cheapestUpgrade) {
+        this.buySubUpgrade(cheapestUpgrade.upgrade);
       }
     }
   }
 
   /**
    * Check if there are discovered but unpurchased special upgrades (sub-upgrades only)
+   * Only returns true if player has at least 80% of the cost
    */
   private hasDiscoveredUpgrades(state: GameState): boolean {
     if (!state.discoveredUpgrades) return false;
@@ -1315,7 +1337,12 @@ export class Shop {
     for (const subUpgrade of subUpgrades) {
       const subKey = `sub_${subUpgrade.id}`;
       if (state.discoveredUpgrades[subKey] && !subUpgrade.owned) {
-        return true;
+        // Only prioritize if we have at least 80% of the cost
+        const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
+        const threshold = cost * 0.8;
+        if (state.points >= threshold) {
+          return true;
+        }
       }
     }
 
@@ -1336,13 +1363,19 @@ export class Shop {
     this.checkForDiscoveries(state);
     // Save state after discoveries
     this.store.setState(state);
-    
-    // If there are discovered special upgrades, don't buy other upgrades - prioritize saving for them
+
+    // If there are discovered special upgrades that we're close to affording (80%+),
+    // prioritize saving for them, but still allow buying if we have enough money
     const freshState = this.store.getState();
     if (this.hasDiscoveredUpgrades(freshState)) {
-      return; // Skip buying other upgrades, save money for discovered special upgrades
+      // First try to buy discovered upgrades if we can afford them
+      this.checkAndBuyDiscoveredUpgrades();
+      // If we still have discovered upgrades we're saving for, don't buy normal upgrades
+      if (this.hasDiscoveredUpgrades(this.store.getState())) {
+        return; // Skip buying other upgrades, save money for discovered special upgrades
+      }
     }
-    
+
     // If no special upgrades discovered, continue with normal upgrade buying logic below
 
     // Get fresh state after discoveries
@@ -1389,7 +1422,10 @@ export class Shop {
       const cost = upgrade.getCost(currentLevel);
       const discoveryThreshold = cost * 0.75;
 
-      if (!currentState.discoveredUpgrades?.[upgrade.id] && currentLevel === 0) {
+      if (
+        !currentState.discoveredUpgrades?.[upgrade.id] &&
+        currentLevel === 0
+      ) {
         // Auto-discover if player has 75% of cost
         if (currentState.points >= discoveryThreshold) {
           if (!currentState.discoveredUpgrades) {

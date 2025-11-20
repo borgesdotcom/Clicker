@@ -170,7 +170,11 @@ export function resolveArtifactIcon(iconPath: string): string {
   }
 
   // If it's an emoji or non-path string, return as-is
-  if (!iconPath.startsWith('/') && !iconPath.startsWith('./') && !iconPath.startsWith('@/')) {
+  if (
+    !iconPath.startsWith('/') &&
+    !iconPath.startsWith('./') &&
+    !iconPath.startsWith('@/')
+  ) {
     return iconPath;
   }
 
@@ -226,4 +230,3 @@ export function resolveArtifactIcon(iconPath: string): string {
   // Return mapped image or fallback to original path
   return artifactMap[filename] || iconPath;
 }
-

@@ -27,7 +27,7 @@ export class Hud {
   private lastPointsText = '';
   private lastStatsText = { totalIncome: '' };
   private lastLevelText = { level: '', exp: '', percent: -1 };
-  
+
   public onSkillActivate: ((artifactId: string) => void) | null = null;
 
   constructor() {
@@ -87,8 +87,10 @@ export class Hud {
   public updateSkillBar(equippedArtifacts: Artifact[]): void {
     if (!this.skillBarContainer) return;
 
-    const activeArtifacts = equippedArtifacts.filter(a => a.type === 'active');
-    
+    const activeArtifacts = equippedArtifacts.filter(
+      (a) => a.type === 'active',
+    );
+
     if (activeArtifacts.length === 0) {
       this.skillBarContainer.style.display = 'none';
       return;
@@ -178,8 +180,12 @@ export class Hud {
       const slot = slots[index] as HTMLElement;
       const overlay = slot.querySelector('.cooldown-overlay') as HTMLElement;
       const text = slot.querySelector('.cooldown-text') as HTMLElement;
-      
-      if (artifact.cooldownTimer && artifact.cooldown && artifact.cooldownTimer > 0) {
+
+      if (
+        artifact.cooldownTimer &&
+        artifact.cooldown &&
+        artifact.cooldownTimer > 0
+      ) {
         const percent = (artifact.cooldownTimer / artifact.cooldown) * 100;
         overlay.style.height = `${percent}%`;
         text.style.display = 'block';
@@ -789,7 +795,7 @@ export class Hud {
     // Create message element with modern UI styling
     const messageEl = document.createElement('div');
     messageEl.textContent = message;
-    
+
     // Create glow color with reduced opacity for box-shadow
     let glowColor: string;
     if (color.includes('rgba')) {
@@ -804,7 +810,7 @@ export class Hud {
     } else {
       glowColor = `${color}4D`; // Fallback
     }
-    
+
     messageEl.style.cssText = `
       position: fixed;
       top: 20px;

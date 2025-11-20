@@ -21,7 +21,6 @@ export class Background {
   // Note: Background GIF is now handled by CSS on #game-container
   // This allows the GIF to animate properly
 
-
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
@@ -43,7 +42,10 @@ export class Background {
     };
     // Use new URL() for dynamic asset path resolution
     // Note: new URL() doesn't understand Vite aliases, so we use relative path
-    this.meteoriteImage.src = new URL('../animations/Asteroid 01 - Base.png', import.meta.url).href;
+    this.meteoriteImage.src = new URL(
+      '../animations/Asteroid 01 - Base.png',
+      import.meta.url,
+    ).href;
   }
 
   /**
@@ -60,7 +62,7 @@ export class Background {
   public resize(width: number, height: number): void {
     this.width = width;
     this.height = height;
-    
+
     // Clear meteorites on resize (they'll respawn naturally)
     this.meteorites = [];
     this.meteoriteSpawnTimer = 0;
@@ -148,28 +150,26 @@ export class Background {
     });
   }
 
-
-
   public render(ctx: CanvasRenderingContext2D): void {
     // Background is now handled by CSS background-image on #game-container
     // which properly animates GIFs. Canvas is transparent so the GIF shows through.
     // Render meteorites as overlay effect
-    
+
     // Render meteorites
     if (this.meteoriteImageLoaded && this.meteoriteImage) {
       for (const meteorite of this.meteorites) {
         if (!meteorite.active) continue;
 
         ctx.save();
-        
+
         // Move to meteorite position and rotate
         ctx.translate(meteorite.x, meteorite.y);
         ctx.rotate(meteorite.rotation);
-        
+
         // Enable pixelated rendering for sprite
         ctx.imageSmoothingEnabled = false;
         ctx.imageSmoothingQuality = 'low';
-        
+
         // Draw meteorite with opacity for depth effect
         ctx.globalAlpha = 0.7;
         const halfSize = meteorite.size / 2;
@@ -180,7 +180,7 @@ export class Background {
           meteorite.size,
           meteorite.size,
         );
-        
+
         ctx.restore();
         ctx.globalAlpha = 1.0;
       }

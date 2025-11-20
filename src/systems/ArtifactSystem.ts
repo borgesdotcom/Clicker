@@ -414,9 +414,12 @@ export class ArtifactSystem {
     }
   }
 
-  public activateArtifact(
-    artifactId: string,
-  ): { success: boolean; effect?: string; duration?: number; reason?: string } {
+  public activateArtifact(artifactId: string): {
+    success: boolean;
+    effect?: string;
+    duration?: number;
+    reason?: string;
+  } {
     const artifact = this.equippedArtifacts.find((a) => a.id === artifactId);
     if (!artifact || artifact.type !== 'active') {
       return { success: false, reason: 'Invalid artifact' };
@@ -768,10 +771,10 @@ export class ArtifactSystem {
   public getFusionCost(rarity: ArtifactRarity): number {
     // PP cost based on rarity - higher rarity costs more
     const costs: Record<ArtifactRarity, number> = {
-      common: 5,      // 5 PP to fuse 3 common -> 1 rare
-      rare: 15,       // 15 PP to fuse 3 rare -> 1 epic
-      epic: 50,       // 50 PP to fuse 3 epic -> 1 legendary
-      legendary: 0,   // Cannot fuse legendary
+      common: 5, // 5 PP to fuse 3 common -> 1 rare
+      rare: 15, // 15 PP to fuse 3 rare -> 1 epic
+      epic: 50, // 50 PP to fuse 3 epic -> 1 legendary
+      legendary: 0, // Cannot fuse legendary
     };
     return costs[rarity] || 0;
   }
@@ -779,7 +782,12 @@ export class ArtifactSystem {
   public fuseArtifacts(
     artifactIds: string[],
     prestigePoints: number,
-  ): { success: boolean; newArtifact?: Artifact; cost?: number; reason?: string } {
+  ): {
+    success: boolean;
+    newArtifact?: Artifact;
+    cost?: number;
+    reason?: string;
+  } {
     if (artifactIds.length !== 3) {
       return { success: false, reason: 'Need exactly 3 artifacts' };
     }
@@ -800,7 +808,7 @@ export class ArtifactSystem {
     // Check rarities
     const firstArtifact = artifactsToFuse[0];
     if (!firstArtifact) {
-        return { success: false, reason: 'System error' };
+      return { success: false, reason: 'System error' };
     }
     const rarity = firstArtifact.rarity;
     if (artifactsToFuse.some((a) => a.rarity !== rarity)) {
@@ -814,7 +822,11 @@ export class ArtifactSystem {
     // Check PP cost
     const cost = this.getFusionCost(rarity);
     if (prestigePoints < cost) {
-      return { success: false, cost, reason: `Not enough Prestige Points. Need ${cost} PP.` };
+      return {
+        success: false,
+        cost,
+        reason: `Not enough Prestige Points. Need ${cost} PP.`,
+      };
     }
 
     // Determine next rarity

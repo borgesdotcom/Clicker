@@ -38,10 +38,25 @@ export class BossBall {
 
   // Effect specific properties
   private drones: Array<{ angle: number; dist: number; speed: number }> = [];
-  private shields: Array<{ angle: number; size: number; speed: number; dist: number }> = [];
-  private rings: Array<{ angle: number; radius: number; speed: number; width: number }> = [];
-  private arcs: Array<{ angle: number; radius: number; speed: number; length: number }> = [];
-  private cracks: Array<Array<{ x: number, y: number }>> = []; // Array of crack paths
+  private shields: Array<{
+    angle: number;
+    size: number;
+    speed: number;
+    dist: number;
+  }> = [];
+  private rings: Array<{
+    angle: number;
+    radius: number;
+    speed: number;
+    width: number;
+  }> = [];
+  private arcs: Array<{
+    angle: number;
+    radius: number;
+    speed: number;
+    length: number;
+  }> = [];
+  private cracks: Array<Array<{ x: number; y: number }>> = []; // Array of crack paths
   private glitchTime = 0;
 
   constructor(
@@ -75,7 +90,7 @@ export class BossBall {
             angle: (i / 3) * Math.PI * 2,
             size: 12,
             speed: 0.5,
-            dist: 1.4
+            dist: 1.4,
           });
         }
         break;
@@ -116,7 +131,7 @@ export class BossBall {
             angle: (i / 4) * Math.PI * 2,
             radius: 1.4,
             speed: 2 + Math.random() * 2,
-            length: Math.PI * 0.5
+            length: Math.PI * 0.5,
           });
         }
         break;
@@ -134,7 +149,7 @@ export class BossBall {
     const numCracks = 6 + Math.floor(Math.random() * 4);
 
     for (let i = 0; i < numCracks; i++) {
-      const crack: Array<{ x: number, y: number }> = [];
+      const crack: Array<{ x: number; y: number }> = [];
       const angle = Math.random() * Math.PI * 2;
       // Start closer to center for some, edge for others
       const startDist = this.radius * (0.3 + Math.random() * 0.6);
@@ -271,17 +286,20 @@ export class BossBall {
     this.particleEmitTimer += dt;
 
     // Variant specific updates
-    if (this.variant === 0) { // Colossus Shields
-      this.shields.forEach(shield => {
+    if (this.variant === 0) {
+      // Colossus Shields
+      this.shields.forEach((shield) => {
         shield.angle += dt * shield.speed * phaseSpeedMultiplier;
       });
-    } else if (this.variant === 1) { // Swarm Queen drones
-      this.drones.forEach(drone => {
+    } else if (this.variant === 1) {
+      // Swarm Queen drones
+      this.drones.forEach((drone) => {
         drone.angle += dt * drone.speed * phaseSpeedMultiplier;
       });
-    } else if (this.variant === 2) { // Void Construct glitch & Rings
+    } else if (this.variant === 2) {
+      // Void Construct glitch & Rings
       // Rings
-      this.rings.forEach(ring => {
+      this.rings.forEach((ring) => {
         ring.angle += dt * ring.speed * phaseSpeedMultiplier;
       });
 
@@ -291,9 +309,10 @@ export class BossBall {
       } else if (Math.random() < 0.02 * phaseSpeedMultiplier) {
         this.glitchTime = 0.15;
       }
-    } else if (this.variant === 3) { // Omega Core chaotic pulsing & Arcs
+    } else if (this.variant === 3) {
+      // Omega Core chaotic pulsing & Arcs
       this.pulseTime += dt * 3;
-      this.arcs.forEach(arc => {
+      this.arcs.forEach((arc) => {
         arc.angle += dt * arc.speed * phaseSpeedMultiplier;
       });
     }
@@ -336,7 +355,7 @@ export class BossBall {
     // Entrance animation - Elastic pop-in
     let scale = 1;
     if (this.entranceTime > 0) {
-      const t = 1 - (this.entranceTime / 1.5); // 0 to 1
+      const t = 1 - this.entranceTime / 1.5; // 0 to 1
       // EaseOutBack
       const c1 = 1.70158;
       const c3 = c1 + 1;
@@ -348,7 +367,7 @@ export class BossBall {
     // Hit Effect: Scale Punch (Squash) - SUBTLE
     // Uses flashTime as the driver for the animation
     if (this.flashTime > 0) {
-      const t = 1 - (this.flashTime / this.flashDuration); // 0 to 1
+      const t = 1 - this.flashTime / this.flashDuration; // 0 to 1
       // Sine wave for a quick squash and recover
       // Reduced from 0.15 to 0.05 for subtlety
       const squash = Math.sin(t * Math.PI) * 0.05;
@@ -380,11 +399,35 @@ export class BossBall {
     // Void Construct RGB Split Effect
     if (this.variant === 2 && this.glitchTime > 0) {
       // Red channel offset
-      this.drawPixelSprite(ctx, drawX - 4, drawY + bobY, size * 0.8, size * 0.8, '#ff0000', 0.7);
+      this.drawPixelSprite(
+        ctx,
+        drawX - 4,
+        drawY + bobY,
+        size * 0.8,
+        size * 0.8,
+        '#ff0000',
+        0.7,
+      );
       // Blue channel offset
-      this.drawPixelSprite(ctx, drawX + 4, drawY + bobY, size * 0.8, size * 0.8, '#0000ff', 0.7);
+      this.drawPixelSprite(
+        ctx,
+        drawX + 4,
+        drawY + bobY,
+        size * 0.8,
+        size * 0.8,
+        '#0000ff',
+        0.7,
+      );
       // Main sprite
-      this.drawPixelSprite(ctx, drawX, drawY + bobY, size * 0.8, size * 0.8, undefined, 0.8);
+      this.drawPixelSprite(
+        ctx,
+        drawX,
+        drawY + bobY,
+        size * 0.8,
+        size * 0.8,
+        undefined,
+        0.8,
+      );
     } else {
       this.drawPixelSprite(ctx, drawX, drawY + bobY, size * 0.8, size * 0.8);
     }
@@ -396,7 +439,13 @@ export class BossBall {
     this.drawHealthBar(ctx, drawX, drawY, size);
   }
 
-  private drawBubbleShell(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, scale: number = 1): void {
+  private drawBubbleShell(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+    scale: number = 1,
+  ): void {
     ctx.save();
 
     // Main bubble body
@@ -405,8 +454,12 @@ export class BossBall {
 
     // Gradient for 3D sphere look
     const gradient = ctx.createRadialGradient(
-      x - radius * 0.3, y - radius * 0.3, radius * 0.1,
-      x, y, radius
+      x - radius * 0.3,
+      y - radius * 0.3,
+      radius * 0.1,
+      x,
+      y,
+      radius,
     );
     // Outer color matches boss theme, inner is transparent/whiteish
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
@@ -423,7 +476,15 @@ export class BossBall {
 
     // Specular highlight (shiny reflection)
     ctx.beginPath();
-    ctx.ellipse(x - radius * 0.4, y - radius * 0.4, radius * 0.2, radius * 0.1, Math.PI / 4, 0, Math.PI * 2);
+    ctx.ellipse(
+      x - radius * 0.4,
+      y - radius * 0.4,
+      radius * 0.2,
+      radius * 0.1,
+      Math.PI / 4,
+      0,
+      Math.PI * 2,
+    );
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.fill();
 
@@ -436,10 +497,12 @@ export class BossBall {
       ctx.translate(x, y);
 
       // Apply variant specific styles
-      if (this.variant === 2) { // Void
+      if (this.variant === 2) {
+        // Void
         ctx.strokeStyle = 'rgba(0, 255, 255, ' + crackOpacity + ')';
         ctx.lineWidth = 2;
-      } else if (this.variant === 3) { // Omega
+      } else if (this.variant === 3) {
+        // Omega
         ctx.strokeStyle = 'rgba(255, 255, 0, ' + crackOpacity + ')';
         ctx.shadowColor = '#ff0000';
         ctx.shadowBlur = 5;
@@ -452,7 +515,7 @@ export class BossBall {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      this.cracks.forEach(crack => {
+      this.cracks.forEach((crack) => {
         if (crack.length < 2) return;
         const firstPoint = crack[0];
         if (!firstPoint) return;
@@ -497,7 +560,8 @@ export class BossBall {
 
     // Phase color shift
     let mainColor = this.color;
-    if (this.phase === 3 && this.variant === 3) mainColor = this.getRandomColor(); // Omega Core chaos
+    if (this.phase === 3 && this.variant === 3)
+      mainColor = this.getRandomColor(); // Omega Core chaos
 
     for (let r = 0; r < rows; r++) {
       const row = grid[r];
@@ -524,21 +588,33 @@ export class BossBall {
           startX + c * pixelSize,
           startY + r * pixelSize,
           pixelSize + 0.5,
-          pixelSize + 0.5
+          pixelSize + 0.5,
         );
       }
     }
     ctx.restore();
   }
 
-  private drawBackgroundEffects(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
+  private drawBackgroundEffects(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
     ctx.save();
 
     // Pulse Aura - Subtler
     const pulse = 1 + Math.sin(this.pulseTime) * 0.05;
     const auraRadius = radius * 1.1 * pulse;
 
-    const gradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, auraRadius);
+    const gradient = ctx.createRadialGradient(
+      x,
+      y,
+      radius * 0.8,
+      x,
+      y,
+      auraRadius,
+    );
     gradient.addColorStop(0, this.hexToRgba(this.glowColor, 0.0));
     gradient.addColorStop(1, this.hexToRgba(this.glowColor, 0.2));
 
@@ -549,7 +625,7 @@ export class BossBall {
 
     // Swarm Queen Drones - Orbiting the bubble
     if (this.variant === 1) {
-      this.drones.forEach(drone => {
+      this.drones.forEach((drone) => {
         const orbitRadius = radius * 1.3; // Orbit outside bubble
         const dx = x + Math.cos(drone.angle) * orbitRadius;
         const dy = y + Math.sin(drone.angle) * orbitRadius;
@@ -570,7 +646,7 @@ export class BossBall {
 
     // Void Construct Rings (Back half)
     if (this.variant === 2) {
-      this.rings.forEach(ring => {
+      this.rings.forEach((ring) => {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ring.angle);
@@ -589,12 +665,18 @@ export class BossBall {
     ctx.restore();
   }
 
-  private drawForegroundEffects(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
+  private drawForegroundEffects(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
     ctx.save();
 
     // Phase Transition Shield
     if (this.phaseTransitionTime > 0) {
-      const alpha = Math.sin(this.phaseTransitionTime * Math.PI * 5) * 0.5 + 0.5;
+      const alpha =
+        Math.sin(this.phaseTransitionTime * Math.PI * 5) * 0.5 + 0.5;
       ctx.strokeStyle = this.accentColor;
       ctx.lineWidth = 3;
       ctx.globalAlpha = alpha;
@@ -615,7 +697,7 @@ export class BossBall {
 
     // Colossus Shields
     if (this.variant === 0) {
-      this.shields.forEach(shield => {
+      this.shields.forEach((shield) => {
         const orbitRadius = radius * shield.dist;
         const dx = x + Math.cos(shield.angle) * orbitRadius;
         const dy = y + Math.sin(shield.angle) * orbitRadius;
@@ -629,8 +711,18 @@ export class BossBall {
         ctx.lineWidth = 2;
 
         // Draw Shield Plate
-        ctx.fillRect(-shield.size, -shield.size * 1.5, shield.size * 2, shield.size * 3);
-        ctx.strokeRect(-shield.size, -shield.size * 1.5, shield.size * 2, shield.size * 3);
+        ctx.fillRect(
+          -shield.size,
+          -shield.size * 1.5,
+          shield.size * 2,
+          shield.size * 3,
+        );
+        ctx.strokeRect(
+          -shield.size,
+          -shield.size * 1.5,
+          shield.size * 2,
+          shield.size * 3,
+        );
 
         ctx.restore();
       });
@@ -638,7 +730,7 @@ export class BossBall {
 
     // Void Construct Rings (Front half)
     if (this.variant === 2) {
-      this.rings.forEach(ring => {
+      this.rings.forEach((ring) => {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ring.angle);
@@ -656,7 +748,7 @@ export class BossBall {
 
     // Omega Core Arcs
     if (this.variant === 3) {
-      this.arcs.forEach(arc => {
+      this.arcs.forEach((arc) => {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(arc.angle);
@@ -737,14 +829,21 @@ export class BossBall {
     const hpPercent = this.currentHp / this.maxHp;
     if (hpPercent > 0) {
       const gradient = ctx.createLinearGradient(
-        centerX - barWidth / 2, barY,
-        centerX - barWidth / 2 + barWidth * hpPercent, barY
+        centerX - barWidth / 2,
+        barY,
+        centerX - barWidth / 2 + barWidth * hpPercent,
+        barY,
       );
       gradient.addColorStop(0, this.color);
       gradient.addColorStop(1, this.glowColor);
 
       ctx.fillStyle = gradient;
-      ctx.fillRect(centerX - barWidth / 2 + 2, barY + 2, (barWidth - 4) * hpPercent, barHeight - 4);
+      ctx.fillRect(
+        centerX - barWidth / 2 + 2,
+        barY + 2,
+        (barWidth - 4) * hpPercent,
+        barHeight - 4,
+      );
     }
 
     // Name
@@ -754,11 +853,11 @@ export class BossBall {
     ctx.shadowColor = this.glowColor;
     ctx.shadowBlur = 4;
 
-    let name = "BOSS";
-    if (this.variant === 0) name = "COLOSSUS";
-    if (this.variant === 1) name = "SWARM QUEEN";
-    if (this.variant === 2) name = "VOID CONSTRUCT";
-    if (this.variant === 3) name = "OMEGA CORE";
+    let name = 'BOSS';
+    if (this.variant === 0) name = 'COLOSSUS';
+    if (this.variant === 1) name = 'SWARM QUEEN';
+    if (this.variant === 2) name = 'VOID CONSTRUCT';
+    if (this.variant === 3) name = 'OMEGA CORE';
 
     ctx.fillText(name, centerX, barY - 8);
     ctx.shadowBlur = 0;
@@ -773,7 +872,14 @@ export class BossBall {
   }
 
   private getRandomColor(): string {
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+    const colors = [
+      '#ff0000',
+      '#00ff00',
+      '#0000ff',
+      '#ffff00',
+      '#ff00ff',
+      '#00ffff',
+    ];
     const color = colors[Math.floor(Math.random() * colors.length)];
     return color ?? '#ff0000'; // Fallback to red if undefined
   }

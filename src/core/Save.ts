@@ -187,7 +187,8 @@ export class Save {
         // Combo pause skill state
         comboPauseActive: validatedState.comboPauseActive ?? false,
         comboPauseEndTime: validatedState.comboPauseEndTime ?? 0,
-        comboPauseCooldownEndTime: validatedState.comboPauseCooldownEndTime ?? 0,
+        comboPauseCooldownEndTime:
+          validatedState.comboPauseCooldownEndTime ?? 0,
         // Preserve lastPlayTime from imported data if it exists, otherwise use current time
         lastPlayTime: data.lastPlayTime ?? Date.now(),
       };
