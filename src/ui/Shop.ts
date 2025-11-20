@@ -1328,15 +1328,23 @@ export class Shop {
   /**
    * Check if there are discovered but unpurchased special upgrades (sub-upgrades only)
    * Only returns true if player has at least 80% of the cost
+   * Returns false if no special upgrades are discovered or if player doesn't have 80% of any cost
    */
   private hasDiscoveredUpgrades(state: GameState): boolean {
     if (!state.discoveredUpgrades) return false;
 
     // Only check sub-upgrades (special upgrades), not main upgrades
     const subUpgrades = this.upgradeSystem.getSubUpgrades();
+    
     for (const subUpgrade of subUpgrades) {
       const subKey = `sub_${subUpgrade.id}`;
+      // Check if this upgrade is discovered and not owned
       if (state.discoveredUpgrades[subKey] && !subUpgrade.owned) {
+        // Check if upgrade meets visibility and requirements
+        if (!subUpgrade.isVisible(state) || !subUpgrade.requires(state)) {
+          continue;
+        }
+        
         // Only prioritize if we have at least 80% of the cost
         const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
         const threshold = cost * 0.8;
@@ -1346,6 +1354,8 @@ export class Shop {
       }
     }
 
+    // No discovered special upgrades with 80%+ threshold found
+    // This allows normal upgrades to be purchased
     return false;
   }
 
@@ -1364,19 +1374,27 @@ export class Shop {
     // Save state after discoveries
     this.store.setState(state);
 
-    // If there are discovered special upgrades that we're close to affording (80%+),
-    // prioritize saving for them, but still allow buying if we have enough money
+    // Always try to buy discovered special upgrades first if affordable
+    this.checkAndBuyDiscoveredUpgrades();
+
+    // Check if we're saving for discovered upgrades (80%+ threshold)
+    // Only block normal upgrades if we're actively saving for a special upgrade
     const freshState = this.store.getState();
-    if (this.hasDiscoveredUpgrades(freshState)) {
-      // First try to buy discovered upgrades if we can afford them
-      this.checkAndBuyDiscoveredUpgrades();
-      // If we still have discovered upgrades we're saving for, don't buy normal upgrades
-      if (this.hasDiscoveredUpgrades(this.store.getState())) {
-        return; // Skip buying other upgrades, save money for discovered special upgrades
+    
+    // Only check for discovered upgrades if there are any discovered upgrades at all
+    if (freshState.discoveredUpgrades && Object.keys(freshState.discoveredUpgrades).length > 0) {
+      const shouldSaveForSpecial = this.hasDiscoveredUpgrades(freshState);
+      
+      if (shouldSaveForSpecial) {
+        // We have 80%+ of a special upgrade cost, so save money for it
+        return; // Skip buying normal upgrades, save money for discovered special upgrades
       }
     }
 
-    // If no special upgrades discovered, continue with normal upgrade buying logic below
+    // Continue with normal upgrade buying logic
+    // This runs when:
+    // 1. No special upgrades are discovered, OR
+    // 2. Special upgrades are discovered but we don't have 80%+ of any cost
 
     // Get fresh state after discoveries
     let currentState = this.store.getState();
