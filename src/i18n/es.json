@@ -200,43 +200,43 @@
   "upgrades": {
     "main": {
       "ship": {
-        "name": "🚀 Flota de Naves Espaciales",
+        "name": "Flota de Naves Espaciales",
         "description": "¡Recluta otra nave espacial para tu armada. Más naves = más poder de fuego!"
       },
       "attackSpeed": {
-        "name": "⚡ Velocidad de Ataque",
+        "name": "Velocidad de Ataque",
         "description": "Mejora los ordenadores de puntería para disparar más rápido. La velocidad lo es todo."
       },
       "pointMultiplier": {
-        "name": "💎 Amplificador de Daño",
+        "name": "Amplificador de Daño",
         "description": "Amplifica por igual el daño por impacto de clics y naves."
       },
       "critChance": {
-        "name": "✨ Golpe Crítico",
+        "name": "Golpe Crítico",
         "description": "Domina el impacto crítico perfecto. Solo afecta tus clics (las naves de la flota no pueden hacer críticos). Máxima eficiencia de destrucción. Muy satisfactorio."
       },
       "resourceGen": {
-        "name": "🏭 Ingresos Pasivos",
+        "name": "Ingresos Pasivos",
         "description": "Estaciones automatizadas de eliminación alienígena. Trabajan mientras duermes. Sistema de defensa muy eficiente."
       },
       "xpBoost": {
-        "name": "📚 Núcleo de Conocimiento",
+        "name": "Núcleo de Conocimiento",
         "description": "Aprende técnicas avanzadas de eliminación alienígena. El conocimiento es poder. Especialmente al eliminar."
       },
       "mutationEngine": {
-        "name": "🧬 Motor de Mutación",
+        "name": "Motor de Mutación",
         "description": "Evoluciona más allá de los límites - desbloquea habilidades transformadoras"
       },
       "energyCore": {
-        "name": "⚡ Núcleo de Energía",
+        "name": "Núcleo de Energía",
         "description": "Aprovecha energía pura - impulsa todos los sistemas"
       },
       "cosmicKnowledge": {
-        "name": "🌌 Conocimiento Cósmico",
+        "name": "Conocimiento Cósmico",
         "description": "Comprende el universo - reduce costos y aumenta recompensas"
       },
       "misc": {
-        "name": "🔬 Investigación y Desarrollo",
+        "name": "Investigación y Desarrollo",
         "description": "Desbloquea tecnologías experimentales y conocimiento prohibido."
       }
     },

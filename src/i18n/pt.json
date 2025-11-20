@@ -200,43 +200,43 @@
   "upgrades": {
     "main": {
       "ship": {
-        "name": "🚀 Frota de Naves Espaciais",
+        "name": "Frota de Naves Espaciais",
         "description": "Recrute outra nave para sua armada. Mais naves = mais poder de fogo!"
       },
       "attackSpeed": {
-        "name": "⚡ Velocidade de Ataque",
+        "name": "Velocidade de Ataque",
         "description": "Aprimore os computadores de mira para disparar mais rápido. Velocidade é tudo."
       },
       "pointMultiplier": {
-        "name": "💎 Amplificador de Dano",
+        "name": "Amplificador de Dano",
         "description": "Amplifica o dano por acerto de cliques e naves igualmente."
       },
       "critChance": {
-        "name": "✨ Golpe Crítico",
+        "name": "Golpe Crítico",
         "description": "Domine o acerto crítico perfeito. Afeta apenas seus cliques (naves da frota não podem dar crítico). Eficiência máxima de destruição. Muito satisfatório."
       },
       "resourceGen": {
-        "name": "🏭 Renda Passiva",
+        "name": "Renda Passiva",
         "description": "Estações automatizadas de eliminação alienígena. Elas trabalham enquanto você dorme. Sistema de defesa muito eficiente."
       },
       "xpBoost": {
-        "name": "📚 Núcleo de Conhecimento",
+        "name": "Núcleo de Conhecimento",
         "description": "Aprenda técnicas avançadas de eliminação alienígena. Conhecimento é poder. Especialmente ao eliminar."
       },
       "mutationEngine": {
-        "name": "🧬 Motor de Mutação",
+        "name": "Motor de Mutação",
         "description": "Evolua além dos limites - desbloqueie habilidades transformadoras"
       },
       "energyCore": {
-        "name": "⚡ Núcleo de Energia",
+        "name": "Núcleo de Energia",
         "description": "Aproveite energia pura - impulsione todos os sistemas"
       },
       "cosmicKnowledge": {
-        "name": "🌌 Conhecimento Cósmico",
+        "name": "Conhecimento Cósmico",
         "description": "Compreenda o universo - reduza custos e aumente recompensas"
       },
       "misc": {
-        "name": "🔬 Pesquisa e Desenvolvimento",
+        "name": "Pesquisa e Desenvolvimento",
         "description": "Desbloqueie tecnologias experimentais e conhecimento proibido."
       }
     },

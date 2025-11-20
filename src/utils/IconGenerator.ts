@@ -1,7 +1,72 @@
+import { PixelGrid } from '@/render/UpgradeSprites';
+
 /**
  * Icon Generator - Creates SVG icons to replace emojis
  * Provides a more professional, consistent look
  */
+
+/**
+ * Generates a Data URL for a pixel sprite
+ * @param sprite The pixel grid to render
+ * @param color The base color for the sprite
+ * @param size The output size of the image (square)
+ */
+export function generateIconUrl(sprite: PixelGrid, color: string, size: number = 64): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) return '';
+
+  const rows = sprite.length;
+  if (rows === 0) return '';
+  const firstRow = sprite[0];
+  if (!firstRow) return '';
+  const cols = firstRow.length;
+
+  const pixelW = size / cols;
+  const pixelH = size / rows;
+
+  // Helper to adjust color brightness
+  const adjustColor = (hex: string, percent: number): string => {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return '#' + (
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    ).toString(16).slice(1);
+  };
+
+  // Clear
+  ctx.clearRect(0, 0, size, size);
+
+  // Draw
+  for (let r = 0; r < rows; r++) {
+    const row = sprite[r];
+    if (!row) continue;
+    for (let c = 0; c < cols; c++) {
+      const type = row[c];
+      if (type === undefined || type === 0) continue;
+
+      let pixelColor = color;
+      if (type === 2) pixelColor = adjustColor(color, -40); // Shade
+      if (type === 3) pixelColor = adjustColor(color, 40);  // Highlight
+      if (type === 4) pixelColor = '#1a1a1a';               // Dark/Outline
+
+      ctx.fillStyle = pixelColor;
+      // Draw slightly larger to avoid gaps
+      ctx.fillRect(c * pixelW, r * pixelH, pixelW + 0.5, pixelH + 0.5);
+    }
+  }
+
+  return canvas.toDataURL('image/png');
+}
 
 export class IconGenerator {
   /**
@@ -53,6 +118,12 @@ export class IconGenerator {
       master_clicker: this.createClickIcon(),
       click_multiplier: this.createSparkleIcon(),
       super_clicker: this.createPowerIcon(),
+      // Powerup icons
+      powerup_points: this.createMoneyIcon(),
+      powerup_damage: this.createSwordIcon(),
+      powerup_speed: this.createLightningIcon(),
+      powerup_multishot: this.createSparkleIcon(),
+      powerup_critical: this.createExplosionIcon(),
     };
 
     return iconMap[upgradeId] || this.createStarIcon();
@@ -478,6 +549,35 @@ export class IconGenerator {
       '0 0 24 24',
       `<path d="M12 2L12 8" stroke="#66ccff" stroke-width="2" stroke-linecap="round"/>
        <path d="M8 6C6 8 5 10 5 12C5 16 8 19 12 19C16 19 19 16 19 12C19 10 18 8 16 6" stroke="#66ccff" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+    );
+  }
+
+  // Money icon (for powerup_points)
+  private static createMoneyIcon(): string {
+    return this.createSVG(
+      '0 0 24 24',
+      `<circle cx="12" cy="12" r="8" fill="#ffcc00" stroke="#ff9900" stroke-width="1.5"/>
+       <path d="M12 6V18M8 10C8 8 9 7 10 7H14C15 7 16 8 16 10C16 12 15 13 14 13H10C9 13 8 12 8 10Z" stroke="#ff9900" stroke-width="1.5" fill="none"/>
+       <text x="12" y="16" font-family="Arial" font-size="8" font-weight="bold" fill="#ff9900" text-anchor="middle">$</text>`,
+    );
+  }
+
+  // Sword icon (for powerup_damage)
+  private static createSwordIcon(): string {
+    return this.createSVG(
+      '0 0 24 24',
+      `<path d="M12 2L14 6L12 10L10 6L12 2Z" fill="#ff4444" stroke="#cc0000" stroke-width="1"/>
+       <rect x="11" y="10" width="2" height="12" fill="#ff4444" stroke="#cc0000" stroke-width="1"/>
+       <path d="M8 20L16 20" stroke="#cc0000" stroke-width="2" stroke-linecap="round"/>
+       <path d="M9 16L15 16" stroke="#cc0000" stroke-width="1" stroke-linecap="round"/>`,
+    );
+  }
+
+  // Lightning icon (for powerup_speed)
+  private static createLightningIcon(): string {
+    return this.createSVG(
+      '0 0 24 24',
+      `<path d="M13 2L5 14H11L10 22L19 10H13L14 2H13Z" fill="#ffff00" stroke="#ffcc00" stroke-width="1.5" stroke-linejoin="round"/>`,
     );
   }
 

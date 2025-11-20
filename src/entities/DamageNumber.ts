@@ -1,3 +1,5 @@
+import { NumberFormatter } from '../utils/NumberFormatter';
+
 export interface DamageNumberConfig {
   x: number;
   y: number;
@@ -55,11 +57,6 @@ export class DamageNumber {
   }
 
   private formatDamage(damage: number): string {
-    if (damage >= 1e9) return `${(damage / 1e9).toFixed(1)}B`;
-    if (damage >= 1e6) return `${(damage / 1e6).toFixed(1)}M`;
-    if (damage >= 1e3) return `${(damage / 1e3).toFixed(1)}K`;
-    if (damage >= 10) return Math.floor(damage).toString();
-    if (damage >= 1) return damage.toFixed(1);
-    return damage.toFixed(2);
+    return NumberFormatter.format(damage);
   }
 }

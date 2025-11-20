@@ -200,43 +200,43 @@
   "upgrades": {
     "main": {
       "ship": {
-        "name": "🚀 Starship Fleet",
+        "name": "Starship Fleet",
         "description": "Recruit another starship to your armada. Each ship fires independently, adding to your total DPS. More ships = more simultaneous attacks!"
       },
       "attackSpeed": {
-        "name": "⚡ Attack Speed",
+        "name": "Attack Speed",
         "description": "Upgrade targeting computers to fire faster. Speed is everything."
       },
       "pointMultiplier": {
-        "name": "💎 Damage Amplifier",
+        "name": "Damage Amplifier",
         "description": "Boost all per-hit damage (clicks and ships deal the same amplified damage)."
       },
       "critChance": {
-        "name": "✨ Critical Strike",
+        "name": "Critical Strike",
         "description": "Master the perfect critical hit. Only affects your clicks (fleet ships cannot crit). Maximum destruction efficiency. Very satisfying."
       },
       "resourceGen": {
-        "name": "🏭 Passive Income",
+        "name": "Passive Income",
         "description": "Automated alien elimination stations. They generate Points (currency) continuously while you play. Very efficient defense system."
       },
       "xpBoost": {
-        "name": "📚 Knowledge Core",
+        "name": "Knowledge Core",
         "description": "Learn advanced alien elimination techniques. Knowledge is power. Especially when eliminating."
       },
       "mutationEngine": {
-        "name": "🧬 Mutation Engine",
+        "name": "Mutation Engine",
         "description": "Evolve beyond limits - unlock transformative abilities"
       },
       "energyCore": {
-        "name": "⚡ Energy Core",
+        "name": "Energy Core",
         "description": "Harness pure energy - boost all systems"
       },
       "cosmicKnowledge": {
-        "name": "🌌 Cosmic Knowledge",
+        "name": "Cosmic Knowledge",
         "description": "Understand the universe - reduces ALL upgrade costs (including post-ascension prestige upgrades). Wisdom is power."
       },
       "misc": {
-        "name": "🔬 Research & Development",
+        "name": "Research & Development",
         "description": "Unlock experimental technologies and forbidden knowledge."
       }
     },

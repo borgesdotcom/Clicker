@@ -17,7 +17,7 @@ export class LaserSystem {
   private maxLasers = 1000;
   private maxShipLasers = 800;
   private beamMode = false;
-  private beamThreshold = 300;
+  private beamThreshold = 250;
   private shipBeams: Map<number, BeamTarget> = new Map();
   private mainShipBeam: BeamTarget | null = null;
   private beamDamageTimer = 0;

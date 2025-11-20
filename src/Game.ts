@@ -38,6 +38,7 @@ import { ArtifactsModal } from './ui/ArtifactsModal';
 import { VersionSplash } from './ui/VersionSplash';
 import { CreditsModal } from './ui/CreditsModal';
 import { GameInfoModal } from './ui/GameInfoModal';
+import { ThankYouModal } from './ui/ThankYouModal';
 import { StartScreen } from './ui/StartScreen';
 import { TutorialSystem } from './systems/TutorialSystem';
 import { PerformanceMonitor } from './ui/PerformanceMonitor';
@@ -81,6 +82,7 @@ export class Game {
   private settingsModal: SettingsModal;
   private creditsModal: CreditsModal;
   private gameInfoModal: GameInfoModal;
+  private thankYouModal: ThankYouModal;
   private performanceMonitor: PerformanceMonitor;
   private notificationSystem: NotificationSystem;
   private hud: Hud;
@@ -100,6 +102,8 @@ export class Game {
   private titleUpdateTimer = 0;
   private shakeTime = 0;
   private shakeAmount = 0;
+  private ascensionAnimationTime = 0;
+  private isAscensionAnimating = false;
 
   // Active Skill States
   private midasActive = false;
@@ -277,6 +281,7 @@ export class Game {
       this.ascensionSystem,
       this.artifactSystem,
     );
+    this.thankYouModal = new ThankYouModal();
     this.performanceMonitor = new PerformanceMonitor();
 
     // Setup performance monitor entity count providers
@@ -1383,6 +1388,12 @@ export class Game {
   }
 
   private performAscension(): void {
+    // Always play ascension animation
+    this.startAscensionAnimation();
+    // Animation will call performAscensionInternal when done
+  }
+
+  private performAscensionInternal(): void {
     const state = this.store.getState();
 
     // Reset damage batch efficiently
@@ -1467,6 +1478,9 @@ export class Game {
     this.store.setState(freshState);
     Save.save(this.store.getState());
 
+    // Check achievements after ascension (e.g., first ascension achievement)
+    this.achievementSystem.checkAchievements(freshState);
+
     // Update background based on new starting level
     this.updateBackgroundByLevel(freshState.level);
 
@@ -1490,6 +1504,88 @@ export class Game {
     this.comboPauseDuration = 0;
     this.comboPauseCooldown = 0;
     this.updateComboPauseButton();
+  }
+
+  private startAscensionAnimation(): void {
+    this.isAscensionAnimating = true;
+    this.ascensionAnimationTime = 0;
+
+    // Close ascension modal
+    this.ascensionModal.hide();
+
+    // Spawn massive particle explosion from center
+    const centerX = this.canvas.getCenterX();
+    const centerY = this.canvas.getCenterY();
+
+    if (this.userSettings.highGraphics) {
+      // Multiple waves of particles
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          this.particleSystem.spawnExplosion(
+            centerX,
+            centerY,
+            '#ffffff',
+            true,
+            'sparkle',
+          );
+          this.particleSystem.spawnParticles({
+            x: centerX,
+            y: centerY,
+            count: 50,
+            color: '#ffff00',
+            spread: Math.PI * 2,
+            speed: 300 + Math.random() * 200,
+            size: 6,
+            life: 2,
+            glow: true,
+            style: 'sparkle',
+          });
+        }, i * 100);
+      }
+    }
+  }
+
+  private renderAscensionAnimation(ctx: CanvasRenderingContext2D): void {
+    const animationDuration = 2.5;
+    const progress = Math.min(1, this.ascensionAnimationTime / animationDuration);
+
+    // Screen flash effect - white fade in/out
+    let flashAlpha = 0;
+    if (progress < 0.3) {
+      // Fade in white flash (first 30%)
+      flashAlpha = progress / 0.3;
+    } else if (progress < 0.7) {
+      // Hold white flash (30% to 70%)
+      flashAlpha = 1;
+    } else {
+      // Fade out white flash (last 30%)
+      flashAlpha = 1 - (progress - 0.7) / 0.3;
+    }
+
+    // Draw white overlay
+    ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha * 0.9})`;
+    ctx.fillRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
+
+    // Draw golden/yellow glow in center
+    const centerX = this.canvas.getCenterX();
+    const centerY = this.canvas.getCenterY();
+    const maxRadius = Math.max(this.canvas.getWidth(), this.canvas.getHeight());
+
+    // Create radial gradient for glow
+    const gradient = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      maxRadius * progress,
+    );
+    gradient.addColorStop(0, `rgba(255, 255, 0, ${flashAlpha * 0.8})`);
+    gradient.addColorStop(0.5, `rgba(255, 215, 0, ${flashAlpha * 0.4})`);
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
   }
 
   private calculateRetainedUpgrades(state: import('./types').GameState): {
@@ -1585,6 +1681,7 @@ export class Game {
         this.settingsModal.hide();
         this.creditsModal.hide();
         this.gameInfoModal.hide();
+        this.thankYouModal.hide();
       } else if (event.key === 'a' || event.key === 'A') {
         // Toggle auto-buy
         if (!event.ctrlKey && !event.altKey && !event.shiftKey) {
@@ -3420,6 +3517,35 @@ export class Game {
     if (this.shakeTime > 0) {
       this.shakeTime = Math.max(0, this.shakeTime - dt);
     }
+
+    // Update ascension animation
+    if (this.isAscensionAnimating) {
+      this.ascensionAnimationTime += dt;
+      const animationDuration = 2.5; // 2.5 seconds total animation
+
+      // Add screen shake during animation
+      if (this.ascensionAnimationTime < animationDuration * 0.8) {
+        this.shakeTime = 0.1;
+        this.shakeAmount = 10;
+      }
+
+      // Complete animation after duration
+      if (this.ascensionAnimationTime >= animationDuration) {
+        this.isAscensionAnimating = false;
+        this.ascensionAnimationTime = 0;
+        // Check if this is the first ascension before resetting
+        const state = this.store.getState();
+        const isFirstAscension = state.prestigeLevel === 0;
+        // Now perform the actual ascension
+        this.performAscensionInternal();
+        // Show thank you modal after first ascension (after a short delay)
+        if (isFirstAscension) {
+          setTimeout(() => {
+            this.thankYouModal.show();
+          }, 500);
+        }
+      }
+    }
   }
 
   private spawnPowerUp(x: number, y: number): void {
@@ -3520,6 +3646,11 @@ export class Game {
 
     // Batch render game entities for better performance
     this.renderGameEntities(ctx);
+
+    // Render ascension animation overlay
+    if (this.isAscensionAnimating) {
+      this.renderAscensionAnimation(ctx);
+    }
 
     ctx.restore();
 

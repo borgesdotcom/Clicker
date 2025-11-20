@@ -521,6 +521,15 @@ export class AchievementSystem {
         hidden: true,
         check: (state) => state.level >= 1500,
       },
+      {
+        id: 'first_ascension',
+        name: 'First Ascension',
+        description: 'Ascend for the first time',
+        icon: '🌟',
+        category: 'progression',
+        unlocked: false,
+        check: (state) => state.prestigeLevel >= 1,
+      },
 
       // === COLLECTION ACHIEVEMENTS (Ships) ===
       {

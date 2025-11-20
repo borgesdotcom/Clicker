@@ -799,6 +799,19 @@ export class Shop {
       const header = document.createElement('div');
       header.className = 'upgrade-header';
 
+      // Add pixel art icon
+      const icon = document.createElement('img');
+      icon.className = 'upgrade-icon-img';
+      // @ts-ignore - We know upgrades exists on images now
+      icon.src = images.upgrades?.[upgrade.id] || images.stars;
+      icon.alt = upgrade.name;
+      icon.style.width = '32px';
+      icon.style.height = '32px';
+      icon.style.marginRight = '8px';
+      icon.style.imageRendering = 'pixelated';
+      icon.style.verticalAlign = 'middle';
+      header.appendChild(icon);
+
       const name = document.createElement('div');
       name.className = 'upgrade-name';
       name.textContent = upgrade.name;
@@ -941,16 +954,19 @@ export class Shop {
     card.className = `sub-upgrade ${subUpgrade.owned ? 'owned' : ''}`;
     card.setAttribute('data-upgrade-id', subUpgrade.id);
 
-    // Add icon back for visibility - use star PNG for all special upgrades
+    // Add icon back for visibility - use generated pixel art if available
     const icon = document.createElement('div');
     icon.className = 'sub-upgrade-icon';
     const img = document.createElement('img');
-    img.src = images.stars;
+    // @ts-ignore - We know upgrades exists on images now
+    img.src = images.upgrades?.[subUpgrade.id] || images.stars;
     img.alt = t(`upgrades.special.${subUpgrade.id}.name`);
     img.style.width = '130%';
     img.style.height = '130%';
     img.style.objectFit = 'contain';
     img.style.transform = 'scale(1.1)';
+    // Pixel art rendering
+    img.style.imageRendering = 'pixelated';
     icon.appendChild(img);
     card.appendChild(icon);
 
@@ -1335,7 +1351,7 @@ export class Shop {
 
     // Only check sub-upgrades (special upgrades), not main upgrades
     const subUpgrades = this.upgradeSystem.getSubUpgrades();
-    
+
     for (const subUpgrade of subUpgrades) {
       const subKey = `sub_${subUpgrade.id}`;
       // Check if this upgrade is discovered and not owned
@@ -1344,7 +1360,7 @@ export class Shop {
         if (!subUpgrade.isVisible(state) || !subUpgrade.requires(state)) {
           continue;
         }
-        
+
         // Only prioritize if we have at least 80% of the cost
         const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
         const threshold = cost * 0.8;
@@ -1380,11 +1396,11 @@ export class Shop {
     // Check if we're saving for discovered upgrades (80%+ threshold)
     // Only block normal upgrades if we're actively saving for a special upgrade
     const freshState = this.store.getState();
-    
+
     // Only check for discovered upgrades if there are any discovered upgrades at all
     if (freshState.discoveredUpgrades && Object.keys(freshState.discoveredUpgrades).length > 0) {
       const shouldSaveForSpecial = this.hasDiscoveredUpgrades(freshState);
-      
+
       if (shouldSaveForSpecial) {
         // We have 80%+ of a special upgrade cost, so save money for it
         return; // Skip buying normal upgrades, save money for discovered special upgrades
