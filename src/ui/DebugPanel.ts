@@ -1,6 +1,7 @@
 import type { Store } from '../core/Store';
 import { ColorManager } from '../math/ColorManager';
 import { images } from '../assets/images';
+import type { EnemyType } from '../entities/EnemyTypes';
 
 export class DebugPanel {
   private panel: HTMLElement | null = null;
@@ -17,6 +18,7 @@ export class DebugPanel {
   private onGenerateArtifact:
     | ((rarity?: 'common' | 'rare' | 'epic' | 'legendary') => void)
     | null = null;
+  private onSpawnAlien: ((type: EnemyType) => void) | null = null;
   private godModeActive = false;
 
   constructor(
@@ -32,6 +34,7 @@ export class DebugPanel {
     onGenerateArtifact?: (
       rarity?: 'common' | 'rare' | 'epic' | 'legendary',
     ) => void,
+    onSpawnAlien?: (type: EnemyType) => void,
   ) {
     this.store = store;
     this.onBossTrigger = onBossTrigger;
@@ -41,6 +44,7 @@ export class DebugPanel {
     this.onSpawnPowerUp = onSpawnPowerUp || null;
     this.onClearPowerUps = onClearPowerUps || null;
     this.onGenerateArtifact = onGenerateArtifact || null;
+    this.onSpawnAlien = onSpawnAlien || null;
     this.createPanel();
     this.setupKeyboardShortcut();
   }
@@ -114,6 +118,25 @@ export class DebugPanel {
           <div class="debug-controls">
             <button id="debug-trigger-boss" class="debug-btn debug-btn-boss">Trigger Boss Fight</button>
             <button id="debug-kill-boss" class="debug-btn">Instant Kill Boss</button>
+          </div>
+        </div>
+
+        <div class="debug-section">
+          <h3>👽 Spawn Aliens</h3>
+          <div class="debug-controls">
+            <button id="debug-spawn-normal" class="debug-btn">Normal</button>
+            <button id="debug-spawn-scout" class="debug-btn">Scout</button>
+            <button id="debug-spawn-tank" class="debug-btn">Tank</button>
+            <button id="debug-spawn-healer" class="debug-btn">Healer</button>
+          </div>
+          <div class="debug-controls">
+            <button id="debug-spawn-guardian" class="debug-btn">Guardian</button>
+            <button id="debug-spawn-hoarder" class="debug-btn">Hoarder</button>
+            <button id="debug-spawn-voidwalker" class="debug-btn">Void Walker</button>
+          </div>
+          <div class="debug-controls">
+            <button id="debug-spawn-plasmab" class="debug-btn debug-btn-special">Plasma Born</button>
+            <button id="debug-spawn-nebula" class="debug-btn debug-btn-special">Nebula Jelly</button>
           </div>
         </div>
 
@@ -279,6 +302,53 @@ export class DebugPanel {
       .getElementById('debug-kill-boss')
       ?.addEventListener('click', () => {
         this.killBoss();
+      });
+
+    // Alien spawning controls
+    document
+      .getElementById('debug-spawn-normal')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('normal');
+      });
+    document
+      .getElementById('debug-spawn-scout')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('scout');
+      });
+    document
+      .getElementById('debug-spawn-tank')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('tank');
+      });
+    document
+      .getElementById('debug-spawn-healer')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('healer');
+      });
+    document
+      .getElementById('debug-spawn-guardian')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('guardian');
+      });
+    document
+      .getElementById('debug-spawn-hoarder')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('hoarder');
+      });
+    document
+      .getElementById('debug-spawn-voidwalker')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('void_walker');
+      });
+    document
+      .getElementById('debug-spawn-plasmab')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('plasma_born');
+      });
+    document
+      .getElementById('debug-spawn-nebula')
+      ?.addEventListener('click', () => {
+        this.spawnAlien('nebula_jelly');
       });
 
     // Stats controls
@@ -544,6 +614,14 @@ export class DebugPanel {
   private killBoss(): void {
     // This needs to be exposed from Game class
     this.showNotification('Boss kill not yet implemented in debug!');
+  }
+
+  private spawnAlien(type: EnemyType): void {
+    if (this.onSpawnAlien) {
+      this.onSpawnAlien(type);
+      const alienName = type.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+      this.showNotification(`Spawned ${alienName}!`);
+    }
   }
 
   private addClicks(count: number): void {

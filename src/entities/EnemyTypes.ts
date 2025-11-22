@@ -11,7 +11,10 @@ export type EnemyType =
   | 'tank'
   | 'healer'
   | 'guardian'
-  | 'hoarder';
+  | 'hoarder'
+  | 'void_walker'
+  | 'plasma_born'
+  | 'nebula_jelly';
 
 export interface EnemyStats {
   type: EnemyType;
@@ -63,6 +66,25 @@ const HOARDER_COLORS = [
   { color: '#ffd84d', glow: 'rgba(255, 216, 77, 0.5)' },
   { color: '#ffc107', glow: 'rgba(255, 193, 7, 0.5)' },
   { color: '#ffb347', glow: 'rgba(255, 179, 71, 0.5)' },
+];
+
+const VOID_WALKER_COLORS = [
+  { color: '#2a0a3b', glow: 'rgba(138, 43, 226, 0.6)' }, // Deep purple
+  { color: '#4b0082', glow: 'rgba(75, 0, 130, 0.6)' }, // Indigo
+  { color: '#1a1a2e', glow: 'rgba(100, 100, 255, 0.5)' }, // Dark blue-black
+];
+
+const PLASMA_BORN_COLORS = [
+  { color: '#00ffff', glow: 'rgba(0, 255, 255, 0.9)' }, // Cyan
+  { color: '#00ffaa', glow: 'rgba(0, 255, 170, 0.9)' }, // Electric Cyan
+  { color: '#00ddff', glow: 'rgba(0, 221, 255, 0.9)' }, // Bright Cyan
+  { color: '#66ffff', glow: 'rgba(102, 255, 255, 0.9)' }, // Light Electric
+];
+
+const NEBULA_JELLY_COLORS = [
+  { color: '#ff69b4', glow: 'rgba(255, 105, 180, 0.6)' }, // Hot Pink
+  { color: '#da70d6', glow: 'rgba(218, 112, 214, 0.6)' }, // Orchid
+  { color: '#9370db', glow: 'rgba(147, 112, 219, 0.6)' }, // Medium Purple
 ];
 
 function getRandomColor(colors: Array<{ color: string; glow: string }>): {
@@ -126,6 +148,30 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
     glowColor: 'rgba(255, 216, 77, 0.5)',
     size: 1.1,
   },
+  void_walker: {
+    type: 'void_walker',
+    hpMultiplier: 5,
+    pointsMultiplier: 6,
+    color: '#2a0a3b',
+    glowColor: 'rgba(138, 43, 226, 0.6)',
+    size: 1.6,
+  },
+  plasma_born: {
+    type: 'plasma_born',
+    hpMultiplier: 2.5,
+    pointsMultiplier: 4,
+    color: '#00ffff',
+    glowColor: 'rgba(0, 255, 255, 0.8)',
+    size: 1.2,
+  },
+  nebula_jelly: {
+    type: 'nebula_jelly',
+    hpMultiplier: 3.5,
+    pointsMultiplier: 5,
+    color: '#ff69b4',
+    glowColor: 'rgba(255, 105, 180, 0.6)',
+    size: 1.3,
+  },
 };
 
 export class EnhancedAlienBall extends AlienBall {
@@ -162,6 +208,15 @@ export class EnhancedAlienBall extends AlienBall {
         break;
       case 'hoarder':
         colorData = getRandomColor(HOARDER_COLORS);
+        break;
+      case 'void_walker':
+        colorData = getRandomColor(VOID_WALKER_COLORS);
+        break;
+      case 'plasma_born':
+        colorData = getRandomColor(PLASMA_BORN_COLORS);
+        break;
+      case 'nebula_jelly':
+        colorData = getRandomColor(NEBULA_JELLY_COLORS);
         break;
       default:
         colorData = getRandomColor(NORMAL_COLORS);
@@ -259,6 +314,10 @@ export class EnhancedAlienBall extends AlienBall {
       }
     }
 
+    // Idle Animation (Breathing/Floating)
+    const idlePulse = Math.sin((this as any).animationTime * 2) * 0.05;
+    const idleY = Math.sin((this as any).animationTime * 1.5) * (this.radius * 0.1);
+
     // Calculate deformation displacement and scales
     const pushDistance = deformationAmount * this.radius * 0.3;
     const deformationX = (this as any).deformationDirection.x * pushDistance;
@@ -295,10 +354,11 @@ export class EnhancedAlienBall extends AlienBall {
     const centerY =
       this.y +
       deformationY +
+      idleY + // Add idle floating
       (Math.random() - 0.5) * (this.shakeTime > 0 ? this.shakeIntensity : 0);
 
-    const spriteWidth = currentRadius * 2 * scaleX;
-    const spriteHeight = currentRadius * 2 * scaleY;
+    const spriteWidth = currentRadius * 2 * scaleX * (1 + idlePulse); // Add idle breathing
+    const spriteHeight = currentRadius * 2 * scaleY * (1 + idlePulse);
 
     // Draw special effects based on enemy type (Background/Underlay)
     // Some effects look better behind the alien
@@ -316,19 +376,47 @@ export class EnhancedAlienBall extends AlienBall {
         centerY,
         Math.max(spriteWidth, spriteHeight) / 2,
       );
+    } else if (this.enemyType === 'normal') {
+      this.drawNormalEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'void_walker') {
+      // Void walker background effect
+      this.drawVoidWalkerBackground(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
     }
 
     // Draw Sprite
     const sprite = getSpriteForType(this.enemyType);
-    this.drawPixelSprite(
-      ctx,
-      centerX,
-      centerY,
-      spriteWidth,
-      spriteHeight,
-      sprite,
-      this.stats.color,
-    );
+
+    if (this.enemyType === 'void_walker') {
+      // Chromatic Aberration for Void Walker
+      this.drawGlitchSprite(
+        ctx,
+        centerX,
+        centerY,
+        spriteWidth,
+        spriteHeight,
+        sprite,
+      );
+    } else {
+      this.drawPixelSprite(
+        ctx,
+        centerX,
+        centerY,
+        spriteWidth,
+        spriteHeight,
+        sprite,
+        this.stats.color,
+      );
+    }
 
     // Flash effect
     if ((this as any).flashTime > 0) {
@@ -372,6 +460,27 @@ export class EnhancedAlienBall extends AlienBall {
       );
     } else if (this.enemyType === 'hoarder') {
       this.drawHoarderEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'void_walker') {
+      this.drawVoidWalkerEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'plasma_born') {
+      this.drawPlasmaBornEffect(
+        ctx,
+        centerX,
+        centerY,
+        Math.max(spriteWidth, spriteHeight) / 2,
+      );
+    } else if (this.enemyType === 'nebula_jelly') {
+      this.drawNebulaJellyEffect(
         ctx,
         centerX,
         centerY,
@@ -450,6 +559,30 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.restore();
   }
 
+  private drawNormalEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+    // Subtle inner glow pulse
+    const pulse = Math.sin((this as any).animationTime * 3) * 0.1 + 0.5;
+    ctx.globalAlpha = 0.2 * pulse;
+    ctx.fillStyle = this.stats.glowColor;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Faint trail/aura
+    const trailPulse = Math.sin((this as any).animationTime * 2 + Math.PI) * 0.1 + 1.0;
+    ctx.globalAlpha = 0.1;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 1.1 * trailPulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   private drawScoutEffect(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -471,25 +604,50 @@ export class EnhancedAlienBall extends AlienBall {
       // Radius expands from 1.0 to 2.5x
       const ringRadius = radius * (1.0 + t * 1.5);
       // Alpha fades out as it expands
-      const alpha = (1 - t) * 0.6;
+      const alpha = (1 - t) * 0.4;
 
       ctx.beginPath();
       ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
       ctx.strokeStyle = this.stats.glowColor;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.globalAlpha = alpha;
       ctx.stroke();
     }
 
-    // Scanning line
-    const scanRotation = (this as any).animationTime * 3 * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.arc(x, y, radius * 2.0, scanRotation, scanRotation + 0.5);
-    ctx.lineTo(x, y);
-    ctx.fillStyle = this.stats.glowColor;
+    // Rotating Scanner Cone
+    const scanRotation = (this as any).animationTime * 2 * Math.PI;
+    ctx.translate(x, y);
+    ctx.rotate(scanRotation);
+
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 2.5);
+    gradient.addColorStop(0, this.stats.glowColor);
+    gradient.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = gradient;
     ctx.globalAlpha = 0.15;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius * 2.5, -0.4, 0.4);
+    ctx.lineTo(0, 0);
     ctx.fill();
+
+    // Target Reticle
+    ctx.rotate(-scanRotation); // Reset rotation for reticle
+    const reticleRotation = -(this as any).animationTime * Math.PI;
+    ctx.rotate(reticleRotation);
+
+    ctx.strokeStyle = this.stats.glowColor;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6;
+    const reticleRadius = radius * 1.8;
+    const bracketSize = Math.PI / 4;
+
+    for (let i = 0; i < 4; i++) {
+      ctx.rotate(Math.PI / 2);
+      ctx.beginPath();
+      ctx.arc(0, 0, reticleRadius, -bracketSize / 2, bracketSize / 2);
+      ctx.stroke();
+    }
 
     ctx.restore();
   }
@@ -509,9 +667,10 @@ export class EnhancedAlienBall extends AlienBall {
     const armorRadius = radius * 1.3;
 
     ctx.strokeStyle = this.stats.glowColor;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.globalAlpha = 0.7;
 
+    // Draw Hexagon
     ctx.beginPath();
     for (let i = 0; i <= sides; i++) {
       const angle = (i / sides) * Math.PI * 2 + rotation;
@@ -523,23 +682,54 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.closePath();
     ctx.stroke();
 
-    // Inner solid structure
-    ctx.fillStyle = this.stats.glowColor;
-    ctx.globalAlpha = 0.15;
-    ctx.fill();
+    // Floating Armor Plates
+    const numPlates = 3;
+    const plateRotation = -(this as any).animationTime * 0.8;
+    const plateDist = radius * 1.6;
 
-    // Reinforcement nodes at corners
-    ctx.fillStyle = '#ffffff';
-    ctx.globalAlpha = 0.9;
-    for (let i = 0; i < sides; i++) {
-      const angle = (i / sides) * Math.PI * 2 + rotation;
-      const px = x + Math.cos(angle) * armorRadius;
-      const py = y + Math.sin(angle) * armorRadius;
+    ctx.fillStyle = this.stats.color;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i < numPlates; i++) {
+      const angle = (i / numPlates) * Math.PI * 2 + plateRotation;
+      const px = x + Math.cos(angle) * plateDist;
+      const py = y + Math.sin(angle) * plateDist;
+
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(angle + Math.PI / 2);
+
+      // Draw trapezoid plate
       ctx.beginPath();
-      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.moveTo(-6, -3);
+      ctx.lineTo(6, -3);
+      ctx.lineTo(4, 3);
+      ctx.lineTo(-4, 3);
+      ctx.closePath();
+
+      ctx.globalAlpha = 0.9;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Shield Shimmer (on damage or random)
+    if (Math.random() < 0.05) {
+      ctx.fillStyle = this.stats.glowColor;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      for (let i = 0; i <= sides; i++) {
+        const angle = (i / sides) * Math.PI * 2 + rotation;
+        const px = x + Math.cos(angle) * armorRadius;
+        const py = y + Math.sin(angle) * armorRadius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
       ctx.fill();
     }
 
+    ctx.restore();
     ctx.restore();
   }
 
@@ -566,35 +756,34 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.arc(x, y, auraRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Floating Crosses (+)
-    const numCrosses = 4;
-    for (let i = 0; i < numCrosses; i++) {
-      // Each cross orbits at different speed/phase
-      const phase = (i / numCrosses) * Math.PI * 2;
-      const orbitSpeed = 0.8;
-      const orbitRadius = radius * 1.4;
-      const angle = (this as any).animationTime * orbitSpeed + phase;
+    // Rising "+" Particles
+    const numParticles = 5;
+    const time = (this as any).animationTime;
 
-      // Bobbing motion
-      const bob = Math.sin((this as any).animationTime * 3 + i) * 5;
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.8;
 
-      const cx = x + Math.cos(angle) * orbitRadius;
-      const cy = y + Math.sin(angle) * orbitRadius + bob;
+    for (let i = 0; i < numParticles; i++) {
+      const offset = i * (Math.PI * 2 / numParticles);
+      const pTime = (time + offset) % 2; // 2 second cycle
 
-      // Draw Cross
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3;
-      ctx.globalAlpha = 0.8;
-      const size = 6;
+      // Spiral up motion
+      const pAngle = time * 2 + offset;
+      const pY = y + radius - (pTime * radius * 2.5);
+      const pX = x + Math.cos(pAngle) * (radius * 0.5);
 
-      ctx.beginPath();
-      ctx.moveTo(cx - size, cy);
-      ctx.lineTo(cx + size, cy);
-      ctx.moveTo(cx, cy - size);
-      ctx.lineTo(cx, cy + size);
-      ctx.stroke();
+      const size = 4 * (1 - pTime / 2);
+      const alpha = 1 - (pTime / 2);
+
+      if (pTime < 2) {
+        ctx.globalAlpha = alpha;
+        // Draw Plus
+        ctx.fillRect(pX - size / 2, pY - size / 6, size, size / 3);
+        ctx.fillRect(pX - size / 6, pY - size / 2, size / 3, size);
+      }
     }
 
+    ctx.restore();
     ctx.restore();
   }
 
@@ -608,15 +797,15 @@ export class EnhancedAlienBall extends AlienBall {
 
     // Treasure Glow / Sparkles
     // Orbiting gold coins/particles
-    const numCoins = 5;
-    const orbitSpeed = 1.2;
+    const numCoins = 6;
+    const orbitSpeed = 1.5;
 
     for (let i = 0; i < numCoins; i++) {
       const phase = (i / numCoins) * Math.PI * 2;
       // Elliptical orbit for 3D feel
       const angle = (this as any).animationTime * orbitSpeed + phase;
-      const orbitRadiusX = radius * 1.6;
-      const orbitRadiusY = radius * 0.6;
+      const orbitRadiusX = radius * 1.8;
+      const orbitRadiusY = radius * 0.8;
 
       const cx = x + Math.cos(angle) * orbitRadiusX;
       const cy = y + Math.sin(angle) * orbitRadiusY;
@@ -624,25 +813,393 @@ export class EnhancedAlienBall extends AlienBall {
       // Sparkle/Coin
       ctx.fillStyle = '#ffd700'; // Gold
       ctx.shadowColor = '#ffaa00';
-      ctx.shadowBlur = 5;
+      ctx.shadowBlur = 8;
       ctx.globalAlpha = 0.9;
 
       // Twinkle size
       const twinkle =
         Math.sin((this as any).animationTime * 10 + i) * 0.3 + 0.7;
-      const size = 4 * twinkle;
+      const size = 3 * twinkle;
 
       ctx.beginPath();
       ctx.arc(cx, cy, size, 0, Math.PI * 2);
       ctx.fill();
+
+      // Occasional Sparkle (4-point star)
+      if (Math.sin(angle * 3) > 0.8) {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - size * 2);
+        ctx.quadraticCurveTo(cx, cy, cx + size * 2, cy);
+        ctx.quadraticCurveTo(cx, cy, cx, cy + size * 2);
+        ctx.quadraticCurveTo(cx, cy, cx - size * 2, cy);
+        ctx.quadraticCurveTo(cx, cy, cx, cy - size * 2);
+        ctx.fill();
+      }
     }
 
     // Central shine
-    ctx.globalAlpha = 0.3 + Math.sin((this as any).animationTime * 5) * 0.2;
-    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.4 + Math.sin((this as any).animationTime * 5) * 0.2;
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(0.4, 'rgba(255, 215, 0, 0.4)');
+    gradient.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  private drawVoidWalkerBackground(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+    // Digital Noise Background
+    const time = Date.now() / 50;
+    if (Math.floor(time) % 3 === 0) {
+      ctx.fillStyle = '#000000';
+      ctx.globalAlpha = 0.2;
+      const w = radius * 2.5;
+      const h = 2;
+      const ny = y + (Math.random() - 0.5) * radius * 2;
+      ctx.fillRect(x - w / 2, ny, w, h);
+    }
+    ctx.restore();
+  }
+
+  private drawVoidWalkerEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+    // Glitch effect - random rectangles
+    const time = Date.now() / 100;
+    if (Math.floor(time) % 2 === 0) {
+      ctx.fillStyle = this.stats.glowColor;
+      ctx.globalAlpha = 0.4;
+      const offsetX = (Math.random() - 0.5) * 15;
+      const offsetY = (Math.random() - 0.5) * 15;
+      const w = (Math.random() * 10) + 5;
+      const h = (Math.random() * 5) + 2;
+      ctx.fillRect(x - radius + offsetX, y - radius + offsetY, w, h);
+    }
+
+    // Data Stream
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '8px monospace';
+    ctx.globalAlpha = 0.3;
+    if (Math.random() < 0.1) {
+      ctx.fillText((Math.random() > 0.5 ? '1' : '0'), x + radius, y - radius + Math.random() * radius * 2);
+    }
+
+    ctx.restore();
+  }
+
+  private drawGlitchSprite(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    sprite: any,
+  ): void {
+    // Draw Red Channel Offset
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.7;
+    const offset = 2;
+
+    // Red
+    this.drawPixelSprite(ctx, x - offset, y, w, h, sprite, '#ff0000');
+
+    // Blue
+    this.drawPixelSprite(ctx, x + offset, y, w, h, sprite, '#0000ff');
+
+    // Green (Center)
+    this.drawPixelSprite(ctx, x, y, w, h, sprite, '#00ff00');
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  private drawPlasmaBornEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+
+    const time = (this as any).animationTime || 0;
+
+    // Pulsing outer glow
+    const pulse = Math.sin(time * 2.5) * 0.15 + 1;
+    const glowGradient = ctx.createRadialGradient(
+      x, y, 0, 
+      x, y, radius * 1.5 * pulse
+    );
+    glowGradient.addColorStop(0, 'rgba(0, 255, 255, 0.25)');
+    glowGradient.addColorStop(0.6, 'rgba(0, 255, 255, 0.15)');
+    glowGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+    ctx.fillStyle = glowGradient;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 1.5 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // 4 Orbiting energy particles
+    const orbCount = 4;
+    for (let i = 0; i < orbCount; i++) {
+      const angle = (i / orbCount) * Math.PI * 2 + time * 2;
+      const orbitRadius = radius * 1.2;
+      const orbX = x + Math.cos(angle) * orbitRadius;
+      const orbY = y + Math.sin(angle) * orbitRadius;
+      const orbSize = 3 + Math.sin(time * 4 + i) * 1;
+
+      // Simple orb with glow
+      ctx.fillStyle = 'rgba(200, 255, 255, 0.8)';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 6;
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.arc(orbX, orbY, orbSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // Single pulsing ring
+    const ringRadius = radius * (1 + Math.sin(time * 3) * 0.2);
+    ctx.strokeStyle = `rgba(0, 255, 255, ${0.4 + Math.sin(time * 3) * 0.15})`;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 8;
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+
+    // Electric sparks (4 sparks, flickering)
+    const sparkCount = 4;
+    for (let i = 0; i < sparkCount; i++) {
+      if (Math.random() > 0.6) continue; // Flicker
+      
+      const angle = (i / sparkCount) * Math.PI * 2 + time;
+      const startDist = radius * 0.3;
+      const endDist = radius * 1.1;
+      
+      const startX = x + Math.cos(angle) * startDist;
+      const startY = y + Math.sin(angle) * startDist;
+      const endX = x + Math.cos(angle) * endDist + (Math.random() - 0.5) * 8;
+      const endY = y + Math.sin(angle) * endDist + (Math.random() - 0.5) * 8;
+      
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 5;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // Subtle pulsing core (matched to other aliens' brightness)
+    const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.6);
+    coreGradient.addColorStop(0, 'rgba(200, 255, 255, 0.6)');
+    coreGradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.4)');
+    coreGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+    ctx.fillStyle = coreGradient;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 8;
+    ctx.globalAlpha = 0.5 + Math.sin(time * 4) * 0.2;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  private drawNebulaJellyEffect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+  ): void {
+    ctx.save();
+
+    const time = (this as any).animationTime || 0;
+
+    // Layered Cosmic Background Gradients (nebula clouds)
+    const outerNebula = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+    outerNebula.addColorStop(0, 'rgba(255, 105, 180, 0.15)');
+    outerNebula.addColorStop(0.3, 'rgba(147, 112, 219, 0.2)');
+    outerNebula.addColorStop(0.6, 'rgba(75, 0, 130, 0.15)');
+    outerNebula.addColorStop(1, 'transparent');
+    ctx.fillStyle = outerNebula;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Rotating nebula clouds
+    const cloudCount = 3;
+    for (let i = 0; i < cloudCount; i++) {
+      const angle = (i / cloudCount) * Math.PI * 2 + time * 0.3;
+      const cloudDist = radius * 0.6;
+      const cloudX = x + Math.cos(angle) * cloudDist;
+      const cloudY = y + Math.sin(angle) * cloudDist;
+      const cloudSize = radius * 0.5;
+      
+      const cloudGradient = ctx.createRadialGradient(
+        cloudX, cloudY, 0,
+        cloudX, cloudY, cloudSize
+      );
+      cloudGradient.addColorStop(0, 'rgba(218, 112, 214, 0.3)');
+      cloudGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.2)');
+      cloudGradient.addColorStop(1, 'rgba(75, 0, 130, 0)');
+      
+      ctx.fillStyle = cloudGradient;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.arc(cloudX, cloudY, cloudSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Multiple pulsing aura rings
+    for (let i = 0; i < 3; i++) {
+      const pulse = Math.sin(time * 1.5 + i * 1) * 0.15 + 1;
+      const ringRadius = radius * (1 + i * 0.2) * pulse;
+      const alpha = 0.4 - i * 0.1;
+      
+      ctx.strokeStyle = this.stats.glowColor;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = '#ff69b4';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    ctx.globalAlpha = 1;
+
+    // Floating cosmic particles (20 particles)
+    const particleCount = 20;
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2 + time * 0.5;
+      const orbitRadius = radius * 0.7 + Math.sin(time * 2 + i) * radius * 0.3;
+      const px = x + Math.cos(angle) * orbitRadius;
+      const py = y + Math.sin(angle) * orbitRadius;
+      const size = 1 + Math.sin(time * 3 + i) * 0.5;
+      const particleAlpha = 0.4 + Math.sin(time * 2 + i * 0.5) * 0.3;
+      
+      // Particle with color variation
+      const colors = [
+        'rgba(255, 105, 180, ',  // Hot Pink
+        'rgba(218, 112, 214, ',  // Orchid
+        'rgba(147, 112, 219, ',  // Medium Purple
+        'rgba(186, 85, 211, ',   // Medium Orchid
+      ];
+      const colorIndex = i % colors.length;
+      const selectedColor = colors[colorIndex] ?? colors[0] ?? 'rgba(255, 105, 180, ';
+      ctx.fillStyle = selectedColor + particleAlpha + ')';
+      ctx.shadowColor = '#ff69b4';
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(px, py, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Twinkling stars - increased to 12 with varying sizes
+    const numStars = 12;
+    for (let i = 0; i < numStars; i++) {
+      const starTime = time * 2 + i;
+      const alpha = (Math.sin(starTime) + 1) / 2; // 0 to 1
+
+      if (alpha > 0.2) {
+        const angle = i * (Math.PI * 2 / numStars) + time * 0.2;
+        const dist = radius * (0.6 + (i % 3) * 0.15);
+        const sx = x + Math.cos(angle) * dist;
+        const sy = y + Math.sin(angle) * dist;
+        const starSize = 1 + (i % 3) * 0.5;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(sx, sy, starSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Four-point star shape for larger stars
+        if (i % 3 === 0) {
+          ctx.beginPath();
+          ctx.moveTo(sx, sy - starSize * 2);
+          ctx.lineTo(sx + starSize * 0.5, sy - starSize * 0.5);
+          ctx.lineTo(sx + starSize * 2, sy);
+          ctx.lineTo(sx + starSize * 0.5, sy + starSize * 0.5);
+          ctx.lineTo(sx, sy + starSize * 2);
+          ctx.lineTo(sx - starSize * 0.5, sy + starSize * 0.5);
+          ctx.lineTo(sx - starSize * 2, sy);
+          ctx.lineTo(sx - starSize * 0.5, sy - starSize * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        }
+        
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // Trailing wisps (tentacle-like cosmic trails)
+    const wispCount = 6;
+    for (let i = 0; i < wispCount; i++) {
+      const baseAngle = (i / wispCount) * Math.PI * 2 - time * 0.5;
+      const wispLength = radius * 0.8;
+      
+      ctx.strokeStyle = `rgba(218, 112, 214, ${0.3 + Math.sin(time * 2 + i) * 0.2})`;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = '#da70d6';
+      ctx.shadowBlur = 10;
+      
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      
+      // Curved wisp path
+      for (let j = 1; j <= 3; j++) {
+        const progress = j / 3;
+        const angle = baseAngle + Math.sin(time * 3 + i + j) * 0.3;
+        const dist = wispLength * progress;
+        const wx = x + Math.cos(angle) * dist;
+        const wy = y + Math.sin(angle) * dist;
+        ctx.lineTo(wx, wy);
+      }
+      
+      ctx.globalAlpha = 0.6;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
 
     ctx.restore();
   }
@@ -751,6 +1308,21 @@ export class EnhancedAlienBall extends AlienBall {
           label: t('enemyTypes.hoarder.name'),
           description: t('enemyTypes.hoarder.effect'),
         };
+      case 'void_walker':
+        return {
+          label: 'Void Walker',
+          description: 'High HP & Points',
+        };
+      case 'plasma_born':
+        return {
+          label: 'Plasma Born',
+          description: 'Fast & Valuable',
+        };
+      case 'nebula_jelly':
+        return {
+          label: 'Nebula Jelly',
+          description: 'Cosmic Entity',
+        };
       default:
         return null;
     }
@@ -773,21 +1345,65 @@ export function selectEnemyType(level: number): EnemyType {
   let guardianWeight = 0.08 + Math.min(level / 450, 0.12);
   let hoarderWeight = 0.005 + Math.min(level / 1200, 0.01);
 
+  // Level 100+ weights
+  let voidWalkerWeight = 0;
+  let plasmaBornWeight = 0;
+  let nebulaJellyWeight = 0;
+
+  if (level >= 100) {
+    voidWalkerWeight = 0.05 + Math.min((level - 100) / 500, 0.1);
+    plasmaBornWeight = 0.05 + Math.min((level - 100) / 500, 0.1);
+    nebulaJellyWeight = 0.05 + Math.min((level - 100) / 500, 0.1);
+  }
+
   // Normalize weights
   const total =
-    scoutWeight + tankWeight + healerWeight + guardianWeight + hoarderWeight;
+    scoutWeight +
+    tankWeight +
+    healerWeight +
+    guardianWeight +
+    hoarderWeight +
+    voidWalkerWeight +
+    plasmaBornWeight +
+    nebulaJellyWeight;
+
   scoutWeight /= total;
   tankWeight /= total;
   healerWeight /= total;
   guardianWeight /= total;
   hoarderWeight /= total;
+  voidWalkerWeight /= total;
+  plasmaBornWeight /= total;
+  nebulaJellyWeight /= total;
 
   const specialRoll = Math.random();
-  if (specialRoll < scoutWeight) return 'scout';
-  if (specialRoll < scoutWeight + tankWeight) return 'tank';
-  if (specialRoll < scoutWeight + tankWeight + healerWeight) return 'healer';
-  if (specialRoll < scoutWeight + tankWeight + healerWeight + guardianWeight) {
-    return 'guardian';
+  let currentThreshold = 0;
+
+  currentThreshold += scoutWeight;
+  if (specialRoll < currentThreshold) return 'scout';
+
+  currentThreshold += tankWeight;
+  if (specialRoll < currentThreshold) return 'tank';
+
+  currentThreshold += healerWeight;
+  if (specialRoll < currentThreshold) return 'healer';
+
+  currentThreshold += guardianWeight;
+  if (specialRoll < currentThreshold) return 'guardian';
+
+  currentThreshold += hoarderWeight;
+  if (specialRoll < currentThreshold) return 'hoarder';
+
+  if (level >= 100) {
+    currentThreshold += voidWalkerWeight;
+    if (specialRoll < currentThreshold) return 'void_walker';
+
+    currentThreshold += plasmaBornWeight;
+    if (specialRoll < currentThreshold) return 'plasma_born';
+
+    currentThreshold += nebulaJellyWeight;
+    if (specialRoll < currentThreshold) return 'nebula_jelly';
   }
-  return 'hoarder';
+
+  return 'hoarder'; // Fallback
 }

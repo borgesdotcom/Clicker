@@ -111,24 +111,25 @@ export class BossBall {
         break;
       case 2: // Void Construct (Lvl 75)
         this.sprite = BOSS_SPRITE_VOID_CONSTRUCT;
-        this.color = '#000000'; // Black
+        this.color = '#001a33'; // Very Dark Blue (instead of pure black for visibility)
         this.glowColor = '#00FFFF'; // Cyan
-        this.secondaryColor = '#191970'; // Midnight Blue
-        this.accentColor = '#FFFFFF'; // White
-        // Init Rings
-        this.rings.push({ angle: 0, radius: 1.3, speed: 0.8, width: 3 });
-        this.rings.push({ angle: Math.PI, radius: 1.6, speed: -0.6, width: 2 });
+        this.secondaryColor = '#0066cc'; // Brighter Blue
+        this.accentColor = '#66ffff'; // Light Cyan
+        // Init Rings - More rings for cooler effect
+        this.rings.push({ angle: 0, radius: 1.3, speed: 0.8, width: 4 });
+        this.rings.push({ angle: Math.PI, radius: 1.6, speed: -0.6, width: 3 });
+        this.rings.push({ angle: Math.PI * 0.5, radius: 1.45, speed: 1.0, width: 2 });
         break;
       case 3: // Omega Core (Lvl 100)
         this.sprite = BOSS_SPRITE_OMEGA_CORE;
         this.color = '#FF0000'; // Red
-        this.glowColor = '#FF0000'; // Red Glow
-        this.secondaryColor = '#FFFF00'; // Yellow
-        this.accentColor = '#FFA500'; // Orange
-        // Init Arcs
-        for (let i = 0; i < 4; i++) {
+        this.glowColor = '#FFFF00'; // Yellow Glow
+        this.secondaryColor = '#FFAA00'; // Orange
+        this.accentColor = '#FFFF00'; // Bright Yellow
+        // Init Arcs - More arcs for cooler effect
+        for (let i = 0; i < 6; i++) {
           this.arcs.push({
-            angle: (i / 4) * Math.PI * 2,
+            angle: (i / 6) * Math.PI * 2,
             radius: 1.4,
             speed: 2 + Math.random() * 2,
             length: Math.PI * 0.5,
@@ -644,18 +645,51 @@ export class BossBall {
       });
     }
 
-    // Void Construct Rings (Back half)
+    // Void Construct Rings (Back half) - Enhanced
     if (this.variant === 2) {
+      // Add outer glow aura
+      const voidGlow = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2);
+      voidGlow.addColorStop(0, 'rgba(0, 255, 255, 0.2)');
+      voidGlow.addColorStop(0.5, 'rgba(0, 200, 255, 0.1)');
+      voidGlow.addColorStop(1, 'rgba(0, 100, 200, 0)');
+      ctx.fillStyle = voidGlow;
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw energy particles around the boss
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2 + this.pulseTime;
+        const dist = radius * (1.5 + Math.sin(this.pulseTime * 2 + i) * 0.2);
+        const px = x + Math.cos(angle) * dist;
+        const py = y + Math.sin(angle) * dist;
+        const size = 3 + Math.sin(this.pulseTime * 3 + i) * 2;
+        
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Glow
+        ctx.fillStyle = 'rgba(0, 200, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(px, py, size * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       this.rings.forEach((ring) => {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ring.angle);
         ctx.scale(1, 0.3); // Flatten to look like 3D ring
 
+        // Enhanced rings with glow
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 15;
         ctx.beginPath();
         ctx.arc(0, 0, radius * ring.radius, Math.PI, 0); // Back half
-        ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.3);
-        ctx.lineWidth = ring.width;
+        ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.6);
+        ctx.lineWidth = ring.width + 2;
         ctx.stroke();
 
         ctx.restore();
@@ -728,7 +762,7 @@ export class BossBall {
       });
     }
 
-    // Void Construct Rings (Front half)
+    // Void Construct Rings (Front half) - Enhanced
     if (this.variant === 2) {
       this.rings.forEach((ring) => {
         ctx.save();
@@ -736,47 +770,189 @@ export class BossBall {
         ctx.rotate(ring.angle);
         ctx.scale(1, 0.3); // Flatten to look like 3D ring
 
+        // Enhanced front rings with stronger glow
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 20;
         ctx.beginPath();
         ctx.arc(0, 0, radius * ring.radius, 0, Math.PI); // Front half
-        ctx.strokeStyle = this.hexToRgba(this.glowColor, 0.8);
-        ctx.lineWidth = ring.width;
+        ctx.strokeStyle = this.hexToRgba(this.glowColor, 1.0);
+        ctx.lineWidth = ring.width + 2;
+        ctx.stroke();
+
+        // Inner glow line
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * ring.radius, 0, Math.PI);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = ring.width * 0.5;
         ctx.stroke();
 
         ctx.restore();
       });
+      
+      // Add central void core effect
+      const coreSize = 15 + Math.sin(this.pulseTime * 2) * 5;
+      const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreSize);
+      coreGradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+      coreGradient.addColorStop(0.5, 'rgba(0, 100, 150, 0.8)');
+      coreGradient.addColorStop(1, 'rgba(0, 255, 255, 0.4)');
+      ctx.fillStyle = coreGradient;
+      ctx.beginPath();
+      ctx.arc(x, y, coreSize, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Core ring
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(x, y, coreSize, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
-    // Omega Core Arcs
+    // Omega Core Arcs - Enhanced
     if (this.variant === 3) {
-      this.arcs.forEach((arc) => {
+      // Add massive energy aura
+      const energyGlow = ctx.createRadialGradient(x, y, radius * 0.3, x, y, radius * 2.5);
+      energyGlow.addColorStop(0, 'rgba(255, 255, 0, 0.3)');
+      energyGlow.addColorStop(0.4, 'rgba(255, 150, 0, 0.2)');
+      energyGlow.addColorStop(0.7, 'rgba(255, 0, 0, 0.1)');
+      energyGlow.addColorStop(1, 'rgba(255, 0, 0, 0)');
+      ctx.fillStyle = energyGlow;
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw rotating energy particles
+      for (let i = 0; i < 16; i++) {
+        const angle = (i / 16) * Math.PI * 2 + this.pulseTime * 2;
+        const dist = radius * (1.6 + Math.sin(this.pulseTime * 4 + i * 0.5) * 0.3);
+        const px = x + Math.cos(angle) * dist;
+        const py = y + Math.sin(angle) * dist;
+        const size = 4 + Math.sin(this.pulseTime * 5 + i) * 2;
+        
+        // Alternate colors between red, yellow, and orange
+        const colors = ['rgba(255, 0, 0, 0.9)', 'rgba(255, 255, 0, 0.9)', 'rgba(255, 165, 0, 0.9)'];
+        const colorIndex = i % 3;
+        const selectedColor = colors[colorIndex] ?? colors[0] ?? 'rgba(255, 255, 0, 0.9)';
+        ctx.fillStyle = selectedColor;
+        ctx.shadowColor = selectedColor;
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Inner rotating ring
+      const innerRingCount = 8;
+      for (let i = 0; i < innerRingCount; i++) {
+        const angle = (i / innerRingCount) * Math.PI * 2 - this.pulseTime * 3;
+        const startAngle = angle;
+        const endAngle = angle + Math.PI * 0.3;
+        
+        ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+        ctx.lineWidth = 5;
+        ctx.shadowColor = '#ffff00';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.2, startAngle, endAngle);
+        ctx.stroke();
+      }
+
+      // Enhanced arcs
+      this.arcs.forEach((arc, index) => {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(arc.angle);
 
+        // Main arc with gradient
+        const arcGradient = ctx.createLinearGradient(-radius * arc.radius, 0, radius * arc.radius, 0);
+        arcGradient.addColorStop(0, '#ffff00');
+        arcGradient.addColorStop(0.5, '#ff8800');
+        arcGradient.addColorStop(1, '#ff0000');
+        
         ctx.beginPath();
         ctx.arc(0, 0, radius * arc.radius, 0, arc.length);
-        ctx.strokeStyle = this.accentColor;
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = arcGradient;
+        ctx.lineWidth = 6;
         ctx.lineCap = 'round';
-        ctx.shadowColor = this.glowColor;
+        ctx.shadowColor = index % 2 === 0 ? '#ffff00' : '#ff0000';
+        ctx.shadowBlur = 25;
+        ctx.stroke();
+
+        // Inner bright line
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * arc.radius, 0, arc.length);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 3;
         ctx.shadowBlur = 10;
         ctx.stroke();
         ctx.shadowBlur = 0;
 
         ctx.restore();
       });
+
+      // Central energy core
+      const pulseSize = 20 + Math.sin(this.pulseTime * 4) * 8;
+      const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, pulseSize);
+      coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      coreGradient.addColorStop(0.3, 'rgba(255, 255, 0, 1)');
+      coreGradient.addColorStop(0.6, 'rgba(255, 150, 0, 0.9)');
+      coreGradient.addColorStop(1, 'rgba(255, 0, 0, 0.5)');
+      
+      ctx.fillStyle = coreGradient;
+      ctx.shadowColor = '#ffff00';
+      ctx.shadowBlur = 30;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Energy spikes radiating from core
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + this.pulseTime;
+        const length = radius * 0.4 * (1 + Math.sin(this.pulseTime * 3 + i) * 0.3);
+        const startX = x + Math.cos(angle) * pulseSize;
+        const startY = y + Math.sin(angle) * pulseSize;
+        const endX = x + Math.cos(angle) * length;
+        const endY = y + Math.sin(angle) * length;
+        
+        const spikeGradient = ctx.createLinearGradient(startX, startY, endX, endY);
+        spikeGradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
+        spikeGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        
+        ctx.strokeStyle = spikeGradient;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ffff00';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+      }
     }
 
-    // Omega Core Lightning - Contained within bubble mostly
-    if (this.variant === 3 && Math.random() < 0.1) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = radius * 0.9;
-      ctx.strokeStyle = this.accentColor;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist);
-      ctx.stroke();
+    // Omega Core Lightning - Enhanced and more frequent
+    if (this.variant === 3 && Math.random() < 0.3) {
+      const lightningCount = 2 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < lightningCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = radius * 0.9;
+        const midAngle = angle + (Math.random() - 0.5) * 0.5;
+        const midDist = dist * 0.5;
+        
+        const colors = ['#ffff00', '#ff8800', '#ff0000'];
+        ctx.strokeStyle = colors[Math.floor(Math.random() * colors.length)] || '#ffff00';
+        ctx.lineWidth = 2 + Math.random() * 2;
+        ctx.shadowColor = ctx.strokeStyle;
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(midAngle) * midDist, y + Math.sin(midAngle) * midDist);
+        ctx.lineTo(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
     }
 
     ctx.restore();

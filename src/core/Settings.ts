@@ -1,3 +1,5 @@
+import { PerformanceMode } from '../systems/PerformanceModeManager';
+
 export interface UserSettings {
   soundEnabled: boolean;
   soundtrackEnabled: boolean;
@@ -5,6 +7,10 @@ export interface UserSettings {
   highGraphics: boolean;
   showShipLasers: boolean;
   showDamageNumbers: boolean;
+  lcdFilterEnabled: boolean;
+  performanceMode: PerformanceMode;
+  particleQuality: 'high' | 'medium' | 'low';
+  enableVisualEffects: boolean;
 }
 
 // Partial type for loading from storage
@@ -38,6 +44,10 @@ export class Settings {
           highGraphics: data.highGraphics ?? true,
           showShipLasers: data.showShipLasers ?? true,
           showDamageNumbers: data.showDamageNumbers ?? true,
+          lcdFilterEnabled: data.lcdFilterEnabled ?? true,
+          performanceMode: (data.performanceMode as PerformanceMode | undefined) ?? PerformanceMode.AUTO,
+          particleQuality: data.particleQuality ?? 'high',
+          enableVisualEffects: data.enableVisualEffects ?? true,
         };
       }
     } catch (error) {
@@ -54,6 +64,10 @@ export class Settings {
       highGraphics: true,
       showShipLasers: true,
       showDamageNumbers: true,
+      lcdFilterEnabled: true,
+      performanceMode: PerformanceMode.AUTO,
+      particleQuality: 'high',
+      enableVisualEffects: true,
     };
   }
 }

@@ -10,6 +10,7 @@ export class SettingsModal {
   private graphicsCallback: ((enabled: boolean) => void) | null = null;
   private shipLasersCallback: ((enabled: boolean) => void) | null = null;
   private damageNumbersCallback: ((enabled: boolean) => void) | null = null;
+  private lcdFilterCallback: ((enabled: boolean) => void) | null = null;
   private soundCallback: ((enabled: boolean) => void) | null = null;
   private soundtrackCallback: ((enabled: boolean) => void) | null = null;
   private volumeCallback: ((volume: number) => void) | null = null;
@@ -18,6 +19,7 @@ export class SettingsModal {
   private graphicsToggle: HTMLButtonElement | null = null;
   private shipLasersToggle: HTMLButtonElement | null = null;
   private damageNumbersToggle: HTMLButtonElement | null = null;
+  private lcdFilterToggle: HTMLButtonElement | null = null;
   private soundtrackToggle: HTMLButtonElement | null = null;
   private languageSelect: HTMLSelectElement | null = null;
 
@@ -41,6 +43,10 @@ export class SettingsModal {
 
   setDamageNumbersCallback(callback: (enabled: boolean) => void): void {
     this.damageNumbersCallback = callback;
+  }
+
+  setLCDFilterCallback(callback: (enabled: boolean) => void): void {
+    this.lcdFilterCallback = callback;
   }
 
   setSoundCallback(callback: (enabled: boolean) => void): void {
@@ -67,6 +73,7 @@ export class SettingsModal {
     graphics: boolean,
     shipLasers: boolean,
     damageNumbers: boolean,
+    lcdFilter: boolean,
   ): void {
     if (this.graphicsToggle) {
       this.graphicsToggle.textContent = graphics
@@ -87,6 +94,14 @@ export class SettingsModal {
         ? t('common.on')
         : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = damageNumbers
+        ? '#0088ff'
+        : '#666';
+    }
+    if (this.lcdFilterToggle) {
+      this.lcdFilterToggle.textContent = lcdFilter
+        ? t('common.on')
+        : t('common.off');
+      this.lcdFilterToggle.style.backgroundColor = lcdFilter
         ? '#0088ff'
         : '#666';
     }
@@ -477,6 +492,49 @@ export class SettingsModal {
     damageNumbersHint.style.color = '#888';
     damageNumbersHint.style.marginTop = '5px';
     graphicsSection.appendChild(damageNumbersHint);
+
+    // LCD filter toggle
+    const lcdFilterContainer = document.createElement('div');
+    lcdFilterContainer.style.marginBottom = '10px';
+    lcdFilterContainer.style.marginTop = '15px';
+    lcdFilterContainer.style.display = 'flex';
+    lcdFilterContainer.style.alignItems = 'center';
+    lcdFilterContainer.style.justifyContent = 'space-between';
+
+    const lcdFilterLabel = document.createElement('label');
+    lcdFilterLabel.textContent = 'LCD Filter';
+    lcdFilterLabel.style.fontSize = '16px';
+
+    this.lcdFilterToggle = document.createElement('button');
+    this.lcdFilterToggle.className = 'modal-button';
+    this.lcdFilterToggle.textContent = t('common.on');
+    this.lcdFilterToggle.style.width = '80px';
+    this.lcdFilterToggle.style.backgroundColor = '#4CAF50';
+
+    this.lcdFilterToggle.addEventListener('click', () => {
+      if (!this.lcdFilterToggle) return;
+      const newState = this.lcdFilterToggle.textContent === t('common.off');
+      this.lcdFilterToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
+      this.lcdFilterToggle.style.backgroundColor = newState
+        ? '#0088ff'
+        : '#666';
+      if (this.lcdFilterCallback) {
+        this.lcdFilterCallback(newState);
+      }
+    });
+
+    lcdFilterContainer.appendChild(lcdFilterLabel);
+    lcdFilterContainer.appendChild(this.lcdFilterToggle);
+    graphicsSection.appendChild(lcdFilterContainer);
+
+    const lcdFilterHint = document.createElement('div');
+    lcdFilterHint.textContent = 'Subtle retro LCD monitor effect with pixel grid';
+    lcdFilterHint.style.fontSize = '12px';
+    lcdFilterHint.style.color = '#888';
+    lcdFilterHint.style.marginTop = '5px';
+    graphicsSection.appendChild(lcdFilterHint);
 
     content.appendChild(graphicsSection);
 

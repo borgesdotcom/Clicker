@@ -221,8 +221,13 @@ export class Particle {
 export class ParticleSystem {
   private particlePool: ObjectPool<Particle>;
   private maxParticles = 200;
+  private particleMultiplier = 1.0; // Reduces particle spawn count
 
-  constructor() {
+  constructor(maxParticles?: number) {
+    if (maxParticles !== undefined) {
+      this.maxParticles = maxParticles;
+    }
+    
     this.particlePool = new ObjectPool<Particle>(
       () => new Particle(),
       (particle) => {
@@ -232,6 +237,27 @@ export class ParticleSystem {
       50,
       this.maxParticles,
     );
+  }
+
+  /**
+   * Set maximum particle count (called by performance manager)
+   */
+  setMaxParticles(max: number): void {
+    this.maxParticles = max;
+  }
+
+  /**
+   * Set particle count multiplier (reduces spawned particles)
+   */
+  setParticleMultiplier(multiplier: number): void {
+    this.particleMultiplier = Math.max(0, Math.min(1, multiplier));
+  }
+
+  /**
+   * Get actual particle count after applying multiplier
+   */
+  private getAdjustedParticleCount(requestedCount: number): number {
+    return Math.max(1, Math.floor(requestedCount * this.particleMultiplier));
   }
 
   spawnParticles(config: {
@@ -259,7 +285,10 @@ export class ParticleSystem {
       style = 'classic',
     } = config;
 
-    for (let i = 0; i < count; i++) {
+    // Apply particle multiplier for performance
+    const adjustedCount = this.getAdjustedParticleCount(count);
+    
+    for (let i = 0; i < adjustedCount; i++) {
       const stats = this.particlePool.getStats();
       if (stats.active >= this.maxParticles) {
         break;

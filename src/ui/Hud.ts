@@ -37,7 +37,7 @@ export class Hud {
     this.pointsDisplay = pointsEl;
 
     // Wrap the money text in a span for easier updates
-    const moneyText = pointsEl.textContent || 'Points: 0';
+    const moneyText = pointsEl.textContent || '0';
     pointsEl.textContent = '';
     const moneySpan = document.createElement('span');
     moneySpan.id = 'money-text';
@@ -203,47 +203,28 @@ export class Hud {
   }
 
   private createPowerUpBuffsDisplay(): void {
-    // Create container above XP bar container (not inside it)
+    // Create container
     const gameContainer = document.getElementById('game-container');
     if (!gameContainer) return;
-
-    const levelBarContainer = document.getElementById('level-bar-container');
-    if (!levelBarContainer) return;
 
     const buffsContainer = document.createElement('div');
     buffsContainer.id = 'powerup-buffs-container';
 
-    // Position it absolutely above the level-bar-container
-    // We'll update the position after the container is inserted to get accurate measurements
+    // Position it absolutely at top right
     buffsContainer.style.cssText = `
       display: none;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 8px;
-      justify-content: center;
-      align-items: flex-start;
+      align-items: flex-end;
       position: absolute;
+      top: 120px;
+      right: 20px;
       z-index: 100;
       pointer-events: none;
     `;
 
-    // Insert into game container, right before level-bar-container
-    gameContainer.insertBefore(buffsContainer, levelBarContainer);
-
-    // Update position after DOM insertion to get accurate measurements
-    const updatePosition = () => {
-      const rect = levelBarContainer.getBoundingClientRect();
-      const containerRect = gameContainer.getBoundingClientRect();
-      const bottomOffset = containerRect.bottom - rect.top;
-
-      buffsContainer.style.bottom = `${bottomOffset + 8}px`;
-      buffsContainer.style.left = '50%';
-      buffsContainer.style.transform = 'translateX(-50%)';
-    };
-
-    setTimeout(updatePosition, 0);
-
-    // Update position on window resize
-    window.addEventListener('resize', updatePosition);
+    // Insert into game container
+    gameContainer.appendChild(buffsContainer);
   }
 
   private lastBuffKeys: string[] = [];
@@ -272,15 +253,7 @@ export class Hud {
 
     container.style.display = 'flex';
 
-    // Ensure position is correct (in case of resize)
-    const levelBarContainer = document.getElementById('level-bar-container');
-    const gameContainer = document.getElementById('game-container');
-    if (levelBarContainer && gameContainer) {
-      const rect = levelBarContainer.getBoundingClientRect();
-      const containerRect = gameContainer.getBoundingClientRect();
-      const bottomOffset = containerRect.bottom - rect.top;
-      container.style.bottom = `${bottomOffset + 8}px`;
-    }
+    container.style.display = 'flex';
 
     const POWERUP_ICONS: Record<string, string> = {
       points: IconGenerator.getUpgradeIcon('powerup_points'),
@@ -301,7 +274,7 @@ export class Hud {
     };
 
     const POWERUP_NAMES: Record<string, string> = {
-      points: 'Points',
+      points: 'Moonies',
       damage: 'Damage',
       speed: 'Speed',
       multishot: 'Multi',
@@ -469,7 +442,12 @@ export class Hud {
   }
 
   update(points: number): void {
-    const newText = `$ ${NumberFormatter.format(points)}`;
+    //make the symbol font size smaller
+    const symbol = document.getElementById('money-text');
+    if (symbol) {
+      symbol.style.fontSize = '50px';
+    }
+    const newText = `നoonies: ${NumberFormatter.format(points)}`;
     if (newText !== this.lastPointsText) {
       // Update only the money text span
       const moneySpan = document.getElementById('money-text');
@@ -605,57 +583,52 @@ export class Hud {
         <span style="color: #ff4444;">⚔️ Combat:</span>
         <span style="float: right; color: #ff8888;">${NumberFormatter.format(dps)}/s (${dpsPercent.toFixed(1)}%)</span>
       </div>
-      ${
-        killRewards > 0
-          ? `
+      ${killRewards > 0
+        ? `
       <div style="margin-bottom: 3px;">
         <span style="color: #ffaa00;">💥 Kills:</span>
         <span style="float: right; color: #ffcc88;">${NumberFormatter.format(killRewards)}/s (${killPercent.toFixed(1)}%)</span>
       </div>
       `
-          : ''
+        : ''
       }
-      ${
-        hasCombatStats
-          ? `
+      ${hasCombatStats
+        ? `
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.2);">
         <div style="margin-bottom: 3px;">
           <span style="color: #ffffff;">DPS:</span>
           <span style="float: right; color: #ffffff;">${NumberFormatter.format(dps)}</span>
         </div>
-        ${
-          hitDamage !== undefined && hitDamage !== null
-            ? `
+        ${hitDamage !== undefined && hitDamage !== null
+          ? `
         <div style="margin-bottom: 3px;">
           <span style="color: #ffffff;">Hit Damage:</span>
           <span style="float: right; color: #ffffff;">${NumberFormatter.format(hitDamage)}</span>
         </div>
         `
-            : ''
+          : ''
         }
-        ${
-          attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0
-            ? `
+        ${attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0
+          ? `
         <div style="margin-bottom: 3px;">
           <span style="color: #ffffff;">Attack Speed:</span>
           <span style="float: right; color: #ffffff;">${attackSpeed.toFixed(2)} shots/sec</span>
         </div>
         `
-            : ''
+          : ''
         }
-        ${
-          critChance !== undefined && critChance !== null
-            ? `
+        ${critChance !== undefined && critChance !== null
+          ? `
         <div>
           <span style="color: #ffffff;">Critical Chance:</span>
           <span style="float: right; color: #ffffff;">${critChance.toFixed(1)}%</span>
         </div>
         `
-            : ''
+          : ''
         }
       </div>
       `
-          : ''
+        : ''
       }
     `;
   }

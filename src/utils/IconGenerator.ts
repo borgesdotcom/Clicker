@@ -1,4 +1,5 @@
 import { PixelGrid } from '@/render/UpgradeSprites';
+import { getPowerUpSprite } from '@/render/AlienSprites';
 
 /**
  * Icon Generator - Creates SVG icons to replace emojis
@@ -119,14 +120,23 @@ export class IconGenerator {
       click_multiplier: this.createSparkleIcon(),
       super_clicker: this.createPowerIcon(),
       // Powerup icons
-      powerup_points: this.createMoneyIcon(),
-      powerup_damage: this.createSwordIcon(),
-      powerup_speed: this.createLightningIcon(),
-      powerup_multishot: this.createSparkleIcon(),
-      powerup_critical: this.createExplosionIcon(),
+      powerup_points: this.createPowerUpIcon('points', '#00ff88'),
+      powerup_damage: this.createPowerUpIcon('damage', '#ff4444'),
+      powerup_speed: this.createPowerUpIcon('speed', '#ffff00'),
+      powerup_multishot: this.createPowerUpIcon('multishot', '#ff00ff'),
+      powerup_critical: this.createPowerUpIcon('critical', '#ff8800'),
     };
 
     return iconMap[upgradeId] || this.createStarIcon();
+  }
+
+  /**
+   * Create an image tag for a powerup pixel sprite
+   */
+  private static createPowerUpIcon(type: string, color: string): string {
+    const sprite = getPowerUpSprite(type);
+    const url = generateIconUrl(sprite, color, 64);
+    return `<img src="${url}" style="width: 100%; height: 100%; image-rendering: pixelated; display: block;">`;
   }
 
   /**
@@ -552,8 +562,9 @@ export class IconGenerator {
     );
   }
 
-  // Money icon (for powerup_points)
-  private static createMoneyIcon(): string {
+  // Money icon (for powerup_points) - Reserved for future use
+  // @ts-expect-error - Unused but kept for future use
+  private static _createMoneyIcon(): string {
     return this.createSVG(
       '0 0 24 24',
       `<circle cx="12" cy="12" r="8" fill="#ffcc00" stroke="#ff9900" stroke-width="1.5"/>
@@ -562,8 +573,9 @@ export class IconGenerator {
     );
   }
 
-  // Sword icon (for powerup_damage)
-  private static createSwordIcon(): string {
+  // Sword icon (for powerup_damage) - Reserved for future use
+  // @ts-expect-error - Unused but kept for future use
+  private static _createSwordIcon(): string {
     return this.createSVG(
       '0 0 24 24',
       `<path d="M12 2L14 6L12 10L10 6L12 2Z" fill="#ff4444" stroke="#cc0000" stroke-width="1"/>
@@ -573,8 +585,9 @@ export class IconGenerator {
     );
   }
 
-  // Lightning icon (for powerup_speed)
-  private static createLightningIcon(): string {
+  // Lightning icon (for powerup_speed) - Reserved for future use
+  // @ts-expect-error - Unused but kept for future use
+  private static _createLightningIcon(): string {
     return this.createSVG(
       '0 0 24 24',
       `<path d="M13 2L5 14H11L10 22L19 10H13L14 2H13Z" fill="#ffff00" stroke="#ffcc00" stroke-width="1.5" stroke-linejoin="round"/>`,

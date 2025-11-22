@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlienBall } from './entities/AlienBall';
-import { EnhancedAlienBall, selectEnemyType } from './entities/EnemyTypes';
+import { EnhancedAlienBall, selectEnemyType, type EnemyType } from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
 import { getPixelHitPoint } from './utils/Raycast';
 import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
 import { Draw } from './render/Draw';
 import { Background } from './render/Background';
+import { CRTFilter } from './render/CRTFilter';
+import { BossEffectFilter } from './render/BossEffectFilter';
+import { LCDFilter } from './render/LCDFilter';
 import type { WebGLRenderer } from './render/WebGLRenderer';
 import { Loop } from './core/Loop';
 import { Input } from './core/Input';
@@ -39,7 +42,6 @@ import { VersionSplash } from './ui/VersionSplash';
 import { CreditsModal } from './ui/CreditsModal';
 import { GameInfoModal } from './ui/GameInfoModal';
 import { ThankYouModal } from './ui/ThankYouModal';
-import { StartScreen } from './ui/StartScreen';
 import { TutorialSystem } from './systems/TutorialSystem';
 import { PerformanceMonitor } from './ui/PerformanceMonitor';
 import { ColorManager } from './math/ColorManager';
@@ -48,6 +50,7 @@ import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
 import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
 import { NumberFormatter } from './utils/NumberFormatter';
+import { PerformanceModeManager } from './systems/PerformanceModeManager';
 import type { Vec2, GameMode, ThemeCategory } from './types';
 import type { UserSettings } from './core/Settings';
 
@@ -55,6 +58,9 @@ export class Game {
   private canvas: Canvas;
   private draw: Draw;
   private background: Background;
+  private crtFilter: CRTFilter;
+  private bossEffectFilter: BossEffectFilter;
+  private lcdFilter: LCDFilter;
   private loop: Loop;
   private input: Input;
   private store: Store;
@@ -87,9 +93,9 @@ export class Game {
   private notificationSystem: NotificationSystem;
   private hud: Hud;
   private shop: Shop;
-  private startScreen: StartScreen;
   private tutorialSystem: TutorialSystem;
   private customizationSystem: VisualCustomizationSystem;
+  private performanceModeManager: PerformanceModeManager;
   private saveTimer = 0;
   private saveInterval = 3;
   private autoBuyTimer = 0;
@@ -186,13 +192,13 @@ export class Game {
     hitDirection?: Vec2;
     isBeam: boolean;
   } = {
-    damage: 0,
-    isCrit: false,
-    isFromShip: false,
-    clickDamage: 0,
-    hitDirection: undefined,
-    isBeam: false,
-  };
+      damage: 0,
+      isCrit: false,
+      isFromShip: false,
+      clickDamage: 0,
+      hitDirection: undefined,
+      isBeam: false,
+    };
   private batchTimer = 0;
   private batchInterval = 0.05; // Apply damage every 50ms
 
@@ -227,13 +233,40 @@ export class Game {
     // Load user settings
     this.userSettings = Settings.load();
 
+    // Initialize Performance Mode Manager
+    this.performanceModeManager = new PerformanceModeManager();
+    this.performanceModeManager.setMode(this.userSettings.performanceMode);
+    console.log('[Game] Performance mode:', this.performanceModeManager.getCurrentMode());
+    console.log('[Game] Performance settings:', this.performanceModeManager.getSettings());
+
+    // Initialize CRT filter (for future creepypasta/horror effects)
+    // NOTE: This creates a distorted, glitchy screen effect with barrel distortion,
+    // scanlines, and noise. Perfect for horror moments or glitch sequences.
+    // To enable programmatically: this.crtFilter.enable()
+    // To disable: this.crtFilter.disable()
+    this.crtFilter = new CRTFilter();
+
+    // Initialize Boss Effect filter (for boss-specific visual effects)
+    // Each boss variant gets a unique WebGL-style effect that matches their vibe
+    this.bossEffectFilter = new BossEffectFilter();
+
+    // Initialize LCD filter (subtle retro monitor effect)
+    // Gives the game a smooth LCD/monitor look with subtle pixel grid
+    this.lcdFilter = new LCDFilter();
+    // Will be enabled based on user settings later in initialization
+
     // Handle window resize to reposition game elements
     window.addEventListener('resize', () => {
       this.handleResize();
     });
     this.upgradeSystem = new UpgradeSystem();
     this.laserSystem = new LaserSystem();
-    this.particleSystem = new ParticleSystem();
+    
+    // Initialize particle system with performance settings
+    const perfSettings = this.performanceModeManager.getSettings();
+    this.particleSystem = new ParticleSystem(perfSettings.maxParticles);
+    this.particleSystem.setParticleMultiplier(perfSettings.particleMultiplier);
+    
     this.damageNumberSystem = new DamageNumberSystem();
     this.comboSystem = new ComboSystem();
     this.soundManager = new SoundManager();
@@ -368,6 +401,9 @@ export class Game {
       (rarity?: 'common' | 'rare' | 'epic' | 'legendary') => {
         this.debugGenerateArtifact(rarity);
       },
+      (type: EnemyType) => {
+        this.debugSpawnAlien(type);
+      },
     );
 
     new VersionSplash();
@@ -393,6 +429,15 @@ export class Game {
       }
       Settings.save(this.userSettings);
     });
+    this.settingsModal.setLCDFilterCallback((enabled: boolean) => {
+      this.userSettings.lcdFilterEnabled = enabled;
+      if (enabled) {
+        this.lcdFilter.enable();
+      } else {
+        this.lcdFilter.disable();
+      }
+      Settings.save(this.userSettings);
+    });
     this.settingsModal.setSoundCallback((enabled: boolean) => {
       this.userSettings.soundEnabled = enabled;
       Settings.save(this.userSettings);
@@ -409,10 +454,17 @@ export class Game {
     // Apply loaded settings
     this.laserSystem.setShowShipLasers(this.userSettings.showShipLasers);
     this.damageNumberSystem.setEnabled(this.userSettings.showDamageNumbers);
+    // Apply LCD filter setting
+    if (this.userSettings.lcdFilterEnabled) {
+      this.lcdFilter.enable();
+    } else {
+      this.lcdFilter.disable();
+    }
     this.settingsModal.updateGraphicsToggles(
       this.userSettings.highGraphics,
       this.userSettings.showShipLasers,
       this.userSettings.showDamageNumbers,
+      this.userSettings.lcdFilterEnabled,
     );
     // Setup stats panel button
     const statsBtn = document.getElementById('stats-btn');
@@ -524,10 +576,6 @@ export class Game {
       this.resetGame();
     });
     this.settingsModal.setCreditsModal(this.creditsModal);
-
-    this.startScreen = new StartScreen(() => {
-      this.onStartGame();
-    });
 
     this.tutorialSystem = new TutorialSystem(this.store);
   }
@@ -696,6 +744,8 @@ export class Game {
 
     // Clean up boss battle state first
     this.hideBossTimer();
+    // Disable boss effect immediately when timeout occurs
+    this.bossEffectFilter.disable(0.5);
     // Switch back to normal soundtrack
     this.soundManager.stopBossSoundtrack();
     // Pause combo to preserve it during transition back to normal (unless combo pause skill is active)
@@ -767,13 +817,7 @@ export class Game {
   }
 
   start(): void {
-    // Only show start screen on first load (no existing save data)
-    if (!Save.hasSaveData()) {
-      this.startScreen.show();
-    } else {
-      // Skip start screen and directly start the game
-      this.onStartGame();
-    }
+    this.onStartGame();
   }
 
   private onStartGame(): void {
@@ -1332,7 +1376,7 @@ export class Game {
     // Get the background GIF from the imported images
     const backgroundGifUrl =
       images.backgroundGifs[
-        backgroundIndex as keyof typeof images.backgroundGifs
+      backgroundIndex as keyof typeof images.backgroundGifs
       ] || images.backgroundGif;
     const backgroundUrl = `url("${backgroundGifUrl}")`;
 
@@ -2945,6 +2989,18 @@ export class Game {
     // Reset timeout flag
     this.bossTimeoutHandled = false;
 
+    // Determine boss variant for the upcoming boss
+    const state = this.store.getState();
+    let bossVariant: 0 | 1 | 2 | 3 = 0;
+    if (state.level >= 25) {
+      const bossIndex = Math.floor((state.level - 25) / 25);
+      bossVariant = (bossIndex % 4) as 0 | 1 | 2 | 3;
+    }
+
+    // Enable boss effect with smooth fade-in during transition
+    // Effect starts fading in during the transition and reaches full intensity when boss appears
+    this.bossEffectFilter.enable(bossVariant, this.transitionDuration * 0.5);
+
     setTimeout(() => {
       if (this.mode === 'transition') {
         this.createBoss();
@@ -2964,6 +3020,9 @@ export class Game {
     this.mode = 'transition';
     this.transitionTime = 0;
     this.bossBall = null;
+
+    // Disable boss effect with smooth fade-out during transition
+    this.bossEffectFilter.disable(this.transitionDuration * 0.5);
 
     // Cleanup systems for memory management
     this.cleanup();
@@ -3789,6 +3848,21 @@ export class Game {
     this.artifactsModal.refresh();
   }
 
+  private debugSpawnAlien(type: EnemyType): void {
+    // Clear current alien if any
+    if (this.ball) {
+      this.ball = null;
+    }
+
+    // Create new alien of specified type
+    const state = this.store.getState();
+    const cx = this.canvas.getCenterX();
+    const cy = this.canvas.getCenterY();
+    const radius = Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.08;
+    
+    this.ball = new EnhancedAlienBall(cx, cy, radius, state.level, type);
+  }
+
   private setGameSpeed(speed: number): void {
     this.gameSpeed = speed;
   }
@@ -4308,8 +4382,8 @@ export class Game {
       : 0;
     const bossEventText = lastHistoryEntry
       ? `${lastHistoryEntry.detail} (${this.formatDuration(
-          secondsSinceBossEvent,
-        )} ago)`
+        secondsSinceBossEvent,
+      )} ago)`
       : 'No boss activity yet';
     const nextRetryText =
       agent.bossRetryTimer > 0
@@ -4383,9 +4457,8 @@ export class Game {
 
     const bossLogEl = overlay.querySelector('[data-metric="boss-log"]');
     if (bossLogEl) {
-      bossLogEl.textContent = `Boss log: ${
-        metrics.bossLogText ? metrics.bossLogText : '—'
-      }`;
+      bossLogEl.textContent = `Boss log: ${metrics.bossLogText ? metrics.bossLogText : '—'
+        }`;
     }
 
     const formatValue = (value: number, fractionDigits = 1): string => {
@@ -4430,9 +4503,8 @@ export class Game {
 
     const actionEl = overlay.querySelector('[data-metric="last-action"]');
     if (actionEl) {
-      actionEl.textContent = `Last action: ${
-        metrics.lastAction ? metrics.lastAction : '—'
-      }`;
+      actionEl.textContent = `Last action: ${metrics.lastAction ? metrics.lastAction : '—'
+        }`;
     }
   }
 
@@ -4522,6 +4594,7 @@ export class Game {
   private handleResize(): void {
     this.background.resize(this.canvas.getWidth(), this.canvas.getHeight());
     this.powerUpSystem.resize(this.canvas.getWidth(), this.canvas.getHeight());
+    this.crtFilter.resize();
 
     if (this.ball) {
       this.ball.x = this.canvas.getCenterX();

@@ -180,7 +180,7 @@ export class PowerUpSystem {
       if (drawer) {
         // console.log('Rendering powerup with pixel sprite', powerUp.type);
         const sprite = getPowerUpSprite(powerUp.type);
-        const size = powerUp.radius * 3.5 * pulse; // Increased size for visibility
+        const size = powerUp.radius * 2 * pulse; // Reduced size for better visibility
 
         // Add a glow effect behind the sprite
         ctx.save();

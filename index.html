@@ -1,115 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>BOBBLE</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content="Pop bubblewrap aliens in a fake invasion! BOBBLE - The most satisfying bubblewrap popper game in the galaxy!" />
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div id="app">
-      <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        <div id="hud">
-          <div id="points-display">Points: 0</div>
-          <button id="mobile-menu-toggle" class="mobile-menu-toggle" style="display: none;">☰</button>
-          <div id="hud-buttons-container">
-            <button id="achievements-btn" class="hud-button" aria-label="Open Achievements (Press H)"><img src="/src/icons/menu/achievements.png" alt="Achievements" /></button>
-            <button id="stats-btn" class="hud-button" aria-label="Open Statistics"><img src="/src/icons/menu/statistic.png" alt="Statistics" /></button>
-            <button id="settings-btn" class="hud-button" aria-label="Open Settings (Press S)"><img src="/src/icons/menu/settings.png" alt="Settings" /></button>
-          </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>BOBBLE</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="description"
+    content="Pop bubblewrap aliens in a fake invasion! BOBBLE - The most satisfying bubblewrap popper game in the galaxy!" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="game-container">
+      <canvas id="game-canvas"></canvas>
+      <div id="hud">
+        <div id="points-display">🌙 Moonies: 0</div>
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" style="display: none;">☰</button>
+        <div id="hud-buttons-container">
+          <button id="achievements-btn" class="hud-button" aria-label="Open Achievements (Press H)"><img
+              src="/src/icons/menu/achievements.png" alt="Achievements" /></button>
+          <button id="stats-btn" class="hud-button" aria-label="Open Statistics"><img
+              src="/src/icons/menu/statistic.png" alt="Statistics" /></button>
+          <button id="settings-btn" class="hud-button" aria-label="Open Settings (Press S)"><img
+              src="/src/icons/menu/settings.png" alt="Settings" /></button>
         </div>
-        <div id="mobile-menu" class="mobile-menu" style="display: none;">
-          <button id="mobile-menu-close" class="mobile-menu-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
-          <div class="mobile-menu-content"></div>
+      </div>
+      <div id="mobile-menu" class="mobile-menu" style="display: none;">
+        <button id="mobile-menu-close" class="mobile-menu-close"><img src="/src/icons/menu/close.png"
+            alt="Close" /></button>
+        <div class="mobile-menu-content"></div>
+      </div>
+      <div id="level-bar-container">
+        <div id="level-info">
+          <span id="level-text">Level 1</span>
+          <span id="exp-text">0 / 100</span>
         </div>
-        <div id="level-bar-container">
-          <div id="level-info">
-            <span id="level-text">Level 1</span>
-            <span id="exp-text">0 / 100</span>
-          </div>
-          <div id="level-bar-bg">
-            <div id="level-bar-fill"></div>
-          </div>
+        <div id="level-bar-bg">
+          <div id="level-bar-fill"></div>
         </div>
-        <div id="boss-dialog" style="display: none;">
-          <div class="boss-dialog-backdrop"></div>
-          <div class="boss-dialog-content">
-            <div class="boss-dialog-header">
-              <div class="boss-icon">👾</div>
-              <h2 class="boss-title">BOSS ENCOUNTER</h2>
-              <div class="boss-subtitle">Alien Threat Detected</div>
-            </div>
-            <div class="boss-dialog-body">
-              <p class="boss-warning">
-                <span class="warning-icon">⚠️</span>
-                A massive alien entity blocks your progress!
-              </p>
-              <div class="boss-stats">
-                <div class="boss-stat-item">
-                  <span class="stat-label">Threat Level</span>
-                  <span class="stat-value danger">EXTREME</span>
-                </div>
-                <div class="boss-stat-item">
-                  <span class="stat-label">Size</span>
-                  <span class="stat-value">3x Normal</span>
-                </div>
-                <div class="boss-stat-item">
-                  <span class="stat-label">Time Limit</span>
-                  <span class="stat-value timer-value" id="boss-dialog-timer"><span>30</span>s</span>
-                </div>
+      </div>
+      <div id="boss-dialog" style="display: none;">
+        <div class="boss-dialog-backdrop"></div>
+        <div class="boss-dialog-content">
+          <div class="boss-dialog-header">
+            <div class="boss-icon">👾</div>
+            <h2 class="boss-title">BOSS ENCOUNTER</h2>
+            <div class="boss-subtitle">Alien Threat Detected</div>
+          </div>
+          <div class="boss-dialog-body">
+            <p class="boss-warning">
+              <span class="warning-icon">⚠️</span>
+              A massive alien entity blocks your progress!
+            </p>
+            <div class="boss-stats">
+              <div class="boss-stat-item">
+                <span class="stat-label">Threat Level</span>
+                <span class="stat-value danger">EXTREME</span>
               </div>
-              <p class="boss-ready">
-                <span class="ready-icon">⚔️</span>
-                You cannot level up until this boss is defeated!
-              </p>
+              <div class="boss-stat-item">
+                <span class="stat-label">Size</span>
+                <span class="stat-value">3x Normal</span>
+              </div>
+              <div class="boss-stat-item">
+                <span class="stat-label">Time Limit</span>
+                <span class="stat-value timer-value" id="boss-dialog-timer"><span>30</span>s</span>
+              </div>
             </div>
-            <div class="boss-dialog-buttons">
-              <button id="boss-start-btn" class="boss-btn boss-btn-start" aria-label="Start Boss Fight">
-                <span class="btn-text">ENGAGE BOSS</span>
-                <span class="btn-glow"></span>
-              </button>
-            </div>
+            <p class="boss-ready">
+              <span class="ready-icon">⚔️</span>
+              You cannot level up until this boss is defeated!
+            </p>
           </div>
-        </div>
-        <div id="boss-timeout-modal" style="display: none;">
-          <div class="boss-timeout-backdrop"></div>
-          <div class="boss-timeout-content">
-            <div class="timeout-icon">⏱️</div>
-            <h2 class="timeout-title">TIME'S UP!</h2>
-            <p class="timeout-message">The boss escaped!</p>
-            <p class="timeout-submessage">You must defeat it to progress.</p>
-            <button id="boss-timeout-close" class="boss-btn boss-btn-close">UNDERSTOOD</button>
-          </div>
-        </div>
-        <div id="boss-timer-hud" style="display: none;">
-          <div class="boss-timer-content">
-            <div class="boss-timer-bar-bg">
-              <div class="boss-timer-bar-fill" id="boss-timer-bar"></div>
-            </div>
-            <div class="boss-timer-text" id="boss-timer-text">TIME: 30s</div>
+          <div class="boss-dialog-buttons">
+            <button id="boss-start-btn" class="boss-btn boss-btn-start" aria-label="Start Boss Fight">
+              <span class="btn-text">ENGAGE BOSS</span>
+              <span class="btn-glow"></span>
+            </button>
           </div>
         </div>
       </div>
-      <button id="mobile-shop-toggle" class="mobile-shop-toggle" style="display: none;">
-        🛒 Shop
-      </button>
-      <div id="shop-panel">
-        <button id="mobile-shop-close" class="mobile-shop-close" style="display: none;"><img src="/src/icons/menu/close.png" alt="Close" /></button>
-        <button id="desktop-shop-toggle" class="desktop-shop-toggle"><img src="/src/icons/menu/left.png" alt="Toggle Shop" /></button>
-        <h2>UPGRADES</h2>
-        <div id="shop-tabs">
-          <button id="tab-available" class="shop-tab active" aria-label="Show Available Upgrades">Available</button>
-          <button id="tab-owned" class="shop-tab" aria-label="Show Owned Upgrades">Owned</button>
+      <div id="boss-timeout-modal" style="display: none;">
+        <div class="boss-timeout-backdrop"></div>
+        <div class="boss-timeout-content">
+          <div class="timeout-icon">⏱️</div>
+          <h2 class="timeout-title">TIME'S UP!</h2>
+          <p class="timeout-message">The boss escaped!</p>
+          <p class="timeout-submessage">You must defeat it to progress.</p>
+          <button id="boss-timeout-close" class="boss-btn boss-btn-close">UNDERSTOOD</button>
         </div>
-        <div id="shop-content"></div>
+      </div>
+      <div id="boss-timer-hud" style="display: none;">
+        <div class="boss-timer-content">
+          <div class="boss-timer-bar-bg">
+            <div class="boss-timer-bar-fill" id="boss-timer-bar"></div>
+          </div>
+          <div class="boss-timer-text" id="boss-timer-text">TIME: 30s</div>
+        </div>
       </div>
     </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
-</html>
+    <button id="mobile-shop-toggle" class="mobile-shop-toggle" style="display: none;">
+      🛒 Shop
+    </button>
+    <div id="shop-panel">
+      <button id="mobile-shop-close" class="mobile-shop-close" style="display: none;"><img
+          src="/src/icons/menu/close.png" alt="Close" /></button>
+      <button id="desktop-shop-toggle" class="desktop-shop-toggle"><img src="/src/icons/menu/left.png"
+          alt="Toggle Shop" /></button>
+      <h2>UPGRADES</h2>
+      <div id="shop-tabs">
+        <button id="tab-available" class="shop-tab active" aria-label="Show Available Upgrades">Available</button>
+        <button id="tab-owned" class="shop-tab" aria-label="Show Owned Upgrades">Owned</button>
+      </div>
+      <div id="shop-content"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
 
+</html>

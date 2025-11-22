@@ -172,6 +172,51 @@ export const POWERUP_SPRITE_CRITICAL: PixelGrid = [
   [0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0],
 ];
 
+export const ALIEN_SPRITE_VOID_WALKER: PixelGrid = [
+  // Dark, glitchy bubble
+  [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+  [0, 0, 1, 2, 2, 1, 1, 1, 1, 0, 0],
+  [0, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+  [1, 1, 4, 0, 1, 1, 1, 0, 4, 1, 1],
+  [1, 1, 4, 0, 1, 1, 1, 0, 4, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 0],
+  [0, 0, 1, 2, 0, 2, 0, 2, 1, 0, 0],
+  [0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+];
+
+export const ALIEN_SPRITE_PLASMA_BORN: PixelGrid = [
+  // Energy core with electric aura
+  [0, 0, 0, 3, 0, 4, 0, 3, 0, 0, 0],
+  [0, 0, 3, 1, 1, 4, 1, 1, 3, 0, 0],
+  [0, 3, 1, 1, 1, 4, 1, 1, 1, 3, 0],
+  [3, 1, 1, 4, 4, 4, 4, 4, 1, 1, 3],
+  [0, 1, 1, 4, 4, 4, 4, 4, 1, 1, 0],
+  [4, 4, 4, 4, 4, 2, 4, 4, 4, 4, 4],
+  [0, 1, 1, 4, 4, 4, 4, 4, 1, 1, 0],
+  [3, 1, 1, 4, 4, 4, 4, 4, 1, 1, 3],
+  [0, 3, 1, 1, 1, 4, 1, 1, 1, 3, 0],
+  [0, 0, 3, 1, 1, 4, 1, 1, 3, 0, 0],
+  [0, 0, 0, 3, 0, 4, 0, 3, 0, 0, 0],
+];
+
+export const ALIEN_SPRITE_NEBULA_JELLY: PixelGrid = [
+  // Soft, glowing bubble
+  [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+  [0, 0, 1, 3, 3, 3, 3, 3, 1, 0, 0],
+  [0, 1, 3, 1, 1, 1, 1, 1, 3, 1, 0],
+  [1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1],
+  [1, 3, 1, 4, 4, 1, 4, 4, 1, 3, 1],
+  [1, 3, 1, 4, 4, 1, 4, 4, 1, 3, 1],
+  [1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1],
+  [0, 1, 3, 1, 2, 2, 2, 1, 3, 1, 0],
+  [0, 0, 1, 3, 2, 2, 2, 3, 1, 0, 0],
+  [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+];
+
 export function getSpriteForType(type: string): PixelGrid {
   switch (type) {
     case 'scout':
@@ -184,6 +229,12 @@ export function getSpriteForType(type: string): PixelGrid {
       return ALIEN_SPRITE_GUARDIAN;
     case 'hoarder':
       return ALIEN_SPRITE_HOARDER;
+    case 'void_walker':
+      return ALIEN_SPRITE_VOID_WALKER;
+    case 'plasma_born':
+      return ALIEN_SPRITE_PLASMA_BORN;
+    case 'nebula_jelly':
+      return ALIEN_SPRITE_NEBULA_JELLY;
     default:
       return ALIEN_SPRITE_NORMAL;
   }
