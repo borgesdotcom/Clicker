@@ -7,6 +7,11 @@ interface Meteorite {
   rotationSpeed: number;
   size: number;
   active: boolean;
+  clickable: boolean; // Whether this meteor can be clicked
+  clicking: boolean; // Animation state when clicked
+  clickTime: number; // Time since click for animation
+  clicks: number; // Current clicks received
+  maxClicks: number; // Clicks required to destroy
 }
 
 export class Background {
@@ -86,6 +91,15 @@ export class Background {
       meteorite.y += meteorite.vy * dt;
       meteorite.rotation += meteorite.rotationSpeed * dt;
 
+      // Update click animation
+      if (meteorite.clicking) {
+        meteorite.clickTime += dt;
+        // Deactivate after animation completes (0.3 seconds)
+        if (meteorite.clickTime >= 0.3) {
+          meteorite.active = false;
+        }
+      }
+
       // Remove if off screen
       if (
         meteorite.x < -200 ||
@@ -147,13 +161,63 @@ export class Background {
       rotationSpeed: (Math.random() - 0.5) * 2, // Random rotation speed
       size: Math.random() * 80 + 40, // Size between 40-120px for more variety
       active: true,
+      clickable: true,
+      clicking: false,
+      clickTime: 0,
+      clicks: 0,
+      maxClicks: 3, // Require 3 clicks to destroy
     });
   }
 
-  public render(ctx: CanvasRenderingContext2D): void {
+  /**
+   * Check if a click hits a meteorite
+   * Returns the meteorite if hit, null otherwise
+   */
+  public checkMeteoriteClick(x: number, y: number): Meteorite | null {
+    for (const meteorite of this.meteorites) {
+      if (!meteorite.active || !meteorite.clickable || meteorite.clicking) continue;
+
+      const dx = meteorite.x - x;
+      const dy = meteorite.y - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const hitRadius = meteorite.size / 2;
+
+      if (distance <= hitRadius) {
+        return meteorite;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Mark a meteorite as clicked and start destruction animation
+   * Returns true if destroyed, false if just damaged
+   */
+  public clickMeteorite(meteorite: Meteorite): boolean {
+    meteorite.clicks++;
+
+    if (meteorite.clicks >= meteorite.maxClicks) {
+      meteorite.clicking = true;
+      meteorite.clickable = false;
+      meteorite.clickTime = 0;
+      return true;
+    } else {
+      // Visual feedback for non-fatal click (shake/flash)
+      // We can implement a simple shake by adding a small offset or rotation bump
+      meteorite.rotationSpeed += 5; // Spin faster when hit
+      return false;
+    }
+  }
+
+  public render(ctx: CanvasRenderingContext2D, highGraphics: boolean = true): void {
     // Background is now handled by CSS background-image on #game-container
     // which properly animates GIFs. Canvas is transparent so the GIF shows through.
     // Render meteorites as overlay effect
+
+    // Skip meteorites if low graphics mode enabled
+    if (!highGraphics) {
+      return;
+    }
 
     // Render meteorites
     if (this.meteoriteImageLoaded && this.meteoriteImage) {
@@ -170,15 +234,28 @@ export class Background {
         ctx.imageSmoothingEnabled = false;
         ctx.imageSmoothingQuality = 'low';
 
+        // Click animation: shrink and fade out
+        let scale = 1;
+        let alpha = 0.7;
+        if (meteorite.clicking) {
+          const progress = meteorite.clickTime / 0.3; // 0.3 second animation
+          scale = 1 - progress * 0.5; // Shrink to 50%
+          alpha = (1 - progress) * 0.7; // Fade out
+
+          // Add explosion glow
+          ctx.shadowBlur = 30 * (1 - progress);
+          ctx.shadowColor = '#ff8800';
+        }
+
         // Draw meteorite with opacity for depth effect
-        ctx.globalAlpha = 0.7;
-        const halfSize = meteorite.size / 2;
+        ctx.globalAlpha = alpha;
+        const halfSize = (meteorite.size * scale) / 2;
         ctx.drawImage(
           this.meteoriteImage,
           -halfSize,
           -halfSize,
-          meteorite.size,
-          meteorite.size,
+          meteorite.size * scale,
+          meteorite.size * scale,
         );
 
         ctx.restore();

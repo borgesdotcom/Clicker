@@ -32,6 +32,8 @@
     "shipLasersHint": "Disable to reduce lag (only your clicks will fire lasers)",
     "damageNumbers": "Damage Numbers:",
     "damageNumbersHint": "Disable to improve performance (damage still applies)",
+    "screenShake": "Screen Shake:",
+    "screenShakeHint": "Disable to prevent motion sickness",
     "language": "Language:",
     "languageHint": "Change the game language"
   },

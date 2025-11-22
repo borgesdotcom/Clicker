@@ -264,10 +264,11 @@ export class EnhancedAlienBall extends AlienBall {
 
   public override update(
     dt: number,
+    hasUniversalTranslator: boolean = false,
     _canvasWidth?: number,
     _canvasHeight?: number,
   ): void {
-    super.update(dt);
+    super.update(dt, hasUniversalTranslator);
 
     // Update animation time for all enemy types (inherited from parent)
     this.animationTime += dt;
@@ -944,7 +945,7 @@ export class EnhancedAlienBall extends AlienBall {
     // Pulsing outer glow
     const pulse = Math.sin(time * 2.5) * 0.15 + 1;
     const glowGradient = ctx.createRadialGradient(
-      x, y, 0, 
+      x, y, 0,
       x, y, radius * 1.5 * pulse
     );
     glowGradient.addColorStop(0, 'rgba(0, 255, 255, 0.25)');
@@ -995,16 +996,16 @@ export class EnhancedAlienBall extends AlienBall {
     const sparkCount = 4;
     for (let i = 0; i < sparkCount; i++) {
       if (Math.random() > 0.6) continue; // Flicker
-      
+
       const angle = (i / sparkCount) * Math.PI * 2 + time;
       const startDist = radius * 0.3;
       const endDist = radius * 1.1;
-      
+
       const startX = x + Math.cos(angle) * startDist;
       const startY = y + Math.sin(angle) * startDist;
       const endX = x + Math.cos(angle) * endDist + (Math.random() - 0.5) * 8;
       const endY = y + Math.sin(angle) * endDist + (Math.random() - 0.5) * 8;
-      
+
       ctx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
       ctx.lineWidth = 1.5;
       ctx.shadowColor = '#00ffff';
@@ -1030,7 +1031,7 @@ export class EnhancedAlienBall extends AlienBall {
     ctx.beginPath();
     ctx.arc(x, y, radius * 0.6, 0, Math.PI * 2);
     ctx.fill();
-    
+
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -1067,7 +1068,7 @@ export class EnhancedAlienBall extends AlienBall {
       const cloudX = x + Math.cos(angle) * cloudDist;
       const cloudY = y + Math.sin(angle) * cloudDist;
       const cloudSize = radius * 0.5;
-      
+
       const cloudGradient = ctx.createRadialGradient(
         cloudX, cloudY, 0,
         cloudX, cloudY, cloudSize
@@ -1075,7 +1076,7 @@ export class EnhancedAlienBall extends AlienBall {
       cloudGradient.addColorStop(0, 'rgba(218, 112, 214, 0.3)');
       cloudGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.2)');
       cloudGradient.addColorStop(1, 'rgba(75, 0, 130, 0)');
-      
+
       ctx.fillStyle = cloudGradient;
       ctx.globalAlpha = 0.6;
       ctx.beginPath();
@@ -1089,7 +1090,7 @@ export class EnhancedAlienBall extends AlienBall {
       const pulse = Math.sin(time * 1.5 + i * 1) * 0.15 + 1;
       const ringRadius = radius * (1 + i * 0.2) * pulse;
       const alpha = 0.4 - i * 0.1;
-      
+
       ctx.strokeStyle = this.stats.glowColor;
       ctx.lineWidth = 2;
       ctx.globalAlpha = alpha;
@@ -1111,7 +1112,7 @@ export class EnhancedAlienBall extends AlienBall {
       const py = y + Math.sin(angle) * orbitRadius;
       const size = 1 + Math.sin(time * 3 + i) * 0.5;
       const particleAlpha = 0.4 + Math.sin(time * 2 + i * 0.5) * 0.3;
-      
+
       // Particle with color variation
       const colors = [
         'rgba(255, 105, 180, ',  // Hot Pink
@@ -1150,7 +1151,7 @@ export class EnhancedAlienBall extends AlienBall {
         ctx.beginPath();
         ctx.arc(sx, sy, starSize, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Four-point star shape for larger stars
         if (i % 3 === 0) {
           ctx.beginPath();
@@ -1165,7 +1166,7 @@ export class EnhancedAlienBall extends AlienBall {
           ctx.closePath();
           ctx.fill();
         }
-        
+
         ctx.shadowBlur = 0;
       }
     }
@@ -1175,16 +1176,16 @@ export class EnhancedAlienBall extends AlienBall {
     for (let i = 0; i < wispCount; i++) {
       const baseAngle = (i / wispCount) * Math.PI * 2 - time * 0.5;
       const wispLength = radius * 0.8;
-      
+
       ctx.strokeStyle = `rgba(218, 112, 214, ${0.3 + Math.sin(time * 2 + i) * 0.2})`;
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       ctx.shadowColor = '#da70d6';
       ctx.shadowBlur = 10;
-      
+
       ctx.beginPath();
       ctx.moveTo(x, y);
-      
+
       // Curved wisp path
       for (let j = 1; j <= 3; j++) {
         const progress = j / 3;
@@ -1194,7 +1195,7 @@ export class EnhancedAlienBall extends AlienBall {
         const wy = y + Math.sin(angle) * dist;
         ctx.lineTo(wx, wy);
       }
-      
+
       ctx.globalAlpha = 0.6;
       ctx.stroke();
       ctx.globalAlpha = 1;

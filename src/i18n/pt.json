@@ -32,6 +32,8 @@
     "shipLasersHint": "Desativar para reduzir lag (apenas seus cliques dispararão lasers)",
     "damageNumbers": "Números de Dano:",
     "damageNumbersHint": "Desativar para melhorar o desempenho (o dano ainda será aplicado)",
+    "screenShake": "Vibração da Tela:",
+    "screenShakeHint": "Desativar para prevenir enjoo",
     "language": "Idioma:",
     "languageHint": "Alterar o idioma do jogo"
   },

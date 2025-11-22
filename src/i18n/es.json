@@ -32,6 +32,8 @@
     "shipLasersHint": "Desactivar para reducir lag (solo tus clics dispararán láseres)",
     "damageNumbers": "Números de Daño:",
     "damageNumbersHint": "Desactivar para mejorar el rendimiento (el daño aún se aplica)",
+    "screenShake": "Vibración de Pantalla:",
+    "screenShakeHint": "Desactivar para prevenir mareos",
     "language": "Idioma:",
     "languageHint": "Cambiar el idioma del juego"
   },

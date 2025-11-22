@@ -56,8 +56,22 @@ export class Shop {
     this.setupBuyQuantityButtons();
     this.setupDesktopToggle();
     this.render();
+
+    // Optimize: Only update shop when points change significantly
+    let lastPoints = 0;
     this.store.subscribe(() => {
-      this.scheduleRender();
+      const state = this.store.getState();
+      const currentPoints = state.points;
+
+      // Only schedule render if points changed by >1% or other state changes
+      // This prevents excessive shop updates on every tiny point gain
+      const pointsDiff = Math.abs(currentPoints - lastPoints);
+      const threshold = lastPoints === 0 ? 0 : lastPoints * 0.01;
+
+      if (pointsDiff > threshold) {
+        lastPoints = currentPoints;
+        this.scheduleRender();
+      }
     });
   }
 
@@ -471,6 +485,12 @@ export class Shop {
       state.discoveredUpgrades = { ship: true };
     }
 
+    // Early exit: If player has very few points, skip discovery checks
+    // This prevents expensive looping when player is just starting or has spent everything
+    if (state.points < 100) {
+      return false;
+    }
+
     let discoveredNew = false;
     const upgrades = this.upgradeSystem.getUpgrades();
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
@@ -804,7 +824,7 @@ export class Shop {
       // Add pixel art icon - use new pixel art renderer
       const iconSprite = getMainUpgradeSprite(upgrade.id);
       let icon: HTMLImageElement;
-      
+
       if (iconSprite) {
         // Use new pixel art sprite
         icon = PixelArtRenderer.renderToImage(iconSprite, upgrade.id, 32, 'upgrade-icon-img');
@@ -823,7 +843,7 @@ export class Shop {
         icon.style.imageRendering = 'pixelated';
         icon.style.verticalAlign = 'middle';
       }
-      
+
       header.appendChild(icon);
 
       const name = document.createElement('div');

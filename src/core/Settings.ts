@@ -11,6 +11,7 @@ export interface UserSettings {
   performanceMode: PerformanceMode;
   particleQuality: 'high' | 'medium' | 'low';
   enableVisualEffects: boolean;
+  screenShakeEnabled: boolean;
 }
 
 // Partial type for loading from storage
@@ -48,6 +49,7 @@ export class Settings {
           performanceMode: (data.performanceMode as PerformanceMode | undefined) ?? PerformanceMode.AUTO,
           particleQuality: data.particleQuality ?? 'high',
           enableVisualEffects: data.enableVisualEffects ?? true,
+          screenShakeEnabled: data.screenShakeEnabled ?? true,
         };
       }
     } catch (error) {
@@ -68,6 +70,7 @@ export class Settings {
       performanceMode: PerformanceMode.AUTO,
       particleQuality: 'high',
       enableVisualEffects: true,
+      screenShakeEnabled: true,
     };
   }
 }

@@ -200,14 +200,14 @@ export class Game {
       isBeam: false,
     };
   private batchTimer = 0;
-  private batchInterval = 0.05; // Apply damage every 50ms
+  private batchInterval = 0.075; // Apply damage every 75ms (reduced from 50ms for better performance)
 
   // Frame counting for throttling expensive operations
   private frameCount = 0;
   private readonly BOSS_TIMER_UPDATE_INTERVAL = 3; // Update boss timer every 3 frames
-  private readonly ACHIEVEMENT_CHECK_INTERVAL = 30; // Check achievements every 30 frames
-  private readonly HUD_STATS_UPDATE_INTERVAL = 5; // Update HUD stats every 5 frames
-  private readonly BEAM_RECALC_INTERVAL = 60; // Recalculate beam damage every 60 frames (~0.5s at 120fps)
+  private readonly ACHIEVEMENT_CHECK_INTERVAL = 60; // Check achievements every 60 frames (~1 second at 60fps)
+  private readonly HUD_STATS_UPDATE_INTERVAL = 30; // Update HUD stats every 30 frames (~2 times per second at 60fps)
+  private readonly BEAM_RECALC_INTERVAL = 120; // Recalculate beam damage every 120 frames (~1s at 120fps)
 
   constructor() {
     const canvasElement = document.getElementById(
@@ -232,6 +232,11 @@ export class Game {
 
     // Load user settings
     this.userSettings = Settings.load();
+
+    // Apply screen shake setting to body class
+    if (!this.userSettings.screenShakeEnabled) {
+      document.body.classList.add('no-screen-shake');
+    }
 
     // Initialize Performance Mode Manager
     this.performanceModeManager = new PerformanceModeManager();
@@ -261,12 +266,12 @@ export class Game {
     });
     this.upgradeSystem = new UpgradeSystem();
     this.laserSystem = new LaserSystem();
-    
+
     // Initialize particle system with performance settings
     const perfSettings = this.performanceModeManager.getSettings();
     this.particleSystem = new ParticleSystem(perfSettings.maxParticles);
     this.particleSystem.setParticleMultiplier(perfSettings.particleMultiplier);
-    
+
     this.damageNumberSystem = new DamageNumberSystem();
     this.comboSystem = new ComboSystem();
     this.soundManager = new SoundManager();
@@ -413,7 +418,12 @@ export class Game {
       this.userSettings.highGraphics = enabled;
       if (!enabled) {
         this.particleSystem.clear();
+        // Disable boss visual effects when low graphics mode is enabled
+        if (this.bossEffectFilter.isEnabled()) {
+          this.bossEffectFilter.disable(0.5);
+        }
       }
+      // Note: Boss effects will automatically re-enable on next boss fight if graphics are turned back on
       Settings.save(this.userSettings);
     });
     this.settingsModal.setShipLasersCallback((enabled: boolean) => {
@@ -426,6 +436,16 @@ export class Game {
       this.damageNumberSystem.setEnabled(enabled);
       if (!enabled) {
         this.damageNumberSystem.clear();
+      }
+      Settings.save(this.userSettings);
+    });
+    this.settingsModal.setScreenShakeCallback((enabled: boolean) => {
+      this.userSettings.screenShakeEnabled = enabled;
+      // Add/remove CSS class to disable boss shake animations
+      if (enabled) {
+        document.body.classList.remove('no-screen-shake');
+      } else {
+        document.body.classList.add('no-screen-shake');
       }
       Settings.save(this.userSettings);
     });
@@ -464,6 +484,7 @@ export class Game {
       this.userSettings.highGraphics,
       this.userSettings.showShipLasers,
       this.userSettings.showDamageNumbers,
+      this.userSettings.screenShakeEnabled,
       this.userSettings.lcdFilterEnabled,
     );
     // Setup stats panel button
@@ -1987,8 +2008,8 @@ export class Game {
         });
       }
 
-      // Refresh shop immediately when power-up is collected (to show updated stats)
-      this.shop.forceRefresh();
+      // Shop updates automatically via store subscription, no need to force refresh
+
 
       const activeBuffs = this.powerUpSystem.getActiveBuffs();
       this.lastPowerUpCount = activeBuffs.length;
@@ -1996,6 +2017,57 @@ export class Game {
       this.lastHadDamageBuff = activeBuffs.some((b) => b.type === 'damage');
 
       return; // Don't fire when collecting power-up - power-ups have highest priority
+    }
+
+    // Check for meteor clicks (Second priority)
+    const clickedMeteor = this.background.checkMeteoriteClick(pos.x, pos.y);
+    if (clickedMeteor) {
+      const destroyed = this.background.clickMeteorite(clickedMeteor);
+      this.soundManager.playClick();
+
+      if (destroyed) {
+        // Reward 1% of current points (minimum 1)
+        const currentPoints = this.store.getState().points;
+        const reward = Math.max(1, Math.floor(currentPoints * 0.01));
+        this.store.addPoints(reward);
+
+        // Visual feedback
+        this.damageNumberSystem.spawnDamageNumber(pos.x, pos.y, reward, true);
+
+        // Spawn explosion particles (reduced count)
+        if (this.userSettings.highGraphics) {
+          this.particleSystem.spawnParticles({
+            x: pos.x,
+            y: pos.y,
+            count: 12, // Slightly more for sparks as they are thin
+            color: '#ffaa00', // Golden/Orange
+            spread: Math.PI * 2,
+            speed: 300, // Fast burst for sparks
+            size: 3,
+            life: 0.5, // Short life
+            glow: true,
+            style: 'spark', // New "faísca" style
+          });
+        }
+      } else {
+        // Small hit effect for non-fatal clicks
+        if (this.userSettings.highGraphics) {
+          this.particleSystem.spawnParticles({
+            x: pos.x,
+            y: pos.y,
+            count: 3,
+            color: '#ffffff', // White sparkles
+            spread: Math.PI * 2,
+            speed: 80,
+            size: 1.5, // Tiny sparkles
+            life: 0.4,
+            glow: true,
+            style: 'sparkle',
+          });
+        }
+      }
+
+      return; // Don't fire when clicking meteor
     }
 
     // Click anywhere to shoot - much better for mobile!
@@ -2997,9 +3069,11 @@ export class Game {
       bossVariant = (bossIndex % 4) as 0 | 1 | 2 | 3;
     }
 
-    // Enable boss effect with smooth fade-in during transition
+    // Enable boss effect with smooth fade-in during transition (only if high graphics enabled)
     // Effect starts fading in during the transition and reaches full intensity when boss appears
-    this.bossEffectFilter.enable(bossVariant, this.transitionDuration * 0.5);
+    if (this.userSettings.highGraphics) {
+      this.bossEffectFilter.enable(bossVariant, this.transitionDuration * 0.5);
+    }
 
     setTimeout(() => {
       if (this.mode === 'transition') {
@@ -3308,18 +3382,17 @@ export class Game {
         const hasSpeedBuff = activeBuffs.some((b) => b.type === 'speed');
         const hasDamageBuff = activeBuffs.some((b) => b.type === 'damage');
 
-        // Check if any power-up state changed (count, speed, or damage)
-        const powerUpStateChanged =
+        // Track power-up state changes for future use
+        // Note: We no longer force shop refresh here as it causes severe lag
+        // The shop updates automatically via store subscription
+        if (
           currentPowerUpCount !== this.lastPowerUpCount ||
           hasSpeedBuff !== this.lastHadSpeedBuff ||
-          hasDamageBuff !== this.lastHadDamageBuff;
-
-        if (powerUpStateChanged) {
+          hasDamageBuff !== this.lastHadDamageBuff
+        ) {
           this.lastPowerUpCount = currentPowerUpCount;
           this.lastHadSpeedBuff = hasSpeedBuff;
           this.lastHadDamageBuff = hasDamageBuff;
-          // Force immediate shop refresh to show/hide power-up indicators
-          this.shop.forceRefresh();
         }
       } catch {
         // Ignore errors in HUD update
@@ -3340,8 +3413,12 @@ export class Game {
       }
     }
 
-    this.ball?.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
-    this.bossBall?.update(dt, this.canvas.getWidth(), this.canvas.getHeight());
+
+    // Check if player has universal translator upgrade
+    const hasUniversalTranslator = state.subUpgrades?.['universal_translator'] === true;
+
+    this.ball?.update(dt, hasUniversalTranslator, this.canvas.getWidth(), this.canvas.getHeight());
+    this.bossBall?.update(dt, hasUniversalTranslator, this.canvas.getWidth(), this.canvas.getHeight());
 
     this.background.update(dt);
     this.missionSystem.update();
@@ -3582,8 +3659,8 @@ export class Game {
       this.ascensionAnimationTime += dt;
       const animationDuration = 2.5; // 2.5 seconds total animation
 
-      // Add screen shake during animation
-      if (this.ascensionAnimationTime < animationDuration * 0.8) {
+      // Add screen shake during animation (only if enabled)
+      if (this.ascensionAnimationTime < animationDuration * 0.8 && this.userSettings.screenShakeEnabled) {
         this.shakeTime = 0.1;
         this.shakeAmount = 10;
       }
@@ -3680,11 +3757,11 @@ export class Game {
     }
 
     // Background always uses 2D canvas (complex gradients and effects)
-    this.background.render(ctx);
+    this.background.render(ctx, this.userSettings.highGraphics);
 
     ctx.save();
 
-    if (this.shakeTime > 0) {
+    if (this.shakeTime > 0 && this.userSettings.screenShakeEnabled) {
       const intensity = this.shakeAmount * (this.shakeTime / 0.1);
       const offsetX = (Math.random() - 0.5) * intensity;
       const offsetY = (Math.random() - 0.5) * intensity;
@@ -3859,7 +3936,7 @@ export class Game {
     const cx = this.canvas.getCenterX();
     const cy = this.canvas.getCenterY();
     const radius = Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.08;
-    
+
     this.ball = new EnhancedAlienBall(cx, cy, radius, state.level, type);
   }
 

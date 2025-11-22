@@ -11,7 +11,7 @@ export interface ParticleConfig {
   life: number;
   decay: number;
   glow?: boolean;
-  style?: 'classic' | 'glow' | 'sparkle' | 'trail';
+  style?: 'classic' | 'glow' | 'sparkle' | 'trail' | 'spark';
 }
 
 export class Particle {
@@ -26,7 +26,7 @@ export class Particle {
   private maxLife!: number;
   private decay!: number;
   private glow!: boolean;
-  public style!: 'classic' | 'glow' | 'sparkle' | 'trail';
+  public style!: 'classic' | 'glow' | 'sparkle' | 'trail' | 'spark';
   private creationTime!: number;
 
   constructor(config?: ParticleConfig) {
@@ -81,6 +81,11 @@ export class Particle {
       this.vy += 30 * dt;
       this.vx *= 0.98;
       this.vy *= 0.98;
+    } else if (this.style === 'spark') {
+      // Sparks have high gravity and drag
+      this.vy += 200 * dt;
+      this.vx *= 0.95;
+      this.vy *= 0.95;
     } else {
       // Classic and glow: normal gravity
       this.vy += 100 * dt;
@@ -107,7 +112,7 @@ export class Particle {
       const sparkleAlpha = Math.min(alpha * twinkle, 1.0);
       ctx.globalAlpha = sparkleAlpha;
       ctx.fillStyle = this.color;
-      ctx.shadowBlur = this.size * 5;
+      ctx.shadowBlur = this.size * 2.5; // Reduced from 5 for performance
       ctx.shadowColor = this.color;
 
       // Draw larger star shape
@@ -129,7 +134,7 @@ export class Particle {
       // Add bright center glow
       ctx.globalAlpha = sparkleAlpha * 0.8;
       ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = this.size * 2;
+      ctx.shadowBlur = this.size; // Reduced from 2 for performance
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
       ctx.fill();
@@ -137,7 +142,8 @@ export class Particle {
       // Glow: enhanced glowing effect - more pronounced
       ctx.globalAlpha = Math.min(alpha * 0.8, 1.0);
       ctx.fillStyle = this.color;
-      ctx.shadowBlur = this.size * 6;
+      ctx.shadowBlur = this.size * 3; // Reduced from 6 for performance
+
       ctx.shadowColor = this.color;
 
       // Outer glow - larger
@@ -147,14 +153,14 @@ export class Particle {
 
       // Middle glow
       ctx.globalAlpha = Math.min(alpha * 0.9, 1.0);
-      ctx.shadowBlur = this.size * 4;
+      ctx.shadowBlur = this.size * 2; // Reduced from 4 for performance
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 1.2, 0, Math.PI * 2);
       ctx.fill();
 
       // Inner bright core
       ctx.globalAlpha = Math.min(alpha * 1.0, 1.0);
-      ctx.shadowBlur = this.size * 2;
+      ctx.shadowBlur = this.size; // Reduced from 2 for performance
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size * 0.8, 0, Math.PI * 2);
       ctx.fill();
@@ -162,7 +168,7 @@ export class Particle {
       // Trail: elongated particle with fade - more visible
       ctx.globalAlpha = alpha;
       ctx.fillStyle = this.color;
-      ctx.shadowBlur = this.size * 3;
+      ctx.shadowBlur = this.size * 1.5; // Reduced from 3 for performance
       ctx.shadowColor = this.color;
 
       // Draw elongated shape in direction of movement using rotated rectangle
@@ -187,10 +193,42 @@ export class Particle {
 
       // Add bright center
       ctx.globalAlpha = alpha * 0.9;
-      ctx.shadowBlur = this.size * 2;
+      ctx.shadowBlur = this.size; // Reduced from 2 for performance
       ctx.beginPath();
       ctx.arc(0, 0, this.size * 0.7, 0, Math.PI * 2);
       ctx.fill();
+
+      ctx.restore();
+    } else if (this.style === 'spark') {
+      // Spark: thin, sharp line - "faísca"
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = this.size * 2;
+      ctx.shadowColor = this.color;
+
+      const angle = Math.atan2(this.vy, this.vx);
+      const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+      // Length depends on speed, making it streak
+      const length = Math.max(this.size * 2, speed * 0.04);
+      const width = this.size * 0.5; // Very thin
+
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(angle);
+
+      // Draw sharp line
+      ctx.beginPath();
+      ctx.moveTo(-length / 2, 0);
+      ctx.lineTo(length / 2, 0);
+      ctx.lineWidth = width;
+      ctx.strokeStyle = this.color;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Bright core
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = width * 0.5;
+      ctx.stroke();
 
       ctx.restore();
     } else {
@@ -199,7 +237,7 @@ export class Particle {
       ctx.fillStyle = this.color;
 
       if (this.glow) {
-        ctx.shadowBlur = this.size * 2;
+        ctx.shadowBlur = this.size; // Reduced from 2 for performance
         ctx.shadowColor = this.color;
       } else {
         ctx.shadowBlur = 0;
@@ -227,7 +265,7 @@ export class ParticleSystem {
     if (maxParticles !== undefined) {
       this.maxParticles = maxParticles;
     }
-    
+
     this.particlePool = new ObjectPool<Particle>(
       () => new Particle(),
       (particle) => {
@@ -270,7 +308,7 @@ export class ParticleSystem {
     size?: number;
     life?: number;
     glow?: boolean;
-    style?: 'classic' | 'glow' | 'sparkle' | 'trail';
+    style?: 'classic' | 'glow' | 'sparkle' | 'trail' | 'spark';
   }): void {
     const {
       x,
@@ -287,7 +325,7 @@ export class ParticleSystem {
 
     // Apply particle multiplier for performance
     const adjustedCount = this.getAdjustedParticleCount(count);
-    
+
     for (let i = 0; i < adjustedCount; i++) {
       const stats = this.particlePool.getStats();
       if (stats.active >= this.maxParticles) {
@@ -317,6 +355,10 @@ export class ParticleSystem {
         // Glow: larger, brighter
         particleSize = size * (1.0 + Math.random() * 0.8);
         particleLife = life * 1.3;
+      } else if (style === 'spark') {
+        // Sparks: vary speed significantly for burst effect
+        particleSpeed = speed * (0.8 + Math.random() * 0.8);
+        particleLife = life * (0.8 + Math.random() * 0.4);
       }
 
       particle.init({

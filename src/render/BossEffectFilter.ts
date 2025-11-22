@@ -93,25 +93,25 @@ export class BossEffectFilter {
         <!-- Void Construct: Vortex distortion with cyan -->
         <filter id="boss-void-filter">
           <feColorMatrix type="matrix" values="
-            0.5 0 0 0 0
-            0 0.8 0 0 0
-            0 0 1.3 0 0
+            0.6 0 0 0 0
+            0 0.85 0 0 0
+            0 0 1.2 0 0
             0 0 0 1 0
           "/>
-          <feGaussianBlur stdDeviation="1"/>
-          <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" result="turbulence"/>
-          <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+          <feGaussianBlur stdDeviation="0.3"/>
+          <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="2" result="turbulence"/>
+          <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="3" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
 
-        <!-- Omega Core: Chromatic aberration with energy -->
+        <!-- Omega Core: Chromatic aberration with energy - MINIMAL SATURATION -->
         <filter id="boss-omega-filter">
           <feColorMatrix type="matrix" values="
-            1.4 0 0 0 0
-            0 1.2 0 0 0
-            0 0 0.8 0 0
+            1.05 0 0 0 0
+            0 0.97 0 0 0
+            0 0 1.0 0 0
             0 0 0 1 0
           "/>
-          <feGaussianBlur stdDeviation="0.8"/>
+          <feGaussianBlur stdDeviation="0.2"/>
         </filter>
       </defs>
     `;
@@ -141,8 +141,8 @@ export class BossEffectFilter {
         background: radial-gradient(
           ellipse at center,
           rgba(139, 0, 0, 0) 0%,
-          rgba(139, 0, 0, 0.3) 70%,
-          rgba(139, 0, 0, 0.6) 100%
+          rgba(139, 0, 0, 0.1) 70%,
+          rgba(139, 0, 0, 0.2) 100%
         );
         pointer-events: none;
         z-index: 999997;
@@ -167,13 +167,13 @@ export class BossEffectFilter {
           repeating-linear-gradient(
             0deg,
             rgba(75, 0, 130, 0) 0px,
-            rgba(75, 0, 130, 0.1) 2px,
+            rgba(75, 0, 130, 0.05) 2px,
             rgba(75, 0, 130, 0) 4px
           ),
           radial-gradient(
             ellipse at center,
             rgba(147, 112, 219, 0) 30%,
-            rgba(147, 112, 219, 0.2) 100%
+            rgba(147, 112, 219, 0.1) 100%
           );
         pointer-events: none;
         z-index: 999997;
@@ -198,18 +198,18 @@ export class BossEffectFilter {
           radial-gradient(
             ellipse at 30% 40%,
             rgba(0, 0, 0, 0) 0%,
-            rgba(0, 0, 0, 0.15) 100%
+            rgba(0, 0, 0, 0.05) 100%
           ),
           radial-gradient(
             ellipse at 70% 60%,
-            rgba(0, 255, 255, 0.08) 0%,
+            rgba(0, 255, 255, 0.03) 0%,
             rgba(0, 0, 0, 0) 50%
           ),
           linear-gradient(
             180deg,
-            rgba(0, 0, 0, 0.1) 0%,
-            rgba(25, 25, 112, 0.15) 50%,
-            rgba(0, 0, 0, 0.2) 100%
+            rgba(0, 0, 0, 0.05) 0%,
+            rgba(25, 25, 112, 0.08) 50%,
+            rgba(0, 0, 0, 0.1) 100%
           );
         pointer-events: none;
         z-index: 999997;
@@ -227,7 +227,7 @@ export class BossEffectFilter {
           repeating-linear-gradient(
             45deg,
             transparent 0px,
-            rgba(0, 255, 255, 0.02) 2px,
+            rgba(0, 255, 255, 0.01) 2px,
             transparent 4px
           );
         pointer-events: none;
@@ -235,9 +235,9 @@ export class BossEffectFilter {
         animation: boss-void-shimmer 4s linear infinite;
       }
 
-      /* Omega Core Effect - Energy Overload */
+      /* Omega Core Effect - Energy Overload (Minimal) */
       body.boss-effect-omega {
-        filter: url(#boss-omega-filter) contrast(1.4) brightness(1.1);
+        filter: url(#boss-omega-filter) contrast(1.0) brightness(1.0);
         animation: boss-energy 0.15s infinite;
         transition: filter 0.3s ease-out;
       }
@@ -251,29 +251,29 @@ export class BossEffectFilter {
         height: 100vh;
         background: radial-gradient(
           ellipse at center,
-          rgba(255, 0, 0, 0.2) 0%,
-          rgba(255, 255, 0, 0.1) 50%,
-          rgba(255, 165, 0, 0.3) 100%
+          rgba(255, 0, 0, 0.03) 0%,
+          rgba(255, 255, 0, 0.02) 50%,
+          rgba(255, 165, 0, 0.04) 100%
         );
         pointer-events: none;
         z-index: 999997;
         animation: boss-energy-pulse 1s ease-in-out infinite;
       }
 
-      /* Chromatic aberration effect for Omega */
+      /* Chromatic aberration effect for Omega - Heavily Reduced */
       body.boss-effect-omega * {
         text-shadow: 
-          -2px 0 0 rgba(255, 0, 0, 0.5),
-          2px 0 0 rgba(0, 255, 255, 0.5),
-          0 0 10px rgba(255, 255, 0, 0.3);
+          -1px 0 0 rgba(255, 0, 0, 0.1),
+          1px 0 0 rgba(0, 255, 255, 0.1),
+          0 0 5px rgba(255, 255, 0, 0.05);
       }
 
       /* Animations */
       @keyframes boss-shake {
         0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        25% { transform: translate(-2px, 2px) rotate(0.5deg); }
-        50% { transform: translate(2px, -2px) rotate(-0.5deg); }
-        75% { transform: translate(-2px, -2px) rotate(0.3deg); }
+        25% { transform: translate(-1px, 1px) rotate(0.2deg); }
+        50% { transform: translate(1px, -1px) rotate(-0.2deg); }
+        75% { transform: translate(-1px, -1px) rotate(0.1deg); }
       }
 
       @keyframes boss-pulse {
@@ -283,10 +283,10 @@ export class BossEffectFilter {
 
       @keyframes boss-glitch {
         0% { transform: translate(0, 0); }
-        20% { transform: translate(-2px, 2px); }
-        40% { transform: translate(2px, -2px); }
-        60% { transform: translate(-2px, -2px); }
-        80% { transform: translate(2px, 2px); }
+        20% { transform: translate(-1px, 1px); }
+        40% { transform: translate(1px, -1px); }
+        60% { transform: translate(-1px, -1px); }
+        80% { transform: translate(1px, 1px); }
         100% { transform: translate(0, 0); }
       }
 
@@ -342,6 +342,23 @@ export class BossEffectFilter {
       @keyframes boss-fade-out {
         from { opacity: 1; }
         to { opacity: 0; }
+      }
+
+      /* Disable screen shake animations when setting is off */
+      body.no-screen-shake.boss-effect-colossus {
+        animation: none !important;
+      }
+
+      body.no-screen-shake.boss-effect-swarm {
+        animation: none !important;
+      }
+
+      body.no-screen-shake.boss-effect-void {
+        animation: none !important;
+      }
+
+      body.no-screen-shake.boss-effect-omega {
+        animation: none !important;
       }
     `;
     document.head.appendChild(style);
@@ -520,16 +537,16 @@ export class BossEffectFilter {
   private drawOmegaEffect(width: number, height: number, alpha: number): void {
     if (!this.ctx) return;
 
-    // Energy lightning bolts
-    const boltCount = 8;
+    // Energy lightning bolts - Reduced
+    const boltCount = 4; // Reduced from 8
     for (let i = 0; i < boltCount; i++) {
       const startX = Math.random() * width;
       const startY = 0;
       let x = startX;
       let y = startY;
       
-      this.ctx.strokeStyle = `rgba(255, 255, 0, ${alpha * 0.6})`;
-      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = `rgba(255, 255, 0, ${alpha * 0.2})`; // Reduced from 0.6
+      this.ctx.lineWidth = 1; // Reduced from 2
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
       
@@ -540,40 +557,40 @@ export class BossEffectFilter {
         this.ctx.lineTo(x, y);
       }
       
-      if (Math.sin(this.time * 20 + i) > 0.8) {
+      if (Math.sin(this.time * 20 + i) > 0.9) { // Changed from 0.8 to appear less often
         this.ctx.stroke();
       }
     }
 
-    // Energy particles
-    const particleCount = 50;
+    // Energy particles - Reduced
+    const particleCount = 25; // Reduced from 50
     for (let i = 0; i < particleCount; i++) {
       const x = ((i * 197.3 + this.time * 120) % width);
       const y = ((this.time * 80 + i * 40) % height);
       const size = 2 + Math.sin(this.time * 5 + i) * 1;
       
-      // Red/Yellow/Orange energy
+      // Red/Yellow/Orange energy - Reduced opacity
       const color = i % 3 === 0 ? 'rgba(255, 0, 0' : i % 3 === 1 ? 'rgba(255, 255, 0' : 'rgba(255, 165, 0';
-      this.ctx.fillStyle = `${color}, ${alpha * 0.7})`;
+      this.ctx.fillStyle = `${color}, ${alpha * 0.3})`; // Reduced from 0.7
       this.ctx.beginPath();
       this.ctx.arc(x, y, size, 0, Math.PI * 2);
       this.ctx.fill();
       
-      // Glow
-      this.ctx.fillStyle = `${color}, ${alpha * 0.3})`;
+      // Glow - Reduced
+      this.ctx.fillStyle = `${color}, ${alpha * 0.1})`; // Reduced from 0.3
       this.ctx.beginPath();
       this.ctx.arc(x, y, size * 2, 0, Math.PI * 2);
       this.ctx.fill();
     }
 
-    // Energy pulse overlay
+    // Energy pulse overlay - Heavily reduced
     const pulseAlpha = Math.sin(this.time * 4) * 0.5 + 0.5;
     const gradient = this.ctx.createRadialGradient(
       width / 2, height / 2, 0,
       width / 2, height / 2, width / 2
     );
-    gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha * pulseAlpha * 0.2})`);
-    gradient.addColorStop(1, `rgba(255, 0, 0, ${alpha * pulseAlpha * 0.1})`);
+    gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha * pulseAlpha * 0.05})`); // Reduced from 0.2
+    gradient.addColorStop(1, `rgba(255, 0, 0, ${alpha * pulseAlpha * 0.03})`); // Reduced from 0.1
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, width, height);
   }

@@ -239,12 +239,11 @@ export class BossBall {
   triggerFlash(): void {
     this.flashTime = this.flashDuration;
   }
-
   isBreaking(): boolean {
     return this.breakAnimTime > 0;
   }
 
-  update(dt: number, _canvasWidth: number, _canvasHeight: number): void {
+  update(dt: number, _hasUniversalTranslator: boolean = false, _canvasWidth?: number, _canvasHeight?: number): void {
     if (this.flashTime > 0) {
       this.flashTime = Math.max(0, this.flashTime - dt);
     }
@@ -664,12 +663,12 @@ export class BossBall {
         const px = x + Math.cos(angle) * dist;
         const py = y + Math.sin(angle) * dist;
         const size = 3 + Math.sin(this.pulseTime * 3 + i) * 2;
-        
+
         ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
         ctx.beginPath();
         ctx.arc(px, py, size, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Glow
         ctx.fillStyle = 'rgba(0, 200, 255, 0.3)';
         ctx.beginPath();
@@ -789,7 +788,7 @@ export class BossBall {
 
         ctx.restore();
       });
-      
+
       // Add central void core effect
       const coreSize = 15 + Math.sin(this.pulseTime * 2) * 5;
       const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreSize);
@@ -800,7 +799,7 @@ export class BossBall {
       ctx.beginPath();
       ctx.arc(x, y, coreSize, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Core ring
       ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
       ctx.lineWidth = 2;
@@ -831,7 +830,7 @@ export class BossBall {
         const px = x + Math.cos(angle) * dist;
         const py = y + Math.sin(angle) * dist;
         const size = 4 + Math.sin(this.pulseTime * 5 + i) * 2;
-        
+
         // Alternate colors between red, yellow, and orange
         const colors = ['rgba(255, 0, 0, 0.9)', 'rgba(255, 255, 0, 0.9)', 'rgba(255, 165, 0, 0.9)'];
         const colorIndex = i % 3;
@@ -850,7 +849,7 @@ export class BossBall {
         const angle = (i / innerRingCount) * Math.PI * 2 - this.pulseTime * 3;
         const startAngle = angle;
         const endAngle = angle + Math.PI * 0.3;
-        
+
         ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
         ctx.lineWidth = 5;
         ctx.shadowColor = '#ffff00';
@@ -871,7 +870,7 @@ export class BossBall {
         arcGradient.addColorStop(0, '#ffff00');
         arcGradient.addColorStop(0.5, '#ff8800');
         arcGradient.addColorStop(1, '#ff0000');
-        
+
         ctx.beginPath();
         ctx.arc(0, 0, radius * arc.radius, 0, arc.length);
         ctx.strokeStyle = arcGradient;
@@ -900,7 +899,7 @@ export class BossBall {
       coreGradient.addColorStop(0.3, 'rgba(255, 255, 0, 1)');
       coreGradient.addColorStop(0.6, 'rgba(255, 150, 0, 0.9)');
       coreGradient.addColorStop(1, 'rgba(255, 0, 0, 0.5)');
-      
+
       ctx.fillStyle = coreGradient;
       ctx.shadowColor = '#ffff00';
       ctx.shadowBlur = 30;
@@ -916,11 +915,11 @@ export class BossBall {
         const startY = y + Math.sin(angle) * pulseSize;
         const endX = x + Math.cos(angle) * length;
         const endY = y + Math.sin(angle) * length;
-        
+
         const spikeGradient = ctx.createLinearGradient(startX, startY, endX, endY);
         spikeGradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
         spikeGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-        
+
         ctx.strokeStyle = spikeGradient;
         ctx.lineWidth = 3;
         ctx.shadowColor = '#ffff00';
@@ -940,7 +939,7 @@ export class BossBall {
         const dist = radius * 0.9;
         const midAngle = angle + (Math.random() - 0.5) * 0.5;
         const midDist = dist * 0.5;
-        
+
         const colors = ['#ffff00', '#ff8800', '#ff0000'];
         ctx.strokeStyle = colors[Math.floor(Math.random() * colors.length)] || '#ffff00';
         ctx.lineWidth = 2 + Math.random() * 2;

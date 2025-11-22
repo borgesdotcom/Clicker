@@ -21,16 +21,16 @@ export class AlienBall {
   private lifetime = 0; // Track how long the alien has been alive
   private speechBubbleText = ''; // Full text to display
   private speechBubbleDisplayedText = ''; // Currently displayed text (for typing animation)
-  private speechBubbleShowTime = 5; // Show speech bubble after 12 seconds (rarely)
+  private speechBubbleShowTime = 15; // Show speech bubble after 15 seconds (much rarer)
   private speechBubbleVisible = false; // Whether speech bubble should be visible
   private speechBubbleHideTime = 0; // Time when speech bubble should start hiding
   private speechBubbleDuration = 8; // How long to show the bubble after typing completes (seconds)
   private speechBubbleCooldown = 0; // Time until next speech bubble can appear
-  private speechBubbleCooldownDuration = 15; // Cooldown between speech bubbles (seconds) - longer for rarity
+  private speechBubbleCooldownDuration = 30; // Cooldown between speech bubbles (seconds) - much longer for rarity
   private typingProgress = 0; // Current typing progress (0-1)
   private typingSpeed = 0.015; // Speed of typing animation (slower - chars per frame)
   private speechBubbleSide: 'left' | 'right' = 'left'; // Which side to show the bubble on
-  private speechBubbleChance = 0.4; // 40% chance to speak even after cooldown (makes it rarer)
+  private speechBubbleChance = 0.15; // 15% chance to speak even after cooldown (makes it much rarer)
 
   // New visual effects
   protected shakeTime = 0;
@@ -51,6 +51,34 @@ export class AlienBall {
 
     // Randomly choose which side to show the bubble
     this.speechBubbleSide = Math.random() > 0.5 ? 'left' : 'right';
+  }
+
+  private generateGibberish(): string {
+    // Simple alphanumeric characters for scrambled text effect
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    // Generate 2-3 lines of gibberish
+    const numLines = Math.floor(Math.random() * 2) + 2; // 2-3 lines
+    const lines: string[] = [];
+
+    for (let i = 0; i < numLines; i++) {
+      const lineLength = Math.floor(Math.random() * 15) + 8; // 8-22 characters per line
+      let line = '';
+
+      for (let j = 0; j < lineLength; j++) {
+        const randomChar = chars[Math.floor(Math.random() * chars.length)];
+        line += randomChar ?? 'a';
+
+        // Add spaces occasionally for word-like appearance (20% chance)
+        if (Math.random() < 0.2 && j < lineLength - 1) {
+          line += ' ';
+        }
+      }
+
+      lines.push(line);
+    }
+
+    return lines.join('\n');
   }
 
   private getRandomSpeech(): string {
@@ -118,6 +146,16 @@ export class AlienBall {
     ];
     const index = Math.floor(Math.random() * speeches.length);
     return speeches[index] ?? 'This is fine...';
+  }
+
+  // Public method to get speech text (checks for universal translator)
+  public getSpeechText(hasUniversalTranslator: boolean): string {
+    if (hasUniversalTranslator) {
+      return this.speechBubbleText;
+    } else {
+      // Generate new gibberish each time for dynamic effect
+      return this.generateGibberish();
+    }
   }
 
   private static getRandomColor(): BallColor {
@@ -240,7 +278,7 @@ export class AlienBall {
     return this.breakAnimTime > 0;
   }
 
-  update(dt: number): void {
+  update(dt: number, hasUniversalTranslator: boolean = false): void {
     if (this.flashTime > 0) {
       this.flashTime = Math.max(0, this.flashTime - dt);
     }
@@ -282,8 +320,8 @@ export class AlienBall {
         this.speechBubbleVisible = true;
         this.typingProgress = 0;
         this.speechBubbleDisplayedText = '';
-        // Get new random speech and side
-        const newSpeech = this.getRandomSpeech();
+        // Get speech text based on translator status
+        const newSpeech = hasUniversalTranslator ? this.getRandomSpeech() : this.generateGibberish();
         this.speechBubbleText = newSpeech;
         this.speechBubbleSide = Math.random() > 0.5 ? 'left' : 'right';
       }

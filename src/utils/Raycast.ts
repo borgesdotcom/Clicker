@@ -75,20 +75,21 @@ export function getPixelHitPoint(
       if (!spriteRow) continue;
       const pixel = spriteRow[col];
       if (pixel !== 0) {
-        // Hit a solid pixel!
-        // Return world position
+        // Hit a solid pixel! 
+        // Penetrate just slightly (1.5 steps) for better visual - not too deep
+        const penetrationDepth = stepSize * 1.5;
         return {
-          x: center.x + px,
-          y: center.y + py,
+          x: center.x + px + (nx * penetrationDepth),
+          y: center.y + py + (ny * penetrationDepth),
         };
       }
     }
   }
 
   // Fallback if no pixel hit (e.g. laser went through a gap or diagonal miss)
-  // Return a point on the visual radius (85% rule as fallback)
+  // Return a point on the visual radius
   return {
-    x: center.x - nx * (radius * 0.85),
-    y: center.y - ny * (radius * 0.85),
+    x: center.x - nx * (radius * 0.88),
+    y: center.y - ny * (radius * 0.88),
   };
 }

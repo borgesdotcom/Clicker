@@ -10,6 +10,7 @@ export class SettingsModal {
   private graphicsCallback: ((enabled: boolean) => void) | null = null;
   private shipLasersCallback: ((enabled: boolean) => void) | null = null;
   private damageNumbersCallback: ((enabled: boolean) => void) | null = null;
+  private screenShakeCallback: ((enabled: boolean) => void) | null = null;
   private lcdFilterCallback: ((enabled: boolean) => void) | null = null;
   private soundCallback: ((enabled: boolean) => void) | null = null;
   private soundtrackCallback: ((enabled: boolean) => void) | null = null;
@@ -19,6 +20,7 @@ export class SettingsModal {
   private graphicsToggle: HTMLButtonElement | null = null;
   private shipLasersToggle: HTMLButtonElement | null = null;
   private damageNumbersToggle: HTMLButtonElement | null = null;
+  private screenShakeToggle: HTMLButtonElement | null = null;
   private lcdFilterToggle: HTMLButtonElement | null = null;
   private soundtrackToggle: HTMLButtonElement | null = null;
   private languageSelect: HTMLSelectElement | null = null;
@@ -43,6 +45,10 @@ export class SettingsModal {
 
   setDamageNumbersCallback(callback: (enabled: boolean) => void): void {
     this.damageNumbersCallback = callback;
+  }
+
+  setScreenShakeCallback(callback: (enabled: boolean) => void): void {
+    this.screenShakeCallback = callback;
   }
 
   setLCDFilterCallback(callback: (enabled: boolean) => void): void {
@@ -73,6 +79,7 @@ export class SettingsModal {
     graphics: boolean,
     shipLasers: boolean,
     damageNumbers: boolean,
+    screenShake: boolean,
     lcdFilter: boolean,
   ): void {
     if (this.graphicsToggle) {
@@ -95,6 +102,14 @@ export class SettingsModal {
         : t('common.off');
       this.damageNumbersToggle.style.backgroundColor = damageNumbers
         ? '#0088ff'
+        : '#666';
+    }
+    if (this.screenShakeToggle) {
+      this.screenShakeToggle.textContent = screenShake
+        ? t('common.on')
+        : t('common.off');
+      this.screenShakeToggle.style.backgroundColor = screenShake
+        ? '#4CAF50'
         : '#666';
     }
     if (this.lcdFilterToggle) {
@@ -493,6 +508,49 @@ export class SettingsModal {
     damageNumbersHint.style.marginTop = '5px';
     graphicsSection.appendChild(damageNumbersHint);
 
+    // Screen shake toggle
+    const screenShakeContainer = document.createElement('div');
+    screenShakeContainer.style.marginBottom = '10px';
+    screenShakeContainer.style.marginTop = '15px';
+    screenShakeContainer.style.display = 'flex';
+    screenShakeContainer.style.alignItems = 'center';
+    screenShakeContainer.style.justifyContent = 'space-between';
+
+    const screenShakeLabel = document.createElement('label');
+    screenShakeLabel.textContent = t('settings.screenShake');
+    screenShakeLabel.style.fontSize = '16px';
+
+    this.screenShakeToggle = document.createElement('button');
+    this.screenShakeToggle.className = 'modal-button';
+    this.screenShakeToggle.textContent = t('common.on');
+    this.screenShakeToggle.style.width = '80px';
+    this.screenShakeToggle.style.backgroundColor = '#4CAF50';
+
+    this.screenShakeToggle.addEventListener('click', () => {
+      if (!this.screenShakeToggle) return;
+      const newState = this.screenShakeToggle.textContent === t('common.off');
+      this.screenShakeToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
+      this.screenShakeToggle.style.backgroundColor = newState
+        ? '#4CAF50'
+        : '#666';
+      if (this.screenShakeCallback) {
+        this.screenShakeCallback(newState);
+      }
+    });
+
+    screenShakeContainer.appendChild(screenShakeLabel);
+    screenShakeContainer.appendChild(this.screenShakeToggle);
+    graphicsSection.appendChild(screenShakeContainer);
+
+    const screenShakeHint = document.createElement('div');
+    screenShakeHint.textContent = t('settings.screenShakeHint');
+    screenShakeHint.style.fontSize = '12px';
+    screenShakeHint.style.color = '#888';
+    screenShakeHint.style.marginTop = '5px';
+    graphicsSection.appendChild(screenShakeHint);
+
     // LCD filter toggle
     const lcdFilterContainer = document.createElement('div');
     lcdFilterContainer.style.marginBottom = '10px';
@@ -733,6 +791,7 @@ export class SettingsModal {
     const graphicsCallback = this.graphicsCallback;
     const shipLasersCallback = this.shipLasersCallback;
     const damageNumbersCallback = this.damageNumbersCallback;
+    const screenShakeCallback = this.screenShakeCallback;
 
     this.createModal();
 
@@ -744,6 +803,8 @@ export class SettingsModal {
     if (shipLasersCallback) this.shipLasersCallback = shipLasersCallback;
     if (damageNumbersCallback)
       this.damageNumbersCallback = damageNumbersCallback;
+    if (screenShakeCallback)
+      this.screenShakeCallback = screenShakeCallback;
 
     // Restore visibility
     if (wasVisible) {

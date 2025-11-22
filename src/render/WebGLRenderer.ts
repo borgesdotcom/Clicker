@@ -1092,7 +1092,7 @@ export class WebGLRenderer {
     y2: number,
     width: number,
     color: string,
-    isCrit: boolean = false,
+    _isCrit: boolean = false,
     themeId?: string,
   ): void {
     const oldStroke = this.currentStrokeColor;
@@ -1114,7 +1114,7 @@ export class WebGLRenderer {
         '#8800ff',
         '#ff00ff',
       ];
-      const segmentCount = 12;
+      const segmentCount = 6; // Reduced from 12 for better performance
       const dx = (x2 - x1) / segmentCount;
       const dy = (y2 - y1) / segmentCount;
 
@@ -1129,27 +1129,32 @@ export class WebGLRenderer {
           colors[0] ??
           '#ffffff';
         const segWidth = width * (1.3 + wave * 0.3);
-        this.setAlpha(baseAlpha * wave);
+        // Inverted opacity gradient: high at ship, low at enemy
+        const t = (i + 1) / segmentCount;
+        const opacityGradient = 0.25 + Math.pow(1 - t, 0.25) * 0.75;
+        this.setAlpha(baseAlpha * wave * opacityGradient);
         this.setStroke(segColor, segWidth);
         this.line(segX1, segY1, segX2, segY2);
       }
 
-      for (let layer = 0; layer < 2; layer++) {
-        const offset = layer * 0.3;
-        for (let i = 0; i < segmentCount; i++) {
-          const wave =
-            Math.sin(wavePhase * 1.5 + i * 1.2 + offset) * 0.15 + 0.85;
-          const segX1 = x1 + dx * i;
-          const segY1 = y1 + dy * i;
-          const segX2 = x1 + dx * (i + 1);
-          const segY2 = y1 + dy * (i + 1);
-          this.setAlpha(baseAlpha * wave * 0.4);
-          this.setStroke(
-            colors[i % colors.length] ?? colors[0] ?? '#ffffff',
-            width * 0.6,
-          );
-          this.line(segX1, segY1, segX2, segY2);
-        }
+      // Reduced to 1 glow layer from 2 for better performance
+      const offset = 0.3;
+      for (let i = 0; i < segmentCount; i++) {
+        const wave =
+          Math.sin(wavePhase * 1.5 + i * 1.2 + offset) * 0.15 + 0.85;
+        const segX1 = x1 + dx * i;
+        const segY1 = y1 + dy * i;
+        const segX2 = x1 + dx * (i + 1);
+        const segY2 = y1 + dy * (i + 1);
+        // Inverted opacity gradient for glow layer
+        const t = (i + 1) / segmentCount;
+        const opacityGradient = 0.25 + Math.pow(1 - t, 0.25) * 0.75;
+        this.setAlpha(baseAlpha * wave * 0.4 * opacityGradient);
+        this.setStroke(
+          colors[i % colors.length] ?? colors[0] ?? '#ffffff',
+          width * 0.6,
+        );
+        this.line(segX1, segY1, segX2, segY2);
       }
     } else if (themeId === 'plasma_laser') {
       const segments = 8;
@@ -1177,7 +1182,10 @@ export class WebGLRenderer {
             plasmaColors[0] ??
             '#ff4400';
           const segWidth = width * (1.2 + wave * 0.4) * (1.0 - layer * 0.3);
-          this.setAlpha(baseAlpha * wave * (1.0 - layer * 0.25));
+          // Inverted opacity gradient: high at ship, low at enemy
+          const t = (i + 1) / segments;
+          const opacityGradient = 0.25 + Math.pow(1 - t, 0.25) * 0.75;
+          this.setAlpha(baseAlpha * wave * (1.0 - layer * 0.25) * opacityGradient);
           this.setStroke(segColor, segWidth);
           this.line(segX1, segY1, segX2, segY2);
         }
@@ -1185,18 +1193,33 @@ export class WebGLRenderer {
     } else if (themeId === 'void_laser') {
       const pulse2 = Math.sin(this.time * 10.0) * 0.2 + 0.8;
       const pulse3 = Math.sin(this.time * 14.0) * 0.15 + 0.85;
+      
+      // Draw void beam in segments with opacity gradient
+      const segments = 8;
+      const dx = (x2 - x1) / segments;
+      const dy = (y2 - y1) / segments;
 
-      this.setAlpha(baseAlpha * 0.6);
-      this.setStroke('#4400aa', width * (1.4 + pulse2 * 0.3));
-      this.line(x1, y1, x2, y2);
+      for (let i = 0; i < segments; i++) {
+        const segX1 = x1 + dx * i;
+        const segY1 = y1 + dy * i;
+        const segX2 = x1 + dx * (i + 1);
+        const segY2 = y1 + dy * (i + 1);
+        // Inverted opacity gradient: high at ship, low at enemy
+        const t = (i + 1) / segments;
+        const opacityGradient = 0.25 + Math.pow(1 - t, 0.25) * 0.75;
 
-      this.setAlpha(baseAlpha * pulse2);
-      this.setStroke('#8800ff', width * (0.9 + pulse3 * 0.2));
-      this.line(x1, y1, x2, y2);
+        this.setAlpha(baseAlpha * 0.6 * opacityGradient);
+        this.setStroke('#4400aa', width * (1.4 + pulse2 * 0.3));
+        this.line(segX1, segY1, segX2, segY2);
 
-      this.setAlpha(baseAlpha * pulse3);
-      this.setStroke('#ff00ff', width * (0.6 + pulse2 * 0.15));
-      this.line(x1, y1, x2, y2);
+        this.setAlpha(baseAlpha * pulse2 * opacityGradient);
+        this.setStroke('#8800ff', width * (0.9 + pulse3 * 0.2));
+        this.line(segX1, segY1, segX2, segY2);
+
+        this.setAlpha(baseAlpha * pulse3 * opacityGradient);
+        this.setStroke('#ff00ff', width * (0.6 + pulse2 * 0.15));
+        this.line(segX1, segY1, segX2, segY2);
+      }
     } else {
       const segments = 6;
       const dx = (x2 - x1) / segments;
@@ -1212,19 +1235,15 @@ export class WebGLRenderer {
           const segY1 = y1 + dy * i;
           const segX2 = x1 + dx * (i + 1);
           const segY2 = y1 + dy * (i + 1);
-          this.setAlpha(layerAlpha * wave);
+          // Inverted opacity gradient: high at ship, low at enemy
+          const t = (i + 1) / segments;
+          const opacityGradient = 0.25 + Math.pow(1 - t, 0.25) * 0.75;
+          this.setAlpha(layerAlpha * wave * opacityGradient);
           this.setStroke(color, layerWidth * wave);
           this.line(segX1, segY1, segX2, segY2);
         }
       }
     }
-
-    const endPulse = Math.sin(this.time * 15.0) * 0.2 + 0.8;
-    this.setFill(color);
-    this.setAlpha(baseAlpha * endPulse);
-    this.circle(x2, y2, (isCrit ? 4 : 2.5) * endPulse, true);
-    this.setAlpha(baseAlpha * endPulse * 0.5);
-    this.circle(x2, y2, (isCrit ? 6 : 4) * endPulse, true);
 
     this.currentStrokeColor = oldStroke;
     this.currentLineWidth = oldWidth;
