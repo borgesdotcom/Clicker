@@ -7,6 +7,8 @@ import { Button } from './Button';
 import { NumberFormatter } from '../utils/NumberFormatter';
 import { t } from '../core/I18n';
 import { images } from '../assets/images';
+import { PixelArtRenderer } from '../utils/PixelArtRenderer';
+import { getMainUpgradeSprite } from '../render/MainUpgradeSprites';
 
 export class Shop {
   private container: HTMLElement;
@@ -799,17 +801,29 @@ export class Shop {
       const header = document.createElement('div');
       header.className = 'upgrade-header';
 
-      // Add pixel art icon
-      const icon = document.createElement('img');
-      icon.className = 'upgrade-icon-img';
-      // @ts-ignore - We know upgrades exists on images now
-      icon.src = images.upgrades?.[upgrade.id] || images.stars;
-      icon.alt = upgrade.name;
-      icon.style.width = '32px';
-      icon.style.height = '32px';
-      icon.style.marginRight = '8px';
-      icon.style.imageRendering = 'pixelated';
-      icon.style.verticalAlign = 'middle';
+      // Add pixel art icon - use new pixel art renderer
+      const iconSprite = getMainUpgradeSprite(upgrade.id);
+      let icon: HTMLImageElement;
+      
+      if (iconSprite) {
+        // Use new pixel art sprite
+        icon = PixelArtRenderer.renderToImage(iconSprite, upgrade.id, 32, 'upgrade-icon-img');
+        icon.style.marginRight = '8px';
+        icon.style.verticalAlign = 'middle';
+      } else {
+        // Fallback to old system
+        icon = document.createElement('img');
+        icon.className = 'upgrade-icon-img';
+        // @ts-ignore - We know upgrades exists on images now
+        icon.src = images.upgrades?.[upgrade.id] || images.stars;
+        icon.alt = upgrade.name;
+        icon.style.width = '32px';
+        icon.style.height = '32px';
+        icon.style.marginRight = '8px';
+        icon.style.imageRendering = 'pixelated';
+        icon.style.verticalAlign = 'middle';
+      }
+      
       header.appendChild(icon);
 
       const name = document.createElement('div');
