@@ -45,7 +45,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Click ${target.toString()} times`,
     target: (level) => Math.max(100, level * 50),
     reward: (level) => ({
-      points: Math.floor(level * level * 500),
+      points: Math.floor(level * level * 100),
       xp: Math.floor(level * 15),
     }),
     icon: '🖱️',
@@ -56,7 +56,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Deal ${target.toLocaleString()} damage`,
     target: (level) => Math.max(5000, level * 2000),
     reward: (level) => ({
-      points: Math.floor(level * level * 750),
+      points: Math.floor(level * level * 150),
       ships: Math.max(1, Math.floor(level / 10)),
     }),
     icon: '⚔️',
@@ -67,7 +67,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Destroy ${target.toString()} aliens`,
     target: (level) => Math.max(10, level * 3),
     reward: (level) => ({
-      points: Math.floor(level * level * 400),
+      points: Math.floor(level * level * 80),
       xp: Math.floor(level * 12),
     }),
     icon: '👾',
@@ -78,7 +78,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Defeat ${target.toString()} bosses`,
     target: () => 3,
     reward: (level) => ({
-      points: Math.floor(level * level * 2500),
+      points: Math.floor(level * level * 500),
       ships: Math.max(2, Math.floor(level / 5)),
     }),
     icon: '🏆',
@@ -89,7 +89,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Purchase ${target.toString()} upgrades`,
     target: (level) => Math.max(5, Math.floor(level / 2)),
     reward: (level) => ({
-      points: Math.floor(level * level * 600),
+      points: Math.floor(level * level * 120),
     }),
     icon: '🔧',
   },
@@ -99,7 +99,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Reach level ${target.toString()}`,
     target: (level) => level + 5,
     reward: (level) => ({
-      points: Math.floor(level * level * 1000),
+      points: Math.floor(level * level * 200),
       xp: Math.floor(level * 30),
     }),
     icon: '⭐',
@@ -110,7 +110,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Build a fleet of ${target.toString()} ships`,
     target: (level) => Math.max(5, Math.floor(level / 3)),
     reward: (level) => ({
-      points: Math.floor(level * level * 1500),
+      points: Math.floor(level * level * 300),
     }),
     icon: '🚀',
   },
@@ -120,7 +120,7 @@ const MISSION_TEMPLATES: MissionTemplate[] = [
     description: (target) => `Achieve a ${target.toString()}x combo`,
     target: (level) => Math.max(10, level * 2),
     reward: (level) => ({
-      points: Math.floor(level * level * 1250),
+      points: Math.floor(level * level * 250),
       xp: Math.floor(level * 25),
     }),
     icon: '🔥',

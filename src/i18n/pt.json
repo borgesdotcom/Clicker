@@ -14,7 +14,8 @@
     "language": "Idioma",
     "english": "Inglês",
     "portuguese": "Português",
-    "spanish": "Espanhol"
+    "spanish": "Espanhol",
+    "japanese": "Japonês"
   },
   "settings": {
     "title": "⚙️ Configurações",
@@ -33,17 +34,62 @@
     "damageNumbers": "Números de Dano:",
     "damageNumbersHint": "Desativar para melhorar o desempenho (o dano ainda será aplicado)",
     "screenShake": "Vibração da Tela:",
-    "screenShakeHint": "Desativar para prevenir enjoo",
+    "screenShakeHint": "Ative efeitos de tremor de tela para momentos impactantes.",
+    "lcdFilter": "Filtro LCD",
+    "lcdFilterHint": "Efeito sutil de monitor LCD retrô com grade de pixels",
+    "saveDataActions": "💾 Dados Salvos e Ações",
+    "exportSave": "EXPORTAR DADOS",
+    "importSave": "IMPORTAR DADOS",
+    "resetSaveButton": "⚠️ Resetar Salvo",
+    "resetConfirm": "Tem certeza que deseja resetar todo o progresso? Isso não pode ser desfeito.",
     "language": "Idioma:",
     "languageHint": "Alterar o idioma do jogo"
   },
   "hud": {
     "points": "Moonies",
+    "crit": "Crítico",
+    "perSec": "/seg",
+    "achievementsTooltip": "Veja suas conquistas e recompensas desbloqueadas.",
+    "statsTooltip": "Acompanhe seu progresso e estatísticas detalhadas.",
+    "settingsTooltip": "Ajuste áudio, gráficos e opções de idioma.",
+    "missionsTooltip": "Complete tarefas para ganhar recompensas extras.",
+    "artifactsTooltip": "Gerencie artefatos poderosos encontrados em chefes.",
+    "gameInfoTooltip": "Aprenda sobre mecânicas de jogo e dicas.",
+    "bossRetryTooltip": "Re-tentar a luta contra o chefe. Mostra o diálogo do chefe novamente para reiniciar o encontro.",
+    "totalIncome": "Renda Total",
+    "clickToToggle": "Clique para alternar detalhes",
     "dps": "DPS",
     "passive": "Passivo",
-    "crit": "Crítico",
+    "combat": "Combate",
+    "kills": "Abates",
+    "hitDamage": "Dano de Golpe",
+    "attackSpeed": "Velocidade de Ataque",
+    "shotsPerSec": "tiros/seg",
+    "critChance": "Chance Crítica",
     "level": "Nível",
-    "perSec": "/seg"
+    "cannotUseSkillsBoss": "Não é possível usar habilidades durante chefes!",
+    "skillCooldown": "Habilidade em recarga!",
+    "time": "TEMPO"
+  },
+  "tutorial": {
+    "clickAlien": "Clique no Alien para ganhar pontos!",
+    "buyUpgrade": "Compre sua primeira melhoria!",
+    "openShop": "Abra a Loja para comprar melhorias!",
+    "bossWarning": "Derrote o Chefe antes que o tempo acabe!"
+  },
+  "messages": {
+    "missionComplete": "🎯 Missão Completa: {{title}}",
+    "newDailyMissions": "📅 Novas Missões Diárias Disponíveis!",
+    "bossEscapeModal": "Você deve derrotá-lo para progredir. Ganhos de XP reduzidos em 90% até a vitória.",
+    "bossEscapeMessage": "⏱️ O TEMPO ACABOU! O chefe escapó! Ganhos de XP reduzidos em 90% até que o chefe seja derrotado."
+  },
+  "powerups": {
+    "moonies": "Moonies",
+    "damage": "Dano",
+    "speed": "Velocidade",
+    "multi": "Multi",
+    "crit": "Crítico",
+    "comboPause": "Pausa de Combo"
   },
   "shop": {
     "title": "MELHORIAS",
@@ -52,7 +98,19 @@
     "buyQuantity": "Quantidade de Compra:",
     "specialUpgrades": "⭐ MELHORIAS ESPECIAIS ⭐",
     "noOwned": "Nenhuma melhoria especial obtida ainda.",
-    "resetSave": "Resetar Salvamento"
+    "resetSave": "Resetar Salvamento",
+    "max": "MÁX",
+    "autoBuy": "Compra Auto",
+    "autoBuyTitle": "Compra automaticamente melhorias acessíveis a cada 0.5 segundos quando ativado",
+    "toggleAutoBuy": "Alternar Compra Automática",
+    "autoBuyTooltip": "Compra automaticamente melhorias acessíveis a cada 0.5 segundos",
+    "autoBuyLockedInfo": "Comprar na Loja de Ascensão (50 PP)",
+    "autoBuyLockedTooltip": "Compra Auto: BLOQUEADO - Compre na Loja de Ascensão por 50 Pontos de Ascensão",
+    "autoBuyOnTooltip": "Compra Auto: LIGADO - Compra automaticamente melhorias acessíveis a cada 0.5 segundos",
+    "autoBuyOffTooltip": "Compra Auto: DESLIGADO - Clique para ativar a compra automática de melhorias acessíveis",
+    "openShop": "Abrir Loja",
+    "closeShop": "Fechar Loja",
+    "buy": "Comprar"
   },
   "boss": {
     "encounter": "⚠️ ENCONTRO COM CHEFE ⚠️",
@@ -197,7 +255,37 @@
     "uiOverlaysDesc": "Badges curtas e visuais únicos para cada arquétipo facilitam a identificação em tempo real.",
     "thankYou": "Obrigado por testar! Conte pra gente o que achou dos novos inimigos.",
     "startPlaying": "Começar a Jogar!",
-    "majorUpdate": "ATUALIZAÇÃO BETA"
+    "majorUpdate": "ATUALIZAÇÃO BETA",
+    "v111Title": "Novidades da Versão 1.11.0 (Beta)",
+    "newControl": "Nova Opção de Controle",
+    "holdSpace": "<strong>Segurar Espaço para Atacar</strong> – Mantenha a barra de espaço pressionada para ataques contínuos!",
+    "rateLimit": "Limitado a ~6.7 ataques/seg para jogabilidade equilibrada sem spam.",
+    "sustainedCombat": "Perfeito para combate sustentado enquanto gerencia outros elementos do jogo.",
+    "enhancedTutorial": "Tutorial Aprimorado",
+    "beautifulUI": "Novo tutorial visual com badges numeradas.",
+    "animatedBorders": "Bordas animadas com efeitos de brilho pulsante e animações de hover.",
+    "clearerVisual": "Hierarquia visual mais clara com ícones e destaque de texto melhorados.",
+    "responsive": "Design totalmente responsivo otimizado para mobile e desktop.",
+    "bugFixes": "Correções de Bugs & Otimizações",
+    "tinyTyrantFix": "Corrigido efeitos visuais do Tiny Tyrant (Boss Level 5) aparecendo no boss errado.",
+    "powerupPerf": "Melhoria dramática de performance dos power-ups – sem mais lag durante buffs!",
+    "screenShakeFix": "Opção de desativar tremor de tela agora funciona corretamente durante lutas de boss.",
+    "omegaFilter": "Reduzida intensidade do filtro amarelo do Omega Core (Boss 100).",
+    "rainbowLaser": "Renderização do laser arco-íris otimizada para jogabilidade mais suave.",
+    "tipSpace": "Experimente segurar Espaço durante lutas de boss para dano sustentado enquanto desvia de efeitos visuais!"
+  },
+  "tutorialSplash": {
+    "welcome": "Bem-vindo ao BOBBLE!",
+    "subtitle": "Sua missão: Defender a Terra da invasão alienígena",
+    "step1Title": "Clique para Atacar <strong>ou Segure Espaço</strong>",
+    "step1Desc": "Clique nos alienígenas para causar dano. Cada morte concede moeda (Moonies) e experiência.",
+    "step2Title": "Construa Sua Frota",
+    "step2Desc": "Abra a Loja para comprar melhorias. Naves fornecem DPS passivo e aumentam seu poder de fogo. Você poderá ascender após o lvl 100",
+    "step3Title": "Colete Power-Ups",
+    "step3Desc": "Alienígenas soltam power-ups que aumentam temporariamente dano, velocidade ou críticos.",
+    "step4Title": "Derrote Chefes",
+    "step4Desc": "A cada 25 níveis (e no lvl 5), um chefe bloqueará seu progresso. Derrote-o antes que o tempo acabe! Você pode ganhar artefatos misteriosos",
+    "startButton": "Entendi!"
   },
   "upgrades": {
     "main": {

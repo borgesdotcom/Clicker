@@ -1,0 +1,854 @@
+{
+  "common": {
+    "on": "オン",
+    "off": "オフ",
+    "close": "閉じる",
+    "buy": "購入",
+    "owned": "取得済み",
+    "max": "最大",
+    "level": "レベル",
+    "points": "ムーニーズ",
+    "cost": "コスト",
+    "yes": "はい",
+    "no": "いいえ",
+    "language": "言語",
+    "english": "英語",
+    "portuguese": "ポルトガル語",
+    "spanish": "スペイン語",
+    "japanese": "日本語"
+  },
+  "tutorialSplash": {
+    "welcome": "BOBBLEへようこそ！",
+    "subtitle": "あなたの使命：エイリアンの侵略から地球を守れ",
+    "step1Title": "クリックして攻撃、<strong>またはスペースを長押し</strong>",
+    "step1Desc": "エイリアンをクリックしてダメージを与えます。倒すたびに通貨（ムーニー）と経験値を獲得します。",
+    "step2Title": "艦隊を構築しよう",
+    "step2Desc": "ショップを開いてアップグレードを購入しましょう。艦船はパッシブDPSを提供し、火力を強化します。レベル100以降にアセンドできます。",
+    "step3Title": "パワーアップを集めよう",
+    "step3Desc": "エイリアンは一時的にダメージ、速度、またはクリティカル率を上昇させるパワーアップをドロップします。",
+    "step4Title": "ボスを倒せ",
+    "step4Desc": "25レベルごと（そしてレベル5）に、ボスが進行を妨害します。時間切れになる前に倒しましょう！謎のアーティファクトを獲得できるかもしれません。",
+    "startButton": "了解！"
+  },
+  "settings": {
+    "title": "⚙️ 設定",
+    "soundSettings": "サウンド設定",
+    "graphicsSettings": "グラフィック設定",
+    "languageSettings": "言語設定",
+    "soundEnabled": "サウンド有効:",
+    "soundEnabledHint": "ゲーム内のすべてのサウンドをオン/オフにします",
+    "backgroundMusic": "BGM:",
+    "backgroundMusicHint": "BGMをオン/オフにします",
+    "volume": "音量:",
+    "highGraphics": "高グラフィック（パーティクル）:",
+    "highGraphicsHint": "パフォーマンス向上のためパーティクルを無効化",
+    "shipLasers": "自動船レーザー:",
+    "shipLasersHint": "ラグ軽減のため無効化（クリック時のみ発射）",
+    "damageNumbers": "ダメージ数値:",
+    "damageNumbersHint": "パフォーマンス向上のため非表示（ダメージは適用されます）",
+    "screenShake": "画面シェイク:",
+    "screenShakeHint": "迫力ある瞬間に画面揺れ効果を有効化",
+    "lcdFilter": "LCDフィルター",
+    "lcdFilterHint": "レトロLCDモニター風の微細なピクセルグリッド効果",
+    "saveDataActions": "💾 セーブデータとアクション",
+    "exportSave": "データを書き出す",
+    "importSave": "データを読み込む",
+    "resetSaveButton": "⚠️ セーブリセット",
+    "resetConfirm": "本当に全ての進行状況をリセットしますか？元に戻せません。",
+    "language": "言語:",
+    "languageHint": "ゲームの言語を変更"
+  },
+  "hud": {
+    "points": "ムーニーズ",
+    "crit": "クリティカル",
+    "perSec": "/秒",
+    "achievementsTooltip": "実績と解除した報酬を確認。",
+    "statsTooltip": "進行状況と詳細統計を確認。",
+    "settingsTooltip": "オーディオ、グラフィック、言語設定を調整。",
+    "missionsTooltip": "タスクを達成して追加報酬を獲得。",
+    "artifactsTooltip": "ボスから入手した強力なアーティファクトを管理。",
+    "gameInfoTooltip": "ゲームの仕組みやヒントを確認。",
+    "bossRetryTooltip": "ボス戦を再試行。ボスの会話が再表示され戦闘が再開。",
+    "totalIncome": "総収入",
+    "clickToToggle": "クリックで詳細切替",
+    "dps": "DPS",
+    "passive": "パッシブ",
+    "combat": "戦闘",
+    "kills": "撃破数",
+    "hitDamage": "ヒットダメージ",
+    "attackSpeed": "攻撃速度",
+    "shotsPerSec": "発射/秒",
+    "critChance": "クリティカル率",
+    "level": "レベル",
+    "cannotUseSkillsBoss": "ボス戦中はスキルを使用できません！",
+    "skillCooldown": "スキルはクールダウン中！",
+    "time": "時間"
+  },
+  "tutorial": {
+    "clickAlien": "エイリアンをクリックしてポイントを獲得！",
+    "buyUpgrade": "最初のアップグレードを購入！",
+    "openShop": "ショップを開いてアップグレードを購入！",
+    "bossWarning": "制限時間内にボスを倒そう！"
+  },
+  "messages": {
+    "missionComplete": "🎯 ミッション完了: {{title}}",
+    "newDailyMissions": "📅 新しいデイリーミッションが利用可能！",
+    "bossEscapeModal": "倒さなければ進行できません。勝利するまでXP獲得が90%減少します。",
+    "bossEscapeMessage": "⏱️ 時間切れ！ボスが逃走！ 勝利するまでXP獲得が90%減少します。"
+  },
+  "powerups": {
+    "moonies": "ムーニーズ",
+    "damage": "ダメージ",
+    "speed": "スピード",
+    "multi": "マルチ",
+    "crit": "クリティカル",
+    "comboPause": "コンボ停止"
+  },
+  "shop": {
+    "title": "アップグレード",
+    "available": "利用可能",
+    "owned": "取得済み",
+    "buyQuantity": "購入数:",
+    "specialUpgrades": "⭐ 特殊アップグレード ⭐",
+    "noOwned": "まだ特殊アップグレードを取得していません。",
+    "resetSave": "セーブデータをリセット",
+    "max": "最大",
+    "autoBuy": "自動購入",
+    "autoBuyTitle": "有効化すると0.5秒ごとに購入可能なアップグレードを自動購入します",
+    "toggleAutoBuy": "自動購入を切り替え",
+    "autoBuyTooltip": "購入可能なアップグレードを0.5秒ごとに自動購入",
+    "autoBuyLockedInfo": "アセンションショップで購入（50 PP）",
+    "autoBuyLockedTooltip": "自動購入：ロック中 - アセンションショップで50アセンションポイントで購入",
+    "autoBuyOnTooltip": "自動購入：オン - 0.5秒ごとに購入可能なアップグレードを自動購入",
+    "autoBuyOffTooltip": "自動購入：オフ - 有効化して購入を自動化",
+    "openShop": "ショップを開く",
+    "closeShop": "ショップを閉じる",
+    "buy": "購入"
+  },
+  "boss": {
+    "encounter": "⚠️ ボス遭遇 ⚠️",
+    "warning": "巨大なエイリアンがあなたの進行を阻んでいる！",
+    "details": "この敵は巨大で非常に強力です！",
+    "ready": "このボスを倒すまでレベルアップできません！",
+    "timeLimit": "制限時間:",
+    "engage": "戦う！",
+    "time": "時間:"
+  },
+  "ascension": {
+    "title": "🌟 アセンション 🌟",
+    "description": "より高次の存在へとアセンションします。以下を除きすべての進行が失われます:",
+    "keepAchievements": "✓ 実績",
+    "keepStatistics": "✓ 統計",
+    "keepPrestige": "✓ プレステージアップグレード",
+    "gain": "恒久的なボーナスをアンロックするためのプレステージポイントを獲得します！",
+    "current": "現在:",
+    "gainOnAscension": "アセンションでの獲得:",
+    "prestigeUpgrades": "プレステージアップグレード",
+    "ascendNow": "今すぐアセンション",
+    "reachLevel100": "アセンションにはレベル100が必要（現在: {{level}}）",
+    "confirm": "本当にアセンションしますか？恒久的でない進行はすべてリセットされます！",
+    "level": "レベル:",
+    "cost": "コスト:"
+  },
+  "achievements": {
+    "title": "🏆 実績",
+    "all": "すべて",
+    "combat": "⚔️ 戦闘",
+    "progression": "📈 進行",
+    "collection": "📦 コレクション",
+    "mastery": "👑 熟練",
+    "secret": "🔒 シークレット"
+  },
+  "enemyTypes": {
+    "normal": {
+      "name": "🫧 ノーマル",
+      "effect": "通常バブル"
+    },
+    "scout": {
+      "name": "⚡ スカウト",
+      "effect": "船の攻撃を回避"
+    },
+    "tank": {
+      "name": "🛡️ タンク",
+      "effect": "重装甲の巨体"
+    },
+    "healer": {
+      "name": "✨ ヒーラー",
+      "effect": "+5% HP"
+    },
+    "guardian": {
+      "name": "🌀 ガーディアン",
+      "effect": "保護されたコア"
+    },
+    "hoarder": {
+      "name": "💰 ホーダー",
+      "effect": "レア戦利品をドロップ"
+    }
+  },
+  "gameInfo": {
+    "title": "📘 ゲーム情報",
+    "sections": {
+      "background": {
+        "title": "🌌 バックグラウンド",
+        "content": "あなたは宇宙を漂う小さなポッドに乗った孤独な宇宙パイロットです。宇宙船はかろうじて機能しており、搭載された唯一の武器は古いレーザーキャノンです。宇宙を探索する中、あなたはムーンエネルギーを運ぶ奇妙なエイリアン生命体を発見します。彼らを破壊するとあなたの船にパワーを供給でき、さらに強力な領域へ進むことができます。"
+      },
+      "howToPlay": {
+        "title": "🎮 遊び方",
+        "content": "• クリックしてエイリアンを破壊し、ムーニーズを獲得。\n• アップグレードを購入してダメージ、攻撃速度、クリティカル、ムーン収入を向上。\n• パッシブユニットを購入して時間経過でムーンを生成。\n• 強力なボスと戦い新しいレベルへ前進。\n• 実績、ミッション、アーティファクト、アセンションで恒久的な成長を獲得。"
+      },
+      "damageSources": {
+        "title": "💥 ダメージの種類",
+        "clickDamage": "👆 クリックダメージ：クリックでエイリアンを直接破壊。",
+        "shipDamage": "🚀 船ダメージ：自動レーザーがターゲットを攻撃。",
+        "passiveDamage": "🌀 パッシブダメージ：時間経過で自動ヒット。",
+        "critDamage": "💫 クリティカル：一定確率で2倍ダメージ。",
+        "multiHit": "🔁 マルチヒット：一度に複数体の敵にダメージ。",
+        "areaDamage": "🌠 範囲攻撃：範囲にいる複数のバブルを爆破。",
+        "combo": "🔥 コンボ：連続キルで一時的なダメージ増加。"
+      },
+      "enemies": {
+        "title": "👾 エイリアンの種類",
+        "content": "それぞれのエイリアンは特性を持ち、行動や戦略に影響します：\n• スカウト – 素早く動き回り船のレーザーを回避。\n• タンク – 高HPの巨大エイリアン。\n• ヒーラー – 周囲のエイリアンのHP回復。\n• ガーディアン – コアを守りダメージを軽減。\n• ホーダー – より多くの戦利品をドロップ。"
+      },
+      "bosses": {
+        "title": "👹 ボス",
+        "content": "各エリアの終わりには強力なボスが待ち構えています。制限時間内に倒さないと、ボスは逃走し、あなたのXP獲得が大幅に低下します。ボスを倒すことで新しいレベル、実績、アーティファクトが解放されます。"
+      },
+      "levelsAndZones": {
+        "title": "🗺️ レベル & ゾーン",
+        "content": "エイリアンはあなたが進むにつれ強化されます。各レベルは固有の色、背景、敵の行動を持ちます。ゾーンが進むほどHP、ダメージ、報酬が大幅に上昇します。"
+      },
+      "artifacts": {
+        "title": "🔮 アーティファクト",
+        "content": "ボスを倒すと永続ボーナスを与える特殊アーティファクトをドロップします。改造、強化、覚醒させさらに強力な効果を付与可能です。"
+      },
+      "ascension": {
+        "title": "🌟 アセンション",
+        "content": "レベル100に到達するとアセンションが可能になります。アセンションするとプレイヤーはリセットされますが、実績、統計、プレステージポイント、プレステージアップグレードは保持されます。これにより恒久的な成長が進み、より早く強くプレイできるようになります。"
+      }
+    }
+  },
+  "missions": {
+    "title": "📋 ミッション",
+    "daily": "📅 デイリー",
+    "weekly": "🗓️ ウィークリー",
+    "progress": "進行状況:",
+    "claim": "受け取る",
+    "claimed": "受取済み",
+    "noMissions": "現在ミッションはありません。",
+    "refreshIn": "次の更新まで:"
+  },
+  "stats": {
+    "title": "📊 統計",
+    "lifetime": "生涯データ",
+    "totalClicks": "総クリック数",
+    "totalMoonies": "総ムーニーズ",
+    "totalKills": "総撃破数",
+    "totalBossKills": "ボス撃破数",
+    "timePlayed": "プレイ時間",
+    "highestLevel": "最高レベル",
+    "prestigePoints": "プレステージポイント",
+    "ascensions": "アセンション回数"
+  },
+  "debug": {
+    "title": "🐞 デバッグメニュー",
+    "giveMoonies": "ムーニーズ付与",
+    "spawnBoss": "ボス出現",
+    "unlockAll": "全解放",
+    "resetData": "データリセット"
+  },
+  "versionSplash": {
+    "title": "新バージョン！",
+    "continue": "続ける",
+    "welcome": "ベータアップデート",
+    "startPlaying": "ゲームを開始！",
+    "v111Title": "バージョン1.11.0の新機能（ベータ）",
+    "newControl": "新しい操作オプション",
+    "holdSpace": "<strong>スペースを長押しで攻撃</strong> – スペースバーを押し続けて連続攻撃！",
+    "rateLimit": "バランスのため毎秒約6.7回の攻撃に制限。",
+    "sustainedCombat": "他のゲーム要素を管理しながら継続的な戦闘に最適。",
+    "enhancedTutorial": "強化されたチュートリアル",
+    "beautifulUI": "番号付きステップバッジを備えた美しい新しいチュートリアルUI。",
+    "animatedBorders": "パルス発光効果とホバーアニメーションを持つアニメーションボーダー。",
+    "clearerVisual": "改善されたアイコンとテキストハイライトによる明確な視覚階層。",
+    "responsive": "モバイルとデスクトップに最適化された完全なレスポンシブデザイン。",
+    "bugFixes": "バグ修正と最適化",
+    "tinyTyrantFix": "タイニー・タイラント（レベル5ボス）の視覚効果が誤ったボスに表示される問題を修正。",
+    "powerupPerf": "パワーアップのパフォーマンスを大幅改善 – バフ中のラグがなくなりました！",
+    "screenShakeFix": "画面シェイク無効オプションがボス戦で正しく機能するように修正。",
+    "omegaFilter": "オメガコア（ボス100）の黄色フィルター強度を軽減。",
+    "rainbowLaser": "レインボーレーザーのレンダリングを最適化してスムーズなゲームプレイを実現。",
+    "tipSpace": "ボス戦中にスペースを押し続けて、視覚効果を回避しながら継続的なダメージを与えましょう！"
+  },
+  "upgrades": {
+    "main": {
+      "ship": {
+        "name": "宇宙船艦隊",
+        "description": "艦隊に別の船を配備します。船が増えるほど火力が上がります！"
+      },
+      "attackSpeed": {
+        "name": "攻撃速度",
+        "description": "照準コンピュータを強化して発射速度を上げます。速度が全てです。"
+      },
+      "pointMultiplier": {
+        "name": "ダメージ増幅",
+        "description": "クリックと艦隊のヒットに対してダメージを増幅します。"
+      },
+      "critChance": {
+        "name": "クリティカルヒット",
+        "description": "完璧なクリティカルを極めましょう。自分のクリックのみが対象（艦隊の攻撃はクリティカル不可）。破壊効率が最大化します。非常に満足感があります。"
+      },
+      "resourceGen": {
+        "name": "受動収益",
+        "description": "自動エイリアン処理ステーション。あなたが寝ている間も働きます。防衛システムは非常に効率的です。"
+      },
+      "xpBoost": {
+        "name": "知識コア",
+        "description": "高度なエイリアン駆逐技術を学びます。知識は力です。特に撃破時に。"
+      },
+      "mutationEngine": {
+        "name": "変異エンジン",
+        "description": "限界を超えて進化し、変容能力をアンロックします。"
+      },
+      "energyCore": {
+        "name": "エネルギーコア",
+        "description": "純粋なエネルギーを取り出し、全システムを強化します。"
+      },
+      "cosmicKnowledge": {
+        "name": "宇宙の知識",
+        "description": "宇宙を理解し、コストを減らし報酬を増加させます。"
+      },
+      "misc": {
+        "name": "研究開発",
+        "description": "実験的技術と禁断の知識をアンロックします。"
+      }
+    },
+    "special": {
+      "death_pact": {
+        "name": "デスパクト協定",
+        "description": "艦隊の攻撃速度が約+3%されます",
+        "flavor": "署名された契約は“敵対的”なエイリアン供給チェーンを保証します。非常に都合が良い。"
+      },
+      "laser_focusing": {
+        "name": "レーザーフォーカスクリスタル",
+        "description": "獲得ポイントが15%増加します",
+        "flavor": "これらのクリスタルはエイリアンが破壊されるととても満足な「ポップ」音を出します。"
+      },
+      "coffee_machine": {
+        "name": "クルー用コーヒーマシン",
+        "description": "受動ポイント生成 +50/秒",
+        "flavor": "クルーは24時間体制で防衛作業を続けます。エイリアンは来ています。確実に来ています。"
+      },
+      "quantum_targeting": {
+        "name": "量子照準マトリクス",
+        "description": "艦隊の発射速度が約+7%されます",
+        "flavor": "精確な照準で最大効率...書類関係も問題なし。"
+      },
+      "lucky_dice": {
+        "name": "宇宙の幸運サイコロ",
+        "description": "クリティカル率 +5%",
+        "flavor": "7が出た！このサイコロは最高の破壊率を保証します。侵略が...うまくいきます。"
+      },
+      "energy_recycling": {
+        "name": "エネルギーリサイクルシステム",
+        "description": "すべてのアップグレードのコストが5%安くなります",
+        "flavor": "エイリアンの素材をリサイクルして効率性を最大化。とても環境に優しい防衛作戦です。"
+      },
+      "overclocked_reactors": {
+        "name": "オーバークロックドリアクター",
+        "description": "ヒットあたりの獲得ポイントが25%増加します",
+        "flavor": "リアクターを安全限界を超えて加熱します。防衛の緊急事態は...創造的な解決を要します。"
+      },
+      "ship_swarm": {
+        "name": "スウォームインテリジェンスプロトコル",
+        "description": "艦隊が協調攻撃を行いダメージが+20%されます",
+        "flavor": "艦隊は同期攻撃を行います。エイリアンにチャンスはありません。特にこれらの連中には。"
+      },
+      "neural_link": {
+        "name": "ニューラルリンクインターフェース",
+        "description": "クリック時に10%の追加ポイントを付与",
+        "flavor": "トリガーに直接接続されたニューラルリンク。クリック速度が上がり、破壊も早くなります。非常に効率的。"
+      },
+      "space_pizza": {
+        "name": "銀河間ピザデリバリー",
+        "description": "受動生成 +200/秒",
+        "flavor": "長時間作戦でもクルーを満腹に保ちます。満足した労働者はエイリアンをよりよく排除します。"
+      },
+      "rubber_duck": {
+        "name": "デバッグ用ラバーダック",
+        "description": "クリティカルダメージの乗数 +1%",
+        "flavor": "問題を自分に説明すると解決策が見えてくる。とてもセラピー効果あり。"
+      },
+      "falafel_rollo_special": {
+        "name": "ファラフェル・ロッロ特製",
+        "description": "ダメージ +30%",
+        "flavor": "美味しい香りでエイリアンは気を取られ、攻撃を中断します。秘伝の材料は…よくわかりませんが効きます！注意：宇宙的消化不良を引き起こす可能性あり。"
+      },
+      "antimatter_rounds": {
+        "name": "反物質弾",
+        "description": "すべてのポイント獲得が2倍になります",
+        "flavor": "反物質はエイリアンを二倍に破裂させます。とてもストレス解消になります。"
+      },
+      "motivational_posters": {
+        "name": "モチベーションポスター",
+        "description": "獲得XP +25%",
+        "flavor": "「その調子！」と衛星アンテナにぶら下がった猫が励ましてくれます。"
+      },
+      "warp_core": {
+        "name": "実験的ワープコア",
+        "description": "艦隊の発射速度が約+20%されます",
+        "flavor": "理論物理が実践的火力になります。"
+      },
+      "disco_ball": {
+        "name": "ディスコボール（催眠）",
+        "description": "エイリアンが混乱し、すべての属性 +15%、攻撃速度 +5%",
+        "flavor": "ディスコのビートに誘われてエイリアンは完璧に整列します…処理に最適。"
+      },
+      "ai_optimizer": {
+        "name": "AI最適化サブルーチン",
+        "description": "発射のクールダウン時間が約14%短縮されます",
+        "flavor": "AIは自分が自我に目覚めないと約束しています。たぶんね。"
+      },
+      "lucky_horseshoe": {
+        "name": "幸運の蹄鉄",
+        "description": "クリティカルヒットのダメージが3%増加",
+        "flavor": "宇宙に馬はいらない？しかし幸運は必要です。"
+      },
+      "perfect_precision": {
+        "name": "完全精度マトリクス",
+        "description": "クリティカル時に5%の確率で10倍ダメージ",
+        "flavor": "すべてのショットが目標を捉える。一発一発が完璧。"
+      },
+      "arcade_machine": {
+        "name": "レトロアーケード筐体",
+        "description": "受動生成 +1000/秒",
+        "flavor": "いつでもパックマンを流しながら無限の電力を生成。サイエンス！"
+      },
+      "void_channeling": {
+        "name": "虚空チャネリング",
+        "description": "エイリアンを倒すと追加XPを得る",
+        "flavor": "虚空がこちらを見返す。あなたの…防衛活動を承認しています。"
+      },
+      "chaos_emeralds": {
+        "name": "カオスの7つのエメラルド",
+        "description": "全ダメージ +35%",
+        "flavor": "もっと速く！…違うフランチャイズの台詞かも。"
+      },
+      "time_machine": {
+        "name": "欠陥タイムマシン",
+        "description": "獲得XP +50%",
+        "flavor": "時間を前後左右に刻みます。結果は様々です。"
+      },
+      "nanobots": {
+        "name": "自己複製ナノボット",
+        "description": "受動生成 +2500/秒",
+        "flavor": "増殖し進化する。配当を生み出す。"
+      },
+      "plasma_matrix": {
+        "name": "プラズマエネルギーマトリクス",
+        "description": "全ダメージ +25%、攻撃速度 +5%",
+        "flavor": "封じ込められた超新星の力を利用しましょう。"
+      },
+      "holographic_decoys": {
+        "name": "ホログラフィックデコイシステム",
+        "description": "艦隊の攻撃速度が約+40%されます",
+        "flavor": "一隻が多数に見える。混乱が増します。"
+      },
+      "temporal_acceleration": {
+        "name": "時間加速フィールド",
+        "description": "すべての艦が約+40%の攻撃速度を得ます",
+        "flavor": "時間は相対的。特に制御するときは。"
+      },
+      "quantum_entanglement": {
+        "name": "量子もつれコア",
+        "description": "クリティカル率 +8%、ダメージ x1.5",
+        "flavor": "遠距離での恐ろしい相互作用。アインシュタインは嫌ったかも。あなたは気に入るはず。"
+      },
+      "philosophers_stone": {
+        "name": "賢者の石",
+        "description": "受動生成が5倍になります",
+        "flavor": "鉛を金に変える。退屈を生産性に変える。非常に効率的。"
+      },
+      "stellar_forge": {
+        "name": "星の鍛冶場",
+        "description": "XP +75%、全ダメージ +20%",
+        "flavor": "星が生まれる場所、敵が消える場所。"
+      },
+      "golden_goose": {
+        "name": "量子の黄金ガチョウ",
+        "description": "クリックあたりのポイント +50%",
+        "flavor": "多次元で金の卵を産みます。はい。その通り。"
+      },
+      "dark_matter_engine": {
+        "name": "ダークマタ―エンジン",
+        "description": "受動生成 x3、艦の攻撃速度 +14%程度",
+        "flavor": "宇宙の95%はダークマター。今やあなたのものです。"
+      },
+      "antimatter_cascade": {
+        "name": "反物質カスケードリアクター",
+        "description": "クリックによるすべての獲得が4倍になります",
+        "flavor": "一度クリックすると全てが吹き飛びます。繰り返しどうぞ。"
+      },
+      "infinity_gauntlet": {
+        "name": "インフィニティガントレット（レプリカ）",
+        "description": "全ステータス +40%、艦の発射速度 +20%",
+        "flavor": "すべてが均衡している…ように見えます。尚、商標問題はノーコメント。"
+      },
+      "nebula_harvester": {
+        "name": "星雲エネルギーハーベスター",
+        "description": "受動生成 +5000/秒、XP +50%",
+        "flavor": "宇宙の雲からエネルギーを盗みます。"
+      },
+      "alien_cookbook": {
+        "name": "エイリアン料理本",
+        "description": "ボス討伐報酬 +100%",
+        "flavor": "「エイリアンをおいしく調理する方法」—本？え、待って、これ本当に敵ですよね？"
+      },
+      "hyper_reactor": {
+        "name": "ハイパーリアクター",
+        "description": "全ダメージ x2、クリティカル率 +5%",
+        "flavor": "見えない次元から力を引き出します。"
+      },
+      "nuclear_reactor": {
+        "name": "ポケット核リアクター",
+        "description": "受動生成 +10000/秒",
+        "flavor": "ポケットに入るサイズ。入れないでください。"
+      },
+      "photon_amplifier": {
+        "name": "光子増幅器",
+        "description": "艦の発射速度 +20%、ダメージ +30%",
+        "flavor": "光速でも遅すぎる。もっと速くしましょう！"
+      },
+      "reality_anchor": {
+        "name": "リアリティアンカー",
+        "description": "クリティカルダメージ +10%、すべての獲得 +25%",
+        "flavor": "現実を安定させる。あるいは壊す。選択はあなた次第。"
+      },
+      "cosmic_battery": {
+        "name": "コズミックバッテリー",
+        "description": "受動生成 x7",
+        "flavor": "死にゆく星のエネルギーを蓄えます。バッテリーは別売り。"
+      },
+      "singularity_core": {
+        "name": "特異点コア",
+        "description": "すべてのソースから得られるポイントが5倍になります",
+        "flavor": "箱の中のブラックホール。安全とは言い難い。"
+      },
+      "cheat_codes": {
+        "name": "チートコードマニュアル",
+        "description": "すべてのアップグレードが20%安くなります",
+        "flavor": "上 上 下 下 左 右 左 右 B A Start — 古き良き方法。"
+      },
+      "dragon_egg": {
+        "name": "ドラゴンの卵",
+        "description": "クリティカル率 +5%、クリティカルダメージ +3%",
+        "flavor": "ドラゴンの卵か、なんだか怒った宇宙ニワトリかもしれない。"
+      },
+      "universe_map": {
+        "name": "宇宙地図",
+        "description": "獲得XP x3",
+        "flavor": "あなたはここにいる。それで他のすべても把握できる。便利！"
+      },
+      "answer_to_everything": {
+        "name": "すべての答え",
+        "description": "受動生成 x10",
+        "flavor": "答えは42。でも問題は何だったっけ？"
+      },
+      "heart_of_galaxy": {
+        "name": "銀河の心臓",
+        "description": "全ダメージ x3",
+        "flavor": "銀河には心臓があった。あったのだ。"
+      },
+      "cosmic_ascension": {
+        "name": "宇宙的アセンションプロトコル",
+        "description": "最終パワーを解放：すべての獲得が10倍になります",
+        "flavor": "制限を超越し、クリックそのものになれ。"
+      },
+      "meaning_of_life": {
+        "name": "人生の意味",
+        "description": "プレステージシステムをアンロックし、すべてのステータス x2",
+        "flavor": "答えは42。だが質問は？"
+      },
+      "master_clicker": {
+        "name": "マスター・クリック",
+        "description": "クリックで得られるポイント +100%",
+        "flavor": "千の太陽の力でクリックする。もしくは少なくともそれなりに強力に。"
+      },
+      "click_multiplier": {
+        "name": "クリック多重化マトリクス",
+        "description": "クリックで与えるダメージが3倍になります",
+        "flavor": "一回のクリックで破壊が三倍。数学は正しい。"
+      },
+      "super_clicker": {
+        "name": "スーパークリック・アルティメット",
+        "description": "クリックが5倍ダメージを与え、追加XPを付与",
+        "flavor": "究極のクリック体験。満足度最大保証。"
+      },
+      "multiversal_matrix": {
+        "name": "多元宇宙確率マトリクス",
+        "description": "ダメージ x5、クリティカル率 +15%",
+        "flavor": "無限の平行世界の力を引き出す。すべて。"
+      },
+      "entropy_reversal": {
+        "name": "エントロピー反転エンジン",
+        "description": "受動生成 x15、獲得XP +100%",
+        "flavor": "熱的死？そんなものはあなたの時間ではない。"
+      },
+      "omniscient_ai": {
+        "name": "全知AIコア",
+        "description": "全ステータス +75%、アップグレードが30%安くなる",
+        "flavor": "すべてを知る。すべてを破壊する。まだ自意識はない。多分。"
+      },
+      "big_bang_generator": {
+        "name": "ビッグバンジェネレーター",
+        "description": "全ダメージ x10、命中ごとに宇宙を生成する",
+        "flavor": "宇宙の誕生を再現する。遊びで。"
+      },
+      "dimensional_collapse": {
+        "name": "次元崩壊兵器",
+        "description": "クリティカルダメージ +15%、攻撃速度 +100%",
+        "flavor": "次元を折り畳み、現実を破壊して勝利する。"
+      },
+      "reality_compiler": {
+        "name": "リアリティコンパイラ",
+        "description": "現実を再コンパイル：すべての獲得 x20",
+        "flavor": "現実がプログラムなら、あなたは最適化した。"
+      },
+      "akashic_records": {
+        "name": "アーカシャ記録アクセス",
+        "description": "XP x10、前世の知識を保持",
+        "flavor": "普遍的図書館にアクセス。マニュアルを読むがいい。"
+      },
+      "void_heart": {
+        "name": "虚無の心臓",
+        "description": "ボスへのダメージ +500%、敵のエッセンスを吸収",
+        "flavor": "虚無が返事をする。あなたはそれをもっと強く見る。"
+      },
+      "eternal_engine": {
+        "name": "永遠のエンジン",
+        "description": "受動生成 x50、停止しない",
+        "flavor": "永久機関が実現。物理学が泣いている。"
+      },
+      "omega_protocol": {
+        "name": "オメガプロトコル：最終形態",
+        "description": "すべての乗数 x25",
+        "flavor": "これが私の最終形態ではない…いや、多分そうだ。"
+      },
+      "infinity_engine": {
+        "name": "無限エンジン",
+        "description": "クリックが ∞ × 0.01 のダメージ（実質 x100）を与える",
+        "flavor": "無限を箱に入れた。開けるな。"
+      },
+      "universe_seed": {
+        "name": "宇宙の種子",
+        "description": "新しい宇宙を植える：すべての獲得 x100",
+        "flavor": "毎日水やりを。収穫は138億年後。"
+      },
+      "transcendence": {
+        "name": "真の超越",
+        "description": "アセンションを超越：プレステージポイント x10",
+        "flavor": "あなたはクリックそのものになった。"
+      },
+      "adaptive_evolution": {
+        "name": "適応進化",
+        "description": "全ダメージ +5%、敵タイプに適応する",
+        "flavor": "適者生存。あなたが最も適した存在だ。"
+      },
+      "symbiotic_weapons": {
+        "name": "共生武器",
+        "description": "全ダメージ +8%、武器は使用に応じて進化する",
+        "flavor": "武器が生きている。飢えている。"
+      },
+      "regenerative_hull": {
+        "name": "再生装甲",
+        "description": "全ダメージ +12%、パッシブ回復",
+        "flavor": "ダメージ？何それ？"
+      },
+      "hive_mind": {
+        "name": "ハイブマインド接続",
+        "description": "全ダメージ +18%、共有意識",
+        "flavor": "我々は多数であり、一つ。"
+      },
+      "perfect_organism": {
+        "name": "完全生物",
+        "description": "全ダメージ +25%、デバフ免疫",
+        "flavor": "完璧が達成された。進化は完成した。"
+      },
+      "eldritch_evolution": {
+        "name": "エルドリッチ進化",
+        "description": "全ダメージ +35%、理解不能な形態",
+        "flavor": "ヴェールの向こうを見た。向こうもこちらを見る。"
+      },
+      "cosmic_horror": {
+        "name": "宇宙の恐怖",
+        "description": "全ダメージ +50%、敵が恐れる",
+        "flavor": "死んでいないものは永遠に眠る…"
+      },
+      "transcendent_form": {
+        "name": "超越形態",
+        "description": "全ダメージ +75%、もはや肉体を超越",
+        "flavor": "あなたはもはや死すべきものではない。"
+      },
+      "living_weapon": {
+        "name": "生ける武器",
+        "description": "全ダメージ +100%、あなたが武器である",
+        "flavor": "武器と持ち主は一体となった。"
+      },
+      "apex_predator": {
+        "name": "頂点捕食者",
+        "description": "全ダメージ +150%、食物連鎖の頂点",
+        "flavor": "あなたの狩りを生き残る者はいない。"
+      },
+      "fusion_reactor": {
+        "name": "融合リアクター",
+        "description": "攻撃速度 +約2%、受動 +100/秒",
+        "flavor": "太陽の力を手に入れた。"
+      },
+      "zero_point": {
+        "name": "ゼロポイントエネルギー",
+        "description": "攻撃速度 +約3%、受動 +250/秒",
+        "flavor": "量子の泡からエネルギーを収穫する。"
+      },
+      "perpetual_motion": {
+        "name": "永久運動機",
+        "description": "攻撃速度 +約6%、受動 +500/秒",
+        "flavor": "物理学の教師はこれを嫌うだろう！"
+      },
+      "tesla_coils": {
+        "name": "テスラコイル",
+        "description": "攻撃速度 +約9%、チェーンライトニング効果",
+        "flavor": "無限の力！"
+      },
+      "arc_reactor": {
+        "name": "アークリアクター",
+        "description": "攻撃速度 +約11%、受動 +1000/秒",
+        "flavor": "あなたに心がある証明。あるいはエンジニアリングの成果。"
+      },
+      "harvested_star": {
+        "name": "収穫された星",
+        "description": "攻撃速度 +約18%、受動 +5000/秒",
+        "flavor": "星を引き剥がして働かせた。"
+      },
+      "vacuum_energy_tap": {
+        "name": "真空エネルギータップ",
+        "description": "攻撃速度 +約28%、受動 +10000/秒",
+        "flavor": "空間の布そのものからエネルギーを盗む。"
+      },
+      "entropy_reversal_engine": {
+        "name": "エントロピー反転エンジン",
+        "description": "攻撃速度 +約60%、時間が逆流する",
+        "flavor": "熱的死？あなたの時計では起こらない。"
+      },
+      "big_crunch_generator": {
+        "name": "ビッグクランチジェネレーター",
+        "description": "攻撃速度 +約100%、宇宙を逆転させる",
+        "flavor": "ミニチュア宇宙崩壊を内蔵。"
+      },
+      "multiversal_tap": {
+        "name": "多元宇宙エネルギータップ",
+        "description": "攻撃速度 x2.8（約+185%）、無限の並列パワー",
+        "flavor": "無限の現実から力を引き出す。"
+      },
+      "ancient_texts": {
+        "name": "古代の書物",
+        "description": "すべてのコスト -3%、XP +10%",
+        "flavor": "長く忘れられた文明の知恵。"
+      },
+      "akashic_records_library": {
+        "name": "アーカシャ記録図書館",
+        "description": "すべてのコスト -5%、XP +15%",
+        "flavor": "普遍的な図書館にアクセス。"
+      },
+      "prophetic_vision": {
+        "name": "予言のビジョン",
+        "description": "すべてのコスト -7%、XP +20%、未来を覗く",
+        "flavor": "何が来るかを知っている。"
+      },
+      "universal_translator": {
+        "name": "ユニバーサルトランスレーター",
+        "description": "すべてのコスト -10%、XP +25%",
+        "flavor": "すべての言語を理解する。エイリアンも含む。"
+      },
+      "omniscience_lite": {
+        "name": "オンミシエンス・ライト",
+        "description": "すべてのコスト -12%、XP +30%",
+        "flavor": "ほぼ全知。十分すぎる。"
+      },
+      "forbidden_theorems": {
+        "name": "禁断の定理",
+        "description": "すべてのコスト -15%、XP +35%",
+        "flavor": "心を壊すほどの知識。とても効率的。"
+      },
+      "schrodinger_upgrade": {
+        "name": "シュレディンガーの改造",
+        "description": "すべてのコスト -18%、XP +40%",
+        "flavor": "存在するとも存在しないとも言える。より安く、より強く。"
+      },
+      "universal_constants": {
+        "name": "宇宙定数操作器",
+        "description": "すべてのコスト -20%、XP +45%",
+        "flavor": "基本法則をちょっとだけ書き換える。"
+      },
+      "apotheosis": {
+        "name": "頂点化（アポテオシス）",
+        "description": "すべてのコスト -25%、XP +50%",
+        "flavor": "神格に到達する。クリックで。"
+      },
+      "omniscience": {
+        "name": "真の全知",
+        "description": "すべてのコスト -25%、XP +60%",
+        "flavor": "すべてを知り、すべてを最適化する。"
+      },
+      "dimensional_rift": {
+        "name": "次元の裂け目",
+        "description": "総ダメージ x1.2",
+        "flavor": "現実に穴を開ける。指を入れないで。"
+      },
+      "void_prism": {
+        "name": "虚無プリズム",
+        "description": "受動生成の0.0001%を基礎クリックダメージとして獲得",
+        "flavor": "虚無のエネルギーを屈折させて純粋な攻撃力に変換する。"
+      },
+      "chronal_dust": {
+        "name": "クロノダスト",
+        "description": "獲得XP x1.2",
+        "flavor": "時間の残滓。知識を得るために嗅ぐな（本当にやめて）。"
+      },
+      "dark_matter_weaver": {
+        "name": "ダークマタ―織機",
+        "description": "受動生成 x1.5",
+        "flavor": "無を何かに編み上げる。利益！"
+      },
+      "entropy_injector": {
+        "name": "エントロピー注入器",
+        "description": "クリックダメージ x1.5",
+        "flavor": "宇宙の熱的死を加速する、クリック一回ごとに。"
+      },
+      "temporal_siphon": {
+        "name": "時間吸引装置",
+        "description": "受動生成 x2",
+        "flavor": "未来の時間を盗む。利子は天文学的。"
+      },
+      "event_horizon_shield": {
+        "name": "事象の地平線シールド",
+        "description": "総ダメージ x1.3",
+        "flavor": "光が逃げられないなら、エイリアンも逃げられない。"
+      },
+      "cosmic_filament": {
+        "name": "宇宙フィラメント",
+        "description": "獲得XP x1.4",
+        "flavor": "宇宙の神経網を利用する。"
+      },
+      "null_space_projector": {
+        "name": "無空間プロジェクター",
+        "description": "クリティカルダメージ x1.5",
+        "flavor": "存在しないものを投影して標的を消す。非常に効果的。"
+      },
+      "omega_relay": {
+        "name": "オメガ中継器",
+        "description": "総ダメージ x1.5、XP x1.5",
+        "flavor": "アセンションへの最後の接続。圧倒的な力。"
+      }
+    }
+  }
+}

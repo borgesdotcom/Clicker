@@ -14,7 +14,8 @@
     "language": "Idioma",
     "english": "Inglés",
     "portuguese": "Portugués",
-    "spanish": "Español"
+    "spanish": "Español",
+    "japanese": "Japonés"
   },
   "settings": {
     "title": "⚙️ Configuración",
@@ -39,11 +40,49 @@
   },
   "hud": {
     "points": "Moonies",
+    "crit": "Crítico",
+    "perSec": "/seg",
+    "achievementsTooltip": "Ver tus logros y recompensas desbloqueadas.",
+    "statsTooltip": "Sigue tu progreso y estadísticas detalladas.",
+    "settingsTooltip": "Ajustar audio, gráficos y opciones de idioma.",
+    "missionsTooltip": "Completa tareas para ganar recompensas extra.",
+    "artifactsTooltip": "Gestiona artefactos poderosos encontrados en jefes.",
+    "gameInfoTooltip": "Aprende sobre mecánicas de juego y consejos.",
+    "bossRetryTooltip": "Reintentar la pelea contra el jefe. Muestra el diálogo del jefe nuevamente para reiniciar el encuentro.",
+    "totalIncome": "Ingresos Totales",
+    "clickToToggle": "Clic para alternar detalles",
     "dps": "DPS",
     "passive": "Pasivo",
-    "crit": "Crítico",
+    "combat": "Combate",
+    "kills": "Bajas",
+    "hitDamage": "Daño de Golpe",
+    "attackSpeed": "Velocidad de Ataque",
+    "shotsPerSec": "tiros/seg",
+    "critChance": "Probabilidad Crítica",
     "level": "Nivel",
-    "perSec": "/seg"
+    "cannotUseSkillsBoss": "¡No se pueden usar habilidades durante jefes!",
+    "skillCooldown": "¡Habilidad en recarga!",
+    "time": "TIEMPO"
+  },
+  "tutorial": {
+    "clickAlien": "¡Haz clic en el Alien para ganar puntos!",
+    "buyUpgrade": "¡Compra tu primera mejora!",
+    "openShop": "¡Abre la Tienda para comprar mejoras!",
+    "bossWarning": "¡Derrota al Jefe antes de que se acabe el tiempo!"
+  },
+  "messages": {
+    "missionComplete": "🎯 Misión Completa: {{title}}",
+    "newDailyMissions": "📅 ¡Nuevas Misiones Diarias Disponibles!",
+    "bossEscapeModal": "Debes derrotarlo para progresar. Ganancias de XP reducidas en un 90% hasta la victoria.",
+    "bossEscapeMessage": "⏱️ ¡SE ACABÓ EL TIEMPO! ¡El jefe escapó! Ganancias de XP reducidas en un 90% hasta que el jefe sea derrotado."
+  },
+  "powerups": {
+    "moonies": "Moonies",
+    "damage": "Daño",
+    "speed": "Velocidad",
+    "multi": "Multi",
+    "crit": "Crítico",
+    "comboPause": "Pausa de Combo"
   },
   "shop": {
     "title": "MEJORAS",
@@ -52,7 +91,32 @@
     "buyQuantity": "Cantidad de Compra:",
     "specialUpgrades": "⭐ MEJORAS ESPECIALES ⭐",
     "noOwned": "Aún no se han obtenido mejoras especiales.",
-    "resetSave": "Restablecer Guardado"
+    "resetSave": "Restablecer Guardado",
+    "max": "MÁX",
+    "autoBuy": "Compra Auto",
+    "autoBuyTitle": "Compra automáticamente mejoras asequibles cada 0.5 segundos cuando está habilitado",
+    "toggleAutoBuy": "Alternar Compra Automática",
+    "autoBuyTooltip": "Compra automáticamente mejoras asequibles cada 0.5 segundos",
+    "autoBuyLockedInfo": "Comprar en Tienda de Ascensión (50 PP)",
+    "autoBuyLockedTooltip": "Compra Auto: BLOQUEADO - Compra en Tienda de Ascensión por 50 Puntos de Ascensión",
+    "autoBuyOnTooltip": "Compra Auto: ENCENDIDO - Compra automáticamente mejoras asequibles cada 0.5 segundos",
+    "autoBuyOffTooltip": "Compra Auto: APAGADO - Clic para habilitar la compra automática de mejoras asequibles",
+    "openShop": "Abrir Tienda",
+    "closeShop": "Cerrar Tienda",
+    "buy": "Comprar"
+  },
+  "tutorialSplash": {
+    "welcome": "¡Bienvenido a BOBBLE!",
+    "subtitle": "Tu misión: Defender la Tierra de la invasión alienígena",
+    "step1Title": "Haz clic para Atacar <strong>o Mantén Espacio</strong>",
+    "step1Desc": "Haz clic en los alienígenas para causar daño. Cada muerte otorga moneda (Moonies) y experiencia.",
+    "step2Title": "Construye Tu Flota",
+    "step2Desc": "Abre la Tienda para comprar mejoras. Las naves proporcionan DPS pasivo y aumentan tu poder de fuego. Podrás ascender después del nivel 100.",
+    "step3Title": "Recoge Power-Ups",
+    "step3Desc": "Los alienígenas sueltan power-ups que aumentan temporalmente el daño, la velocidad o la probabilidad de crítico.",
+    "step4Title": "Derrota a los Jefes",
+    "step4Desc": "Cada 25 niveles (y en el nivel 5), un jefe bloqueará tu progreso. ¡Derrotalo antes de que el tiempo se acabe! Puedes ganar artefactos misteriosos.",
+    "startButton": "¡Entendido!"
   },
   "boss": {
     "encounter": "⚠️ ENCUENTRO CON JEFE ⚠️",
@@ -197,7 +261,24 @@
     "uiOverlaysDesc": "Badges simples y overlays únicos hacen que cada enemigo especial se entienda de un vistazo.",
     "thankYou": "¡Gracias por probar! Cuéntanos qué tal la nueva variedad de enemigos.",
     "startPlaying": "¡Comenzar a Jugar!",
-    "majorUpdate": "ACTUALIZACIÓN BETA"
+    "majorUpdate": "ACTUALIZACIÓN BETA",
+    "v111Title": "Novedades de la Versión 1.11.0 (Beta)",
+    "newControl": "Nueva Opción de Control",
+    "holdSpace": "<strong>Mantener Espacio para Atacar</strong> – ¡Mantén presionada la barra espaciadora para ataques continuos!",
+    "rateLimit": "Limitado a ~6.7 ataques/seg para jugabilidad equilibrada sin spam.",
+    "sustainedCombat": "Perfecto para combate sostenido mientras gestionas otros elementos del juego.",
+    "enhancedTutorial": "Tutorial Mejorado",
+    "beautifulUI": "Nuevo tutorial visual con insignias numeradas.",
+    "animatedBorders": "Bordes animados con efectos de brillo pulsante y animaciones de hover.",
+    "clearerVisual": "Jerarquía visual más clara con iconos y resaltado de texto mejorados.",
+    "responsive": "Diseño totalmente responsive optimizado para móvil y escritorio.",
+    "bugFixes": "Correcciones de Bugs y Optimizaciones",
+    "tinyTyrantFix": "Corregidos efectos visuales de Tiny Tyrant (Boss Nivel 5) apareciendo en el boss equivocado.",
+    "powerupPerf": "¡Mejora dramática de rendimiento de power-ups – no más lag durante buffs!",
+    "screenShakeFix": "La opción de desactivar temblor de pantalla ahora funciona correctamente durante peleas de jefes.",
+    "omegaFilter": "Reducida intensidad del filtro amarillo de Omega Core (Boss 100).",
+    "rainbowLaser": "Renderizado del láser arcoíris optimizado para jugabilidad más fluida.",
+    "tipSpace": "¡Intenta mantener Espacio durante peleas de jefes para daño sostenido mientras esquivas efectos visuales!"
   },
   "upgrades": {
     "main": {

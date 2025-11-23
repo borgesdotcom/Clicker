@@ -48,6 +48,7 @@ import { ColorManager } from './math/ColorManager';
 import { images } from './assets/images';
 import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
+import { i18n } from './core/I18n';
 import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
 import { NumberFormatter } from './utils/NumberFormatter';
 import { PerformanceModeManager } from './systems/PerformanceModeManager';
@@ -119,6 +120,11 @@ export class Game {
   private transitionDuration = 2;
   private keys: Set<string> = new Set();
   private userSettings: UserSettings = Settings.getDefault();
+
+  // Space key attack holding
+  private spaceKeyHeld = false;
+  private spaceAttackCooldown = 0;
+  private readonly SPACE_ATTACK_RATE = 0.15; // 150ms between attacks = ~6.67 attacks/sec cap
 
   // Boss battle timer system
   private bossTimeLimit = 0;
@@ -344,7 +350,7 @@ export class Game {
     // Setup mission completion notifications
     this.missionSystem.setOnMissionComplete((mission) => {
       this.notificationSystem.show(
-        `🎯 Mission Complete: ${mission.title}`,
+        i18n.t('messages.missionComplete', { title: mission.title }),
         'mission',
         4000,
       );
@@ -353,7 +359,7 @@ export class Game {
     // Setup daily mission reset notifications
     this.missionSystem.setOnDailyReset(() => {
       this.notificationSystem.show(
-        '📅 New Daily Missions Available!',
+        i18n.t('messages.newDailyMissions'),
         'info',
         5000,
       );
@@ -491,6 +497,13 @@ export class Game {
     const statsBtn = document.getElementById('stats-btn');
     if (statsBtn) {
       statsBtn.setAttribute('aria-label', 'Open Statistics');
+
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('hud.statsTooltip');
+      statsBtn.appendChild(tooltip);
+
       statsBtn.addEventListener('click', () => {
         this.statsPanel.show();
       });
@@ -500,7 +513,7 @@ export class Game {
       // Prevent activation during boss mode
       if (this.mode === 'boss') {
         this.hud.showMessage(
-          'Cannot use skills during boss fights!',
+          i18n.t('hud.cannotUseSkillsBoss'),
           '#ff4444',
           2000,
         );
@@ -511,7 +524,7 @@ export class Game {
       if (result.success && result.effect) {
         this.handleActiveEffect(result.effect);
       } else if (result.reason === 'On cooldown') {
-        this.hud.showMessage('Skill is on cooldown!', '#ffaa00', 1500);
+        this.hud.showMessage(i18n.t('hud.skillCooldown'), '#ffaa00', 1500);
       }
     };
     // Configure UpgradeSystem to access game state for discounts
@@ -635,8 +648,7 @@ export class Game {
       // Add tooltip AFTER setting innerHTML
       const tooltip = document.createElement('div');
       tooltip.className = 'boss-retry-tooltip';
-      tooltip.textContent =
-        'Retry the boss fight. Shows the boss dialog again to restart the encounter.';
+      tooltip.textContent = i18n.t('hud.bossRetryTooltip');
       this.bossRetryButton.appendChild(tooltip);
 
       this.bossRetryButton.addEventListener('click', () => {
@@ -700,13 +712,13 @@ export class Game {
 
       // Update text and classes
       if (this.bossTimeRemaining <= 5) {
-        timerText.textContent = `TIME: ${seconds}s`;
+        timerText.textContent = `${i18n.t('hud.time')}: ${seconds}s`;
         timerText.className = 'boss-timer-text critical';
       } else if (this.bossTimeRemaining <= 10) {
-        timerText.textContent = `TIME: ${seconds}s`;
+        timerText.textContent = `${i18n.t('hud.time')}: ${seconds}s`;
         timerText.className = 'boss-timer-text warning';
       } else {
-        timerText.textContent = `TIME: ${seconds}s`;
+        timerText.textContent = `${i18n.t('hud.time')}: ${seconds}s`;
         timerText.className = 'boss-timer-text';
       }
 
@@ -807,14 +819,13 @@ export class Game {
       // Show modal after setting up handler
       const subMessage = timeoutModal.querySelector('.timeout-submessage');
       if (subMessage) {
-        subMessage.textContent =
-          'You must defeat it to progress. XP gains are reduced by 90% until victory.';
+        subMessage.textContent = i18n.t('messages.bossEscapeModal');
       }
       timeoutModal.style.display = 'flex';
     } else {
       // Fallback to message if modal doesn't exist
       this.hud.showMessage(
-        "⏱️ TIME'S UP! The boss escaped! XP gains reduced by 90% until the boss is defeated.",
+        i18n.t('messages.bossEscapeMessage'),
         '#ff0000',
         4000,
       );
@@ -916,8 +927,8 @@ export class Game {
 
         const formattedReward = this.formatOfflineReward(offlineReward);
         this.hud.showMessage(
-          `⏰ Offline Progress!\nAway: ${timeText}\nReward: +${formattedReward}`,
-          '#00ff88',
+          `Offline Progress!\nAway: ${timeText}\nReward: +${formattedReward}`,
+          '#5c5c5cff',
           5000,
         );
 
@@ -940,6 +951,13 @@ export class Game {
     if (achievementsBtn) {
       achievementsBtn.setAttribute('aria-label', 'Open Achievements');
       achievementsBtn.setAttribute('aria-keyshortcuts', 'H');
+
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('hud.achievementsTooltip');
+      achievementsBtn.appendChild(tooltip);
+
       achievementsBtn.addEventListener('click', () => {
         this.achievementsModal.show();
       });
@@ -958,6 +976,13 @@ export class Game {
       ascensionBtn.setAttribute('aria-label', 'Open Prestige/Ascension');
       ascensionBtn.setAttribute('aria-keyshortcuts', 'P');
       ascensionBtn.innerHTML = `<img src="${images.menu.ascension}" alt="Ascension" />`;
+
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('ascension.title');
+      ascensionBtn.appendChild(tooltip);
+
       ascensionBtn.addEventListener('click', () => {
         this.ascensionModal.show();
       });
@@ -1039,6 +1064,12 @@ export class Game {
   private setupSettingsButton(): void {
     const settingsBtn = document.getElementById('settings-btn');
     if (settingsBtn) {
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('hud.settingsTooltip');
+      settingsBtn.appendChild(tooltip);
+
       settingsBtn.addEventListener('click', () => {
         this.settingsModal.show();
       });
@@ -1056,6 +1087,13 @@ export class Game {
       missionsBtn.setAttribute('aria-label', 'Open Missions');
       missionsBtn.setAttribute('aria-keyshortcuts', 'M');
       missionsBtn.innerHTML = `<img src="${images.menu.info}" alt="Missions" />`;
+
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('hud.missionsTooltip');
+      missionsBtn.appendChild(tooltip);
+
       missionsBtn.addEventListener('click', () => {
         this.missionsModal.show();
       });
@@ -1072,6 +1110,13 @@ export class Game {
       artifactsBtn.setAttribute('data-icon', '✨');
       artifactsBtn.setAttribute('data-text', 'Artifacts');
       artifactsBtn.innerHTML = `<img src="${images.menu.artifacts}" alt="Artifacts" />`;
+
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('hud.artifactsTooltip');
+      artifactsBtn.appendChild(tooltip);
+
       artifactsBtn.addEventListener('click', () => {
         this.artifactsModal.show();
       });
@@ -1165,6 +1210,13 @@ export class Game {
       infoBtn.setAttribute('data-icon', '📖');
       infoBtn.setAttribute('data-text', 'Game Info');
       infoBtn.innerHTML = `<img src="${images.menu.missions}" alt="Game Info" />`;
+
+      // Add tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'hud-tooltip';
+      tooltip.textContent = i18n.t('hud.gameInfoTooltip');
+      infoBtn.appendChild(tooltip);
+
       infoBtn.addEventListener('click', () => {
         this.gameInfoModal.show();
       });
@@ -1906,16 +1958,20 @@ export class Game {
     const baseHp = ColorManager.getBossHp(state.level);
     const hp = Math.floor(baseHp * 3);
 
-    // Determine boss variant based on level
-    // Level 25 -> 0 (Colossus)
-    // Level 50 -> 1 (Swarm Queen)
-    // Level 75 -> 2 (Void Construct)
-    // Level 100 -> 3 (Omega Core)
-    // Level 125 -> 0 (Cycle)
+    // Determine boss variant based on level (chronological order)
+    // Level 5 -> 0 (Tiny Tyrant - Tutorial Boss)
+    // Level 25 -> 1 (Colossus)
+    // Level 50 -> 2 (Swarm Queen)
+    // Level 75 -> 3 (Void Construct)
+    // Level 100 -> 4 (Omega Core)
+    // Level 125+ -> Cycle through 1-4
     let bossVariant = 0;
-    if (state.level >= 25) {
+    if (state.level === 5) {
+      // Tutorial boss - Tiny Tyrant
+      bossVariant = 0;
+    } else if (state.level >= 25) {
       const bossIndex = Math.floor((state.level - 25) / 25);
-      bossVariant = bossIndex % 4;
+      bossVariant = 1 + (bossIndex % 4); // Cycles through 1-4 (Colossus to Omega)
     }
 
     this.bossBall = new BossBall(cx, cy, radius, hp, bossVariant);
@@ -1961,6 +2017,22 @@ export class Game {
         state.experience,
         ColorManager.getExpRequired(state.level),
       );
+    });
+
+    // Space key attack holding
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !this.spaceKeyHeld) {
+        e.preventDefault();
+        this.spaceKeyHeld = true;
+        this.spaceAttackCooldown = 0; // Allow immediate first attack
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.spaceKeyHeld = false;
+      }
     });
   }
 
@@ -3061,12 +3133,15 @@ export class Game {
     // Reset timeout flag
     this.bossTimeoutHandled = false;
 
-    // Determine boss variant for the upcoming boss
+    // Determine boss variant for the upcoming boss (chronological order)
     const state = this.store.getState();
-    let bossVariant: 0 | 1 | 2 | 3 = 0;
-    if (state.level >= 25) {
+    let bossVariant: 0 | 1 | 2 | 3 | 4 = 0;
+    if (state.level === 5) {
+      // Tutorial boss - Tiny Tyrant
+      bossVariant = 0;
+    } else if (state.level >= 25) {
       const bossIndex = Math.floor((state.level - 25) / 25);
-      bossVariant = (bossIndex % 4) as 0 | 1 | 2 | 3;
+      bossVariant = (1 + (bossIndex % 4)) as 1 | 2 | 3 | 4; // Cycles through 1-4
     }
 
     // Enable boss effect with smooth fade-in during transition (only if high graphics enabled)
@@ -3303,6 +3378,29 @@ export class Game {
           Math.floor(this.comboPauseCooldown + dt)
         ) {
           this.updateComboPauseButton();
+        }
+      }
+    }
+
+    // Handle space key attack holding with rate limiting
+    if (this.spaceKeyHeld && this.mode !== 'transition') {
+      // Update cooldown
+      if (this.spaceAttackCooldown > 0) {
+        this.spaceAttackCooldown -= dt;
+      }
+
+      // Fire when cooldown is ready and there's a valid target
+      if (this.spaceAttackCooldown <= 0) {
+        const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
+        if (targetEntity && targetEntity.currentHp > 0) {
+          // Trigger attack
+          this.store.incrementClick();
+          this.soundManager.playClick();
+          this.comboSystem.hit(state);
+          this.fireVolley();
+
+          // Reset cooldown
+          this.spaceAttackCooldown = this.SPACE_ATTACK_RATE;
         }
       }
     }

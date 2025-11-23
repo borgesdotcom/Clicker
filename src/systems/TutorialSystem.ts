@@ -1,4 +1,5 @@
 import { Store } from '../core/Store';
+import { t } from '../core/I18n';
 
 export type TutorialStep =
   | 'click_alien'
@@ -53,7 +54,7 @@ export class TutorialSystem {
       case 'click_alien':
         this.highlightElement(
           'game-canvas',
-          'Click the Alien to earn points!',
+          t('tutorial.clickAlien'),
           'top',
         );
         break;
@@ -66,14 +67,14 @@ export class TutorialSystem {
           // Shop is open, point to the content
           this.highlightElement(
             'shop-content',
-            'Buy your first upgrade!',
+            t('tutorial.buyUpgrade'),
             'left',
           );
         } else {
           // Shop is closed, point to the toggle
           this.highlightElement(
             'desktop-shop-toggle',
-            'Open the Shop to buy upgrades!',
+            t('tutorial.openShop'),
             'right',
           );
         }
@@ -82,7 +83,7 @@ export class TutorialSystem {
         // This is triggered by external events (boss spawn)
         this.highlightElement(
           'boss-timer-hud',
-          'Defeat the Boss before time runs out!',
+          t('tutorial.bossWarning'),
           'bottom',
         );
         break;
@@ -159,7 +160,7 @@ export class TutorialSystem {
       if (shopPanel && !isCollapsed) {
         this.highlightElement(
           'shop-content',
-          'Buy your first upgrade!',
+          t('tutorial.buyUpgrade'),
           'left',
         );
       }

@@ -182,33 +182,23 @@ export class PowerUpSystem {
         const sprite = getPowerUpSprite(powerUp.type);
         const size = powerUp.radius * 2 * pulse; // Reduced size for better visibility
 
-        // Add a glow effect behind the sprite
+        // Simplified glow effect - single circle instead of gradient for performance
         ctx.save();
-        ctx.globalAlpha = alpha * 0.6;
-        const glow = ctx.createRadialGradient(
-          powerUp.x,
-          powerUp.y,
-          size * 0.2,
-          powerUp.x,
-          powerUp.y,
-          size * 0.8,
-        );
-        glow.addColorStop(0, config.color);
-        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = glow;
+        ctx.globalAlpha = alpha * 0.3;
+        ctx.fillStyle = config.color;
         ctx.beginPath();
-        ctx.arc(powerUp.x, powerUp.y, size * 0.8, 0, Math.PI * 2);
+        ctx.arc(powerUp.x, powerUp.y, size * 0.6, 0, Math.PI * 2);
         ctx.fill();
 
-        // Add some pixel particles/sparkles around
+        // Simplified sparkles - only 2 instead of 4 for performance
         const sparklePhase = powerUp.pulseTime * 3;
         ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 4; i++) {
-          const angle = (i / 4) * Math.PI * 2 + sparklePhase;
+        for (let i = 0; i < 2; i++) {
+          const angle = (i / 2) * Math.PI * 2 + sparklePhase;
           const dist = size * 0.6;
           const px = powerUp.x + Math.cos(angle) * dist;
           const py = powerUp.y + Math.sin(angle) * dist;
-          const pSize = 2 + Math.sin(sparklePhase * 2 + i) * 1;
+          const pSize = 2;
           ctx.fillRect(px - pSize / 2, py - pSize / 2, pSize, pSize);
         }
         ctx.restore();

@@ -129,7 +129,7 @@ export class Shop {
     const quantities: (1 | 5 | 10 | 'max')[] = [1, 5, 10, 'max'];
     quantities.forEach((qty) => {
       const btn = document.createElement('button');
-      btn.textContent = qty === 'max' ? 'MAX' : `x${qty}`;
+      btn.textContent = qty === 'max' ? t('shop.max') : `x${qty}`;
       btn.className = 'buy-quantity-btn';
       if (this.buyQuantity === qty) {
         btn.classList.add('active');
@@ -180,10 +180,9 @@ export class Shop {
   private setupAutoBuyToggle(container: HTMLElement): void {
     const autoBuyBtn = document.createElement('button');
     autoBuyBtn.className = 'buy-quantity-btn auto-buy-toggle';
-    autoBuyBtn.textContent = 'Auto-Buy';
-    autoBuyBtn.title =
-      'Automatically purchase affordable upgrades every 0.5 seconds when enabled';
-    autoBuyBtn.setAttribute('aria-label', 'Toggle Auto-Buy');
+    autoBuyBtn.textContent = t('shop.autoBuy');
+    autoBuyBtn.title = t('shop.autoBuyTitle');
+    autoBuyBtn.setAttribute('aria-label', t('shop.toggleAutoBuy'));
     autoBuyBtn.setAttribute('aria-keyshortcuts', 'A');
     autoBuyBtn.setAttribute('role', 'switch');
     autoBuyBtn.setAttribute('aria-checked', 'false');
@@ -207,8 +206,7 @@ export class Shop {
       text-shadow: 1px 1px 0 rgba(0, 0, 0, 1), -1px -1px 0 rgba(0, 0, 0, 1);
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.5);
     `;
-    tooltip.textContent =
-      'Automatically purchase affordable upgrades every 0.5 seconds';
+    tooltip.textContent = t('shop.autoBuyTooltip');
     document.body.appendChild(tooltip);
 
     // Update tooltip position on hover
@@ -235,7 +233,7 @@ export class Shop {
       font-family: 'Courier New', monospace;
       display: none;
     `;
-    infoText.textContent = 'Purchase in Ascension Store (50 PP)';
+    infoText.textContent = t('shop.autoBuyLockedInfo');
     container.appendChild(infoText);
 
     const updateAutoBuyButton = () => {
@@ -259,8 +257,7 @@ export class Shop {
         autoBuyBtn.style.cursor = 'not-allowed';
         autoBuyBtn.style.opacity = '0.6';
         autoBuyBtn.setAttribute('aria-checked', 'false');
-        tooltip.textContent =
-          'Auto-Buy: LOCKED - Purchase in Ascension Store for 50 Ascension Points';
+        tooltip.textContent = t('shop.autoBuyLockedTooltip');
         infoText.style.display = 'block';
       } else {
         // Unlocked - can toggle (button should be ENABLED/ACTIVE, not disabled)
@@ -273,13 +270,11 @@ export class Shop {
         if (isEnabled) {
           autoBuyBtn.classList.add('auto-buy-enabled');
           autoBuyBtn.classList.remove('auto-buy-disabled');
-          tooltip.textContent =
-            'Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds';
+          tooltip.textContent = t('shop.autoBuyOnTooltip');
         } else {
           autoBuyBtn.classList.add('auto-buy-disabled');
           autoBuyBtn.classList.remove('auto-buy-enabled');
-          tooltip.textContent =
-            'Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades';
+          tooltip.textContent = t('shop.autoBuyOffTooltip');
         }
       }
     };
@@ -322,7 +317,7 @@ export class Shop {
     const img = button.querySelector('img');
     if (img) {
       img.src = this.isDesktopCollapsed ? images.menu.right : images.menu.left;
-      img.alt = this.isDesktopCollapsed ? 'Open Shop' : 'Close Shop';
+      img.alt = this.isDesktopCollapsed ? t('shop.openShop') : t('shop.closeShop');
     }
   }
 
@@ -716,7 +711,7 @@ export class Shop {
     // Add image
     const img = document.createElement('img');
     img.src = images.menu.buy;
-    img.alt = 'Buy';
+    img.alt = t('shop.buy');
     buttonElement.appendChild(img);
 
     // Add quantity text if needed
@@ -730,7 +725,7 @@ export class Shop {
     // Add hover text "Buy"
     const hoverText = document.createElement('span');
     hoverText.className = 'buy-hover-text';
-    hoverText.textContent = 'Buy';
+    hoverText.textContent = t('shop.buy');
     buttonElement.appendChild(hoverText);
   }
 

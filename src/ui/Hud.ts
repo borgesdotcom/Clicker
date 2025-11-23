@@ -253,8 +253,6 @@ export class Hud {
 
     container.style.display = 'flex';
 
-    container.style.display = 'flex';
-
     const POWERUP_ICONS: Record<string, string> = {
       points: IconGenerator.getUpgradeIcon('powerup_points'),
       damage: IconGenerator.getUpgradeIcon('powerup_damage'),
@@ -274,12 +272,12 @@ export class Hud {
     };
 
     const POWERUP_NAMES: Record<string, string> = {
-      points: 'Moonies',
-      damage: 'Damage',
-      speed: 'Speed',
-      multishot: 'Multi',
-      critical: 'Crit',
-      combo_pause: 'Combo Pause',
+      points: t('powerups.moonies'),
+      damage: t('powerups.damage'),
+      speed: t('powerups.speed'),
+      multishot: t('powerups.multi'),
+      critical: t('powerups.crit'),
+      combo_pause: t('powerups.comboPause'),
     };
 
     // If buffs changed, recreate elements
@@ -316,17 +314,17 @@ export class Hud {
         }, 400);
 
         buffEl.innerHTML = `
-          <div class="powerup-buff-glow" style="background: radial-gradient(circle, ${color}40 0%, transparent 70%);"></div>
+          <div class="powerup-buff-glow" style="background-color: ${color}40;"></div>
           <div class="powerup-buff-content">
-            <div class="powerup-buff-icon" style="color: ${color}; filter: drop-shadow(0 0 8px ${color});">${iconSvg}</div>
-            <div class="powerup-buff-name" style="color: ${color}; text-shadow: 0 0 6px ${color};">${name}</div>
-            <div class="powerup-buff-timer" style="color: ${color}; text-shadow: 0 0 8px ${color};">
+            <div class="powerup-buff-icon" style="color: ${color};">${iconSvg}</div>
+            <div class="powerup-buff-name" style="color: ${color};">${name}</div>
+            <div class="powerup-buff-timer" style="color: ${color};">
               <span class="powerup-buff-time-value">${timeLeft}</span>
               <span class="powerup-buff-time-unit">s</span>
             </div>
             <div class="powerup-buff-bar-container">
               <div class="powerup-buff-bar-bg"></div>
-              <div class="powerup-buff-bar-fill" style="background: linear-gradient(90deg, ${color}, ${color}CC, ${color}); width: ${percent}%; box-shadow: 0 0 8px ${color}, inset 0 0 4px ${color}80;"></div>
+              <div class="powerup-buff-bar-fill" style="background-color: ${color}; width: ${percent}%;"></div>
               <div class="powerup-buff-bar-shimmer"></div>
             </div>
           </div>
@@ -385,8 +383,8 @@ export class Hud {
     // Main total income display
     this.totalIncomeDisplay = document.createElement('div');
     this.totalIncomeDisplay.id = 'income-display';
-    this.totalIncomeDisplay.textContent = `Total Income: 0${t('hud.perSec')}`;
-    this.totalIncomeDisplay.title = 'Click to toggle income breakdown';
+    this.totalIncomeDisplay.textContent = `${t('hud.totalIncome')}: 0${t('hud.perSec')}`;
+    this.totalIncomeDisplay.title = t('hud.clickToToggle');
 
     // Income breakdown (collapsible)
     const breakdownContainer = document.createElement('div');
@@ -510,7 +508,7 @@ export class Hud {
     // DPS represents active income from combat since damage = points
     // Kill rewards are the bonus points from killing enemies (kill bounty)
     const totalIncome = passive + dps + killRewardsPerSec;
-    const totalIncomeText = `Total Income: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
+    const totalIncomeText = `${t('hud.totalIncome')}: ${NumberFormatter.format(totalIncome)}${t('hud.perSec')}`;
 
     // Update total income display
     if (
@@ -523,7 +521,7 @@ export class Hud {
 
     // Update always visible combat stats (only DPS)
     if (this.dpsFullDisplay) {
-      this.dpsFullDisplay.textContent = `DPS: ${NumberFormatter.format(dps)}`;
+      this.dpsFullDisplay.textContent = `${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
     }
 
     // Enhanced UI: Update income breakdown with combat stats
@@ -576,17 +574,17 @@ export class Hud {
 
     breakdownContent.innerHTML = `
       <div style="margin-bottom: 3px;">
-        <span style="color: #00ffff;">🏭 Passive:</span>
+        <span style="color: #00ffff;">🏭 ${t('hud.passive')}:</span>
         <span style="float: right; color: #88ffff;">${NumberFormatter.format(passive)}/s (${passivePercent.toFixed(1)}%)</span>
       </div>
       <div style="margin-bottom: 3px;">
-        <span style="color: #ff4444;">⚔️ Combat:</span>
+        <span style="color: #ff4444;">⚔️ ${t('hud.combat')}:</span>
         <span style="float: right; color: #ff8888;">${NumberFormatter.format(dps)}/s (${dpsPercent.toFixed(1)}%)</span>
       </div>
       ${killRewards > 0
         ? `
       <div style="margin-bottom: 3px;">
-        <span style="color: #ffaa00;">💥 Kills:</span>
+        <span style="color: #ffaa00;">💥 ${t('hud.kills')}:</span>
         <span style="float: right; color: #ffcc88;">${NumberFormatter.format(killRewards)}/s (${killPercent.toFixed(1)}%)</span>
       </div>
       `
@@ -596,13 +594,13 @@ export class Hud {
         ? `
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.2);">
         <div style="margin-bottom: 3px;">
-          <span style="color: #ffffff;">DPS:</span>
+          <span style="color: #ffffff;">${t('hud.dps')}:</span>
           <span style="float: right; color: #ffffff;">${NumberFormatter.format(dps)}</span>
         </div>
         ${hitDamage !== undefined && hitDamage !== null
           ? `
         <div style="margin-bottom: 3px;">
-          <span style="color: #ffffff;">Hit Damage:</span>
+          <span style="color: #ffffff;">${t('hud.hitDamage')}:</span>
           <span style="float: right; color: #ffffff;">${NumberFormatter.format(hitDamage)}</span>
         </div>
         `
@@ -611,8 +609,8 @@ export class Hud {
         ${attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0
           ? `
         <div style="margin-bottom: 3px;">
-          <span style="color: #ffffff;">Attack Speed:</span>
-          <span style="float: right; color: #ffffff;">${attackSpeed.toFixed(2)} shots/sec</span>
+          <span style="color: #ffffff;">${t('hud.attackSpeed')}:</span>
+          <span style="float: right; color: #ffffff;">${attackSpeed.toFixed(2)} ${t('hud.shotsPerSec')}</span>
         </div>
         `
           : ''
@@ -620,7 +618,7 @@ export class Hud {
         ${critChance !== undefined && critChance !== null
           ? `
         <div>
-          <span style="color: #ffffff;">Critical Chance:</span>
+          <span style="color: #ffffff;">${t('hud.critChance')}:</span>
           <span style="float: right; color: #ffffff;">${critChance.toFixed(1)}%</span>
         </div>
         `

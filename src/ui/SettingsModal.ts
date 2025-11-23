@@ -333,6 +333,7 @@ export class SettingsModal {
       { code: 'en', name: 'English' },
       { code: 'pt', name: 'Português' },
       { code: 'es', name: 'Español' },
+      { code: 'ja', name: '日本語' },
     ];
 
     languages.forEach((lang) => {

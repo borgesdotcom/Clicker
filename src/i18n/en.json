@@ -14,7 +14,8 @@
     "language": "Language",
     "english": "English",
     "portuguese": "Portuguese",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "japanese": "Japanese"
   },
   "settings": {
     "title": "⚙️ Settings",
@@ -33,17 +34,62 @@
     "damageNumbers": "Damage Numbers:",
     "damageNumbersHint": "Disable to improve performance (damage still applies)",
     "screenShake": "Screen Shake:",
-    "screenShakeHint": "Disable to prevent motion sickness",
+    "screenShakeHint": "Enable screen shake effects for impactful moments.",
+    "lcdFilter": "LCD Filter",
+    "lcdFilterHint": "Subtle retro LCD monitor effect with pixel grid",
+    "saveDataActions": "💾 Save Data & Actions",
+    "exportSave": "EXPORT SAVE DATA",
+    "importSave": "IMPORT SAVE DATA",
+    "resetSaveButton": "⚠️ Reset Save",
+    "resetConfirm": "Are you sure you want to reset all progress? This cannot be undone.",
     "language": "Language:",
     "languageHint": "Change the game language"
   },
   "hud": {
     "points": "Moonies",
+    "crit": "Crit",
+    "perSec": "/sec",
+    "achievementsTooltip": "View your achievements and unlocked rewards.",
+    "statsTooltip": "Track your progress and detailed statistics.",
+    "settingsTooltip": "Adjust audio, graphics, and language options.",
+    "missionsTooltip": "Complete tasks to earn extra rewards.",
+    "artifactsTooltip": "Manage powerful artifacts found from bosses.",
+    "gameInfoTooltip": "Learn about game mechanics and tips.",
+    "bossRetryTooltip": "Retry the boss fight. Shows the boss dialog again to restart the encounter.",
+    "totalIncome": "Total Income",
+    "clickToToggle": "Click to toggle income breakdown",
     "dps": "DPS",
     "passive": "Passive",
-    "crit": "Crit",
+    "combat": "Combat",
+    "kills": "Kills",
+    "hitDamage": "Hit Damage",
+    "attackSpeed": "Attack Speed",
+    "shotsPerSec": "shots/sec",
+    "critChance": "Critical Chance",
     "level": "Level",
-    "perSec": "/sec"
+    "cannotUseSkillsBoss": "Cannot use skills during boss fights!",
+    "skillCooldown": "Skill is on cooldown!",
+    "time": "TIME"
+  },
+  "tutorial": {
+    "clickAlien": "Click the Alien to earn points!",
+    "buyUpgrade": "Buy your first upgrade!",
+    "openShop": "Open the Shop to buy upgrades!",
+    "bossWarning": "Defeat the Boss before time runs out!"
+  },
+  "messages": {
+    "missionComplete": "🎯 Mission Complete: {{title}}",
+    "newDailyMissions": "📅 New Daily Missions Available!",
+    "bossEscapeModal": "You must defeat it to progress. XP gains are reduced by 90% until victory.",
+    "bossEscapeMessage": "⏱️ TIME'S UP! The boss escaped! XP gains reduced by 90% until the boss is defeated."
+  },
+  "powerups": {
+    "moonies": "Moonies",
+    "damage": "Damage",
+    "speed": "Speed",
+    "multi": "Multi",
+    "crit": "Crit",
+    "comboPause": "Combo Pause"
   },
   "shop": {
     "title": "UPGRADES",
@@ -52,7 +98,19 @@
     "buyQuantity": "Buy Quantity:",
     "specialUpgrades": "⭐ SPECIAL UPGRADES ⭐",
     "noOwned": "No special upgrades owned yet.",
-    "resetSave": "Reset Save"
+    "resetSave": "Reset Save",
+    "max": "MAX",
+    "autoBuy": "Auto-Buy",
+    "autoBuyTitle": "Automatically purchase affordable upgrades every 0.5 seconds when enabled",
+    "toggleAutoBuy": "Toggle Auto-Buy",
+    "autoBuyTooltip": "Automatically purchase affordable upgrades every 0.5 seconds",
+    "autoBuyLockedInfo": "Purchase in Ascension Store (50 PP)",
+    "autoBuyLockedTooltip": "Auto-Buy: LOCKED - Purchase in Ascension Store for 50 Ascension Points",
+    "autoBuyOnTooltip": "Auto-Buy: ON - Automatically purchases affordable upgrades every 0.5 seconds",
+    "autoBuyOffTooltip": "Auto-Buy: OFF - Click to enable automatic purchase of affordable upgrades",
+    "openShop": "Open Shop",
+    "closeShop": "Close Shop",
+    "buy": "Buy"
   },
   "boss": {
     "encounter": "⚠️ BOSS ENCOUNTER ⚠️",
@@ -197,7 +255,37 @@
     "uiOverlaysDesc": "Minimal badges and unique overlays make every special alien readable at a glance.",
     "thankYou": "Thanks for testing! Let us know how the new enemy variety feels.",
     "startPlaying": "Start Playing!",
-    "majorUpdate": "BETA UPDATE"
+    "majorUpdate": "BETA UPDATE",
+    "v111Title": "What's New in 1.11.0 (Beta)",
+    "newControl": "New Control Option",
+    "holdSpace": "<strong>Hold Space to Attack</strong> – Keep the spacebar pressed for continuous attacks!",
+    "rateLimit": "Rate-limited to ~6.7 attacks/sec for balanced gameplay without spam.",
+    "sustainedCombat": "Perfect for sustained combat while managing other game elements.",
+    "enhancedTutorial": "Enhanced Tutorial Experience",
+    "beautifulUI": "Beautiful new tutorial UI with numbered step badges.",
+    "animatedBorders": "Animated borders with pulsing glow effects and hover animations.",
+    "clearerVisual": "Clearer visual hierarchy with improved icons and text highlighting.",
+    "responsive": "Fully responsive design optimized for mobile and desktop.",
+    "bugFixes": "Bug Fixes & Optimizations",
+    "tinyTyrantFix": "Fixed Tiny Tyrant (Level 5 boss) visual effects appearing on wrong boss.",
+    "powerupPerf": "Dramatically improved power-up performance – no more lag during buffs!",
+    "screenShakeFix": "Screen shake disable option now properly works during boss fights.",
+    "omegaFilter": "Reduced Omega Core (Boss 100) yellow filter intensity.",
+    "rainbowLaser": "Optimized rainbow laser rendering for smoother gameplay.",
+    "tipSpace": "Try holding Space during boss fights for sustained damage while dodging visual effects!"
+  },
+  "tutorialSplash": {
+    "welcome": "Welcome to BOBBLE!",
+    "subtitle": "Your mission: Defend Earth from the alien invasion",
+    "step1Title": "Click to Attack <strong>or Hold Space</strong>",
+    "step1Desc": "Click on the aliens to deal damage. Each kill grants currency (Moonies) and experience.",
+    "step2Title": "Build Your Fleet",
+    "step2Desc": "Open the Shop to buy upgrades. Ships provide passive DPS and increase your firepower. You can ascend after level 100.",
+    "step3Title": "Collect Power-Ups",
+    "step3Desc": "Aliens drop power-ups that temporarily increase damage, speed, or critical chance.",
+    "step4Title": "Defeat Bosses",
+    "step4Desc": "Every 25 levels (and at level 5), a boss will block your progress. Defeat it before time runs out! You may earn mysterious artifacts.",
+    "startButton": "Got it!"
   },
   "upgrades": {
     "main": {

@@ -478,7 +478,7 @@ const DEFAULT_CONFIG: GameConfigData = {
         earlyThreshold: 100,
         midThreshold: 500,
       },
-      milestones: [50, 100, 250, 500, 750, 1000],
+      milestones: [5, 50, 100, 250, 500, 750, 1000],
     },
     xpScaling: {
       noReductionLevel: 30,

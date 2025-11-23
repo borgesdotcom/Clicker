@@ -7,7 +7,7 @@
  * - Omega Core: Energy overload with chromatic aberration
  */
 
-export type BossVariant = 0 | 1 | 2 | 3;
+export type BossVariant = 0 | 1 | 2 | 3 | 4;
 
 export class BossEffectFilter {
   private overlay: HTMLDivElement;
@@ -23,7 +23,7 @@ export class BossEffectFilter {
 
   constructor() {
     this.createSVGFilters();
-    
+
     // Create overlay container
     this.overlay = document.createElement('div');
     this.overlay.id = 'boss-effect-overlay';
@@ -65,6 +65,17 @@ export class BossEffectFilter {
     svg.style.cssText = 'position: absolute; width: 0; height: 0;';
     svg.innerHTML = `
       <defs>
+        <!-- Tiny Tyrant: Magical sparkles with soft rainbow -->
+        <filter id="boss-tyrant-filter">
+          <feColorMatrix type="matrix" values="
+            1.0 0 0 0 0
+            0 1.05 0 0 0
+            0 0 1.0 0 0
+            0 0 0 1 0
+          "/>
+          <feGaussianBlur stdDeviation="0.1"/>
+        </filter>
+
         <!-- Colossus: Barrel distortion with red tint -->
         <filter id="boss-colossus-filter">
           <feColorMatrix type="matrix" values="
@@ -360,6 +371,66 @@ export class BossEffectFilter {
       body.no-screen-shake.boss-effect-omega {
         animation: none !important;
       }
+
+      /* Tiny Tyrant Effect - Magical Sparkles (NO SHAKE EVER) */
+      body.boss-effect-tyrant {
+        filter: url(#boss-tyrant-filter) brightness(1.05) contrast(0.95);
+        animation: none !important; /* Never shake for tutorial boss */
+        transition: filter 0.5s ease-out;
+      }
+
+      body.boss-effect-tyrant::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: 
+          radial-gradient(
+            ellipse at center,
+            rgba(168, 230, 207, 0.08) 0%,
+            rgba(255, 211, 182, 0.06) 50%,
+            rgba(255, 170, 165, 0.05) 100%
+          );
+        pointer-events: none;
+        z-index: 999997;
+        animation: boss-magical-glow 3s ease-in-out infinite;
+      }
+
+      /* Floating sparkles background */
+      body.boss-effect-tyrant::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image:
+          radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 2px),
+          radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.4) 0%, transparent 2px),
+          radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.4) 0%, transparent 2px),
+          radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.4) 0%, transparent 2px);
+        background-size: 100% 100%;
+        pointer-events: none;
+        z-index: 999996;
+        animation: boss-sparkle-twinkle 2s ease-in-out infinite;
+      }
+
+      @keyframes boss-magical-glow {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+
+      @keyframes boss-sparkle-twinkle {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+
+      /* Ensure Tiny Tyrant NEVER shakes */
+      body.no-screen-shake.boss-effect-tyrant {
+        animation: none !important;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -399,16 +470,19 @@ export class BossEffectFilter {
 
     // Draw variant-specific animated effects
     switch (this.currentVariant) {
-      case 0: // Colossus - Impact particles
+      case 0: // Tiny Tyrant - Magical sparkles
+        this.drawTyrantEffect(width, height, alpha);
+        break;
+      case 1: // Colossus - Impact particles
         this.drawColossusEffect(width, height, alpha);
         break;
-      case 1: // Swarm Queen - Pixelated particles
+      case 2: // Swarm Queen - Pixelated particles
         this.drawSwarmEffect(width, height, alpha);
         break;
-      case 2: // Void Construct - Void particles
+      case 3: // Void Construct - Void particles
         this.drawVoidEffect(width, height, alpha);
         break;
-      case 3: // Omega Core - Energy lightning
+      case 4: // Omega Core - Energy lightning
         this.drawOmegaEffect(width, height, alpha);
         break;
     }
@@ -425,10 +499,10 @@ export class BossEffectFilter {
       const x = ((i * 137.5 + this.time * 50) % width);
       const y = ((this.time * 100 + i * 50) % height);
       const size = 3 + Math.sin(this.time + i) * 2;
-      
+
       this.ctx.fillStyle = `rgba(139, 0, 0, ${alpha * 0.6})`;
       this.ctx.fillRect(x, y, size, size);
-      
+
       // Glow
       this.ctx.fillStyle = `rgba(255, 69, 0, ${alpha * 0.3})`;
       this.ctx.fillRect(x - 1, y - 1, size + 2, size + 2);
@@ -452,15 +526,15 @@ export class BossEffectFilter {
     // Glitchy pixelated particles
     const pixelSize = 4;
     const particleCount = 30;
-    
+
     for (let i = 0; i < particleCount; i++) {
       const x = Math.floor(((i * 234.5 + this.time * 80) % width) / pixelSize) * pixelSize;
       const y = Math.floor(((this.time * 60 + i * 70) % height) / pixelSize) * pixelSize;
       const glitchOffset = Math.sin(this.time * 10 + i) > 0.7 ? pixelSize : 0;
-      
+
       this.ctx.fillStyle = `rgba(75, 0, 130, ${alpha * 0.5})`;
       this.ctx.fillRect(x + glitchOffset, y, pixelSize * 2, pixelSize * 2);
-      
+
       // Purple accent
       this.ctx.fillStyle = `rgba(147, 112, 219, ${alpha * 0.4})`;
       this.ctx.fillRect(x, y + pixelSize, pixelSize, pixelSize);
@@ -484,13 +558,13 @@ export class BossEffectFilter {
       const y = ((seed * 1.7 + this.time * 20) % height);
       const size = 1.5 + Math.sin(this.time * 3 + i) * 1;
       const particleAlpha = alpha * (0.5 + Math.sin(this.time * 2 + i * 0.5) * 0.3);
-      
+
       // Cyan glow particles
       this.ctx.fillStyle = `rgba(0, 255, 255, ${particleAlpha * 0.9})`;
       this.ctx.beginPath();
       this.ctx.arc(x, y, size, 0, Math.PI * 2);
       this.ctx.fill();
-      
+
       // Outer glow
       this.ctx.fillStyle = `rgba(100, 255, 255, ${particleAlpha * 0.4})`;
       this.ctx.beginPath();
@@ -505,7 +579,7 @@ export class BossEffectFilter {
       const x = ((seed + this.time * 15) % width);
       const y = ((seed * 1.3 - this.time * 10) % height);
       const size = 2 + Math.sin(this.time * 2 + i * 0.3) * 1.5;
-      
+
       this.ctx.fillStyle = `rgba(0, 100, 150, ${alpha * 0.2})`;
       this.ctx.beginPath();
       this.ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -519,12 +593,12 @@ export class BossEffectFilter {
       const y1 = (i * 100 + Math.sin(this.time + i) * 50) % height;
       const x2 = x1 + 40 + Math.sin(this.time * 2 + i) * 25;
       const y2 = y1 + 100;
-      
+
       const gradient = this.ctx.createLinearGradient(x1, y1, x2, y2);
       gradient.addColorStop(0, `rgba(0, 255, 255, ${alpha * 0.15})`);
       gradient.addColorStop(0.5, `rgba(0, 200, 255, ${alpha * 0.25})`);
       gradient.addColorStop(1, `rgba(0, 100, 200, ${alpha * 0.1})`);
-      
+
       this.ctx.strokeStyle = gradient;
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
@@ -544,19 +618,19 @@ export class BossEffectFilter {
       const startY = 0;
       let x = startX;
       let y = startY;
-      
+
       this.ctx.strokeStyle = `rgba(255, 255, 0, ${alpha * 0.2})`; // Reduced from 0.6
       this.ctx.lineWidth = 1; // Reduced from 2
       this.ctx.beginPath();
       this.ctx.moveTo(x, y);
-      
+
       // Random lightning path
       while (y < height) {
         x += (Math.random() - 0.5) * 50;
         y += Math.random() * 50 + 20;
         this.ctx.lineTo(x, y);
       }
-      
+
       if (Math.sin(this.time * 20 + i) > 0.9) { // Changed from 0.8 to appear less often
         this.ctx.stroke();
       }
@@ -568,14 +642,14 @@ export class BossEffectFilter {
       const x = ((i * 197.3 + this.time * 120) % width);
       const y = ((this.time * 80 + i * 40) % height);
       const size = 2 + Math.sin(this.time * 5 + i) * 1;
-      
+
       // Red/Yellow/Orange energy - Reduced opacity
       const color = i % 3 === 0 ? 'rgba(255, 0, 0' : i % 3 === 1 ? 'rgba(255, 255, 0' : 'rgba(255, 165, 0';
       this.ctx.fillStyle = `${color}, ${alpha * 0.3})`; // Reduced from 0.7
       this.ctx.beginPath();
       this.ctx.arc(x, y, size, 0, Math.PI * 2);
       this.ctx.fill();
-      
+
       // Glow - Reduced
       this.ctx.fillStyle = `${color}, ${alpha * 0.1})`; // Reduced from 0.3
       this.ctx.beginPath();
@@ -591,6 +665,79 @@ export class BossEffectFilter {
     );
     gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha * pulseAlpha * 0.05})`); // Reduced from 0.2
     gradient.addColorStop(1, `rgba(255, 0, 0, ${alpha * pulseAlpha * 0.03})`); // Reduced from 0.1
+    this.ctx.fillStyle = gradient;
+    this.ctx.fillRect(0, 0, width, height);
+  }
+
+  private drawTyrantEffect(width: number, height: number, alpha: number): void {
+    if (!this.ctx) return;
+
+    // Magical rainbow sparkles floating gently
+    const sparkleCount = 40;
+    for (let i = 0; i < sparkleCount; i++) {
+      const x = ((i * 234.7 + this.time * 40) % width);
+      const y = ((i * 117.3 + Math.sin(this.time + i) * 50) % height);
+      const size = 2 + Math.sin(this.time * 2 + i) * 1.5;
+      const twinkle = Math.abs(Math.sin(this.time * 3 + i * 0.5));
+
+      // Rainbow color cycling
+      const hue = (this.time * 50 + i * 30) % 360;
+      this.ctx.fillStyle = `hsla(${hue}, 70%, 75%, ${alpha * twinkle * 0.8})`;
+
+      // Draw 4-pointed star
+      this.ctx.save();
+      this.ctx.translate(x, y);
+      this.ctx.rotate(this.time + i);
+      this.ctx.beginPath();
+      for (let j = 0; j < 4; j++) {
+        const angle = (j / 4) * Math.PI * 2;
+        const r = j % 2 === 0 ? size : size * 0.4;
+        this.ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+      }
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.restore();
+    }
+
+    // Floating heart particles
+    const heartCount = 8;
+    for (let i = 0; i < heartCount; i++) {
+      const x = ((i * width / heartCount + this.time * 30) % width);
+      const y = height - ((this.time * 50 + i * 80) % (height + 100));
+      const heartSize = 6 + Math.sin(this.time + i) * 2;
+      const heartAlpha = alpha * (0.4 + Math.sin(this.time * 2 + i) * 0.2);
+
+      this.ctx.fillStyle = `rgba(255, 182, 193, ${heartAlpha})`; // Light pink
+      this.ctx.save();
+      this.ctx.translate(x, y);
+      this.ctx.scale(1, -1); // Flip for proper heart orientation
+
+      // Draw heart shape
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, heartSize * 0.3);
+      this.ctx.bezierCurveTo(
+        -heartSize * 0.5, -heartSize * 0.3,
+        -heartSize, heartSize * 0.3,
+        0, heartSize
+      );
+      this.ctx.bezierCurveTo(
+        heartSize, heartSize * 0.3,
+        heartSize * 0.5, -heartSize * 0.3,
+        0, heartSize * 0.3
+      );
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.restore();
+    }
+
+    // Soft magical glow overlay
+    const gradient = this.ctx.createRadialGradient(
+      width / 2, height / 2, 0,
+      width / 2, height / 2, width / 2
+    );
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.05})`);
+    gradient.addColorStop(0.5, `rgba(168, 230, 207, ${alpha * 0.08})`);
+    gradient.addColorStop(1, `rgba(255, 170, 165, ${alpha * 0.06})`);
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, width, height);
   }
@@ -613,6 +760,7 @@ export class BossEffectFilter {
 
     // Remove all boss effect classes
     document.body.classList.remove(
+      'boss-effect-tyrant',
       'boss-effect-colossus',
       'boss-effect-swarm',
       'boss-effect-void',
@@ -621,10 +769,11 @@ export class BossEffectFilter {
 
     // Add appropriate class
     const classNames: Record<BossVariant, string> = {
-      0: 'boss-effect-colossus',
-      1: 'boss-effect-swarm',
-      2: 'boss-effect-void',
-      3: 'boss-effect-omega'
+      0: 'boss-effect-tyrant',
+      1: 'boss-effect-colossus',
+      2: 'boss-effect-swarm',
+      3: 'boss-effect-void',
+      4: 'boss-effect-omega'
     };
     document.body.classList.add(classNames[variant]);
 
@@ -661,7 +810,8 @@ export class BossEffectFilter {
       'boss-effect-colossus',
       'boss-effect-swarm',
       'boss-effect-void',
-      'boss-effect-omega'
+      'boss-effect-omega',
+      'boss-effect-tyrant'
     );
 
     // Stop animation

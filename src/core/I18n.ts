@@ -1,4 +1,4 @@
-export type Language = 'en' | 'pt' | 'es';
+export type Language = 'en' | 'pt' | 'es' | 'ja';
 
 export interface TranslationStrings {
   [key: string]: string | TranslationStrings;
@@ -18,7 +18,8 @@ export class I18n {
     if (
       savedLanguage === 'en' ||
       savedLanguage === 'pt' ||
-      savedLanguage === 'es'
+      savedLanguage === 'es' ||
+      savedLanguage === 'ja'
     ) {
       this.currentLanguage = savedLanguage;
     } else {
@@ -28,6 +29,8 @@ export class I18n {
         this.currentLanguage = 'pt';
       } else if (browserLang.startsWith('es')) {
         this.currentLanguage = 'es';
+      } else if (browserLang.startsWith('ja')) {
+        this.currentLanguage = 'ja';
       } else {
         this.currentLanguage = 'en';
       }
@@ -45,15 +48,17 @@ export class I18n {
 
   async loadTranslations(): Promise<void> {
     // Load all translation files
-    const [en, pt, es] = await Promise.all([
+    const [en, pt, es, ja] = await Promise.all([
       import('../i18n/en.json'),
       import('../i18n/pt.json'),
       import('../i18n/es.json'),
+      import('../i18n/jp.json'),
     ]);
 
     this.translations.set('en', en.default);
     this.translations.set('pt', pt.default);
     this.translations.set('es', es.default);
+    this.translations.set('ja', ja.default);
   }
 
   setLanguage(language: Language): void {

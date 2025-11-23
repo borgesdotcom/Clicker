@@ -5,6 +5,7 @@ import {
   BOSS_SPRITE_SWARM_QUEEN,
   BOSS_SPRITE_VOID_CONSTRUCT,
   BOSS_SPRITE_OMEGA_CORE,
+  BOSS_SPRITE_TINY_TYRANT,
   PixelGrid,
 } from '../render/AlienSprites';
 
@@ -38,6 +39,7 @@ export class BossBall {
 
   // Effect specific properties
   private drones: Array<{ angle: number; dist: number; speed: number }> = [];
+  private sparkles: Array<{ angle: number; dist: number; speed: number; size: number }> = [];
   private shields: Array<{
     angle: number;
     size: number;
@@ -76,9 +78,25 @@ export class BossBall {
     // Generate random cracks for the bubble based on variant
     this.generateCracks();
 
-    // Initialize based on variant
+    // Initialize based on variant (chronological order by level)
     switch (this.variant) {
-      case 0: // Colossus (Lvl 25)
+      case 0: // Tiny Tyrant (Lvl 5 - Tutorial Boss)
+        this.sprite = BOSS_SPRITE_TINY_TYRANT;
+        this.color = '#A8E6CF'; // Soft mint green
+        this.glowColor = '#FFD3B6'; // Soft peach
+        this.secondaryColor = '#6BBE92'; // Medium mint
+        this.accentColor = '#FFAAA5'; // Coral pink
+        // Init twinkling stars - completely unique VFX
+        for (let i = 0; i < 8; i++) {
+          this.sparkles.push({
+            angle: (i / 8) * Math.PI * 2,
+            dist: 1.4 + Math.random() * 0.4,
+            speed: 0.4 + Math.random() * 0.3,
+            size: 2 + Math.random() * 2,
+          });
+        }
+        break;
+      case 1: // Colossus (Lvl 25)
         this.sprite = BOSS_SPRITE_COLOSSUS;
         this.color = '#8B0000'; // Dark Red
         this.glowColor = '#FF4500'; // Orange Red
@@ -94,7 +112,7 @@ export class BossBall {
           });
         }
         break;
-      case 1: // Swarm Queen (Lvl 50)
+      case 2: // Swarm Queen (Lvl 50)
         this.sprite = BOSS_SPRITE_SWARM_QUEEN;
         this.color = '#4B0082'; // Indigo
         this.glowColor = '#9370DB'; // Medium Purple
@@ -109,24 +127,24 @@ export class BossBall {
           });
         }
         break;
-      case 2: // Void Construct (Lvl 75)
+      case 3: // Void Construct (Lvl 75)
         this.sprite = BOSS_SPRITE_VOID_CONSTRUCT;
-        this.color = '#001a33'; // Very Dark Blue (instead of pure black for visibility)
+        this.color = '#001a33'; // Very Dark Blue
         this.glowColor = '#00FFFF'; // Cyan
         this.secondaryColor = '#0066cc'; // Brighter Blue
         this.accentColor = '#66ffff'; // Light Cyan
-        // Init Rings - More rings for cooler effect
+        // Init Rings
         this.rings.push({ angle: 0, radius: 1.3, speed: 0.8, width: 4 });
         this.rings.push({ angle: Math.PI, radius: 1.6, speed: -0.6, width: 3 });
         this.rings.push({ angle: Math.PI * 0.5, radius: 1.45, speed: 1.0, width: 2 });
         break;
-      case 3: // Omega Core (Lvl 100)
+      case 4: // Omega Core (Lvl 100)
         this.sprite = BOSS_SPRITE_OMEGA_CORE;
         this.color = '#FF0000'; // Red
         this.glowColor = '#FFFF00'; // Yellow Glow
         this.secondaryColor = '#FFAA00'; // Orange
         this.accentColor = '#FFFF00'; // Bright Yellow
-        // Init Arcs - More arcs for cooler effect
+        // Init Arcs
         for (let i = 0; i < 6; i++) {
           this.arcs.push({
             angle: (i / 6) * Math.PI * 2,
@@ -137,11 +155,11 @@ export class BossBall {
         }
         break;
       default:
-        this.sprite = BOSS_SPRITE_COLOSSUS;
-        this.color = '#8B0000';
-        this.glowColor = '#FF4500';
-        this.secondaryColor = '#2F4F4F';
-        this.accentColor = '#FFD700';
+        this.sprite = BOSS_SPRITE_TINY_TYRANT;
+        this.color = '#A8E6CF';
+        this.glowColor = '#FFD3B6';
+        this.secondaryColor = '#6BBE92';
+        this.accentColor = '#FFAAA5';
     }
   }
 
@@ -161,21 +179,25 @@ export class BossBall {
       const segments = 4 + Math.floor(Math.random() * 5);
 
       for (let j = 0; j < segments; j++) {
-        if (this.variant === 0) {
+        if (this.variant === 1) {
           // Colossus: Shattered Glass (Straight, sharp angles)
           cx += (Math.random() - 0.5) * this.radius * 0.6;
           cy += (Math.random() - 0.5) * this.radius * 0.6;
-        } else if (this.variant === 1) {
+        } else if (this.variant === 2) {
           // Swarm: Organic/Web (Curved, smaller steps)
           cx += (Math.random() - 0.5) * this.radius * 0.3;
           cy += (Math.random() - 0.5) * this.radius * 0.3;
-        } else if (this.variant === 2) {
+        } else if (this.variant === 3) {
           // Void: Digital Glitch (Orthogonal lines)
           if (Math.random() > 0.5) {
             cx += (Math.random() > 0.5 ? 1 : -1) * this.radius * 0.2;
           } else {
             cy += (Math.random() > 0.5 ? 1 : -1) * this.radius * 0.2;
           }
+        } else if (this.variant === 0) {
+          // Tiny Tyrant: Simple straight cracks (beginner-friendly)
+          cx += (Math.random() - 0.5) * this.radius * 0.4;
+          cy += (Math.random() - 0.5) * this.radius * 0.4;
         } else {
           // Omega: Energy Fissures (Chaotic, jagged)
           cx += (Math.random() - 0.5) * this.radius * 0.5;
@@ -211,8 +233,8 @@ export class BossBall {
       this.phase = 2;
     }
 
-    // Trigger phase transition animation
-    if (oldPhase !== this.phase) {
+    // Trigger phase transition animation (not for Tiny Tyrant)
+    if (oldPhase !== this.phase && this.variant !== 4) {
       this.phaseTransitionTime = 1;
       this.shakeTime = 0.5;
       this.shakeIntensity = 10;
@@ -224,9 +246,16 @@ export class BossBall {
     }
 
     // Colossus shakes on every hit
-    if (this.variant === 0 && amount > this.maxHp * 0.005) {
+    if (this.variant === 1 && amount > this.maxHp * 0.005) {
       this.shakeTime = 0.1;
       this.shakeIntensity = 3;
+    }
+
+    // Tiny Tyrant never shakes (gentle tutorial boss)
+    if (this.variant === 0) {
+      this.shakeTime = 0;
+      this.shakeIntensity = 0;
+      this.phaseTransitionTime = 0;
     }
 
     if (this.currentHp <= 0 && wasAlive) {
@@ -286,17 +315,17 @@ export class BossBall {
     this.particleEmitTimer += dt;
 
     // Variant specific updates
-    if (this.variant === 0) {
+    if (this.variant === 1) {
       // Colossus Shields
       this.shields.forEach((shield) => {
         shield.angle += dt * shield.speed * phaseSpeedMultiplier;
       });
-    } else if (this.variant === 1) {
+    } else if (this.variant === 2) {
       // Swarm Queen drones
       this.drones.forEach((drone) => {
         drone.angle += dt * drone.speed * phaseSpeedMultiplier;
       });
-    } else if (this.variant === 2) {
+    } else if (this.variant === 3) {
       // Void Construct glitch & Rings
       // Rings
       this.rings.forEach((ring) => {
@@ -309,11 +338,16 @@ export class BossBall {
       } else if (Math.random() < 0.02 * phaseSpeedMultiplier) {
         this.glitchTime = 0.15;
       }
-    } else if (this.variant === 3) {
+    } else if (this.variant === 4) {
       // Omega Core chaotic pulsing & Arcs
       this.pulseTime += dt * 3;
       this.arcs.forEach((arc) => {
         arc.angle += dt * arc.speed * phaseSpeedMultiplier;
+      });
+    } else if (this.variant === 0) {
+      // Tiny Tyrant sparkles
+      this.sparkles.forEach((sparkle) => {
+        sparkle.angle += dt * sparkle.speed;
       });
     }
 
@@ -603,28 +637,79 @@ export class BossBall {
   ): void {
     ctx.save();
 
-    // Pulse Aura - Subtler
-    const pulse = 1 + Math.sin(this.pulseTime) * 0.05;
-    const auraRadius = radius * 1.1 * pulse;
+    // Tiny Tyrant gets COMPLETELY unique playful effects
+    if (this.variant === 0) {
+      // Magical rainbow aura with wave pattern
+      const waveCount = 3;
+      for (let wave = 0; wave < waveCount; wave++) {
+        const waveOffset = (wave / waveCount) * Math.PI * 2;
+        const waveRadius = radius * (1.2 + wave * 0.15);
+        const alpha = 0.15 - wave * 0.04;
 
-    const gradient = ctx.createRadialGradient(
-      x,
-      y,
-      radius * 0.8,
-      x,
-      y,
-      auraRadius,
-    );
-    gradient.addColorStop(0, this.hexToRgba(this.glowColor, 0.0));
-    gradient.addColorStop(1, this.hexToRgba(this.glowColor, 0.2));
+        // Create wavy circle
+        ctx.beginPath();
+        for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+          const wobble = Math.sin(angle * 4 + this.pulseTime * 2 + waveOffset) * (radius * 0.1);
+          const r = waveRadius + wobble;
+          const px = x + Math.cos(angle) * r;
+          const py = y + Math.sin(angle) * r;
+          if (angle === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+        ctx.closePath();
 
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, auraRadius, 0, Math.PI * 2);
-    ctx.fill();
+        // Rainbow gradient
+        const rainbowGradient = ctx.createRadialGradient(x, y, waveRadius * 0.5, x, y, waveRadius);
+        const hue = (this.pulseTime * 50 + wave * 40) % 360;
+        rainbowGradient.addColorStop(0, `hsla(${hue}, 70%, 80%, 0)`);
+        rainbowGradient.addColorStop(0.5, `hsla(${hue}, 70%, 80%, ${alpha})`);
+        rainbowGradient.addColorStop(1, `hsla(${hue}, 70%, 80%, 0)`);
+
+        ctx.fillStyle = rainbowGradient;
+        ctx.fill();
+      }
+
+      // Sparkle trail particles
+      const trailCount = 12;
+      for (let i = 0; i < trailCount; i++) {
+        const angle = (i / trailCount) * Math.PI * 2 + this.pulseTime;
+        const dist = radius * (0.8 + Math.sin(this.pulseTime * 3 + i) * 0.3);
+        const px = x + Math.cos(angle) * dist;
+        const py = y + Math.sin(angle) * dist;
+        const sparkleSize = 2 + Math.sin(this.pulseTime * 4 + i) * 1.5;
+
+        // Draw cross sparkle
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + Math.sin(this.pulseTime * 5 + i) * 0.3})`;
+        ctx.fillRect(px - sparkleSize, py - 0.5, sparkleSize * 2, 1);
+        ctx.fillRect(px - 0.5, py - sparkleSize, 1, sparkleSize * 2);
+      }
+    } else {
+      // Generic pulse aura for other bosses
+      const pulse = 1 + Math.sin(this.pulseTime) * 0.05;
+      const auraRadius = radius * 1.1 * pulse;
+
+      const gradient = ctx.createRadialGradient(
+        x,
+        y,
+        radius * 0.8,
+        x,
+        y,
+        auraRadius,
+      );
+      gradient.addColorStop(0, this.hexToRgba(this.glowColor, 0.0));
+      gradient.addColorStop(1, this.hexToRgba(this.glowColor, 0.2));
+
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, y, auraRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Swarm Queen Drones - Orbiting the bubble
-    if (this.variant === 1) {
+    if (this.variant === 2) {
       this.drones.forEach((drone) => {
         const orbitRadius = radius * 1.3; // Orbit outside bubble
         const dx = x + Math.cos(drone.angle) * orbitRadius;
@@ -644,8 +729,63 @@ export class BossBall {
       });
     }
 
+    // Tiny Tyrant Twinkling Stars - UNIQUE personality
+    if (this.variant === 0) {
+      this.sparkles.forEach((star, index) => {
+        const orbitRadius = radius * star.dist;
+        const spiralOffset = Math.sin(this.pulseTime + index) * (radius * 0.2);
+        const sx = x + Math.cos(star.angle) * (orbitRadius + spiralOffset);
+        const sy = y + Math.sin(star.angle) * (orbitRadius + spiralOffset);
+
+        // Twinkling effect
+        const twinkle = Math.abs(Math.sin(this.pulseTime * 3 + index * 0.5));
+        const starSize = star.size * (0.6 + twinkle * 0.8);
+
+        // Draw 4-pointed star
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(this.pulseTime + index);
+
+        // Star color cycles through rainbow
+        const hue = ((this.pulseTime * 100 + index * 45) % 360);
+        ctx.fillStyle = `hsla(${hue}, 80%, 75%, ${0.7 + twinkle * 0.3})`;
+        ctx.shadowColor = `hsla(${hue}, 80%, 75%, 0.8)`;
+        ctx.shadowBlur = 8;
+
+        // Draw star shape
+        ctx.beginPath();
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const outerRadius = starSize;
+          const innerRadius = starSize * 0.4;
+
+          // Outer point
+          ctx.lineTo(
+            Math.cos(angle) * outerRadius,
+            Math.sin(angle) * outerRadius
+          );
+          // Inner point
+          ctx.lineTo(
+            Math.cos(angle + Math.PI / 4) * innerRadius,
+            Math.sin(angle + Math.PI / 4) * innerRadius
+          );
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // Add bright center
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(0, 0, starSize * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      });
+    }
+
     // Void Construct Rings (Back half) - Enhanced
-    if (this.variant === 2) {
+    if (this.variant === 3) {
       // Add outer glow aura
       const voidGlow = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2);
       voidGlow.addColorStop(0, 'rgba(0, 255, 255, 0.2)');
@@ -729,7 +869,7 @@ export class BossBall {
     }
 
     // Colossus Shields
-    if (this.variant === 0) {
+    if (this.variant === 1) {
       this.shields.forEach((shield) => {
         const orbitRadius = radius * shield.dist;
         const dx = x + Math.cos(shield.angle) * orbitRadius;
@@ -762,7 +902,7 @@ export class BossBall {
     }
 
     // Void Construct Rings (Front half) - Enhanced
-    if (this.variant === 2) {
+    if (this.variant === 3) {
       this.rings.forEach((ring) => {
         ctx.save();
         ctx.translate(x, y);
@@ -1029,10 +1169,11 @@ export class BossBall {
     ctx.shadowBlur = 4;
 
     let name = 'BOSS';
-    if (this.variant === 0) name = 'COLOSSUS';
-    if (this.variant === 1) name = 'SWARM QUEEN';
-    if (this.variant === 2) name = 'VOID CONSTRUCT';
-    if (this.variant === 3) name = 'OMEGA CORE';
+    if (this.variant === 0) name = 'TYRANT';
+    if (this.variant === 1) name = 'COLOSSUS';
+    if (this.variant === 2) name = 'SWARM QUEEN';
+    if (this.variant === 3) name = 'VOID CONSTRUCT';
+    if (this.variant === 4) name = 'OMEGA CORE';
 
     ctx.fillText(name, centerX, barY - 8);
     ctx.shadowBlur = 0;
