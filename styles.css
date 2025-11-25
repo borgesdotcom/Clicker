@@ -7652,6 +7652,23 @@ svg {
 
 /* Fullscreen modal styles - applied to all modals */
 .alert-dialog,
+.alert-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0);
+  z-index: 20000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease-out, background 0.3s ease-out;
+}
+
 .tutorial-modal,
 .achievements-modal,
 .artifacts-modal,
@@ -7683,6 +7700,14 @@ svg {
 
 .alert-dialog.show {
   display: flex;
+  opacity: 1;
+  animation: fullscreenModalFadeIn 0.3s ease-out;
+}
+
+.alert-dialog.show .alert-dialog-content {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: fullscreenModalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .alert-dialog-backdrop {
@@ -7709,7 +7734,7 @@ svg {
   z-index: 20001;
   display: flex;
   flex-direction: column;
-  animation: alertDialogSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
 @keyframes alertDialogSlideIn {
