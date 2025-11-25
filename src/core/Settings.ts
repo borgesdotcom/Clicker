@@ -14,6 +14,7 @@ export interface UserSettings {
   enableVisualEffects: boolean;
   screenShakeEnabled: boolean;
   fontFamily: string;
+  useOldShopUI: boolean;
 }
 
 // Partial type for loading from storage
@@ -53,6 +54,7 @@ export class Settings {
           enableVisualEffects: data.enableVisualEffects ?? true,
           screenShakeEnabled: data.screenShakeEnabled ?? true,
           fontFamily: data.fontFamily ?? "'Courier New', 'Courier', monospace",
+          useOldShopUI: data.useOldShopUI ?? false,
         };
       }
     } catch (error) {
@@ -75,6 +77,7 @@ export class Settings {
       enableVisualEffects: true,
       screenShakeEnabled: true,
       fontFamily: "'Courier New', 'Courier', monospace",
+      useOldShopUI: false,
     };
   }
 }

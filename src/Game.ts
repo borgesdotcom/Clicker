@@ -454,6 +454,17 @@ export class Game {
       // Apply font globally
       document.documentElement.style.setProperty('--font-family', fontFamily);
     });
+    this.settingsModal.setOldShopUICallback((enabled: boolean) => {
+      this.userSettings.useOldShopUI = enabled;
+      Settings.save(this.userSettings);
+      // Load/unload old CSS stylesheet
+      import('./utils/stylesheetLoader').then(({ toggleOldStylesheet }) => {
+        toggleOldStylesheet(enabled);
+      });
+      // Force shop to re-render with new UI mode
+      this.shop.setUseOldUI(enabled);
+      this.shop.forceRefresh();
+    });
 
     // Apply loaded settings
     // Apply font family from settings
@@ -474,6 +485,7 @@ export class Game {
       this.userSettings.showDamageNumbers,
       this.userSettings.screenShakeEnabled,
       this.userSettings.lcdFilterEnabled,
+      this.userSettings.useOldShopUI,
     );
     // Set initial font family in settings modal
     if (this.userSettings.fontFamily) {
@@ -520,6 +532,15 @@ export class Game {
     this.shop.setSoundManager(this.soundManager);
     this.shop.setMissionSystem(this.missionSystem);
     this.shop.setAscensionSystem(this.ascensionSystem);
+    this.shop.setUseOldUI(this.userSettings.useOldShopUI);
+    
+    // Load old stylesheet if setting is enabled
+    if (this.userSettings.useOldShopUI) {
+      import('./utils/stylesheetLoader').then(({ toggleOldStylesheet }) => {
+        toggleOldStylesheet(true);
+      });
+    }
+    
     this.shop.setOnPurchase(() => {
       this.handleUpgradePurchase();
     });
@@ -1639,10 +1660,23 @@ export class Game {
       state.blockedOnBossLevel !== undefined &&
       state.blockedOnBossLevel !== null;
 
+    // Fix: If player has already passed the blocked boss level, clear the block
+    // This handles cases where player levels up past the boss (e.g., gaining too much XP at once)
+    if (isBlockedByBoss && state.level > (state.blockedOnBossLevel ?? 0)) {
+      this.bossManager.clearBlockedState();
+      state.blockedOnBossLevel = null;
+      this.store.setState(state);
+    }
+
+    // Re-check after potential clearing
+    const stillBlocked =
+      state.blockedOnBossLevel !== undefined &&
+      state.blockedOnBossLevel !== null;
+
     // Check if player is currently on a boss level
     const isOnBossLevel = this.bossManager.isBossLevel(state.level);
 
-    if (isBlockedByBoss) {
+    if (stillBlocked) {
       // Player lost to boss previously - show retry button and normal mode
       this.bossManager.setBlockedBossLevel(state.blockedOnBossLevel ?? null);
       this.mode = 'normal';
@@ -2302,7 +2336,15 @@ export class Game {
     bonusXP *= 1 + artifactBonus;
 
     // At level 100, can only gain XP after defeating the boss
-    const blockedLevel = this.bossManager.getBlockedBossLevel();
+    let blockedLevel = this.bossManager.getBlockedBossLevel();
+    
+    // Fix: If player has already passed the blocked boss level, clear the block
+    // This handles cases where player levels up past the boss (e.g., gaining too much XP at once)
+    if (blockedLevel !== null && state.level > blockedLevel) {
+      this.bossManager.clearBlockedState();
+      blockedLevel = null;
+    }
+    
     if (state.level === 100 && blockedLevel === 100) {
       bonusXP = 0; // No XP until boss is defeated
     } else if (blockedLevel !== null) {
@@ -2313,7 +2355,9 @@ export class Game {
 
     let leveledUp = false;
     let newLevel = state.level;
-    if (blockedLevel === null) {
+    
+    // Allow leveling if not blocked, or if player has already passed the blocked level
+    if (blockedLevel === null || (blockedLevel !== null && state.level > blockedLevel)) {
       while (state.experience >= ColorManager.getExpRequired(state.level)) {
         const expRequired = ColorManager.getExpRequired(state.level);
         state.experience -= expRequired;
@@ -2326,6 +2370,12 @@ export class Game {
         // after calculating prestige points.
 
         leveledUp = true;
+        
+        // If we leveled past a blocked boss level, clear the block
+        if (blockedLevel !== null && state.level > blockedLevel) {
+          this.bossManager.clearBlockedState();
+          blockedLevel = null;
+        }
       }
     }
 

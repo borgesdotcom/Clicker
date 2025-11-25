@@ -35,6 +35,8 @@
     "damageNumbersHint": "Desactivar para mejorar el rendimiento (el daño aún se aplica)",
     "screenShake": "Vibración de Pantalla:",
     "screenShakeHint": "Desactivar para prevenir mareos",
+    "oldShopUI": "Tienda Antigua:",
+    "oldShopUIHint": "Usar la interfaz de tienda clásica y más simple",
     "language": "Idioma:",
     "languageHint": "Cambiar el idioma del juego",
     "accessibilitySettings": "Configuración de Accesibilidad",
@@ -120,6 +122,7 @@
     "step3Desc": "Los alienígenas sueltan power-ups que aumentan temporalmente el daño, la velocidad o la probabilidad de crítico.",
     "step4Title": "Derrota a los Jefes",
     "step4Desc": "Cada 25 niveles (y en el nivel 5), un jefe bloqueará tu progreso. ¡Derrotalo antes de que el tiempo se acabe! Puedes ganar artefactos misteriosos.",
+    "gpuAccelerationWarning": "⚠️ IMPORTANTE: La aceleración por GPU debe estar habilitada en tu navegador para un rendimiento óptimo. Por favor, verifica la configuración de tu navegador si experimentas lag o problemas visuales.",
     "startButton": "¡Entendido!"
   },
   "boss": {

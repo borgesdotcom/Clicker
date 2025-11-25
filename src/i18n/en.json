@@ -37,6 +37,8 @@
     "screenShakeHint": "Enable screen shake effects for impactful moments.",
     "lcdFilter": "LCD Filter",
     "lcdFilterHint": "Subtle retro LCD monitor effect with pixel grid",
+    "oldShopUI": "Old Shop UI:",
+    "oldShopUIHint": "Use the classic, simpler shop interface",
     "saveDataActions": "Save Data & Actions",
     "exportSave": "EXPORT SAVE DATA",
     "importSave": "IMPORT SAVE DATA",
@@ -303,6 +305,7 @@
     "step3Desc": "Aliens drop power-ups that temporarily increase damage, speed, or critical chance.",
     "step4Title": "Defeat Bosses",
     "step4Desc": "Every 25 levels (and at level 5), a boss will block your progress. Defeat it before time runs out! You may earn mysterious artifacts.",
+    "gpuAccelerationWarning": "⚠️ IMPORTANT: GPU acceleration must be enabled in your web browser for optimal performance. Please check your browser settings if you experience lag or visual issues.",
     "startButton": "Got it!"
   },
   "upgrades": {

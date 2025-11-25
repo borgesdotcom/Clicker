@@ -37,6 +37,8 @@
     "screenShakeHint": "Ative efeitos de tremor de tela para momentos impactantes.",
     "lcdFilter": "Filtro LCD",
     "lcdFilterHint": "Efeito sutil de monitor LCD retrô com grade de pixels",
+    "oldShopUI": "Loja Antiga:",
+    "oldShopUIHint": "Usar a interface de loja clássica e mais simples",
     "saveDataActions": "Dados Salvos e Ações",
     "exportSave": "EXPORTAR DADOS",
     "importSave": "IMPORTAR DADOS",
@@ -303,6 +305,7 @@
     "step3Desc": "Alienígenas soltam power-ups que aumentam temporariamente dano, velocidade ou críticos.",
     "step4Title": "Derrote Chefes",
     "step4Desc": "A cada 25 níveis (e no lvl 5), um chefe bloqueará seu progresso. Derrote-o antes que o tempo acabe! Você pode ganhar artefatos misteriosos",
+    "gpuAccelerationWarning": "⚠️ IMPORTANTE: A aceleração de GPU deve estar habilitada no seu navegador para melhor desempenho. Verifique as configurações do navegador se você tiver lag ou problemas visuais.",
     "startButton": "Entendi!"
   },
   "upgrades": {

@@ -392,6 +392,7 @@ export class MissionSystem {
     }
     if (finalReward.xp > 0) {
       // At level 100, can only gain XP after defeating the boss
+      // But if player has already passed level 100, allow XP gain
       if (state.level === 100 && state.blockedOnBossLevel === 100) {
         // No XP from missions until boss is defeated
       } else {

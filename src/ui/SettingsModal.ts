@@ -2,6 +2,7 @@ import type { SoundManager } from '../systems/SoundManager';
 import { i18n, t } from '../core/I18n';
 import type { Language } from '../core/I18n';
 import { alertDialog } from './AlertDialog';
+import { images } from '../assets/images';
 
 export class SettingsModal {
   private modal: HTMLElement | null = null;
@@ -27,6 +28,8 @@ export class SettingsModal {
   private soundtrackToggle: HTMLButtonElement | null = null;
   private languageSelect: HTMLSelectElement | null = null;
   private fontFamilySelect: HTMLSelectElement | null = null;
+  private oldShopUIToggle: HTMLButtonElement | null = null;
+  private oldShopUICallback: ((enabled: boolean) => void) | null = null;
 
   constructor(soundManager: SoundManager) {
     this.soundManager = soundManager;
@@ -74,6 +77,10 @@ export class SettingsModal {
     this.fontFamilyCallback = callback;
   }
 
+  setOldShopUICallback(callback: (enabled: boolean) => void): void {
+    this.oldShopUICallback = callback;
+  }
+
   setFontFamily(fontFamily: string): void {
     if (this.fontFamilySelect && fontFamily) {
       // Check if the font exists in options before setting
@@ -109,6 +116,7 @@ export class SettingsModal {
     damageNumbers: boolean,
     screenShake: boolean,
     lcdFilter: boolean,
+    useOldShopUI?: boolean,
   ): void {
     if (this.graphicsToggle) {
       this.graphicsToggle.textContent = graphics
@@ -148,6 +156,14 @@ export class SettingsModal {
         ? '#0088ff'
         : '#666';
     }
+    if (this.oldShopUIToggle && useOldShopUI !== undefined) {
+      this.oldShopUIToggle.textContent = useOldShopUI
+        ? t('common.on')
+        : t('common.off');
+      this.oldShopUIToggle.style.backgroundColor = useOldShopUI
+        ? '#0088ff'
+        : '#666';
+    }
   }
 
   private createModal(): void {
@@ -175,7 +191,7 @@ export class SettingsModal {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
     const closeImg = document.createElement('img');
-    closeImg.src = '/src/icons/menu/close.png';
+    closeImg.src = images.menu.close;
     closeImg.alt = 'Close';
     closeBtn.appendChild(closeImg);
     closeBtn.addEventListener('click', () => {
@@ -769,6 +785,52 @@ export class SettingsModal {
     lcdFilterHint.style.fontFamily = 'var(--font-family)';
     graphicsSection.appendChild(lcdFilterHint);
 
+    // Old Shop UI toggle
+    const oldShopUIContainer = document.createElement('div');
+    oldShopUIContainer.style.marginBottom = '10px';
+    oldShopUIContainer.style.marginTop = '15px';
+    oldShopUIContainer.style.display = 'flex';
+    oldShopUIContainer.style.alignItems = 'center';
+    oldShopUIContainer.style.justifyContent = 'space-between';
+
+    const oldShopUILabel = document.createElement('label');
+    oldShopUILabel.textContent = t('settings.oldShopUI');
+    oldShopUILabel.style.fontSize = '16px';
+    oldShopUILabel.style.color = '#FFFAE5';
+    oldShopUILabel.style.fontFamily = 'var(--font-family)';
+
+    this.oldShopUIToggle = document.createElement('button');
+    this.oldShopUIToggle.className = 'modal-button';
+    this.oldShopUIToggle.textContent = t('common.off');
+    this.oldShopUIToggle.style.width = '80px';
+    this.oldShopUIToggle.style.backgroundColor = '#666';
+
+    this.oldShopUIToggle.addEventListener('click', () => {
+      if (!this.oldShopUIToggle) return;
+      const newState = this.oldShopUIToggle.textContent === t('common.off');
+      this.oldShopUIToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
+      this.oldShopUIToggle.style.backgroundColor = newState
+        ? '#0088ff'
+        : '#666';
+      if (this.oldShopUICallback) {
+        this.oldShopUICallback(newState);
+      }
+    });
+
+    oldShopUIContainer.appendChild(oldShopUILabel);
+    oldShopUIContainer.appendChild(this.oldShopUIToggle);
+    graphicsSection.appendChild(oldShopUIContainer);
+
+    const oldShopUIHint = document.createElement('div');
+    oldShopUIHint.textContent = t('settings.oldShopUIHint');
+    oldShopUIHint.style.fontSize = '12px';
+    oldShopUIHint.style.color = 'rgba(255, 250, 229, 0.6)';
+    oldShopUIHint.style.marginTop = '5px';
+    oldShopUIHint.style.fontFamily = 'var(--font-family)';
+    graphicsSection.appendChild(oldShopUIHint);
+
     modalBody.appendChild(graphicsSection);
 
     // Save Data & Actions Section
@@ -973,6 +1035,7 @@ export class SettingsModal {
     const damageNumbersCallback = this.damageNumbersCallback;
     const screenShakeCallback = this.screenShakeCallback;
     const fontFamilyCallback = this.fontFamilyCallback;
+    const oldShopUICallback = this.oldShopUICallback;
 
     this.createModal();
 
@@ -988,6 +1051,8 @@ export class SettingsModal {
       this.screenShakeCallback = screenShakeCallback;
     if (fontFamilyCallback)
       this.fontFamilyCallback = fontFamilyCallback;
+    if (oldShopUICallback)
+      this.oldShopUICallback = oldShopUICallback;
 
     // Restore visibility
     if (wasVisible) {

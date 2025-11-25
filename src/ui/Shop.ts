@@ -30,6 +30,7 @@ export class Shop {
   private isDesktopCollapsed = false; // Desktop shop collapsed state
   private updateAutoBuyButtonCallback: (() => void) | null = null;
   private activeTooltips: Set<HTMLElement> = new Set(); // Track active tooltips for cleanup
+  private useOldUI = false; // Use old/simple shop UI
 
   constructor(
     private store: Store,
@@ -54,7 +55,9 @@ export class Shop {
     }
 
     this.setupTabs();
-    this.setupBuyQuantityButtons();
+    if (!this.useOldUI) {
+      this.setupBuyQuantityButtons();
+    }
     this.setupDesktopToggle();
     this.render();
 
@@ -95,6 +98,31 @@ export class Shop {
     }
   }
 
+  setUseOldUI(useOldUI: boolean): void {
+    this.useOldUI = useOldUI;
+    
+    // Add/remove CSS class to shop panel for old UI styling
+    const shopPanel = document.getElementById('shop-panel');
+    if (shopPanel) {
+      if (useOldUI) {
+        shopPanel.classList.add('old-shop-ui');
+      } else {
+        shopPanel.classList.remove('old-shop-ui');
+      }
+    }
+    
+    // Show/hide buy quantity selector
+    const quantitySelector = document.querySelector('.buy-quantity-selector') as HTMLElement;
+    if (quantitySelector) {
+      quantitySelector.style.display = useOldUI ? 'none' : 'flex';
+    }
+    
+    // Reset buy quantity to 1 when switching to old UI
+    if (useOldUI) {
+      this.buyQuantity = 1;
+    }
+  }
+
   private setupTabs(): void {
     const availableTab = document.getElementById('tab-available');
     const ownedTab = document.getElementById('tab-owned');
@@ -115,6 +143,9 @@ export class Shop {
   }
 
   private setupBuyQuantityButtons(): void {
+    // Don't setup buy quantity buttons if old UI is enabled
+    if (this.useOldUI) return;
+    
     const shopPanel = document.getElementById('shop-panel');
     const shopTabs = document.getElementById('shop-tabs');
     if (!shopPanel || !shopTabs) return;
@@ -738,11 +769,13 @@ export class Shop {
     // Clear button cache for fresh render
     this.buttonCache.clear();
 
-    // Render special upgrades box at the top
-    // Always render the container to prevent layout shifts when special upgrades appear/disappear
-    // Filter: must meet requirements, be visible, AND be discovered (40% of cost OR already owned)
-    // Once discovered, upgrades stay visible even if player drops below 40% cost
-    const visibleSubUpgrades = allSubUpgrades
+    // Don't render special upgrades box in old UI
+    if (!this.useOldUI) {
+      // Render special upgrades box at the top
+      // Always render the container to prevent layout shifts when special upgrades appear/disappear
+      // Filter: must meet requirements, be visible, AND be discovered (40% of cost OR already owned)
+      // Once discovered, upgrades stay visible even if player drops below 40% cost
+      const visibleSubUpgrades = allSubUpgrades
       .filter((sub) => {
         const subKey = `sub_${sub.id}`;
 
@@ -800,6 +833,7 @@ export class Shop {
     
     // Always append the container to maintain consistent layout
     this.container.appendChild(specialBox);
+    }
 
     // Render main upgrades (exclude R&D category and undiscovered upgrades)
     for (const upgrade of upgrades) {
@@ -820,8 +854,8 @@ export class Shop {
       const item = document.createElement('div');
       item.className = 'upgrade-item';
 
-      // Enhanced UI: Add visual indicator for ships
-      if (upgrade.id === 'ship') {
+      // Enhanced UI: Add visual indicator for ships (only in new UI)
+      if (!this.useOldUI && upgrade.id === 'ship') {
         item.classList.add('upgrade-item-ship');
         itemContainer.classList.add('upgrade-item-ship-container');
       }
@@ -829,30 +863,33 @@ export class Shop {
       const header = document.createElement('div');
       header.className = 'upgrade-header';
 
-      // Add pixel art icon - use new pixel art renderer
-      const iconSprite = getMainUpgradeSprite(upgrade.id);
-      let icon: HTMLImageElement;
+      // Only add pixel art icons in new UI
+      if (!this.useOldUI) {
+        // Add pixel art icon - use new pixel art renderer
+        const iconSprite = getMainUpgradeSprite(upgrade.id);
+        let icon: HTMLImageElement;
 
-      if (iconSprite) {
-        // Use new pixel art sprite
-        icon = PixelArtRenderer.renderToImage(iconSprite, upgrade.id, 32, 'upgrade-icon-img');
-        icon.style.marginRight = '8px';
-        icon.style.verticalAlign = 'middle';
-      } else {
-        // Fallback to old system
-        icon = document.createElement('img');
-        icon.className = 'upgrade-icon-img';
-        // @ts-ignore - We know upgrades exists on images now
-        icon.src = images.upgrades?.[upgrade.id] || images.stars;
-        icon.alt = upgrade.name;
-        icon.style.width = '32px';
-        icon.style.height = '32px';
-        icon.style.marginRight = '8px';
-        icon.style.imageRendering = 'pixelated';
-        icon.style.verticalAlign = 'middle';
+        if (iconSprite) {
+          // Use new pixel art sprite
+          icon = PixelArtRenderer.renderToImage(iconSprite, upgrade.id, 32, 'upgrade-icon-img');
+          icon.style.marginRight = '8px';
+          icon.style.verticalAlign = 'middle';
+        } else {
+          // Fallback to old system
+          icon = document.createElement('img');
+          icon.className = 'upgrade-icon-img';
+          // @ts-ignore - We know upgrades exists on images now
+          icon.src = images.upgrades?.[upgrade.id] || images.stars;
+          icon.alt = upgrade.name;
+          icon.style.width = '32px';
+          icon.style.height = '32px';
+          icon.style.marginRight = '8px';
+          icon.style.imageRendering = 'pixelated';
+          icon.style.verticalAlign = 'middle';
+        }
+
+        header.appendChild(icon);
       }
-
-      header.appendChild(icon);
 
       const name = document.createElement('div');
       name.className = 'upgrade-name';

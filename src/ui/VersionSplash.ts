@@ -6,6 +6,7 @@ import {
   POWERUP_SPRITE_POINTS,
   BOSS_SPRITE_COLOSSUS,
 } from '../render/AlienSprites';
+import { images } from '../assets/images';
 
 export class VersionSplash {
   private overlay: HTMLElement | null = null;
@@ -47,7 +48,7 @@ export class VersionSplash {
       <div class="modal-content tutorial-modal-content">
         <div class="modal-header tutorial-modal-header">
           <h2>${i18n.t('tutorialSplash.welcome')}</h2>
-          <button class="modal-close" id="tutorial-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <button class="modal-close" id="tutorial-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="modal-body tutorial-modal-body">
 
@@ -96,6 +97,9 @@ export class VersionSplash {
               </div>
             </div>
           </div>
+          <div class="tutorial-gpu-warning" style="margin-top: 20px; padding: 12px; background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.3); border-radius: 4px; font-size: 12px; color: #ffaa00; font-family: var(--font-family, 'Courier New', monospace);">
+            ${i18n.t('tutorialSplash.gpuAccelerationWarning')}
+          </div>
           <button class="tutorial-start-btn">${i18n.t('tutorialSplash.startButton')}</button>
         </div>
       </div>
@@ -123,7 +127,7 @@ export class VersionSplash {
       <div class="modal-content tutorial-modal-content">
         <div class="modal-header tutorial-modal-header">
           <h2>Welcome to BOBBLE</h2>
-          <button class="modal-close" id="version-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
+          <button class="modal-close" id="version-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="modal-body tutorial-modal-body">
           <h2 style="text-align: center; color: #FFFAE5; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 1px;">${i18n.t('versionSplash.v121Title')}</h2>
