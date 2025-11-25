@@ -21,7 +21,7 @@ export class MissionsModal {
   private createModal(): HTMLElement {
     const modal = document.createElement('div');
     modal.id = 'missions-modal';
-    modal.className = 'modal';
+    modal.className = 'missions-modal';
     modal.style.display = 'none';
 
     modal.innerHTML = `
@@ -49,11 +49,6 @@ export class MissionsModal {
       this.hide();
     });
 
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
 
     // Tab switching
     const tabs = this.modal.querySelectorAll('.mission-tab');
@@ -69,16 +64,15 @@ export class MissionsModal {
   }
 
   public show(): void {
+    document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
+    this.modal.classList.add('show');
     this.renderMissions();
-    // Trigger animation
-    requestAnimationFrame(() => {
-      this.modal.classList.add('show');
-    });
   }
 
   public hide(): void {
     this.modal.classList.remove('show');
+    document.body.style.overflow = '';
     // Wait for animation to complete
     setTimeout(() => {
       this.modal.style.display = 'none';

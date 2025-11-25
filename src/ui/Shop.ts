@@ -9,6 +9,7 @@ import { t } from '../core/I18n';
 import { images } from '../assets/images';
 import { PixelArtRenderer } from '../utils/PixelArtRenderer';
 import { getMainUpgradeSprite } from '../render/MainUpgradeSprites';
+import { UI_THROTTLE } from '../config/constants';
 
 export class Shop {
   private container: HTMLElement;
@@ -24,7 +25,7 @@ export class Shop {
     isAutoBuyUnlocked: (state: GameState) => boolean;
   } | null = null;
   private lastUpdateTime = 0;
-  private updateThrottle = 30; // Update at most every 30ms (much more responsive)
+  private updateThrottle = UI_THROTTLE.SHOP_UPDATE_INTERVAL; // Update at most every 30ms (much more responsive)
   private buyQuantity: 1 | 5 | 10 | 'max' = 1; // Buy quantity selector
   private isDesktopCollapsed = false; // Desktop shop collapsed state
   private updateAutoBuyButtonCallback: (() => void) | null = null;
@@ -703,7 +704,7 @@ export class Shop {
 
   private setBuyButtonContent(
     buttonElement: HTMLButtonElement,
-    displayQuantity: number,
+    _displayQuantity: number,
   ): void {
     // Clear existing content
     buttonElement.innerHTML = '';
@@ -714,13 +715,8 @@ export class Shop {
     img.alt = t('shop.buy');
     buttonElement.appendChild(img);
 
-    // Add quantity text if needed
-    if (this.buyQuantity === 'max' && displayQuantity > 1) {
-      const quantityText = document.createElement('span');
-      quantityText.textContent = ` ×${displayQuantity}`;
-      quantityText.style.marginLeft = '4px';
-      buttonElement.appendChild(quantityText);
-    }
+    // Don't show quantity text for Max button to prevent container size changes
+    // Quantity text removed per user request
 
     // Add hover text "Buy"
     const hoverText = document.createElement('span');
@@ -743,6 +739,7 @@ export class Shop {
     this.buttonCache.clear();
 
     // Render special upgrades box at the top
+    // Always render the container to prevent layout shifts when special upgrades appear/disappear
     // Filter: must meet requirements, be visible, AND be discovered (40% of cost OR already owned)
     // Once discovered, upgrades stay visible even if player drops below 40% cost
     const visibleSubUpgrades = allSubUpgrades
@@ -763,30 +760,46 @@ export class Shop {
       })
       .sort((a, b) => a.cost - b.cost);
 
-    if (visibleSubUpgrades.length > 0) {
-      const specialBox = document.createElement('div');
-      specialBox.className = 'special-upgrades-box';
+    // Always render the special upgrades box container - always visible with fixed size
+    const specialBox = document.createElement('div');
+    specialBox.className = 'special-upgrades-box';
 
+    // Always show the title
+    const title = document.createElement('h3');
+    // Add star emoji before the text
+    const starEmoji = document.createElement('span');
+    starEmoji.style.fontSize = '16px';
+    title.appendChild(starEmoji);
+    const titleText = document.createElement('span');
+    titleText.textContent = t('shop.specialUpgrades');
+    title.appendChild(titleText);
+    specialBox.appendChild(title);
+
+    // Create scrollable grid container
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'special-upgrades-grid-container';
+
+    const grid = document.createElement('div');
+    grid.className = 'special-upgrades-grid';
+
+    if (visibleSubUpgrades.length > 0) {
       // Create inner wrapper for the animated effect
       const effectWrapper = document.createElement('div');
       effectWrapper.className = 'special-upgrades-effect-wrapper';
-
-      const title = document.createElement('h3');
-      title.textContent = t('shop.specialUpgrades');
-      specialBox.appendChild(title);
-
-      const grid = document.createElement('div');
-      grid.className = 'special-upgrades-grid';
 
       for (const subUpgrade of visibleSubUpgrades) {
         const subItem = this.createSubUpgradeCard(subUpgrade, state);
         grid.appendChild(subItem);
       }
 
-      specialBox.appendChild(effectWrapper);
-      specialBox.appendChild(grid);
-      this.container.appendChild(specialBox);
+      gridContainer.appendChild(effectWrapper);
     }
+
+    gridContainer.appendChild(grid);
+    specialBox.appendChild(gridContainer);
+    
+    // Always append the container to maintain consistent layout
+    this.container.appendChild(specialBox);
 
     // Render main upgrades (exclude R&D category and undiscovered upgrades)
     for (const upgrade of upgrades) {
@@ -915,9 +928,14 @@ export class Shop {
       }
 
       // Simplified cost display - just show the number
+      // Don't show quantity text for Max mode to prevent container size changes
       cost.textContent = this.formatNumber(displayCost);
-      if (displayQuantity > 1) {
-        cost.textContent += ` (×${displayQuantity})`;
+      // Only show quantity for specific quantities (x5, x10), not for Max
+      if (this.buyQuantity !== 'max' && displayQuantity > 1) {
+        const quantitySpan = document.createElement('span');
+        quantitySpan.className = 'upgrade-quantity-text';
+        quantitySpan.textContent = ` (×${displayQuantity})`;
+        cost.appendChild(quantitySpan);
       }
 
       // Create button with image instead of text
@@ -986,17 +1004,33 @@ export class Shop {
     // Add icon back for visibility - use generated pixel art if available
     const icon = document.createElement('div');
     icon.className = 'sub-upgrade-icon';
-    const img = document.createElement('img');
+    
+    // Check if there's a specific icon for this upgrade, otherwise use star emoji
     // @ts-ignore - We know upgrades exists on images now
-    img.src = images.upgrades?.[subUpgrade.id] || images.stars;
-    img.alt = t(`upgrades.special.${subUpgrade.id}.name`);
-    img.style.width = '130%';
-    img.style.height = '130%';
-    img.style.objectFit = 'contain';
-    img.style.transform = 'scale(1.1)';
-    // Pixel art rendering
-    img.style.imageRendering = 'pixelated';
-    icon.appendChild(img);
+    if (images.upgrades?.[subUpgrade.id]) {
+      const img = document.createElement('img');
+      // @ts-ignore - We know upgrades exists on images now
+      img.src = images.upgrades[subUpgrade.id];
+      img.alt = t(`upgrades.special.${subUpgrade.id}.name`);
+      img.style.width = '130%';
+      img.style.height = '130%';
+      img.style.objectFit = 'contain';
+      img.style.transform = 'scale(1.1)';
+      // Pixel art rendering
+      img.style.imageRendering = 'pixelated';
+      icon.appendChild(img);
+    } else {
+      // Use star emoji instead of images.stars
+      const starEmoji = document.createElement('span');
+      starEmoji.textContent = '⭐';
+      starEmoji.style.fontSize = '32px';
+      starEmoji.style.display = 'flex';
+      starEmoji.style.alignItems = 'center';
+      starEmoji.style.justifyContent = 'center';
+      starEmoji.style.width = '100%';
+      starEmoji.style.height = '100%';
+      icon.appendChild(starEmoji);
+    }
     card.appendChild(icon);
 
     // Name and cost are hidden via CSS for simpler UI

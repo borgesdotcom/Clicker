@@ -1,7 +1,8 @@
 import type { SaveData, GameState } from '../types';
 import { clamp } from '../math/rng';
+import { SAVE } from '../config/constants';
 
-const SAVE_KEY = 'alien-clicker-save';
+const SAVE_KEY = SAVE.STORAGE_KEY;
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Save {

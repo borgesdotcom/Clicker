@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlienBall } from './entities/AlienBall';
-import { EnhancedAlienBall, selectEnemyType, type EnemyType } from './entities/EnemyTypes';
+import { EnhancedAlienBall, type EnemyType } from './entities/EnemyTypes';
 import { BossBall } from './entities/BossBall';
-import { getPixelHitPoint } from './utils/Raycast';
 import { Ship } from './entities/Ship';
 import { Canvas } from './render/Canvas';
 import { Draw } from './render/Draw';
@@ -50,10 +49,26 @@ import { Settings } from './core/Settings';
 import { NotificationSystem } from './ui/NotificationSystem';
 import { i18n } from './core/I18n';
 import { VisualCustomizationSystem } from './systems/VisualCustomizationSystem';
-import { NumberFormatter } from './utils/NumberFormatter';
 import { PerformanceModeManager } from './systems/PerformanceModeManager';
 import type { Vec2, GameMode, ThemeCategory } from './types';
 import type { UserSettings } from './core/Settings';
+import {
+  COMBAT,
+  FRAME_INTERVALS,
+  SAVE,
+  AUTO_BUY,
+  BOSS,
+  COMBO_PAUSE,
+  UI_THROTTLE,
+} from './config/constants';
+import {
+  BossManager,
+  CombatManager,
+  InputManager,
+  RenderManager,
+  EntityManager,
+  GodModeManager,
+} from './managers';
 
 export class Game {
   private canvas: Canvas;
@@ -97,10 +112,17 @@ export class Game {
   private tutorialSystem: TutorialSystem;
   private customizationSystem: VisualCustomizationSystem;
   private performanceModeManager: PerformanceModeManager;
+  private bossManager: BossManager;
+  private combatManager: CombatManager;
+  private inputManager: InputManager;
+  private renderManager: RenderManager;
+  private entityManager: EntityManager;
+  private godModeManager: GodModeManager;
+  private artifactsButton: HTMLElement | null = null;
   private saveTimer = 0;
-  private saveInterval = 3;
+  private saveInterval = SAVE.AUTO_SAVE_INTERVAL;
   private autoBuyTimer = 0;
-  private autoBuyInterval = 0.5; // Check every 0.5 seconds
+  private autoBuyInterval = AUTO_BUY.CHECK_INTERVAL;
   private lastPowerUpCount = 0; // Track power-up changes for shop refresh
   private lastHadSpeedBuff = false; // Track speed buff specifically for shop refresh
   private lastHadDamageBuff = false; // Track damage buff specifically for shop refresh
@@ -117,77 +139,27 @@ export class Game {
   private overclockTimer = 0;
   private mode: GameMode = 'normal';
   private transitionTime = 0;
-  private transitionDuration = 2;
-  private keys: Set<string> = new Set();
+  private transitionDuration = BOSS.TRANSITION_DURATION;
   private userSettings: UserSettings = Settings.getDefault();
 
   // Space key attack holding
   private spaceKeyHeld = false;
   private spaceAttackCooldown = 0;
-  private readonly SPACE_ATTACK_RATE = 0.15; // 150ms between attacks = ~6.67 attacks/sec cap
-
-  // Boss battle timer system
-  private bossTimeLimit = 0;
-  private bossTimeRemaining = 0;
-  private bossTimerElement: HTMLElement | null = null;
-  private bossTimeoutHandled = false;
+  private readonly SPACE_ATTACK_RATE = COMBAT.SPACE_ATTACK_RATE;
 
   // Debug controls
   private gameSpeed = 1.0;
-  private godMode = false;
-  private godModeAgent: {
-    clickTimer: number;
-    clickIntervalRange: { min: number; max: number };
-    burstChance: number;
-    burstShotsRemaining: number;
-    burstCooldownTimer: number;
-    burstCooldownRange: { min: number; max: number };
-    jitterRadius: number;
-    upgradeTimer: number;
-    upgradeIntervalRange: { min: number; max: number };
-    powerUpTimer: number;
-    powerUpReactionRange: { min: number; max: number };
-    metricsTimer: number;
-    metricsInterval: number;
-    startTimestamp: number;
-    baseline: {
-      points: number;
-      clicks: number;
-      aliens: number;
-      bosses: number;
-      upgrades: number;
-      subUpgrades: number;
-    };
-    overlay: HTMLElement | null;
-    lastAction: string;
-    logTimer: number;
-    idleTimer: number;
-    nextBreakIn: number;
-    breakTimer: number;
-    breakDurationRange: { min: number; max: number };
-    bossCheckTimer: number;
-    bossCheckIntervalRange: { min: number; max: number };
-    bossRetryTimer: number;
-    bossRetryDelay: number;
-    bossRetryAttempts: number;
-    bossHistory: Array<{
-      timestamp: number;
-      level: number;
-      detail: string;
-    }>;
-  } | null = null;
 
-  // Boss retry system
-  private bossRetryButton: HTMLElement | null = null;
-  private blockedOnBossLevel: number | null = null;
+  // Boss retry system (managed by BossManager)
+  // private blockedOnBossLevel: number | null = null; // Now in BossManager
 
   // Combo pause skill system
   private comboPauseButton: HTMLElement | null = null;
   private comboPauseActive = false;
   private comboPauseDuration = 0; // Remaining duration in seconds
   private comboPauseCooldown = 0; // Remaining cooldown in seconds
-  private readonly COMBO_PAUSE_DURATION = 15 * 60; // 15 minutes in seconds
-  private readonly COMBO_PAUSE_COOLDOWN = 60 * 60; // 1 hour in seconds
+  private readonly COMBO_PAUSE_DURATION = COMBO_PAUSE.DURATION;
+  private readonly COMBO_PAUSE_COOLDOWN = COMBO_PAUSE.COOLDOWN;
 
   // Damage batching for performance - use pre-allocated object to reduce GC
   private damageBatch: {
@@ -206,14 +178,14 @@ export class Game {
       isBeam: false,
     };
   private batchTimer = 0;
-  private batchInterval = 0.075; // Apply damage every 75ms (reduced from 50ms for better performance)
+  private batchInterval = COMBAT.DAMAGE_BATCH_INTERVAL;
 
   // Frame counting for throttling expensive operations
   private frameCount = 0;
-  private readonly BOSS_TIMER_UPDATE_INTERVAL = 3; // Update boss timer every 3 frames
-  private readonly ACHIEVEMENT_CHECK_INTERVAL = 60; // Check achievements every 60 frames (~1 second at 60fps)
-  private readonly HUD_STATS_UPDATE_INTERVAL = 30; // Update HUD stats every 30 frames (~2 times per second at 60fps)
-  private readonly BEAM_RECALC_INTERVAL = 120; // Recalculate beam damage every 120 frames (~1s at 120fps)
+  private readonly BOSS_TIMER_UPDATE_INTERVAL = FRAME_INTERVALS.BOSS_TIMER_UPDATE;
+  private readonly ACHIEVEMENT_CHECK_INTERVAL = FRAME_INTERVALS.ACHIEVEMENT_CHECK;
+  private readonly HUD_STATS_UPDATE_INTERVAL = FRAME_INTERVALS.HUD_STATS_UPDATE;
+  private readonly BEAM_RECALC_INTERVAL = FRAME_INTERVALS.BEAM_RECALC;
 
   constructor() {
     const canvasElement = document.getElementById(
@@ -400,7 +372,7 @@ export class Game {
         this.setGameSpeed(speed);
       },
       () => {
-        this.toggleGodMode();
+        this.godModeManager.toggle();
       },
       (type: 'damage' | 'speed' | 'points' | 'multishot' | 'critical') => {
         this.debugActivatePowerUp(type);
@@ -476,8 +448,18 @@ export class Game {
       this.userSettings.volume = volume;
       Settings.save(this.userSettings);
     });
+    this.settingsModal.setFontFamilyCallback((fontFamily: string) => {
+      this.userSettings.fontFamily = fontFamily;
+      Settings.save(this.userSettings);
+      // Apply font globally
+      document.documentElement.style.setProperty('--font-family', fontFamily);
+    });
 
     // Apply loaded settings
+    // Apply font family from settings
+    if (this.userSettings.fontFamily) {
+      document.documentElement.style.setProperty('--font-family', this.userSettings.fontFamily);
+    }
     this.laserSystem.setShowShipLasers(this.userSettings.showShipLasers);
     this.damageNumberSystem.setEnabled(this.userSettings.showDamageNumbers);
     // Apply LCD filter setting
@@ -493,6 +475,10 @@ export class Game {
       this.userSettings.screenShakeEnabled,
       this.userSettings.lcdFilterEnabled,
     );
+    // Set initial font family in settings modal
+    if (this.userSettings.fontFamily) {
+      this.settingsModal.setFontFamily(this.userSettings.fontFamily);
+    }
     // Setup stats panel button
     const statsBtn = document.getElementById('stats-btn');
     if (statsBtn) {
@@ -544,6 +530,80 @@ export class Game {
     });
     this.achievementSystem.updateFromState(this.store.getState());
 
+    // Initialize BossManager
+    this.bossManager = new BossManager(
+      {
+        store: this.store,
+        soundManager: this.soundManager,
+        hud: this.hud,
+        canvas: this.canvas,
+        artifactsModal: this.artifactsModal,
+      },
+      {
+        onStartTransitionToBoss: () => {
+          this.startTransitionToBoss();
+        },
+        onStartTransitionToNormal: () => {
+          this.startTransitionToNormal();
+        },
+        onBossCreated: (boss) => {
+          this.bossBall = boss;
+        },
+        onBossTimeout: () => {
+          // Game-specific cleanup when boss timeout occurs
+          // Disable boss effect immediately when timeout occurs
+          this.bossEffectFilter.disable(0.5);
+          // Pause combo to preserve it during transition back to normal (unless combo pause skill is active)
+          if (!this.comboPauseActive) {
+            this.comboSystem.pause();
+          }
+        },
+      },
+    );
+    this.bossManager.setupUI();
+
+    // Initialize EntityManager
+    this.entityManager = new EntityManager(
+      {
+        canvas: this.canvas,
+        store: this.store,
+      },
+      {
+        onBallCreated: (ball) => {
+          this.ball = ball;
+        },
+      },
+    );
+
+    // Initialize RenderManager
+    this.renderManager = new RenderManager({
+      canvas: this.canvas,
+      draw: this.draw,
+      background: this.background,
+      customizationSystem: this.customizationSystem,
+      userSettings: this.userSettings,
+    });
+
+    // Initialize CombatManager
+    this.combatManager = new CombatManager(
+      {
+        upgradeSystem: this.upgradeSystem,
+        artifactSystem: this.artifactSystem,
+        powerUpSystem: this.powerUpSystem,
+        comboSystem: this.comboSystem,
+        customizationSystem: this.customizationSystem,
+        store: this.store,
+      },
+      {
+        onCriticalHit: () => {
+          this.store.getState().stats.criticalHits++;
+        },
+        onTutorialClick: () => {
+          this.tutorialSystem.onAlienClicked();
+        },
+      },
+    );
+
     this.input = new Input(canvasElement);
     this.loop = new Loop(
       (dt) => {
@@ -585,17 +645,80 @@ export class Game {
       },
     );
 
-    // Setup boss-related UI before initGame (which may need to show the retry button)
-    this.setupBossDialog();
-    this.setupBossTimer();
-    this.setupBossRetryButton();
-
     // Initialize game state (may show boss retry button if player is blocked)
     this.initGame();
 
+    // Initialize InputManager
+    this.inputManager = new InputManager(
+      {
+        store: this.store,
+        notificationSystem: this.notificationSystem,
+        achievementsModal: this.achievementsModal,
+        ascensionModal: this.ascensionModal,
+        missionsModal: this.missionsModal,
+        artifactsModal: this.artifactsModal,
+        statsPanel: this.statsPanel,
+        settingsModal: this.settingsModal,
+        creditsModal: this.creditsModal,
+        gameInfoModal: this.gameInfoModal,
+        thankYouModal: this.thankYouModal,
+      },
+      {
+        onSpaceKeyDown: () => {
+          if (!this.spaceKeyHeld) {
+            this.spaceKeyHeld = true;
+            this.spaceAttackCooldown = 0; // Allow immediate first attack
+          }
+        },
+        onSpaceKeyUp: () => {
+          this.spaceKeyHeld = false;
+        },
+      },
+    );
+
+    // Initialize GodModeManager
+    this.godModeManager = new GodModeManager(
+      {
+        store: this.store,
+        notificationSystem: this.notificationSystem,
+        shop: this.shop,
+        powerUpSystem: this.powerUpSystem,
+        comboSystem: this.comboSystem,
+        upgradeSystem: this.upgradeSystem,
+        bossManager: this.bossManager,
+        canvas: this.canvas,
+      },
+      {
+        handleClick: (pos) => {
+          this.handleClick(pos);
+        },
+        showBossDialog: () => {
+          this.showBossDialog();
+        },
+        startBossFight: () => {
+          this.startBossFight();
+        },
+        startTransitionToNormal: () => {
+          this.startTransitionToNormal();
+        },
+        getGameMode: () => {
+          return this.mode;
+        },
+        getBall: () => {
+          return this.ball;
+        },
+        getBossBall: () => {
+          return this.bossBall;
+        },
+        onBossDefeated: (defeatedBossLevel) => {
+          this.godModeManager.recordBossDefeated(defeatedBossLevel);
+        },
+      },
+    );
+
     // Setup remaining UI and input
     this.setupInput();
-    this.setupKeyboard();
+    this.inputManager.setupKeyboard();
     this.setupAutoSave();
     this.setupAchievementsButton();
     this.setupAscensionButton();
@@ -614,239 +737,10 @@ export class Game {
     this.tutorialSystem = new TutorialSystem(this.store);
   }
 
-  private setupBossDialog(): void {
-    const startBtn = document.getElementById('boss-start-btn');
-    if (startBtn) {
-      startBtn.addEventListener('click', () => {
-        const dialog = document.getElementById('boss-dialog');
-        if (dialog) {
-          dialog.style.display = 'none';
-        }
-        this.startBossFight();
-      });
-    }
-  }
-
-  private setupBossTimer(): void {
-    this.bossTimerElement = document.getElementById('boss-timer-hud');
-  }
-
-  private setupBossRetryButton(): void {
-    // Create boss retry button
-    const buttonsContainer = document.getElementById('hud-buttons-container');
-    if (buttonsContainer) {
-      this.bossRetryButton = document.createElement('button');
-      this.bossRetryButton.id = 'boss-retry-btn';
-      this.bossRetryButton.className = 'hud-button boss-retry-button';
-      this.bossRetryButton.setAttribute('data-icon', '⚔️');
-      this.bossRetryButton.setAttribute('data-text', 'Retry Boss');
-      this.bossRetryButton.setAttribute('aria-label', 'Retry Boss Fight');
-      this.bossRetryButton.innerHTML = `<img src="${images.bossbattle}" alt="Boss" />`;
-      this.bossRetryButton.style.display = 'none';
-      this.bossRetryButton.style.pointerEvents = 'auto';
-
-      // Add tooltip AFTER setting innerHTML
-      const tooltip = document.createElement('div');
-      tooltip.className = 'boss-retry-tooltip';
-      tooltip.textContent = i18n.t('hud.bossRetryTooltip');
-      this.bossRetryButton.appendChild(tooltip);
-
-      this.bossRetryButton.addEventListener('click', () => {
-        this.retryBossFight();
-      });
-
-      buttonsContainer.appendChild(this.bossRetryButton);
-    }
-  }
-
-  private startBossTimer(): void {
-    const state = this.store.getState();
-    // Use ColorManager for dynamic boss timer scaling
-    this.bossTimeLimit = ColorManager.getBossTimeLimit(state.level);
-    this.bossTimeRemaining = this.bossTimeLimit;
-    this.bossTimeoutHandled = false; // Reset timeout flag
-
-    // Show timer
-    if (this.bossTimerElement) {
-      this.bossTimerElement.style.display = 'block';
-    }
-
-    // Update dialog timer display
-    const dialogTimer = document.getElementById('boss-dialog-timer');
-    if (dialogTimer) {
-      const span = dialogTimer.querySelector('span');
-      if (span) {
-        span.textContent = this.bossTimeLimit.toString();
-      }
-    }
-  }
-
-  private updateBossTimer(dt: number): void {
-    if (this.mode !== 'boss') return;
-
-    // Don't update if timeout already handled
-    if (this.bossTimeoutHandled) return;
-
-    // Check timeout BEFORE updating to catch exactly at 0
-    if (this.bossTimeRemaining <= 0) {
-      this.handleBossTimeout();
-      return;
-    }
-
-    this.bossTimeRemaining -= dt;
-
-    // Check again after decrementing (in case dt was large enough to go past 0)
-    if (this.bossTimeRemaining <= 0) {
-      this.bossTimeRemaining = 0; // Clamp to 0
-      this.handleBossTimeout();
-      return;
-    }
-
-    // Update timer display
-    const timerText = document.getElementById('boss-timer-text');
-    const timerBar = document.getElementById('boss-timer-bar');
-
-    if (timerText && timerBar) {
-      const timeLeft = Math.ceil(Math.max(0, this.bossTimeRemaining));
-      const seconds = timeLeft.toString().padStart(2, '0');
-
-      // Update text and classes
-      if (this.bossTimeRemaining <= 5) {
-        timerText.textContent = `${i18n.t('hud.time')}: ${seconds}s`;
-        timerText.className = 'boss-timer-text critical';
-      } else if (this.bossTimeRemaining <= 10) {
-        timerText.textContent = `${i18n.t('hud.time')}: ${seconds}s`;
-        timerText.className = 'boss-timer-text warning';
-      } else {
-        timerText.textContent = `${i18n.t('hud.time')}: ${seconds}s`;
-        timerText.className = 'boss-timer-text';
-      }
-
-      // Update bar width with smooth transition
-      const percent = Math.max(
-        0,
-        (this.bossTimeRemaining / this.bossTimeLimit) * 100,
-      );
-      timerBar.style.width = `${String(percent)}%`;
-
-      // Update bar classes for visual state
-      if (this.bossTimeRemaining <= 5) {
-        timerBar.className = 'boss-timer-bar-fill critical';
-      } else if (this.bossTimeRemaining <= 10) {
-        timerBar.className = 'boss-timer-bar-fill warning';
-      } else {
-        timerBar.className = 'boss-timer-bar-fill';
-      }
-    }
-  }
-
-  private hideBossTimer(): void {
-    if (this.bossTimerElement) {
-      this.bossTimerElement.style.display = 'none';
-    }
-  }
-
-  private handleBossTimeout(): void {
-    // Prevent duplicate calls - check at start
-    if (this.bossTimeoutHandled) {
-      return;
-    }
-
-    // Check if boss is already defeated (race condition fix)
-    // If boss is dead, don't process timeout - defeat handler will handle it
-    if (this.bossBall && this.bossBall.currentHp <= 0) {
-      return;
-    }
-
-    // Set flag immediately to prevent race conditions
-    this.bossTimeoutHandled = true;
-
-    // Boss escapes! Player must retry
-    const state = this.store.getState();
-
-    this.soundManager.playBossDefeat(); // Play defeat sound
-
-    // Penalty: Lose 20% of current XP (not too punishing)
-    const xpLoss = Math.floor(state.experience * 0.2);
-    state.experience = Math.max(0, state.experience - xpLoss);
-
-    // Block progression until boss is defeated
-    this.blockedOnBossLevel = state.level;
-    state.blockedOnBossLevel = state.level; // Save to state for persistence
-    this.store.setState(state);
-
-    // Clean up boss battle state first
-    this.hideBossTimer();
-    // Disable boss effect immediately when timeout occurs
-    this.bossEffectFilter.disable(0.5);
-    // Switch back to normal soundtrack
-    this.soundManager.stopBossSoundtrack();
-    // Pause combo to preserve it during transition back to normal (unless combo pause skill is active)
-    if (!this.comboPauseActive) {
-      this.comboSystem.pause();
-    }
-
-    // Show epic timeout modal
-    const timeoutModal = document.getElementById('boss-timeout-modal');
-    if (timeoutModal) {
-      // Ensure modal is hidden first
-      timeoutModal.style.display = 'none';
-
-      // Remove any existing event listeners by cloning the button
-      const closeBtn = document.getElementById('boss-timeout-close');
-      if (closeBtn && closeBtn.parentNode) {
-        const newCloseBtn = closeBtn.cloneNode(true) as HTMLElement;
-        newCloseBtn.id = 'boss-timeout-close'; // Restore ID after cloning
-
-        // Setup close button handler BEFORE replacing
-        newCloseBtn.addEventListener('click', () => {
-          timeoutModal.style.display = 'none';
-
-          // Show retry button
-          if (this.bossRetryButton) {
-            this.bossRetryButton.style.display = 'flex';
-          }
-
-          setTimeout(() => {
-            this.startTransitionToNormal();
-          }, 500);
-        });
-
-        // Replace the button
-        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-      }
-
-      // Show modal after setting up handler
-      const subMessage = timeoutModal.querySelector('.timeout-submessage');
-      if (subMessage) {
-        subMessage.textContent = i18n.t('messages.bossEscapeModal');
-      }
-      timeoutModal.style.display = 'flex';
-    } else {
-      // Fallback to message if modal doesn't exist
-      this.hud.showMessage(
-        i18n.t('messages.bossEscapeMessage'),
-        '#ff0000',
-        4000,
-      );
-
-      // Show retry button
-      if (this.bossRetryButton) {
-        this.bossRetryButton.style.display = 'flex';
-      }
-
-      setTimeout(() => {
-        this.startTransitionToNormal();
-      }, 500);
-    }
-  }
-
-  private retryBossFight(): void {
-    if (this.bossRetryButton) {
-      this.bossRetryButton.style.display = 'none';
-    }
-    this.showBossDialog();
-  }
+  // Boss setup methods removed - now handled by BossManager.setupUI()
+  // Boss timer methods removed - now handled by BossManager
+  // Boss timeout handling moved to BossManager with callbacks
+  // retryBossFight() removed - now handled directly by BossManager
 
   start(): void {
     this.onStartGame();
@@ -977,25 +871,28 @@ export class Game {
       ascensionBtn.setAttribute('aria-keyshortcuts', 'P');
       ascensionBtn.innerHTML = `<img src="${images.menu.ascension}" alt="Ascension" />`;
 
-      // Add tooltip
+      // Add tooltip with star icon
       const tooltip = document.createElement('div');
       tooltip.className = 'hud-tooltip';
-      tooltip.textContent = i18n.t('ascension.title');
+      tooltip.innerHTML = `ASCENSION`;
       ascensionBtn.appendChild(tooltip);
 
       ascensionBtn.addEventListener('click', () => {
         this.ascensionModal.show();
       });
 
+      // Always show the button from the start (visible from level 1)
+      ascensionBtn.style.display = 'block';
+
       // Track if prestige was previously unlocked to detect when it gets unlocked
       let wasPrestigeUnlocked = false;
       let wasMeaningOfLifeOwned = false;
 
-      // Update button visibility based on whether ascension is unlocked
+      // Update button visibility - button is always visible from level 1
       const updateAscensionBtn = () => {
         const state = this.store.getState();
         const hasMeaningOfLife = state.subUpgrades['meaning_of_life'] === true;
-        // Button only appears if meaning_of_life is purchased OR if already prestiged before
+        // Button is always visible, but check if prestige was just unlocked
         const isUnlocked = hasMeaningOfLife || state.prestigeLevel > 0;
 
         // Check if prestige was just unlocked via meaning_of_life purchase
@@ -1005,9 +902,11 @@ export class Game {
           hasMeaningOfLife &&
           !wasMeaningOfLifeOwned;
 
+        // Always show the button
+        ascensionBtn.style.display = 'block';
+
         if (isNowUnlocked) {
           // Animate the button appearing
-          ascensionBtn.style.display = 'block';
           ascensionBtn.style.opacity = '0';
           ascensionBtn.style.transform = 'scale(0.5)';
           ascensionBtn.style.transition =
@@ -1040,8 +939,6 @@ export class Game {
               5000,
             );
           }
-        } else {
-          ascensionBtn.style.display = isUnlocked ? 'block' : 'none';
         }
 
         wasPrestigeUnlocked = isUnlocked;
@@ -1111,6 +1008,9 @@ export class Game {
       artifactsBtn.setAttribute('data-text', 'Artifacts');
       artifactsBtn.innerHTML = `<img src="${images.menu.artifacts}" alt="Artifacts" />`;
 
+      // Store reference to button
+      this.artifactsButton = artifactsBtn;
+
       // Add tooltip
       const tooltip = document.createElement('div');
       tooltip.className = 'hud-tooltip';
@@ -1118,6 +1018,8 @@ export class Game {
       artifactsBtn.appendChild(tooltip);
 
       artifactsBtn.addEventListener('click', () => {
+        // Remove glow/animation when clicked
+        this.removeArtifactNotification();
         this.artifactsModal.show();
       });
       buttonsContainer.appendChild(artifactsBtn);
@@ -1587,10 +1489,7 @@ export class Game {
     };
 
     // Clear local boss block state
-    this.blockedOnBossLevel = null;
-    if (this.bossRetryButton) {
-      this.bossRetryButton.style.display = 'none';
-    }
+    this.bossManager.clearBlockedState();
 
     this.store.setState(freshState);
     Save.save(this.store.getState());
@@ -1662,48 +1561,6 @@ export class Game {
     }
   }
 
-  private renderAscensionAnimation(ctx: CanvasRenderingContext2D): void {
-    const animationDuration = 2.5;
-    const progress = Math.min(1, this.ascensionAnimationTime / animationDuration);
-
-    // Screen flash effect - white fade in/out
-    let flashAlpha = 0;
-    if (progress < 0.3) {
-      // Fade in white flash (first 30%)
-      flashAlpha = progress / 0.3;
-    } else if (progress < 0.7) {
-      // Hold white flash (30% to 70%)
-      flashAlpha = 1;
-    } else {
-      // Fade out white flash (last 30%)
-      flashAlpha = 1 - (progress - 0.7) / 0.3;
-    }
-
-    // Draw white overlay
-    ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha * 0.9})`;
-    ctx.fillRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
-
-    // Draw golden/yellow glow in center
-    const centerX = this.canvas.getCenterX();
-    const centerY = this.canvas.getCenterY();
-    const maxRadius = Math.max(this.canvas.getWidth(), this.canvas.getHeight());
-
-    // Create radial gradient for glow
-    const gradient = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      0,
-      centerX,
-      centerY,
-      maxRadius * progress,
-    );
-    gradient.addColorStop(0, `rgba(255, 255, 0, ${flashAlpha * 0.8})`);
-    gradient.addColorStop(0.5, `rgba(255, 215, 0, ${flashAlpha * 0.4})`);
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
-  }
 
   private calculateRetainedUpgrades(state: import('./types').GameState): {
     shipsCount: number;
@@ -1773,84 +1630,6 @@ export class Game {
     };
   }
 
-  private setupKeyboard(): void {
-    window.addEventListener('keydown', (event) => {
-      this.keys.add(event.key.toLowerCase());
-
-      // Keyboard shortcuts (only when not typing in input fields)
-      const target = event.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
-        return; // Don't trigger shortcuts when typing
-      }
-
-      // Handle shortcuts
-      if (event.key === 'Escape') {
-        // Close any open modals
-        this.achievementsModal.hide();
-        this.ascensionModal.hide();
-        this.missionsModal.hide();
-        this.artifactsModal.hide();
-        this.statsPanel.hide();
-        this.settingsModal.hide();
-        this.creditsModal.hide();
-        this.gameInfoModal.hide();
-        this.thankYouModal.hide();
-      } else if (event.key === 'a' || event.key === 'A') {
-        // Toggle auto-buy
-        if (!event.ctrlKey && !event.altKey && !event.shiftKey) {
-          event.preventDefault();
-          const state = this.store.getState();
-          state.autoBuyEnabled = !(state.autoBuyEnabled ?? false);
-          this.store.setState(state);
-          // Show notification
-          this.notificationSystem.show(
-            state.autoBuyEnabled
-              ? '🤖 Auto-Buy Enabled'
-              : '🤖 Auto-Buy Disabled',
-            'info',
-            2000,
-          );
-        }
-      } else if (event.key === 'm' || event.key === 'M') {
-        // Open missions modal
-        if (!event.ctrlKey && !event.altKey) {
-          event.preventDefault();
-          this.missionsModal.show();
-        }
-      } else if (event.key === 's' || event.key === 'S') {
-        // Open settings modal
-        if (!event.ctrlKey && !event.altKey) {
-          event.preventDefault();
-          this.settingsModal.show();
-        }
-      } else if (event.key === 'h' || event.key === 'H') {
-        // Open achievements modal
-        if (!event.ctrlKey && !event.altKey) {
-          event.preventDefault();
-          this.achievementsModal.show();
-        }
-      } else if (event.key === 'p' || event.key === 'P') {
-        // Open prestige/ascension modal
-        if (!event.ctrlKey && !event.altKey) {
-          event.preventDefault();
-          this.ascensionModal.show();
-        }
-      } else if (event.key === 'i' || event.key === 'I') {
-        // Open game info modal
-        if (!event.ctrlKey && !event.altKey) {
-          event.preventDefault();
-          this.gameInfoModal.show();
-        }
-      }
-    });
-    window.addEventListener('keyup', (event) => {
-      this.keys.delete(event.key.toLowerCase());
-    });
-  }
 
   private initGame(): void {
     const state = this.store.getState();
@@ -1861,19 +1640,14 @@ export class Game {
       state.blockedOnBossLevel !== null;
 
     // Check if player is currently on a boss level
-    const isOnBossLevel = ColorManager.isBossLevel(state.level);
+    const isOnBossLevel = this.bossManager.isBossLevel(state.level);
 
     if (isBlockedByBoss) {
       // Player lost to boss previously - show retry button and normal mode
-      this.blockedOnBossLevel = state.blockedOnBossLevel ?? null;
+      this.bossManager.setBlockedBossLevel(state.blockedOnBossLevel ?? null);
       this.mode = 'normal';
       this.createBall();
       this.createShips();
-
-      // Show retry button
-      if (this.bossRetryButton) {
-        this.bossRetryButton.style.display = 'block';
-      }
     } else if (isOnBossLevel) {
       // Player is on a boss level and NOT blocked = they refreshed during boss fight
       // Treat this as a loss - apply penalties
@@ -1882,7 +1656,7 @@ export class Game {
       state.experience = Math.max(0, state.experience - xpLoss);
 
       // Block progression until boss is defeated
-      this.blockedOnBossLevel = state.level;
+      this.bossManager.setBlockedBossLevel(state.level);
       state.blockedOnBossLevel = state.level;
 
       // Save the penalized state
@@ -1892,11 +1666,6 @@ export class Game {
       this.mode = 'normal';
       this.createBall();
       this.createShips();
-
-      // Show retry button
-      if (this.bossRetryButton) {
-        this.bossRetryButton.style.display = 'block';
-      }
 
       // Show loss message
       this.hud.showMessage(
@@ -1923,82 +1692,16 @@ export class Game {
   }
 
   private createBall(): void {
-    const cx = this.canvas.getCenterX();
-    const cy = this.canvas.getCenterY();
-    const radius =
-      Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.08;
-    const state = this.store.getState();
-
-    // v2.0: Use enhanced enemy types
-    const enemyType = selectEnemyType(state.level);
-    const enhancedBall = new EnhancedAlienBall(
-      cx,
-      cy,
-      radius,
-      state.level,
-      enemyType,
-    );
-
-    // Visual effects are now handled in applyDamageBatch to differentiate
-    // between main ship and auto-fire ship damage for better performance
-    // No callback needed here anymore
-
+    const enhancedBall = this.entityManager.createBall();
     this.ball = enhancedBall;
     this.bossBall = null;
   }
 
-  private createBoss(): void {
-    const cx = this.canvas.getCenterX();
-    const cy = this.canvas.getCenterY();
-    // Boss is 50% bigger than normal aliens
-    const radius =
-      Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.15;
-    const state = this.store.getState();
-    // Make bosses 3x harder than before to match time limit challenge
-    const baseHp = ColorManager.getBossHp(state.level);
-    const hp = Math.floor(baseHp * 3);
-
-    // Determine boss variant based on level (chronological order)
-    // Level 5 -> 0 (Tiny Tyrant - Tutorial Boss)
-    // Level 25 -> 1 (Colossus)
-    // Level 50 -> 2 (Swarm Queen)
-    // Level 75 -> 3 (Void Construct)
-    // Level 100 -> 4 (Omega Core)
-    // Level 125+ -> Cycle through 1-4
-    let bossVariant = 0;
-    if (state.level === 5) {
-      // Tutorial boss - Tiny Tyrant
-      bossVariant = 0;
-    } else if (state.level >= 25) {
-      const bossIndex = Math.floor((state.level - 25) / 25);
-      bossVariant = 1 + (bossIndex % 4); // Cycles through 1-4 (Colossus to Omega)
-    }
-
-    this.bossBall = new BossBall(cx, cy, radius, hp, bossVariant);
-    this.ball = null;
-  }
+  // createBoss() removed - now handled by BossManager.createBoss()
 
   private createShips(): void {
+    this.ships = this.entityManager.createShips(this.ships);
     const state = this.store.getState();
-    const cx = this.canvas.getCenterX();
-    const cy = this.canvas.getCenterY();
-    const orbitRadius =
-      Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.4;
-
-    // Destroy old ships and clean up their image elements before creating new ones
-    for (const ship of this.ships) {
-      ship.destroy();
-    }
-
-    this.ships = [];
-    for (let i = 0; i < state.shipsCount; i++) {
-      // Random angle for each ship instead of perfect circle
-      const angle = Math.random() * Math.PI * 2;
-      const isMain = i === 0;
-      // Random radius for each ship
-      const randomRadius = orbitRadius * (0.7 + Math.random() * 0.6); // 70% to 130% of base radius
-      this.ships.push(new Ship(angle, cx, cy, randomRadius, isMain));
-    }
     this.autoFireSystem.setShipCount(state.shipsCount);
   }
 
@@ -2017,22 +1720,6 @@ export class Game {
         state.experience,
         ColorManager.getExpRequired(state.level),
       );
-    });
-
-    // Space key attack holding
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !this.spaceKeyHeld) {
-        e.preventDefault();
-        this.spaceKeyHeld = true;
-        this.spaceAttackCooldown = 0; // Allow immediate first attack
-      }
-    });
-
-    window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        this.spaceKeyHeld = false;
-      }
     });
   }
 
@@ -2163,40 +1850,19 @@ export class Game {
   }
 
   private calculateTotalBeamDamage(state: import('./types').GameState): number {
-    // Calculate auto-fire damage for all ships (excluding main ship)
-    // Main ship doesn't use beams - it fires regular projectiles for click feedback
-    let autoFireDamage = this.upgradeSystem.getAutoFireDamage(state);
-    // Same artifact bonus as clicks for 1:1 damage
-    autoFireDamage *= 1 + this.artifactSystem.getDamageBonus();
-
-    if (this.mode === 'boss') {
-      const prestigeBossLevel =
-        state.prestigeUpgrades?.prestige_boss_power ?? 0;
-      const bossDamageBonus = 1 + prestigeBossLevel * 0.2;
-      autoFireDamage *= bossDamageBonus;
-
-      const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1;
-      autoFireDamage *= voidHeartBonus;
-    }
+    // Calculate auto-fire damage per ship (excluding main ship)
+    const mode = this.mode === 'transition' ? 'normal' : this.mode;
+    const autoFireDamagePerShip = this.combatManager.calculateTotalBeamDamage(state, mode);
 
     // Total damage = only auto-fire ships (main ship uses regular projectiles)
     const totalShips = Math.max(1, this.ships.length);
     const autoFireShips = totalShips - 1; // Exclude main ship
 
-    return autoFireDamage * autoFireShips;
+    return autoFireDamagePerShip * autoFireShips;
   }
 
   private getEnemyXpScaling(level: number): number {
-    if (level <= 30) {
-      return 1;
-    }
-
-    const extraLevels = level - 30;
-    const linearDrop = 1 / (1 + extraLevels * 0.02);
-    const exponentialDrop = Math.pow(0.995, Math.min(extraLevels, 600));
-    const combined = linearDrop * exponentialDrop;
-
-    return Math.max(0.15, combined);
+    return this.combatManager.getEnemyXpScaling(level);
   }
 
   private fireVolley(): void {
@@ -2204,26 +1870,9 @@ export class Game {
 
     // Main ship always fires regular projectiles (even in beam mode)
     // This provides click feedback and visual variety
-    // Use getPointsPerHit to ensure clicks and ships deal the same base damage
     // Note: Perfect Precision is now handled in handleDamage() to ensure it's checked once per hit
-    let damage = this.upgradeSystem.getPointsPerHit(state);
-
-    // v2.0: Apply artifact bonuses
-    damage *= 1 + this.artifactSystem.getDamageBonus();
-
-    // Apply power-up damage multiplier
-    damage *= this.powerUpSystem.getDamageMultiplier();
-
-    // Apply boss damage bonus in boss mode
-    if (this.mode === 'boss') {
-      const prestigeBossLevel =
-        state.prestigeUpgrades?.prestige_boss_power ?? 0;
-      const bossDamageBonus = 1 + prestigeBossLevel * 0.2;
-      damage *= bossDamageBonus;
-
-      const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1;
-      damage *= voidHeartBonus;
-    }
+    const mode = this.mode === 'transition' ? 'normal' : this.mode;
+    const damage = this.combatManager.calculateClickDamage(state, mode);
 
     // Don't fire if there's no valid target
     const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
@@ -2239,20 +1888,14 @@ export class Game {
     const laserVisuals = this.getLaserVisuals(state);
 
     // Update laser theme ID based on special upgrades
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const laserThemeId = this.customizationSystem.getLaserThemeId(state);
+    const laserThemeId = this.combatManager.getLaserThemeId(state);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.laserSystem.lastBeamThemeId = laserThemeId;
 
     // Only fire from the main ship (index 0) when clicking
     if (this.ships[0]) {
       // Calculate base shot count
-      let shotCount = 1; // Main ship always fires 1
-
-      // Multishot power-up: doubles all shots
-      if (this.powerUpSystem.hasMultishot()) {
-        shotCount *= 2;
-      }
+      const shotCount = this.combatManager.getShotCount();
 
       // Fire the calculated number of shots
       const shipsToUse: Ship[] = [this.ships[0]]; // Start with main ship
@@ -2304,24 +1947,8 @@ export class Game {
     // Regular projectile mode
     const state = this.store.getState();
     // Use auto-fire damage - now same as clicks (1:1 damage)
-    let damage = this.upgradeSystem.getAutoFireDamage(state);
-
-    // v2.0: Apply artifact bonuses (same as clicks for 1:1 damage)
-    damage *= 1 + this.artifactSystem.getDamageBonus();
-
-    // Apply power-up damage multiplier
-    damage *= this.powerUpSystem.getDamageMultiplier();
-
-    // Apply boss damage bonus in boss mode
-    if (this.mode === 'boss') {
-      const prestigeBossLevel =
-        state.prestigeUpgrades?.prestige_boss_power ?? 0;
-      const bossDamageBonus = 1 + prestigeBossLevel * 0.2;
-      damage *= bossDamageBonus;
-
-      const voidHeartBonus = state.subUpgrades['void_heart'] ? 6 : 1;
-      damage *= voidHeartBonus;
-    }
+    const mode = this.mode === 'transition' ? 'normal' : this.mode;
+    const damage = this.combatManager.calculateAutoFireDamage(state, mode);
 
     // Don't fire if there's no valid target
     const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
@@ -2343,8 +1970,7 @@ export class Game {
         ? this.getLaserVisualsNoCrit(state)
         : this.getLaserVisuals(state);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const laserThemeId = this.customizationSystem.getLaserThemeId(state);
+    const laserThemeId = this.combatManager.getLaserThemeId(state);
 
     // Store theme ID for laser rendering
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -2360,20 +1986,7 @@ export class Game {
   }
 
   private calculateHitPoint(origin: Vec2, center: Vec2, radius: number): Vec2 {
-    // Use pixel-perfect raycasting
-    // We need to determine the sprite type.
-    // Since this method is generic for any target, and we don't pass the entity itself easily here without refactoring,
-    // we can assume 'normal' for now or try to infer.
-    // Ideally, we should pass the entity to this method, but to avoid breaking changes, we'll use the default sprite.
-    // Most aliens use the same 11x11 grid structure roughly, so ALIEN_SPRITE_NORMAL is a good approximation for all.
-    // If we have the target entity available in scope (which we do in fireSingleShip), we could pass it.
-
-    // However, looking at fireSingleShip, we call this with targetEntity.radius.
-    // Let's stick to the new utility function.
-
-    // Determine sprite based on context if possible, otherwise default
-    // For now, using the default normal sprite covers most cases well enough for "shape"
-    return getPixelHitPoint(origin, center, radius);
+    return this.combatManager.calculateHitPoint(origin, center, radius);
   }
 
   private getLaserVisuals(state: import('./types').GameState): {
@@ -2381,100 +1994,7 @@ export class Game {
     color: string;
     width: number;
   } {
-    let color = this.customizationSystem.getLaserColor(state, false);
-    let width = 1.5; // Reduced from 2.5 for thinner lasers
-    let isCrit = false;
-
-    let critChance = this.upgradeSystem.getCritChance(state);
-    critChance += this.powerUpSystem.getCritChanceBonus() * 100;
-    if (Math.random() * 100 < critChance) {
-      isCrit = true;
-      color = '#ffff00';
-      width = 2.0; // Reduced from 3.5 for thinner crit lasers
-      this.store.getState().stats.criticalHits++;
-      return { isCrit, color, width };
-    }
-
-    // Apply special upgrade visual effects to lasers (priority order - most powerful first)
-    // Legendary tier upgrades - thinner widths
-    if (state.subUpgrades['cosmic_ascension']) {
-      color = '#00ffff'; // Cyan for cosmic
-      width = 2.2;
-    } else if (state.subUpgrades['reality_anchor']) {
-      color = '#ffffff'; // Pure white for reality
-      width = 2.1;
-    } else if (state.subUpgrades['infinity_gauntlet']) {
-      color = '#ff1493'; // Hot pink for infinity
-      width = 2.15;
-    } else if (state.subUpgrades['meaning_of_life']) {
-      color = '#00ffff'; // Cyan for meaning
-      width = 2.0;
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      color = '#ff0044'; // Deep red for heart
-      width = 1.95;
-    } else if (state.subUpgrades['singularity_core']) {
-      color = '#000000'; // Black with glow for singularity
-      width = 2.25;
-    }
-    // Epic tier upgrades
-    else if (state.subUpgrades['antimatter_rounds']) {
-      color = '#ff00ff'; // Magenta for antimatter
-      width = 1.85;
-    } else if (state.subUpgrades['photon_amplifier']) {
-      color = '#00ffff'; // Cyan for photon
-      width = 1.9;
-    } else if (state.subUpgrades['stellar_forge']) {
-      color = '#ffaa00'; // Gold for stellar
-      width = 1.95;
-    } else if (state.subUpgrades['hyper_reactor']) {
-      color = '#ff0080'; // Pink for hyper
-      width = 1.8;
-    } else if (state.subUpgrades['dark_matter_engine']) {
-      color = '#4b0082'; // Indigo for dark matter
-      width = 1.9;
-    } else if (state.subUpgrades['antimatter_cascade']) {
-      color = '#ff00aa'; // Bright magenta for cascade
-      width = 1.85;
-    } else if (state.subUpgrades['quantum_entanglement']) {
-      color = '#00ff88'; // Green for quantum
-      width = 1.75;
-    } else if (state.subUpgrades['plasma_matrix']) {
-      color = '#ff4400'; // Red-orange for plasma
-      width = 1.8;
-    } else if (state.subUpgrades['nebula_harvester']) {
-      color = '#00ffff'; // Cyan for nebula
-      width = 1.75;
-    } else if (state.subUpgrades['cosmic_battery']) {
-      color = '#4169e1'; // Royal blue for cosmic battery
-      width = 1.7;
-    }
-    // Rare tier upgrades
-    else if (state.subUpgrades['laser_focusing']) {
-      color = '#ff6600'; // Orange for focused laser
-      width = 1.65;
-    } else if (state.subUpgrades['warp_core']) {
-      color = '#00ffff'; // Cyan for warp
-      width = 1.7;
-    } else if (state.subUpgrades['chaos_emeralds']) {
-      color = '#00ff88'; // Emerald green for chaos
-      width = 1.65;
-    } else if (state.subUpgrades['void_channeling']) {
-      color = '#00ffff'; // Cyan for void
-      width = 1.7;
-    } else if (state.subUpgrades['nanobots']) {
-      color = '#00ff00'; // Bright green for nanobots
-      width = 1.6;
-    } else if (state.subUpgrades['nuclear_reactor']) {
-      color = '#ffff00'; // Yellow for nuclear
-      width = 1.65;
-    }
-
-    // Perfect precision visual effect is now handled in handleDamage()
-    // The visual check here is kept for consistency, but actual damage multiplier
-    // is applied in handleDamage() to ensure it's only checked once per hit
-    // Note: Perfect Precision will show as a crit visually when it triggers
-
-    return { isCrit, color, width };
+    return this.combatManager.getLaserVisuals(state);
   }
 
   private getLaserVisualsNoCrit(state: import('./types').GameState): {
@@ -2482,85 +2002,7 @@ export class Game {
     color: string;
     width: number;
   } {
-    // Small ships cannot crit - always return non-crit visuals
-    let color = this.customizationSystem.getLaserColor(state, false);
-    let width = 1.5; // Reduced from 2.5 for thinner lasers
-
-    // Apply special upgrade visual effects to lasers (same as main ship - priority order)
-    // Legendary tier upgrades - thinner widths
-    if (state.subUpgrades['cosmic_ascension']) {
-      color = '#00ffff'; // Cyan for cosmic
-      width = 2.2;
-    } else if (state.subUpgrades['reality_anchor']) {
-      color = '#ffffff'; // Pure white for reality
-      width = 2.1;
-    } else if (state.subUpgrades['infinity_gauntlet']) {
-      color = '#ff1493'; // Hot pink for infinity
-      width = 2.15;
-    } else if (state.subUpgrades['meaning_of_life']) {
-      color = '#00ffff'; // Cyan for meaning
-      width = 2.0;
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      color = '#ff0044'; // Deep red for heart
-      width = 1.95;
-    } else if (state.subUpgrades['singularity_core']) {
-      color = '#000000'; // Black with glow for singularity
-      width = 2.25;
-    }
-    // Epic tier upgrades
-    else if (state.subUpgrades['antimatter_rounds']) {
-      color = '#ff00ff'; // Magenta for antimatter
-      width = 1.85;
-    } else if (state.subUpgrades['photon_amplifier']) {
-      color = '#00ffff'; // Cyan for photon
-      width = 1.9;
-    } else if (state.subUpgrades['stellar_forge']) {
-      color = '#ffaa00'; // Gold for stellar
-      width = 1.95;
-    } else if (state.subUpgrades['hyper_reactor']) {
-      color = '#ff0080'; // Pink for hyper
-      width = 1.8;
-    } else if (state.subUpgrades['dark_matter_engine']) {
-      color = '#4b0082'; // Indigo for dark matter
-      width = 1.9;
-    } else if (state.subUpgrades['antimatter_cascade']) {
-      color = '#ff00aa'; // Bright magenta for cascade
-      width = 1.85;
-    } else if (state.subUpgrades['quantum_entanglement']) {
-      color = '#00ff88'; // Green for quantum
-      width = 1.75;
-    } else if (state.subUpgrades['plasma_matrix']) {
-      color = '#ff4400'; // Red-orange for plasma
-      width = 1.8;
-    } else if (state.subUpgrades['nebula_harvester']) {
-      color = '#00ffff'; // Cyan for nebula
-      width = 1.75;
-    } else if (state.subUpgrades['cosmic_battery']) {
-      color = '#4169e1'; // Royal blue for cosmic battery
-      width = 1.7;
-    }
-    // Rare tier upgrades
-    else if (state.subUpgrades['laser_focusing']) {
-      color = '#ff6600'; // Orange for focused laser
-      width = 1.65;
-    } else if (state.subUpgrades['warp_core']) {
-      color = '#00ffff'; // Cyan for warp
-      width = 1.7;
-    } else if (state.subUpgrades['chaos_emeralds']) {
-      color = '#00ff88'; // Emerald green for chaos
-      width = 1.65;
-    } else if (state.subUpgrades['void_channeling']) {
-      color = '#00ffff'; // Cyan for void
-      width = 1.7;
-    } else if (state.subUpgrades['nanobots']) {
-      color = '#00ff00'; // Bright green for nanobots
-      width = 1.6;
-    } else if (state.subUpgrades['nuclear_reactor']) {
-      color = '#ffff00'; // Yellow for nuclear
-      width = 1.65;
-    }
-
-    return { isCrit: false, color, width };
+    return this.combatManager.getLaserVisualsNoCrit(state);
   }
 
   private handleDamage(
@@ -2575,38 +2017,21 @@ export class Game {
       this.tutorialSystem.onAlienClicked();
     }
 
-    let finalDamage = damage;
     const state = this.store.getState();
+    const targetEntity = this.mode === 'normal' ? this.ball : (this.mode === 'boss' ? this.bossBall : null);
 
-    // Perfect precision: 5% chance for 10x damage (only for main ship clicks, not auto-fire)
-    // Check once per actual hit here, not in getPointsPerHit which is called multiple times
-    let perfectPrecisionTriggered = false;
-    if (!isFromShip && state.subUpgrades['perfect_precision']) {
-      if (Math.random() < 0.05) {
-        finalDamage *= 10;
-        perfectPrecisionTriggered = true;
-        isCrit = true; // Mark as crit for visual effects
-      }
-    }
+    // Process damage using CombatManager (applies all multipliers)
+    const processedResult = this.combatManager.processDamage(
+      damage,
+      isCrit,
+      isFromShip,
+      state,
+      targetEntity instanceof EnhancedAlienBall || targetEntity instanceof AlienBall ? targetEntity : undefined,
+      isBeam,
+    );
 
-    // Apply critical damage multiplier (only if not from Perfect Precision, which already gives 10x)
-    if (isCrit && !perfectPrecisionTriggered) {
-      const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
-      finalDamage *= critMultiplier;
-    }
-
-    // Apply combo multiplier (works in all modes now!)
-    const comboMult = this.comboSystem.getMultiplier(this.store.getState());
-    finalDamage *= comboMult;
-
-    // Scout enemies evade ship fire - reduce auto-fire damage significantly
-    if (this.ball instanceof EnhancedAlienBall && !isBeam) {
-      if (isFromShip && this.ball.enemyType === 'scout') {
-        finalDamage *= 0.5;
-      } else if (!isFromShip && this.ball.enemyType === 'guardian') {
-        finalDamage *= 0.5;
-      }
-    }
+    const finalDamage = processedResult.finalDamage;
+    const finalIsCrit = processedResult.isCrit;
 
     // Record damage for DPS calculation
     this.hud.recordDamage(finalDamage);
@@ -2617,7 +2042,7 @@ export class Game {
 
     // Batch damage instead of applying immediately - reuse pre-allocated object
     this.damageBatch.damage += finalDamage;
-    if (isCrit) {
+    if (finalIsCrit) {
       // Show crit effects for all ships (main ship and small ships)
       this.damageBatch.isCrit = true;
     }
@@ -2787,7 +2212,7 @@ export class Game {
       this.bossBall &&
       this.bossBall.currentHp > 0
     ) {
-      if (this.bossTimeoutHandled) {
+      if (this.bossManager.isTimeoutHandled()) {
         return;
       }
       const broken = this.bossBall.takeDamage(finalDamage);
@@ -2877,9 +2302,10 @@ export class Game {
     bonusXP *= 1 + artifactBonus;
 
     // At level 100, can only gain XP after defeating the boss
-    if (state.level === 100 && this.blockedOnBossLevel === 100) {
+    const blockedLevel = this.bossManager.getBlockedBossLevel();
+    if (state.level === 100 && blockedLevel === 100) {
       bonusXP = 0; // No XP until boss is defeated
-    } else if (this.blockedOnBossLevel !== null) {
+    } else if (blockedLevel !== null) {
       bonusXP *= 0.1;
     }
 
@@ -2887,7 +2313,7 @@ export class Game {
 
     let leveledUp = false;
     let newLevel = state.level;
-    if (this.blockedOnBossLevel === null) {
+    if (blockedLevel === null) {
       while (state.experience >= ColorManager.getExpRequired(state.level)) {
         const expRequired = ColorManager.getExpRequired(state.level);
         state.experience -= expRequired;
@@ -2909,7 +2335,7 @@ export class Game {
 
       this.soundManager.playLevelUp();
 
-      if (ColorManager.isBossLevel(state.level)) {
+      if (this.bossManager.isBossLevel(state.level)) {
         this.ball = null;
         this.showBossDialog();
       } else {
@@ -2939,7 +2365,7 @@ export class Game {
 
     // Prevent timeout handler from running if boss is defeated
     // This fixes race condition when boss is killed near timer expiration
-    this.bossTimeoutHandled = true;
+    this.bossManager.markTimeoutHandled();
 
     const state = this.store.getState();
     const defeatedBossLevel = state.level;
@@ -3001,13 +2427,8 @@ export class Game {
       this.artifactSystem.generateArtifact();
       artifactFound = true;
 
-      // Show artifacts modal first, then victory message when it closes
-      this.artifactsModal.setOnCloseCallback(() => {
-        setTimeout(() => {
-          this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
-        }, 300);
-      });
-      this.artifactsModal.show();
+      // Trigger glow and animation on artifacts button instead of opening modal
+      this.triggerArtifactNotification();
     }
 
     // Limit leveling after level 100 boss defeat
@@ -3037,28 +2458,16 @@ export class Game {
     if (!this.comboPauseActive) {
       this.comboSystem.pause();
     }
-    this.hideBossTimer();
+    this.bossManager.hideBossTimer();
+    this.bossManager.clearBlockedState();
 
-    this.blockedOnBossLevel = null;
-    state.blockedOnBossLevel = null;
-    this.store.setState(state);
+    this.godModeManager.recordBossDefeated(defeatedBossLevel);
 
-    if (this.godModeAgent) {
-      this.recordGodModeBossEvent(
-        this.godModeAgent,
-        defeatedBossLevel,
-        'Boss defeated - returning to normal',
-      );
-      this.resetGodModeBossTracking(this.godModeAgent);
-    }
-
-    if (this.bossRetryButton) {
-      this.bossRetryButton.style.display = 'none';
-    }
+    this.bossManager.hideRetryButton();
 
     // Only show victory message if artifact modal didn't open
     if (!artifactFound) {
-      this.hud.showMessage('🎉 BOSS DEFEATED! 🎉', '#00ff88', 2000);
+      this.hud.showMessage('BOSS DEFEATED!', '#005800ff', 2000);
     }
 
     if (this.userSettings.highGraphics) {
@@ -3101,14 +2510,7 @@ export class Game {
   }
 
   private showBossDialog(): void {
-    // Close artifacts modal if open to prevent interference
-    this.artifactsModal.hide();
-
-    const dialog = document.getElementById('boss-dialog');
-    if (dialog) {
-      dialog.style.display = 'flex';
-      this.soundManager.playBossAppear();
-    }
+    this.bossManager.showBossDialog();
   }
 
   private startBossFight(): void {
@@ -3131,18 +2533,11 @@ export class Game {
     }
 
     // Reset timeout flag
-    this.bossTimeoutHandled = false;
+    this.bossManager.resetTimeoutFlag();
 
-    // Determine boss variant for the upcoming boss (chronological order)
+    // Determine boss variant for the upcoming boss
     const state = this.store.getState();
-    let bossVariant: 0 | 1 | 2 | 3 | 4 = 0;
-    if (state.level === 5) {
-      // Tutorial boss - Tiny Tyrant
-      bossVariant = 0;
-    } else if (state.level >= 25) {
-      const bossIndex = Math.floor((state.level - 25) / 25);
-      bossVariant = (1 + (bossIndex % 4)) as 1 | 2 | 3 | 4; // Cycles through 1-4
-    }
+    const bossVariant = this.bossManager.getBossVariant(state.level);
 
     // Enable boss effect with smooth fade-in during transition (only if high graphics enabled)
     // Effect starts fading in during the transition and reaches full intensity when boss appears
@@ -3152,9 +2547,10 @@ export class Game {
 
     setTimeout(() => {
       if (this.mode === 'transition') {
-        this.createBoss();
+        const boss = this.bossManager.createBoss();
+        this.bossBall = boss;
         this.mode = 'boss';
-        this.startBossTimer();
+        this.bossManager.startBossTimer();
         // Switch to boss battle soundtrack
         this.soundManager.startBossSoundtrack();
         // Resume combo when boss fight actually starts (not during transition, unless combo pause is active)
@@ -3294,11 +2690,11 @@ export class Game {
         break;
       case 'midas':
         this.midasActive = true;
-        this.hud.showMessage('MIDAS TOUCH ACTIVE!', '#ffd700', 3000);
+        this.hud.showMessage('MIDAS TOUCH ACTIVE', '#ffd700', 2000);
         break;
       case 'overclock':
         this.overclockTimer = 5; // 5 seconds
-        this.hud.showMessage('OVERCLOCK ACTIVE!', '#00ffff', 3000);
+        this.hud.showMessage('OVERCLOCK ACTIVE', '#00ffff', 2000);
         break;
     }
   }
@@ -3405,22 +2801,24 @@ export class Game {
       }
     }
 
-    if (this.godMode) {
-      this.updateGodMode(scaledDt, realDt);
+    if (this.godModeManager.isEnabled()) {
+      this.godModeManager.update(scaledDt, realDt);
     }
 
     // Throttle boss timer updates (expensive DOM updates)
     if (this.mode === 'boss') {
-      // Always update internal timer for accurate timeout checking
-      const oldTime = this.bossTimeRemaining;
-      this.bossTimeRemaining -= dt;
+      // Always update timer internally every frame for accurate timeout checking
+      const timeoutTriggered = this.bossManager.updateBossTimer(dt);
 
-      // Check timeout immediately (critical)
-      if (this.bossTimeRemaining <= 0 && oldTime > 0) {
-        this.handleBossTimeout();
-      } else if (this.frameCount % this.BOSS_TIMER_UPDATE_INTERVAL === 0) {
-        // Only update DOM display every N frames (expensive operation)
-        this.updateBossTimer(0); // Pass 0 since we already decremented above
+      // Update DOM display only every N frames (expensive operation)
+      if (this.frameCount % this.BOSS_TIMER_UPDATE_INTERVAL === 0) {
+        // Force a display update (0 dt so it doesn't double-decrement)
+        this.bossManager.updateTimerDisplay();
+      }
+
+      if (timeoutTriggered) {
+        // Timeout handling is done inside BossManager via callback
+        return; // Exit early if timeout was handled
       }
     }
 
@@ -3730,7 +3128,7 @@ export class Game {
     }
 
     this.titleUpdateTimer += dt;
-    if (this.titleUpdateTimer >= 1.0) {
+    if (this.titleUpdateTimer >= UI_THROTTLE.TITLE_UPDATE_INTERVAL) {
       this.updatePageTitle(state.points);
       this.titleUpdateTimer = 0;
     }
@@ -3827,151 +3225,31 @@ export class Game {
   }
 
   private render(): void {
-    // Apply background theme colors (keep for star colors, etc.)
-    const bgColors = this.customizationSystem.getBackgroundColors();
-    const themeId: string = 'default_background';
-    this.background.setThemeColors(bgColors, themeId);
-
-    // Background GIF is updated automatically by level in updateBackgroundByLevel()
-
-    // Clear canvas (WebGL or 2D)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const webglRenderer: WebGLRenderer | null = this.canvas.getWebGLRenderer();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    if (this.canvas.isWebGLEnabled() && webglRenderer !== null) {
-      // Clear WebGL canvas
-      webglRenderer.clear(bgColors.primary);
-      // Also clear offscreen 2D canvas for background/text
-      this.canvas.clear();
-    } else {
-      this.canvas.clear();
-    }
-
-    const ctx = this.canvas.getContext();
-
-    // Early exit if nothing to render (shouldn't happen, but safety check)
-    if (this.mode === 'transition' && this.transitionTime <= 0) {
-      return;
-    }
-
-    // Background always uses 2D canvas (complex gradients and effects)
-    this.background.render(ctx, this.userSettings.highGraphics);
-
-    ctx.save();
-
-    if (this.shakeTime > 0 && this.userSettings.screenShakeEnabled) {
-      const intensity = this.shakeAmount * (this.shakeTime / 0.1);
-      const offsetX = (Math.random() - 0.5) * intensity;
-      const offsetY = (Math.random() - 0.5) * intensity;
-      ctx.translate(offsetX, offsetY);
-    }
-
-    if (this.mode === 'transition') {
-      this.renderTransition();
-      ctx.restore();
-      // Flush WebGL batches before frame end
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      this.draw.flush();
-      // Also flush WebGL and composite overlay
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      this.canvas.flushWebGL();
-      return;
-    }
-
-    // Batch render game entities for better performance
-    this.renderGameEntities(ctx);
-
-    // Render ascension animation overlay
-    if (this.isAscensionAnimating) {
-      this.renderAscensionAnimation(ctx);
-    }
-
-    ctx.restore();
-
-    // Flush WebGL batches at end of frame (critical for performance)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    this.draw.flush();
-    // Also flush WebGL and composite overlay
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    this.canvas.flushWebGL();
+    this.renderManager.render(
+      {
+        ball: this.ball,
+        bossBall: this.bossBall,
+        ships: this.ships,
+        particleSystem: this.particleSystem,
+        laserSystem: this.laserSystem,
+        damageNumberSystem: this.damageNumberSystem,
+        comboSystem: this.comboSystem,
+        powerUpSystem: this.powerUpSystem,
+        customizationSystem: this.customizationSystem,
+        store: this.store,
+      },
+      {
+        mode: this.mode,
+        transitionTime: this.transitionTime,
+        transitionDuration: this.transitionDuration,
+        shakeTime: this.shakeTime,
+        shakeAmount: this.shakeAmount,
+        isAscensionAnimating: this.isAscensionAnimating,
+        ascensionAnimationTime: this.ascensionAnimationTime,
+      },
+    );
   }
 
-  private renderGameEntities(ctx: CanvasRenderingContext2D): void {
-    // Early exit checks
-    const hasBall = this.ball && this.ball.currentHp > 0;
-    const hasBoss = this.bossBall && this.bossBall.currentHp > 0;
-    const hasParticles =
-      this.userSettings.highGraphics &&
-      this.particleSystem.getParticleCount() > 0;
-    const hasDamageNumbers = this.damageNumberSystem.getCount() > 0;
-    const hasCombo = this.comboSystem.getCombo() > 0;
-    const hasPowerUps = this.powerUpSystem.getPowerUps().length > 0;
-
-    // Render particles first (background layer)
-    if (hasParticles) {
-      this.particleSystem.draw(this.draw);
-    }
-
-    // Render lasers (projectiles)
-    this.laserSystem.draw(this.draw);
-
-    // Render main entities (ball/boss)
-    if (hasBall && this.ball) {
-      this.ball.draw(this.draw);
-    }
-    if (hasBoss && this.bossBall) {
-      this.bossBall.draw(this.draw);
-    }
-
-    // Render ships (batch by entity type)
-    // Use 2D canvas rendering for ships (better performance than DOM overlays)
-    const state = this.store.getReadonlyState();
-    // Calculate visuals once per frame instead of per ship
-    const visuals = this.customizationSystem.getShipColors(state);
-
-    for (const ship of this.ships) {
-      // Store visuals for ship to use (for fallback triangle rendering)
-      (ship as any).customVisuals = visuals;
-      ship.draw(this.draw);
-    }
-
-    // Render UI elements
-    if (hasDamageNumbers) {
-      this.damageNumberSystem.draw(this.draw);
-    }
-
-    if (hasCombo) {
-      this.comboSystem.draw(
-        this.draw,
-        this.canvas.getWidth(),
-        this.canvas.getHeight(),
-        state,
-      );
-    }
-
-    // Render power-ups
-    if (hasPowerUps) {
-      this.powerUpSystem.render(ctx, this.draw);
-    }
-  }
-
-  private renderTransition(): void {
-    const progress = this.transitionTime / this.transitionDuration;
-    const alpha = Math.sin(progress * Math.PI);
-
-    this.draw.setAlpha(alpha);
-    const cx = this.canvas.getCenterX();
-    const cy = this.canvas.getCenterY();
-    const maxRadius = Math.max(this.canvas.getWidth(), this.canvas.getHeight());
-
-    for (let i = 0; i < 5; i++) {
-      const radius = maxRadius * (progress + i * 0.2);
-      this.draw.setStroke('#fff', 2);
-      this.draw.circle(cx, cy, radius, false);
-    }
-
-    this.draw.resetAlpha();
-  }
 
   private resetGame(): void {
     Save.clear();
@@ -3981,12 +3259,10 @@ export class Game {
     this.store.setState(newState);
     this.mode = 'normal';
 
-    this.blockedOnBossLevel = null;
-    if (this.bossRetryButton) {
-      this.bossRetryButton.style.display = 'none';
-    }
+    this.bossManager.setBlockedBossLevel(null);
+    this.bossManager.hideRetryButton();
 
-    this.hideBossTimer();
+    this.bossManager.hideBossTimer();
 
     // Reset damage batch efficiently
     this.damageBatch.damage = 0;
@@ -4019,6 +3295,8 @@ export class Game {
     rarity?: 'common' | 'rare' | 'epic' | 'legendary',
   ): void {
     this.artifactSystem.generateArtifact(rarity);
+    // Trigger glow and animation on artifacts button
+    this.triggerArtifactNotification();
     // Refresh the artifacts modal if it's open
     this.artifactsModal.refresh();
   }
@@ -4042,728 +3320,14 @@ export class Game {
     this.gameSpeed = speed;
   }
 
-  private toggleGodMode(): void {
-    this.godMode = !this.godMode;
-    if (this.godMode) {
-      this.enableGodMode();
-    } else {
-      this.disableGodMode();
-    }
-  }
 
-  private enableGodMode(): void {
-    const state = this.store.getState();
-    const overlay = this.createGodModeOverlay();
-    this.godModeAgent = {
-      clickTimer: this.getRandomInRange(0.08, 0.2),
-      clickIntervalRange: { min: 0.08, max: 0.22 },
-      burstChance: 0.18,
-      burstShotsRemaining: 0,
-      burstCooldownTimer: 0,
-      burstCooldownRange: { min: 4.2, max: 7.5 },
-      jitterRadius: 28,
-      upgradeTimer: this.getRandomInRange(0.9, 1.6),
-      upgradeIntervalRange: { min: 0.8, max: 1.8 },
-      powerUpTimer: this.getRandomInRange(0.4, 0.9),
-      powerUpReactionRange: { min: 0.12, max: 0.35 },
-      metricsTimer: 0,
-      metricsInterval: 1,
-      startTimestamp: performance.now(),
-      baseline: {
-        points: state.points,
-        clicks: state.stats.totalClicks,
-        aliens: state.stats.aliensKilled,
-        bosses: state.stats.bossesKilled,
-        upgrades: state.stats.totalUpgrades,
-        subUpgrades: state.stats.totalSubUpgrades,
-      },
-      overlay,
-      lastAction: 'Autopilot engaged',
-      logTimer: 12,
-      idleTimer: 0,
-      nextBreakIn: this.getRandomInRange(25, 45),
-      breakTimer: 0,
-      breakDurationRange: { min: 1.4, max: 3.3 },
-      bossCheckTimer: 0,
-      bossCheckIntervalRange: { min: 0.15, max: 0.35 },
-      bossRetryTimer: 0,
-      bossRetryDelay: 300,
-      bossRetryAttempts: 0,
-      bossHistory: [],
-    };
-    this.notificationSystem.show('God Mode autopilot engaged.', 'info', 2400);
-  }
-
-  private disableGodMode(): void {
-    if (this.godModeAgent?.overlay) {
-      this.godModeAgent.overlay.remove();
-    }
-    this.godModeAgent = null;
-    this.notificationSystem.show('God Mode disengaged.', 'warning', 2000);
-  }
-
-  private createGodModeOverlay(): HTMLElement | null {
-    if (typeof document === 'undefined') return null;
-    const existing = document.getElementById('god-mode-overlay');
-    if (existing) {
-      existing.remove();
-    }
-    const overlay = document.createElement('div');
-    overlay.id = 'god-mode-overlay';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '16px';
-    overlay.style.right = '16px';
-    overlay.style.zIndex = '2147483646';
-    overlay.style.padding = '14px 18px';
-    overlay.style.width = '220px';
-    overlay.style.background =
-      'linear-gradient(135deg, rgba(20,20,35,0.92), rgba(40,15,60,0.95))';
-    overlay.style.border = '1px solid rgba(255, 215, 0, 0.35)';
-    overlay.style.boxShadow =
-      '0 8px 24px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 215, 0, 0.3)';
-    overlay.style.borderRadius = '10px';
-    overlay.style.backdropFilter = 'blur(6px)';
-    overlay.style.color = '#f5f5f5';
-    overlay.style.fontFamily = '"Courier New", monospace';
-    overlay.style.pointerEvents = 'none';
-    overlay.innerHTML = `
-      <div style="font-weight:700;font-size:14px;margin-bottom:8px;letter-spacing:0.04em;display:flex;align-items:center;gap:6px;">
-        <span>🛡️</span>GOD MODE AUTOPILOT
-      </div>
-      <div class="metric" data-metric="elapsed">Elapsed: 0s</div>
-      <div class="metric" data-metric="points">Points/min: 0</div>
-      <div class="metric" data-metric="clicks">Clicks/min: 0</div>
-      <div class="metric" data-metric="bosses">Bosses/hr: 0</div>
-      <div class="metric" data-metric="upgrades">Upgrades/min: 0</div>
-      <div class="metric" data-metric="boss-log">Boss log: —</div>
-      <div class="metric" data-metric="last-action" style="margin-top:8px;font-size:11px;color:#ddd;">
-        Last action: —
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
-  private updateGodMode(dt: number, realDt: number): void {
-    if (!this.godModeAgent) return;
-    const agent = this.godModeAgent;
-
-    agent.clickTimer -= dt;
-    agent.upgradeTimer -= dt;
-    agent.powerUpTimer -= dt;
-    agent.metricsTimer -= dt;
-    agent.logTimer -= dt;
-    agent.bossCheckTimer -= dt;
-    agent.bossRetryTimer = Math.max(0, agent.bossRetryTimer - realDt);
-    agent.burstCooldownTimer = Math.max(0, agent.burstCooldownTimer - dt);
-
-    if (agent.breakTimer > 0) {
-      agent.breakTimer = Math.max(0, agent.breakTimer - dt);
-      if (agent.breakTimer === 0) {
-        agent.lastAction = 'Back from short break';
-        agent.clickTimer = this.getRandomInRange(
-          agent.clickIntervalRange.min,
-          agent.clickIntervalRange.max,
-        );
-      }
-    } else {
-      agent.idleTimer += dt;
-      if (agent.idleTimer >= agent.nextBreakIn) {
-        agent.breakTimer = this.getRandomInRange(
-          agent.breakDurationRange.min,
-          agent.breakDurationRange.max,
-        );
-        agent.idleTimer = 0;
-        agent.nextBreakIn = this.getRandomInRange(20, 45);
-        agent.lastAction = 'Taking a short break';
-      }
-    }
-
-    let handledBossAction = false;
-    if (agent.bossCheckTimer <= 0) {
-      handledBossAction = this.handleGodModeBossFlow(agent);
-      agent.bossCheckTimer = this.getRandomInRange(
-        agent.bossCheckIntervalRange.min,
-        agent.bossCheckIntervalRange.max,
-      );
-    }
-
-    if (handledBossAction) {
-      return;
-    }
-
-    const powerUpClicked = this.runGodModePowerUps(agent);
-    if (!powerUpClicked && agent.breakTimer <= 0) {
-      this.runGodModeClicking(agent);
-    }
-
-    // Check for discovered but unpurchased upgrades - prioritize saving money for them
-    const hasDiscoveredUpgrades = this.checkForDiscoveredUpgrades();
-    if (hasDiscoveredUpgrades) {
-      // Reduce upgrade check timer to check more frequently when saving for discovered upgrades
-      agent.upgradeTimer = Math.min(
-        agent.upgradeTimer,
-        this.getRandomInRange(0.3, 0.6),
-      );
-    }
-
-    if (agent.upgradeTimer <= 0) {
-      this.runGodModeUpgrades(agent);
-    }
-
-    if (agent.metricsTimer <= 0) {
-      this.updateGodModeMetrics(agent);
-    }
-
-    if (agent.logTimer <= 0) {
-      this.logGodModeSnapshot(agent);
-      agent.logTimer = this.getRandomInRange(14, 22);
-    }
-  }
-
-  private runGodModePowerUps(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): boolean {
-    const available = this.powerUpSystem
-      .getPowerUps()
-      .filter((powerUp) => powerUp.active);
-
-    if (available.length === 0) {
-      if (agent.powerUpTimer <= 0) {
-        agent.powerUpTimer = this.getRandomInRange(0.6, 1.4);
-      }
-      return false;
-    }
-
-    if (agent.powerUpTimer > 0) {
-      return false;
-    }
-
-    const target =
-      available[Math.floor(Math.random() * available.length)] ?? available[0];
-    if (!target) return false;
-
-    const clickPos = this.withJitter({ x: target.x, y: target.y }, 12);
-    this.handleClick(clickPos);
-    agent.lastAction = `Collected ${this.powerUpSystem.getBuffName(
-      target.type,
-    )}`;
-    agent.powerUpTimer = this.getRandomInRange(
-      agent.powerUpReactionRange.min,
-      agent.powerUpReactionRange.max,
-    );
-    agent.clickTimer = this.getRandomInRange(0.05, 0.12);
-    return true;
-  }
-
-  private runGodModeClicking(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): void {
-    if (this.mode === 'transition') return;
-    if (agent.breakTimer > 0) return;
-
-    const targetEntity = this.mode === 'boss' ? this.bossBall : this.ball;
-    if (!targetEntity || targetEntity.currentHp <= 0) return;
-
-    const state = this.store.getState();
-    const comboMultiplier = this.comboSystem.getMultiplier(state);
-    if (comboMultiplier >= 3) {
-      this.comboSystem.reset();
-      agent.breakTimer = this.getRandomInRange(0.6, 1.1);
-      agent.idleTimer = 0;
-      agent.lastAction = 'Capped combo at 3x multiplier';
-      agent.clickTimer = this.getRandomInRange(0.2, 0.35);
-      return;
-    }
-
-    if (agent.clickTimer > 0) return;
-
-    const jitterScale = this.mode === 'boss' ? 0.7 : 1;
-    const clickPos = this.withJitter(
-      { x: targetEntity.x, y: targetEntity.y },
-      agent.jitterRadius * jitterScale,
-    );
-    this.handleClick(clickPos);
-
-    // Check if saving for discovered upgrades - use faster click intervals
-    const hasDiscovered = this.checkForDiscoveredUpgrades();
-    const clickIntervalMin = hasDiscovered
-      ? agent.clickIntervalRange.min * 0.7 // 30% faster
-      : agent.clickIntervalRange.min;
-    const clickIntervalMax = hasDiscovered
-      ? agent.clickIntervalRange.max * 0.7 // 30% faster
-      : agent.clickIntervalRange.max;
-
-    if (agent.burstShotsRemaining > 0) {
-      agent.burstShotsRemaining--;
-      agent.clickTimer = agent.burstShotsRemaining
-        ? this.getRandomInRange(0.05, 0.1)
-        : this.getRandomInRange(clickIntervalMin, clickIntervalMax);
-    } else if (
-      agent.burstCooldownTimer <= 0 &&
-      Math.random() < agent.burstChance
-    ) {
-      agent.burstShotsRemaining = Math.floor(this.getRandomInRange(2, 5));
-      agent.clickTimer = this.getRandomInRange(0.05, 0.1);
-      agent.burstCooldownTimer = this.getRandomInRange(
-        agent.burstCooldownRange.min,
-        agent.burstCooldownRange.max,
-      );
-      agent.lastAction = 'Executed rapid click burst';
-    } else {
-      agent.clickTimer = this.getRandomInRange(
-        clickIntervalMin,
-        clickIntervalMax,
-      );
-    }
-  }
-
-  private checkForDiscoveredUpgrades(): boolean {
-    const state = this.store.getState();
-    if (!state.discoveredUpgrades) return false;
-
-    // Only check sub-upgrades (special upgrades), not main upgrades
-    const subUpgrades = this.upgradeSystem.getSubUpgrades();
-    for (const subUpgrade of subUpgrades) {
-      const subKey = `sub_${subUpgrade.id}`;
-      if (state.discoveredUpgrades[subKey] && !subUpgrade.owned) {
-        // Only prioritize if we have at least 80% of the cost
-        const cost = this.upgradeSystem.getSubUpgradeCost(subUpgrade);
-        const threshold = cost * 0.8;
-        if (state.points >= threshold) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  private runGodModeUpgrades(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): void {
-    const beforeState = this.store.getState();
-    const beforeUpgrades = beforeState.stats.totalUpgrades;
-    const beforeSubUpgrades = beforeState.stats.totalSubUpgrades;
-
-    // Always try to buy discovered upgrades first (if affordable)
-    this.shop.checkAndBuyDiscoveredUpgrades();
-
-    // Check if we're saving for discovered upgrades (80% threshold)
-    const hasDiscovered = this.checkForDiscoveredUpgrades();
-
-    // Only buy normal upgrades if we're not saving for a special upgrade
-    if (!hasDiscovered) {
-      this.shop.checkAndBuyAffordableUpgrades(true);
-    }
-
-    const afterState = this.store.getState();
-    if (afterState.stats.totalUpgrades > beforeUpgrades) {
-      const diff = afterState.stats.totalUpgrades - beforeUpgrades;
-      agent.lastAction =
-        diff > 1 ? `Bought ${String(diff)} upgrades` : 'Bought upgrade';
-    } else if (afterState.stats.totalSubUpgrades > beforeSubUpgrades) {
-      agent.lastAction = 'Unlocked special upgrade';
-    } else if (hasDiscovered) {
-      agent.lastAction = 'Saving for discovered upgrade';
-    }
-
-    // Adjust timer based on whether we're saving for discovered upgrades
-    if (hasDiscovered) {
-      // Check more frequently when saving for discovered upgrades
-      agent.upgradeTimer = this.getRandomInRange(0.3, 0.6);
-    } else {
-      agent.upgradeTimer = this.getRandomInRange(
-        agent.upgradeIntervalRange.min,
-        agent.upgradeIntervalRange.max,
-      );
-    }
-  }
-
-  private handleGodModeBossFlow(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): boolean {
-    if (typeof document === 'undefined') {
-      return false;
-    }
-
-    const state = this.store.getState();
-    const blockedLevel =
-      state.blockedOnBossLevel ?? this.blockedOnBossLevel ?? null;
-    const resolvedBossLevel =
-      blockedLevel !== null ? blockedLevel : state.level;
-
-    const ensureAgentReady = (action: string, resetClickTimer = true): void => {
-      agent.lastAction = action;
-      agent.breakTimer = 0;
-      agent.idleTimer = 0;
-      if (resetClickTimer) {
-        agent.clickTimer = this.getRandomInRange(0.05, 0.1);
-      }
-    };
-
-    const timeoutModal = document.getElementById('boss-timeout-modal');
-    if (
-      timeoutModal &&
-      timeoutModal.style.display !== 'none' &&
-      this.mode === 'boss'
-    ) {
-      const closeButton = document.getElementById('boss-timeout-close');
-      if (closeButton) {
-        closeButton.click();
-      } else {
-        timeoutModal.style.display = 'none';
-        if (this.bossRetryButton) {
-          this.bossRetryButton.style.display = 'flex';
-        }
-        this.startTransitionToNormal();
-      }
-      agent.bossRetryTimer = agent.bossRetryDelay;
-      agent.bossRetryAttempts += 1;
-      this.recordGodModeBossEvent(
-        agent,
-        resolvedBossLevel,
-        `Boss timeout (attempt ${String(agent.bossRetryAttempts)})`,
-      );
-      const waitLabel = this.formatDuration(agent.bossRetryDelay);
-      ensureAgentReady(`Boss escaped - retry in ${waitLabel}`, false);
-      return true;
-    }
-
-    if (this.mode !== 'normal') {
-      return false;
-    }
-
-    const dialog = document.getElementById('boss-dialog');
-    const dialogVisible = Boolean(dialog && dialog.style.display !== 'none');
-    const startButton = document.getElementById('boss-start-btn');
-
-    if (dialogVisible) {
-      if (startButton) {
-        startButton.click();
-      } else {
-        if (dialog) {
-          dialog.style.display = 'none';
-        }
-        this.startBossFight();
-      }
-      agent.bossRetryTimer = 0;
-      const attemptNumber = agent.bossRetryAttempts + 1;
-      this.recordGodModeBossEvent(
-        agent,
-        resolvedBossLevel,
-        `Starting boss attempt ${String(attemptNumber)}`,
-      );
-      if (blockedLevel === null) {
-        agent.bossRetryAttempts = 0;
-      }
-      ensureAgentReady(
-        blockedLevel !== null
-          ? 'Re-engaging boss fight'
-          : 'Engaging boss fight',
-      );
-      if (this.bossRetryButton) {
-        this.bossRetryButton.style.display = 'none';
-      }
-      return true;
-    }
-
-    if (blockedLevel !== null) {
-      if (agent.bossRetryTimer > 0) {
-        const waitLabel = this.formatDuration(agent.bossRetryTimer);
-        ensureAgentReady(`Boss retry in ${waitLabel}`, false);
-        return true;
-      }
-
-      const retryButton =
-        this.bossRetryButton ?? document.getElementById('boss-retry-btn');
-
-      if (retryButton && retryButton.style.display !== 'none') {
-        agent.bossRetryTimer = 0;
-        retryButton.click();
-        const attemptNumber = agent.bossRetryAttempts + 1;
-        this.recordGodModeBossEvent(
-          agent,
-          blockedLevel,
-          `Launching boss retry attempt ${String(attemptNumber)}`,
-        );
-        ensureAgentReady('Retrying boss fight', false);
-        return true;
-      }
-
-      agent.bossRetryTimer = 0;
-      this.recordGodModeBossEvent(
-        agent,
-        blockedLevel,
-        'Opening boss dialog for retry',
-      );
-      this.showBossDialog();
-      ensureAgentReady('Preparing boss retry', false);
-      return true;
-    }
-
-    const isBossLevel = ColorManager.isBossLevel(state.level);
-
-    if (isBossLevel && !this.ball) {
-      agent.bossRetryTimer = 0;
-      agent.bossRetryAttempts = 0;
-      this.recordGodModeBossEvent(
-        agent,
-        state.level,
-        'Boss detected - preparing fight',
-      );
-      this.showBossDialog();
-      ensureAgentReady('Summoning boss', false);
-      return true;
-    }
-
-    return false;
-  }
-
-  private updateGodModeMetrics(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): void {
-    agent.metricsTimer = agent.metricsInterval;
-    const state = this.store.getState();
-    const elapsedSeconds = Math.max(
-      0.1,
-      (performance.now() - agent.startTimestamp) / 1000,
-    );
-
-    const deltaPoints = Math.max(0, state.points - agent.baseline.points);
-    const deltaClicks = Math.max(
-      0,
-      state.stats.totalClicks - agent.baseline.clicks,
-    );
-    const deltaBosses = Math.max(
-      0,
-      state.stats.bossesKilled - agent.baseline.bosses,
-    );
-    const deltaUpgrades =
-      Math.max(0, state.stats.totalUpgrades - agent.baseline.upgrades) +
-      Math.max(0, state.stats.totalSubUpgrades - agent.baseline.subUpgrades);
-
-    const pointsPerMinute = (deltaPoints / elapsedSeconds) * 60;
-    const clicksPerMinute = (deltaClicks / elapsedSeconds) * 60;
-    const bossesPerHour = (deltaBosses / elapsedSeconds) * 3600;
-    const upgradesPerMinute = (deltaUpgrades / elapsedSeconds) * 60;
-
-    const lastHistoryEntry =
-      agent.bossHistory.length > 0
-        ? agent.bossHistory[agent.bossHistory.length - 1]
-        : null;
-    const secondsSinceBossEvent = lastHistoryEntry
-      ? Math.max(0, (Date.now() - lastHistoryEntry.timestamp) / 1000)
-      : 0;
-    const bossEventText = lastHistoryEntry
-      ? `${lastHistoryEntry.detail} (${this.formatDuration(
-        secondsSinceBossEvent,
-      )} ago)`
-      : 'No boss activity yet';
-    const nextRetryText =
-      agent.bossRetryTimer > 0
-        ? `Next retry in ${this.formatDuration(agent.bossRetryTimer)}`
-        : 'Next retry ready';
-    const bossLogText = `${bossEventText} | Failures: ${String(
-      agent.bossRetryAttempts,
-    )} | ${nextRetryText}`;
-
-    this.updateGodModeOverlay(agent, {
-      elapsedSeconds,
-      pointsPerMinute,
-      clicksPerMinute,
-      bossesPerHour,
-      upgradesPerMinute,
-      lastAction: agent.lastAction,
-      bossLogText,
-    });
-  }
-
-  private recordGodModeBossEvent(
-    agent: NonNullable<typeof this.godModeAgent>,
-    level: number,
-    detail: string,
-  ): void {
-    const timestamp = Date.now();
-    const entry = { timestamp, level, detail };
-    agent.bossHistory.push(entry);
-    if (agent.bossHistory.length > 12) {
-      agent.bossHistory.splice(0, agent.bossHistory.length - 12);
-    }
-    agent.lastAction = detail;
-    agent.metricsTimer = 0;
-    if (typeof console !== 'undefined' && typeof console.info === 'function') {
-      const timeIso = new Date(timestamp).toISOString();
-      console.info(
-        `[GodMode][Boss][${timeIso}] Level ${String(level)} - ${detail}`,
-      );
-    }
-  }
-
-  private resetGodModeBossTracking(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): void {
-    agent.bossRetryTimer = 0;
-    agent.bossRetryAttempts = 0;
-    agent.metricsTimer = 0;
-  }
-
-  private updateGodModeOverlay(
-    agent: NonNullable<typeof this.godModeAgent>,
-    metrics: {
-      elapsedSeconds: number;
-      pointsPerMinute: number;
-      clicksPerMinute: number;
-      bossesPerHour: number;
-      upgradesPerMinute: number;
-      lastAction: string;
-      bossLogText: string;
-    },
-  ): void {
-    if (!agent.overlay) return;
-    const overlay = agent.overlay;
-
-    const elapsedEl = overlay.querySelector('[data-metric="elapsed"]');
-    if (elapsedEl) {
-      elapsedEl.textContent = `Elapsed: ${this.formatDuration(
-        metrics.elapsedSeconds,
-      )}`;
-    }
-
-    const bossLogEl = overlay.querySelector('[data-metric="boss-log"]');
-    if (bossLogEl) {
-      bossLogEl.textContent = `Boss log: ${metrics.bossLogText ? metrics.bossLogText : '—'
-        }`;
-    }
-
-    const formatValue = (value: number, fractionDigits = 1): string => {
-      if (!isFinite(value) || value <= 0) return '0';
-      if (value >= 1000) {
-        return NumberFormatter.format(value);
-      }
-      return value.toFixed(fractionDigits);
-    };
-
-    const pointsEl = overlay.querySelector('[data-metric="points"]');
-    if (pointsEl) {
-      pointsEl.textContent = `Points/min: ${formatValue(
-        metrics.pointsPerMinute,
-        1,
-      )}`;
-    }
-
-    const clicksEl = overlay.querySelector('[data-metric="clicks"]');
-    if (clicksEl) {
-      clicksEl.textContent = `Clicks/min: ${formatValue(
-        metrics.clicksPerMinute,
-        1,
-      )}`;
-    }
-
-    const bossesEl = overlay.querySelector('[data-metric="bosses"]');
-    if (bossesEl) {
-      bossesEl.textContent = `Bosses/hr: ${formatValue(
-        metrics.bossesPerHour,
-        2,
-      )}`;
-    }
-
-    const upgradesEl = overlay.querySelector('[data-metric="upgrades"]');
-    if (upgradesEl) {
-      upgradesEl.textContent = `Upgrades/min: ${formatValue(
-        metrics.upgradesPerMinute,
-        2,
-      )}`;
-    }
-
-    const actionEl = overlay.querySelector('[data-metric="last-action"]');
-    if (actionEl) {
-      actionEl.textContent = `Last action: ${metrics.lastAction ? metrics.lastAction : '—'
-        }`;
-    }
-  }
-
-  private logGodModeSnapshot(
-    agent: NonNullable<typeof this.godModeAgent>,
-  ): void {
-    if (typeof console === 'undefined') return;
-    const state = this.store.getState();
-    const elapsedSeconds = Math.max(
-      0.1,
-      (performance.now() - agent.startTimestamp) / 1000,
-    );
-
-    const deltaPoints = state.points - agent.baseline.points;
-    const deltaClicks = state.stats.totalClicks - agent.baseline.clicks;
-    const deltaBosses = state.stats.bossesKilled - agent.baseline.bosses;
-    const deltaUpgrades = state.stats.totalUpgrades - agent.baseline.upgrades;
-    const deltaSubUpgrades =
-      state.stats.totalSubUpgrades - agent.baseline.subUpgrades;
-
-    const pointsPerMinute = (Math.max(0, deltaPoints) / elapsedSeconds) * 60;
-    const clicksPerMinute = (Math.max(0, deltaClicks) / elapsedSeconds) * 60;
-    const bossesPerHour = (Math.max(0, deltaBosses) / elapsedSeconds) * 3600;
-    const upgradesPerMinute =
-      ((Math.max(0, deltaUpgrades) + Math.max(0, deltaSubUpgrades)) /
-        elapsedSeconds) *
-      60;
-
-    console.table({
-      'Elapsed (m)': Number((elapsedSeconds / 60).toFixed(2)),
-      'Points gained': Math.max(0, deltaPoints),
-      'Points/min': Number(pointsPerMinute.toFixed(1)),
-      'Clicks/min': Number(clicksPerMinute.toFixed(1)),
-      'Bosses/hr': Number(bossesPerHour.toFixed(2)),
-      'Upgrades/min': Number(upgradesPerMinute.toFixed(2)),
-      'Last action': agent.lastAction,
-    });
-  }
-
-  private formatDuration(seconds: number): string {
-    const totalSeconds = Math.max(0, Math.floor(seconds));
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-
-    if (hours > 0) {
-      return `${String(hours)}h ${String(minutes)}m`;
-    }
-    if (minutes > 0) {
-      return `${String(minutes)}m ${secs.toString().padStart(2, '0')}s`;
-    }
-    return `${String(secs)}s`;
-  }
-
-  private withJitter(base: Vec2, radius: number): Vec2 {
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * radius;
-    const pos = {
-      x: base.x + Math.cos(angle) * distance,
-      y: base.y + Math.sin(angle) * distance,
-    };
-    return this.clampToCanvas(pos);
-  }
-
-  private clampToCanvas(pos: Vec2): Vec2 {
-    const width = this.canvas.getWidth();
-    const height = this.canvas.getHeight();
-    return {
-      x: Math.min(Math.max(pos.x, 0), width),
-      y: Math.min(Math.max(pos.y, 0), height),
-    };
-  }
-
-  private getRandomInRange(min: number, max: number): number {
-    if (max <= min) return min;
-    return Math.random() * (max - min) + min;
-  }
 
   public getGameSpeed(): number {
     return this.gameSpeed;
   }
 
   public isGodMode(): boolean {
-    return this.godMode;
+    return this.godModeManager.isEnabled();
   }
 
   private handleResize(): void {
@@ -4786,6 +3350,24 @@ export class Game {
     if (this.ships.length > 0) {
       // Recreate ships to update their orbits and clean up old image elements
       this.createShips();
+    }
+  }
+
+  /**
+   * Trigger glow and animation on artifacts button when new artifact is gained
+   */
+  private triggerArtifactNotification(): void {
+    if (this.artifactsButton) {
+      this.artifactsButton.classList.add('has-new', 'artifact-glow', 'artifact-pulse');
+    }
+  }
+
+  /**
+   * Remove glow and animation from artifacts button
+   */
+  private removeArtifactNotification(): void {
+    if (this.artifactsButton) {
+      this.artifactsButton.classList.remove('has-new', 'artifact-glow', 'artifact-pulse');
     }
   }
 }

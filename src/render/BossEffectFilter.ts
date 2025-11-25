@@ -16,6 +16,7 @@ export class BossEffectFilter {
   private enabled = false;
   private currentVariant: BossVariant = 0;
   private animationFrameId: number | null = null;
+  private cleanupTimeoutId: number | null = null;
   private time = 0;
   private intensity = 0; // 0 to 1 for fade in/out
   private targetIntensity = 0;
@@ -441,7 +442,13 @@ export class BossEffectFilter {
   }
 
   private animate = (): void => {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.enabled || !this.ctx) {
+      // If disabled during animation, ensure cleanup happens
+      if (!this.enabled && this.animationFrameId) {
+        this.cleanup();
+      }
+      return;
+    }
 
     this.time += 0.016; // ~60fps
 
@@ -454,6 +461,13 @@ export class BossEffectFilter {
       } else {
         this.intensity += Math.sign(delta) * step;
       }
+    }
+
+    // Check if fade-out is complete and cleanup should happen
+    if (this.targetIntensity === 0 && this.intensity <= 0.01) {
+      this.intensity = 0;
+      this.cleanup();
+      return;
     }
 
     // Update overlay opacity
@@ -750,6 +764,12 @@ export class BossEffectFilter {
   enable(variant: BossVariant, fadeDuration: number = 1.0): void {
     if (this.enabled && this.currentVariant === variant) return;
 
+    // Clear any pending cleanup timeout
+    if (this.cleanupTimeoutId !== null) {
+      clearTimeout(this.cleanupTimeoutId);
+      this.cleanupTimeoutId = null;
+    }
+
     this.currentVariant = variant;
     this.enabled = true;
     this.fadeSpeed = 1.0 / fadeDuration;
@@ -790,20 +810,35 @@ export class BossEffectFilter {
   disable(fadeDuration: number = 1.0): void {
     if (!this.enabled) return;
 
+    // Clear any existing cleanup timeout
+    if (this.cleanupTimeoutId !== null) {
+      clearTimeout(this.cleanupTimeoutId);
+      this.cleanupTimeoutId = null;
+    }
+
     this.fadeSpeed = 1.0 / fadeDuration;
     this.targetIntensity = 0;
 
-    // Wait for fade out to complete before cleanup
-    setTimeout(() => {
-      if (this.intensity === 0) {
-        this.cleanup();
-      }
-    }, fadeDuration * 1000 + 100);
+    // Fallback: Ensure cleanup happens after fade duration + buffer
+    // This prevents effects from staying if animation loop stops
+    this.cleanupTimeoutId = window.setTimeout(() => {
+      this.cleanup();
+      this.cleanupTimeoutId = null;
+    }, fadeDuration * 1000 + 200);
   }
 
   private cleanup(): void {
+    // Clear cleanup timeout if it exists
+    if (this.cleanupTimeoutId !== null) {
+      clearTimeout(this.cleanupTimeoutId);
+      this.cleanupTimeoutId = null;
+    }
+
     this.enabled = false;
+    this.targetIntensity = 0;
+    this.intensity = 0;
     this.overlay.style.display = 'none';
+    this.overlay.style.opacity = '0';
 
     // Remove all boss effect classes
     document.body.classList.remove(
@@ -815,9 +850,14 @@ export class BossEffectFilter {
     );
 
     // Stop animation
-    if (this.animationFrameId) {
+    if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
+    }
+
+    // Clear canvas
+    if (this.ctx) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
   }
 

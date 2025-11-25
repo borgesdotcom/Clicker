@@ -18,7 +18,7 @@
     "japanese": "Japanese"
   },
   "settings": {
-    "title": "⚙️ Settings",
+    "title": "Settings",
     "soundSettings": "Sound Settings",
     "graphicsSettings": "Graphics Settings",
     "languageSettings": "Language Settings",
@@ -37,13 +37,17 @@
     "screenShakeHint": "Enable screen shake effects for impactful moments.",
     "lcdFilter": "LCD Filter",
     "lcdFilterHint": "Subtle retro LCD monitor effect with pixel grid",
-    "saveDataActions": "💾 Save Data & Actions",
+    "saveDataActions": "Save Data & Actions",
     "exportSave": "EXPORT SAVE DATA",
     "importSave": "IMPORT SAVE DATA",
-    "resetSaveButton": "⚠️ Reset Save",
+    "resetSaveButton": "Reset Save",
     "resetConfirm": "Are you sure you want to reset all progress? This cannot be undone.",
     "language": "Language:",
-    "languageHint": "Change the game language"
+    "languageHint": "Change the game language",
+    "accessibilitySettings": "Accessibility Settings",
+    "fontFamily": "Font Family:",
+    "fontDefault": "Default (Courier New)",
+    "fontFamilyWarning": "⚠️ WARNING: Changing the font may break some UI elements. The game was designed with the default font in mind."
   },
   "hud": {
     "points": "Moonies",
@@ -96,7 +100,7 @@
     "available": "Available",
     "owned": "Owned",
     "buyQuantity": "Buy Quantity:",
-    "specialUpgrades": "⭐ SPECIAL UPGRADES ⭐",
+    "specialUpgrades": "SPECIAL ITEMS",
     "noOwned": "No special upgrades owned yet.",
     "resetSave": "Reset Save",
     "max": "MAX",
@@ -122,7 +126,7 @@
     "time": "TIME:"
   },
   "ascension": {
-    "title": "🌟 ASCENSION 🌟",
+    "title": "ASCENSION",
     "description": "Ascend to a higher plane of existence. You will lose all progress except:",
     "keepAchievements": "✓ Achievements",
     "keepStatistics": "✓ Statistics",
@@ -272,7 +276,21 @@
     "screenShakeFix": "Screen shake disable option now properly works during boss fights.",
     "omegaFilter": "Reduced Omega Core (Boss 100) yellow filter intensity.",
     "rainbowLaser": "Optimized rainbow laser rendering for smoother gameplay.",
-    "tipSpace": "Try holding Space during boss fights for sustained damage while dodging visual effects!"
+    "tipSpace": "Try holding Space during boss fights for sustained damage while dodging visual effects!",
+    "v120Title": "What's New in 1.20.0",
+    "qualityOfLife": "Quality of Life Improvements",
+    "artifactNotification": "New artifact notification – artifacts button now glows instead of auto-opening modal.",
+    "bossEffectFix": "Fixed boss visual effects sometimes not cleaning up properly.",
+    "v121Title": "What's New in 1.21.0",
+    "accessibility": "Accessibility Improvements",
+    "accessibilityFont": "Font customization option added for players with vision difficulties.",
+    "accessibilityScreenShake": "Screen shake option moved to accessibility settings to help with motion sickness.",
+    "hudUpdates": "HUD Updates",
+    "hudImprovements": "Enhanced HUD with improved income breakdown and better visual feedback.",
+    "newContent": "New Content",
+    "newBossLevel5": "New boss encounter added at level 5 – prepare for a unique challenge!",
+    "optimizations": "Performance Optimizations",
+    "generalOptimizations": "General performance improvements and code optimizations throughout the game."
   },
   "tutorialSplash": {
     "welcome": "Welcome to BOBBLE!",

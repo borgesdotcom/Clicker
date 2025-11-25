@@ -23,7 +23,7 @@ export class GameInfoModal {
 
   private createModal(): HTMLElement {
     const modal = document.createElement('div');
-    modal.className = 'modal game-info-modal';
+    modal.className = 'game-info-modal';
     modal.style.display = 'none';
     modal.innerHTML = `
       <div class="modal-content info-content">
@@ -49,11 +49,6 @@ export class GameInfoModal {
       this.hide();
     });
 
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
 
     // Tab switching
     const tabs = this.modal.querySelectorAll('.info-tab');
@@ -70,16 +65,15 @@ export class GameInfoModal {
   }
 
   show(): void {
-    this.modal.style.display = 'flex';
     this.renderTab('combat');
-    // Trigger animation
-    requestAnimationFrame(() => {
-      this.modal.classList.add('show');
-    });
+    document.body.style.overflow = 'hidden';
+    this.modal.style.display = 'flex';
+    this.modal.classList.add('show');
   }
 
   hide(): void {
     this.modal.classList.remove('show');
+    document.body.style.overflow = '';
     // Wait for animation to complete
     setTimeout(() => {
       this.modal.style.display = 'none';
@@ -180,7 +174,7 @@ export class GameInfoModal {
             <span class="info-value">${critDamageDisplay}</span>
           </div>
         </div>
-        <p class="info-note">💡 Critical hits only work on your clicks - fleet ships cannot crit!</p>
+        <p class="info-note">[TIP] Critical hits only work on your clicks - fleet ships cannot crit!</p>
       </div>
 
       <div class="info-section">
@@ -190,62 +184,56 @@ export class GameInfoModal {
         <p>• <strong>Critical Hits:</strong> Only clicks can crit - fleet ships deal consistent damage</p>
       </div>
 
-      ${
-        this.artifactSystem &&
+      ${this.artifactSystem &&
         (artifactDamageBonus > 0 ||
           artifactSpeedBonus > 0 ||
           artifactCritBonus > 0 ||
           artifactPointsBonus > 0 ||
           artifactXPBonus > 0)
-          ? `
+        ? `
       <div class="info-section">
         <h3><img src="${images.stars}" alt="Artifacts" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Artifact Bonuses</h3>
         <div class="info-grid">
-          ${
-            artifactDamageBonus > 0
-              ? `<div class="info-item">
+          ${artifactDamageBonus > 0
+          ? `<div class="info-item">
             <span class="info-label">Damage Bonus:</span>
             <span class="info-value">+${(artifactDamageBonus * 100).toFixed(1)}%</span>
           </div>`
-              : ''
-          }
-          ${
-            artifactSpeedBonus > 0
-              ? `<div class="info-item">
+          : ''
+        }
+          ${artifactSpeedBonus > 0
+          ? `<div class="info-item">
             <span class="info-label">Attack Speed Bonus:</span>
             <span class="info-value">+${(artifactSpeedBonus * 100).toFixed(1)}%</span>
           </div>`
-              : ''
-          }
-          ${
-            artifactCritBonus > 0
-              ? `<div class="info-item">
+          : ''
+        }
+          ${artifactCritBonus > 0
+          ? `<div class="info-item">
             <span class="info-label">Critical Bonus:</span>
             <span class="info-value">+${(artifactCritBonus * 100).toFixed(1)}%</span>
           </div>`
-              : ''
-          }
-          ${
-            artifactPointsBonus > 0
-              ? `<div class="info-item">
+          : ''
+        }
+          ${artifactPointsBonus > 0
+          ? `<div class="info-item">
             <span class="info-label">Points Bonus:</span>
             <span class="info-value">+${(artifactPointsBonus * 100).toFixed(1)}%</span>
           </div>`
-              : ''
-          }
-          ${
-            artifactXPBonus > 0
-              ? `<div class="info-item">
+          : ''
+        }
+          ${artifactXPBonus > 0
+          ? `<div class="info-item">
             <span class="info-label">XP Bonus:</span>
             <span class="info-value">+${(artifactXPBonus * 100).toFixed(1)}%</span>
           </div>`
-              : ''
-          }
+          : ''
+        }
         </div>
-        <p class="info-note">💡 Artifacts are found from boss kills and can be equipped/upgraded in the Artifacts menu</p>
+        <p class="info-note">[TIP] Artifacts are found from boss kills and can be equipped/upgraded in the Artifacts menu</p>
       </div>
       `
-          : ''
+        : ''
       }
     `;
   }
@@ -274,7 +262,7 @@ export class GameInfoModal {
             <span class="info-value">${xpMult.toFixed(2)}x (+${((xpMult - 1) * 100).toFixed(0)}%)</span>
           </div>
         </div>
-        <p class="info-note">💡 You gain 1 XP per enemy killed. Boss enemies give 10x XP!</p>
+        <p class="info-note">[TIP] You gain 1 XP per enemy killed. Boss enemies give 10x XP!</p>
       </div>
 
       <div class="info-section">
@@ -289,8 +277,8 @@ export class GameInfoModal {
             <span class="info-value">${NumberFormatter.format(passiveGen * 3600)}</span>
           </div>
         </div>
-        <p class="info-note">⚠️ "Boost All Systems" upgrades increase damage and fleet power, NOT passive generation!</p>
-        <p class="info-note">To increase passive income, upgrade the "🏭 Energy Reactor" system.</p>
+        <p class="info-note">[WARNING] "Boost All Systems" upgrades increase damage and fleet power, NOT passive generation!</p>
+        <p class="info-note">To increase passive income, upgrade the "Energy Reactor" system.</p>
       </div>
 
       <div class="info-section">
@@ -312,7 +300,7 @@ export class GameInfoModal {
           <li><strong>Bonus PP:</strong> 2x bonus for levels beyond your previous best!</li>
           <li><strong>Achievement Bonus:</strong> +1 PP per 10 achievements unlocked</li>
         </ul>
-        <p class="info-note">💡 To double your Prestige Points, you need to reach roughly 4x your previous level progress (square root scaling).</p>
+        <p class="info-note">[TIP] To double your Prestige Points, you need to reach roughly 4x your previous level progress (square root scaling).</p>
         <div class="info-grid">
           <div class="info-item">
             <span class="info-label">Can Ascend:</span>
@@ -323,9 +311,9 @@ export class GameInfoModal {
             <span class="info-value">${prestigePoints.toString()} Prestige Points</span>
           </div>
         </div>
-        <p class="info-note">💡 Prestige Points are earned for each NEW level beyond your previous best</p>
+        <p class="info-note">[TIP] Prestige Points are earned for each NEW level beyond your previous best</p>
         <p class="info-note">You keep: Achievements, Statistics, and Prestige Upgrades ONLY</p>
-        <p class="info-note">⚠️ You LOSE all special upgrades, regular upgrades, levels, and currency</p>
+        <p class="info-note">[WARNING] You LOSE all special upgrades, regular upgrades, levels, and currency</p>
       </div>
     `;
   }
@@ -336,8 +324,8 @@ export class GameInfoModal {
     return `
       <div class="info-section">
         <h3><img src="${images.graph}" alt="Cost Reduction" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Cost Reduction Systems</h3>
-        <p><strong>🌌 Cosmic Knowledge:</strong> -${cosmicDiscount.toFixed(1)}% to ALL costs</p>
-        <p class="info-note">💡 Stacks multiplicatively with Special Upgrade discounts!</p>
+        <p><strong>[COSMIC] Cosmic Knowledge:</strong> -${cosmicDiscount.toFixed(1)}% to ALL costs</p>
+        <p class="info-note">[TIP] Stacks multiplicatively with Special Upgrade discounts!</p>
       </div>
 
       <div class="info-section">
@@ -350,10 +338,10 @@ export class GameInfoModal {
 
       <div class="info-section">
         <h3><img src="${images.bossbattle}" alt="Enemy Types" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;" /> Enemy Types</h3>
-        <p><strong>🟢 Normal (≈60%):</strong> Standard HP and rewards</p>
-        <p><strong>🟡 Scout (≈20%):</strong> 50% HP, 2× speed, 70% size, 1.5× points</p>
-        <p><strong>🔴 Tank (≈15%):</strong> 3× HP, 0.5× speed, 140% size, 2.5× points</p>
-        <p><strong>🟢 Healer (≈5%):</strong> 80% HP, 80% speed, regenerates, 3× points</p>
+        <p><strong>[NORMAL] Normal (≈60%):</strong> Standard HP and rewards</p>
+        <p><strong>[SCOUT] Scout (≈20%):</strong> 50% HP, 2× speed, 70% size, 1.5× points</p>
+        <p><strong>[TANK] Tank (≈15%):</strong> 3× HP, 0.5× speed, 140% size, 2.5× points</p>
+        <p><strong>[HEALER] Healer (≈5%):</strong> 80% HP, 80% speed, regenerates, 3× points</p>
       </div>
 
       <div class="info-section">
@@ -372,7 +360,7 @@ export class GameInfoModal {
         <p>• Meeting level requirements for the base upgrade</p>
         <p>• Having 40% of the cost (technology becomes visible)</p>
         <p>• Purchasing with accumulated points</p>
-        <p class="info-note">⚠️ Special Upgrades are LOST on ascension - buy them again with your prestige bonuses!</p>
+        <p class="info-note">[WARNING] Special Upgrades are LOST on ascension - buy them again with your prestige bonuses!</p>
       </div>
     `;
   }

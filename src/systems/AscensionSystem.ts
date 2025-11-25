@@ -24,114 +24,114 @@ export class AscensionSystem {
         id: 'prestige_damage',
         name: 'Eternal Power',
         description: 'Permanently increase all damage',
-        cost: 1,
-        maxLevel: 100, // Extended for late game
+        cost: Config.ascension.upgrades.damage.costPerLevel,
+        maxLevel: Config.ascension.upgrades.damage.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_damage ?? 0,
-        effect: '+15% damage per level',
+        effect: `+${Config.ascension.upgrades.damage.multiplierPerLevel * 100}% damage per level`,
       },
       {
         id: 'prestige_points',
         name: 'Cosmic Fortune',
         description: 'Permanently increase point gains',
-        cost: 1,
-        maxLevel: 100, // Extended for late game
+        cost: Config.ascension.upgrades.points.costPerLevel,
+        maxLevel: Config.ascension.upgrades.points.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_points ?? 0,
-        effect: '+20% points per level',
+        effect: `+${Config.ascension.upgrades.points.multiplierPerLevel * 100}% points per level`,
       },
       {
         id: 'prestige_xp',
         name: 'Ancient Wisdom',
         description: 'Permanently increase XP gains',
-        cost: 1,
-        maxLevel: 100, // Extended for late game
+        cost: Config.ascension.upgrades.xp.costPerLevel,
+        maxLevel: Config.ascension.upgrades.xp.maxLevel,
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_xp ?? 0,
-        effect: '+25% XP per level',
+        effect: `+${Config.ascension.upgrades.xp.multiplierPerLevel * 100}% XP per level`,
       },
       {
         id: 'prestige_crit',
         name: 'Lucky Stars',
         description: 'Permanently increase critical hit chance',
-        cost: 2,
-        maxLevel: 50, // Extended for late game
+        cost: Config.ascension.upgrades.crit.costPerLevel,
+        maxLevel: Config.ascension.upgrades.crit.maxLevel,
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_crit ?? 0,
-        effect: '+2% crit chance per level',
+        effect: `+${Config.ascension.upgrades.crit.bonusPerLevel}% crit chance per level`,
       },
       {
         id: 'prestige_passive',
         name: 'Idle Mastery',
         description: 'Permanently increase passive generation',
-        cost: 2,
-        maxLevel: 75, // Extended for late game
+        cost: Config.ascension.upgrades.passive.costPerLevel,
+        maxLevel: Config.ascension.upgrades.passive.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_passive ?? 0,
-        effect: '+30% passive per level',
+        effect: `+${Config.ascension.upgrades.passive.multiplierPerLevel * 100}% passive per level`,
       },
       {
         id: 'prestige_speed',
         name: 'Time Dilation',
         description: 'Permanently increase attack speed',
-        cost: 3,
-        maxLevel: 50, // Extended for late game
+        cost: Config.ascension.upgrades.speed.costPerLevel,
+        maxLevel: Config.ascension.upgrades.speed.maxLevel,
         getCurrentLevel: (state) => state.prestigeUpgrades?.prestige_speed ?? 0,
-        effect: '+5% attack speed per level',
+        effect: `+${Config.ascension.upgrades.speed.multiplierPerLevel * 100}% attack speed per level`,
       },
       {
         id: 'prestige_starting_level',
         name: 'Head Start',
         description: 'Start at a higher level after ascension',
-        cost: 5,
-        maxLevel: 20, // Extended to allow starting at level 100
+        cost: Config.ascension.upgrades.startingLevel.costPerLevel,
+        maxLevel: Config.ascension.upgrades.startingLevel.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_starting_level ?? 0,
-        effect: 'Start +5 levels per level',
+        effect: `Start +${Config.ascension.upgrades.startingLevel.levelsPerUpgrade} levels per level`,
       },
       {
         id: 'prestige_retain_upgrades',
         name: 'Persistent Memory',
         description: 'Retain a percentage of upgrade levels',
-        cost: 10,
-        maxLevel: 10, // Extended for late game
+        cost: Config.ascension.upgrades.retainUpgrades.costPerLevel,
+        maxLevel: Config.ascension.upgrades.retainUpgrades.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_retain_upgrades ?? 0,
-        effect: 'Retain +1% upgrades per level',
+        effect: `Retain +${Config.ascension.upgrades.retainUpgrades.percentagePerLevel}% upgrades per level`,
       },
       {
         id: 'prestige_boss_power',
         name: 'Boss Slayer',
         description: 'Deal extra damage to bosses',
-        cost: 3,
-        maxLevel: 50,
+        cost: Config.ascension.upgrades.bossPower.costPerLevel,
+        maxLevel: Config.ascension.upgrades.bossPower.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_boss_power ?? 0,
-        effect: '+20% boss damage per level',
+        effect: `+${Config.ascension.upgrades.bossPower.multiplierPerLevel * 100}% boss damage per level`,
       },
       {
         id: 'prestige_combo_boost',
         name: 'Combo Master',
         description: 'Combo multiplier builds faster',
-        cost: 5,
-        maxLevel: 20,
+        cost: Config.ascension.upgrades.comboBoost.costPerLevel,
+        maxLevel: Config.ascension.upgrades.comboBoost.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_combo_boost ?? 0,
-        effect: '+0.0005× combo per level (total +0.001×)',
+        effect: `+${Config.ascension.upgrades.comboBoost.baseMultiplier}× combo per level (total +${Config.ascension.upgrades.comboBoost.baseMultiplier + Config.ascension.upgrades.comboBoost.bonusPerLevel}×)`,
       },
       {
         id: 'prestige_combo_duration',
         name: 'Combo Persistence',
         description: 'Increase combo duration before it resets',
-        cost: 4,
-        maxLevel: 25,
+        cost: Config.ascension.upgrades.comboDuration.costPerLevel,
+        maxLevel: Config.ascension.upgrades.comboDuration.maxLevel,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.prestige_combo_duration ?? 0,
-        effect: '+1 second duration per level',
+        effect: `+${Config.ascension.upgrades.comboDuration.secondsPerLevel} second duration per level`,
       },
       {
         id: 'auto_buy_unlock',
         name: 'Auto-Buy Protocol',
         description: 'Unlock automatic purchase of affordable upgrades',
-        cost: 50,
+        cost: Config.ascension.upgrades.autoBuyUnlock.cost,
         maxLevel: 1,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.auto_buy_unlock ?? 0,
@@ -141,7 +141,7 @@ export class AscensionSystem {
         id: 'combo_pause_unlock',
         name: 'Combo Freeze',
         description: 'Unlock ability to pause combo timer for 15 minutes',
-        cost: 30,
+        cost: Config.ascension.upgrades.comboPauseUnlock.cost,
         maxLevel: 1,
         getCurrentLevel: (state) =>
           state.prestigeUpgrades?.combo_pause_unlock ?? 0,
@@ -156,7 +156,7 @@ export class AscensionSystem {
 
   calculatePrestigePoints(state: GameState): number {
     const breakdown = this.calculatePrestigePointsBreakdown(state);
-    let total = breakdown.base + breakdown.bonus;
+    let total = breakdown.base + breakdown.achievementBonus + breakdown.bonus;
 
     // Transcendence upgrade: x2 prestige points
     if (state.subUpgrades?.['transcendence']) {
@@ -168,6 +168,7 @@ export class AscensionSystem {
 
   calculatePrestigePointsBreakdown(state: GameState): {
     base: number;
+    achievementBonus: number;
     bonus: number;
     previousBest: number;
   } {
@@ -177,6 +178,7 @@ export class AscensionSystem {
     if (state.level < config.baseLevel) {
       return {
         base: 0,
+        achievementBonus: 0,
         bonus: 0,
         previousBest: state.highestLevelReached ?? 0,
       };
@@ -207,9 +209,8 @@ export class AscensionSystem {
       }
     }
 
-    // Achievement bonus (always available)
+    // Achievement bonus (always available) - keep separate from base
     const achievementBonus = this.calculateAchievementBonus(state);
-    basePoints += achievementBonus;
 
     // Part III: Bonus for surpassing previous best (lifetime-based system)
     // This encourages players to push further each run
@@ -245,6 +246,7 @@ export class AscensionSystem {
 
     return {
       base: Math.max(0, basePoints),
+      achievementBonus: Math.max(0, achievementBonus),
       bonus: Math.max(0, bonusPoints),
       previousBest: effectivePreviousBest,
     };
@@ -257,7 +259,9 @@ export class AscensionSystem {
     const achievementCount = Object.values(state.achievements).filter(
       (unlocked) => unlocked,
     ).length;
-    bonus += Math.floor(achievementCount / 10); // +1 PP per 10 achievements
+    const achievementsPerPP =
+      Config.ascension.prestigePointCalculation.achievementBonus.achievementsPerPP;
+    bonus += Math.floor(achievementCount / achievementsPerPP);
 
     return bonus;
   }
@@ -280,64 +284,69 @@ export class AscensionSystem {
 
   getDamageMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_damage ?? 0;
-    // Improved scaling: each level gives meaningful boost
-    // Following idle game principles: prestige should provide clear acceleration
-    return 1 + level * 0.15; // Increased from 0.1 to 0.15 (15% per level)
+    const multiplierPerLevel = Config.ascension.upgrades.damage.multiplierPerLevel;
+    return 1 + level * multiplierPerLevel;
   }
 
   getPointsMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_points ?? 0;
-    // Points are the primary currency, so they get a good boost
-    return 1 + level * 0.2; // Increased from 0.15 to 0.2 (20% per level)
+    const multiplierPerLevel = Config.ascension.upgrades.points.multiplierPerLevel;
+    return 1 + level * multiplierPerLevel;
   }
 
   getXPMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_xp ?? 0;
-    // XP helps reach prestige faster, so it's valuable
-    return 1 + level * 0.25; // Increased from 0.2 to 0.25 (25% per level)
+    const multiplierPerLevel = Config.ascension.upgrades.xp.multiplierPerLevel;
+    return 1 + level * multiplierPerLevel;
   }
 
   getCritBonus(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_crit ?? 0;
-    return level * 2;
+    const bonusPerLevel = Config.ascension.upgrades.crit.bonusPerLevel;
+    return level * bonusPerLevel;
   }
 
   getPassiveMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_passive ?? 0;
-    // Passive generation is crucial for idle gameplay
-    return 1 + level * 0.3; // Increased from 0.25 to 0.3 (30% per level)
+    const multiplierPerLevel = Config.ascension.upgrades.passive.multiplierPerLevel;
+    return 1 + level * multiplierPerLevel;
   }
 
   getSpeedMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_speed ?? 0;
-    return 1 + level * 0.05;
+    const multiplierPerLevel = Config.ascension.upgrades.speed.multiplierPerLevel;
+    return 1 + level * multiplierPerLevel;
   }
 
   getStartingLevel(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_starting_level ?? 0;
-    return 1 + level * 5;
+    const levelsPerUpgrade = Config.ascension.upgrades.startingLevel.levelsPerUpgrade;
+    return 1 + level * levelsPerUpgrade;
   }
 
   getRetainPercentage(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_retain_upgrades ?? 0;
-    return level * 0.01;
+    const percentagePerLevel = Config.ascension.upgrades.retainUpgrades.percentagePerLevel;
+    return level * (percentagePerLevel / 100);
   }
 
   getBossDamageMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_boss_power ?? 0;
-    return 1 + level * 0.2;
+    const multiplierPerLevel = Config.ascension.upgrades.bossPower.multiplierPerLevel;
+    return 1 + level * multiplierPerLevel;
   }
 
   getComboBoostMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_combo_boost ?? 0;
-    // Adds extra combo multiplier rate
-    return 0.0005 + level * 0.00035;
+    const baseMultiplier = Config.ascension.upgrades.comboBoost.baseMultiplier;
+    const bonusPerLevel = Config.ascension.upgrades.comboBoost.bonusPerLevel;
+    return baseMultiplier + level * bonusPerLevel;
   }
 
   getComboDurationBonus(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_combo_duration ?? 0;
-    // Adds +1 second per level to base combo duration
-    return level * 1.0;
+    const secondsPerLevel = Config.ascension.upgrades.comboDuration.secondsPerLevel;
+    return level * secondsPerLevel;
   }
 
   isAutoBuyUnlocked(state: GameState): boolean {
@@ -357,10 +366,11 @@ export class AscensionSystem {
     const currentLevel = upgrade.getCurrentLevel(state);
     if (currentLevel >= upgrade.maxLevel) return Infinity;
 
-    // Scale cost based on current level: baseCost * (1.15 ^ currentLevel)
+    // Scale cost based on current level: baseCost * (exponentialBase ^ currentLevel)
     // This makes each level progressively more expensive
     const baseCost = upgrade.cost;
-    const scaledCost = Math.floor(baseCost * Math.pow(1.15, currentLevel));
+    const exponentialBase = Config.ascension.costScaling.exponentialBase;
+    const scaledCost = Math.floor(baseCost * Math.pow(exponentialBase, currentLevel));
 
     return scaledCost;
   }
@@ -393,11 +403,12 @@ export class AscensionSystem {
 
   /**
    * Get income multiplier from unspent prestige points
-   * Each unspent PP gives +1% to all income (points from clicks, kills, and passive generation)
+   * Each unspent PP gives +5% to all income (points from clicks, kills, and passive generation)
    */
   getUnspentPPMultiplier(state: GameState): number {
     const unspentPP = state.prestigePoints ?? 0;
-    // 0.25% per point: 1 + (unspentPP * 0.0025)
-    return 1 + unspentPP * 0.0025;
+    const percentagePerPP = Config.ascension.unspentPPMultiplier.percentagePerPP;
+    // Convert percentage to multiplier: 1 + (unspentPP * percentagePerPP / 100)
+    return 1 + (unspentPP * percentagePerPP) / 100;
   }
 }

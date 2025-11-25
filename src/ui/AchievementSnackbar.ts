@@ -28,8 +28,10 @@ export class AchievementSnackbar {
     // Create snackbar element
     const snackbar = document.createElement('div');
     snackbar.className = 'achievement-snackbar';
+    const iconImg = `<img src="${achievement.icon}" alt="Star" style="width: 64px; height: 64px; image-rendering: pixelated;" />`;
+    
     snackbar.innerHTML = `
-      <div class="achievement-icon">${achievement.icon}</div>
+      <div class="achievement-icon">${iconImg}</div>
       <div class="achievement-content">
         <div class="achievement-title">Achievement Unlocked!</div>
         <div class="achievement-name">${achievement.name}</div>

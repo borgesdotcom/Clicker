@@ -16,7 +16,7 @@ export class AchievementsModal {
   private createModal(): HTMLElement {
     const modal = document.createElement('div');
     modal.id = 'achievements-modal';
-    modal.className = 'modal';
+    modal.className = 'achievements-modal';
     modal.style.display = 'none';
 
     modal.innerHTML = `
@@ -36,11 +36,11 @@ export class AchievementsModal {
         </div>
         <div class="achievements-filters">
           <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="combat">⚔️ Combat</button>
-          <button class="filter-btn" data-filter="progression">📈 Progression</button>
-          <button class="filter-btn" data-filter="collection">📦 Collection</button>
-          <button class="filter-btn" data-filter="mastery">👑 Mastery</button>
-          <button class="filter-btn" data-filter="secret">🔒 Secret</button>
+          <button class="filter-btn" data-filter="combat">Combat</button>
+          <button class="filter-btn" data-filter="progression">Progression</button>
+          <button class="filter-btn" data-filter="collection">Collection</button>
+          <button class="filter-btn" data-filter="mastery">Mastery</button>
+          <button class="filter-btn" data-filter="secret">Secret</button>
         </div>
         <div class="achievements-grid" id="achievements-grid"></div>
       </div>
@@ -58,11 +58,6 @@ export class AchievementsModal {
       });
     }
 
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
 
     const filterBtns = this.modal.querySelectorAll('.filter-btn');
     filterBtns.forEach((btn) => {
@@ -97,15 +92,14 @@ export class AchievementsModal {
 
   show(): void {
     this.update();
+    document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
-    // Trigger animation
-    requestAnimationFrame(() => {
-      this.modal.classList.add('show');
-    });
+    this.modal.classList.add('show');
   }
 
   hide(): void {
     this.modal.classList.remove('show');
+    document.body.style.overflow = '';
     // Wait for animation to complete
     setTimeout(() => {
       this.modal.style.display = 'none';
@@ -138,15 +132,17 @@ export class AchievementsModal {
         const isLocked = !achievement.unlocked;
         const isHidden = isLocked && achievement.hidden;
 
+        const iconImg = `<img src="${achievement.icon}" alt="Star" style="width: 64px; height: 64px; image-rendering: pixelated;" />`;
+        
         return `
         <div class="achievement-item ${isLocked ? 'locked' : 'unlocked'}" data-category="${achievement.category}">
-          <div class="achievement-icon-large ${isLocked ? 'grayscale' : ''}">${achievement.icon}</div>
+          <div class="achievement-icon-large ${isLocked ? 'grayscale' : ''}">${iconImg}</div>
           <div class="achievement-details">
             <div class="achievement-item-name">${isHidden ? '???' : achievement.name}</div>
             <div class="achievement-item-desc">${isHidden ? 'Hidden achievement' : achievement.description}</div>
             <div class="achievement-category-badge ${achievement.category}">${this.getCategoryLabel(achievement.category)}</div>
           </div>
-          ${isLocked ? '<div class="achievement-lock">🔒</div>' : '<div class="achievement-checkmark">✓</div>'}
+          ${isLocked ? '' : '<div class="achievement-checkmark">✓</div>'}
         </div>
       `;
       })
@@ -155,11 +151,11 @@ export class AchievementsModal {
 
   private getCategoryLabel(category: string): string {
     const labels: Record<string, string> = {
-      combat: '⚔️ Combat',
-      progression: '📈 Progression',
-      collection: '📦 Collection',
-      mastery: '👑 Mastery',
-      secret: '🔒 Secret',
+      combat: 'Combat',
+      progression: 'Progression',
+      collection: 'Collection',
+      mastery: 'Mastery',
+      secret: 'Secret',
     };
     return labels[category] || category;
   }

@@ -18,7 +18,7 @@
     "japanese": "Japonês"
   },
   "settings": {
-    "title": "⚙️ Configurações",
+    "title": "Configurações",
     "soundSettings": "Configurações de Áudio",
     "graphicsSettings": "Configurações de Gráficos",
     "languageSettings": "Configurações de Idioma",
@@ -37,13 +37,17 @@
     "screenShakeHint": "Ative efeitos de tremor de tela para momentos impactantes.",
     "lcdFilter": "Filtro LCD",
     "lcdFilterHint": "Efeito sutil de monitor LCD retrô com grade de pixels",
-    "saveDataActions": "💾 Dados Salvos e Ações",
+    "saveDataActions": "Dados Salvos e Ações",
     "exportSave": "EXPORTAR DADOS",
     "importSave": "IMPORTAR DADOS",
-    "resetSaveButton": "⚠️ Resetar Salvo",
+    "resetSaveButton": "Resetar Salvo",
     "resetConfirm": "Tem certeza que deseja resetar todo o progresso? Isso não pode ser desfeito.",
     "language": "Idioma:",
-    "languageHint": "Alterar o idioma do jogo"
+    "languageHint": "Alterar o idioma do jogo",
+    "accessibilitySettings": "Configurações de Acessibilidade",
+    "fontFamily": "Fonte:",
+    "fontDefault": "Padrão (Courier New)",
+    "fontFamilyWarning": "⚠️ AVISO: Mudar a fonte pode quebrar alguns elementos da interface. O jogo foi projetado pensando na fonte padrão."
   },
   "hud": {
     "points": "Moonies",
@@ -272,7 +276,21 @@
     "screenShakeFix": "Opção de desativar tremor de tela agora funciona corretamente durante lutas de boss.",
     "omegaFilter": "Reduzida intensidade do filtro amarelo do Omega Core (Boss 100).",
     "rainbowLaser": "Renderização do laser arco-íris otimizada para jogabilidade mais suave.",
-    "tipSpace": "Experimente segurar Espaço durante lutas de boss para dano sustentado enquanto desvia de efeitos visuais!"
+    "tipSpace": "Experimente segurar Espaço durante lutas de boss para dano sustentado enquanto desvia de efeitos visuais!",
+    "v120Title": "Novidades da Versão 1.20.0",
+    "qualityOfLife": "Melhorias de Qualidade de Vida",
+    "artifactNotification": "Nova notificação de artefato – o botão de artefatos agora brilha em vez de abrir o modal automaticamente.",
+    "bossEffectFix": "Corrigido efeitos visuais de boss às vezes não sendo limpos corretamente.",
+    "v121Title": "Novidades da Versão 1.21.0",
+    "accessibility": "Melhorias de Acessibilidade",
+    "accessibilityFont": "Opção de personalização de fonte adicionada para jogadores com dificuldades visuais.",
+    "accessibilityScreenShake": "Opção de vibração de tela movida para configurações de acessibilidade para ajudar com enjoos de movimento.",
+    "hudUpdates": "Atualizações do HUD",
+    "hudImprovements": "HUD aprimorado com melhor detalhamento de renda e feedback visual melhorado.",
+    "newContent": "Novo Conteúdo",
+    "newBossLevel5": "Novo encontro de boss adicionado no nível 5 – prepare-se para um desafio único!",
+    "optimizations": "Otimizações de Performance",
+    "generalOptimizations": "Melhorias gerais de performance e otimizações de código em todo o jogo."
   },
   "tutorialSplash": {
     "welcome": "Bem-vindo ao BOBBLE!",

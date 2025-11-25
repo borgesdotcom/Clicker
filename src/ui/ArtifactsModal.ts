@@ -1,6 +1,7 @@
 import type { ArtifactSystem } from '../systems/ArtifactSystem';
 import type { Store } from '../core/Store';
 import { images, resolveArtifactIcon } from '../assets/images';
+import { alertDialog } from './AlertDialog';
 
 export class ArtifactsModal {
   private modal: HTMLElement;
@@ -10,6 +11,8 @@ export class ArtifactsModal {
   private currentFilter: string = 'all';
   private isFusionMode: boolean = false;
   private selectedArtifactIds: Set<string> = new Set();
+  private currentPage: number = 1;
+  private itemsPerPage: number = 10;
 
   constructor(artifactSystem: ArtifactSystem, store: Store) {
     this.artifactSystem = artifactSystem;
@@ -22,7 +25,7 @@ export class ArtifactsModal {
   private createModal(): HTMLElement {
     const modal = document.createElement('div');
     modal.id = 'artifacts-modal';
-    modal.className = 'modal';
+    modal.className = 'artifacts-modal';
     modal.style.display = 'none';
 
     modal.innerHTML = `
@@ -54,6 +57,22 @@ export class ArtifactsModal {
               </div>
             </div>
           </div>
+          <div class="artifacts-pagination-controls" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="color: #fffae5; font-family: var(--font-family); font-size: 12px;">Items per page:</label>
+              <select id="items-per-page-select" style="background: var(--bg-rpg-box); border: var(--border-rpg); color: #fffae5; font-family: var(--font-family); padding: 4px 8px; font-size: 12px; cursor: pointer;">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="0">All</option>
+              </select>
+            </div>
+            <div id="pagination-info" style="color: #fffae5; font-family: var(--font-family); font-size: 12px;"></div>
+            <div style="display: flex; gap: 8px;">
+              <button id="prev-page-btn" class="filter-btn" style="padding: 6px 12px; font-size: 12px;">« Prev</button>
+              <button id="next-page-btn" class="filter-btn" style="padding: 6px 12px; font-size: 12px;">Next »</button>
+            </div>
+          </div>
           <div class="artifacts-inventory" id="artifacts-list"></div>
         </div>
       </div>
@@ -68,11 +87,6 @@ export class ArtifactsModal {
       this.hide();
     });
 
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
 
     // Filter buttons
     const filterBtns = this.modal.querySelectorAll('.filter-btn');
@@ -83,6 +97,7 @@ export class ArtifactsModal {
         const filter = btn.getAttribute('data-filter');
         if (filter) {
           this.currentFilter = filter;
+          this.currentPage = 1; // Reset to first page when filter changes
 
           // Update active class
           this.modal.querySelectorAll('.filter-btn').forEach((b) => {
@@ -108,6 +123,7 @@ export class ArtifactsModal {
         // Force filter to 'common' if currently on 'all' or 'equipped' to help user start
         if (this.currentFilter === 'all' || this.currentFilter === 'equipped') {
           this.currentFilter = 'common';
+          this.currentPage = 1; // Reset to first page when filter changes
           // Update filter buttons UI
           this.modal.querySelectorAll('.filter-btn').forEach((b) => {
             if (b.getAttribute('data-filter') === 'common')
@@ -124,7 +140,7 @@ export class ArtifactsModal {
 
     // Fuse Action Button
     const fuseActionBtn = this.modal.querySelector('#fuse-action-btn');
-    fuseActionBtn?.addEventListener('click', () => {
+    fuseActionBtn?.addEventListener('click', async () => {
       if (this.selectedArtifactIds.size !== 3) return;
 
       const state = this.store.getState();
@@ -139,8 +155,9 @@ export class ArtifactsModal {
       const currentPP = state.prestigePoints || 0;
 
       if (currentPP < cost) {
-        alert(
+        await alertDialog.alert(
           `Not enough Prestige Points! Need ${cost} PP, but you have ${currentPP} PP.`,
+          'Fusion',
         );
         return;
       }
@@ -154,13 +171,50 @@ export class ArtifactsModal {
         state.prestigePoints = currentPP - result.cost;
         this.store.setState(state);
 
-        alert(
+        await alertDialog.alert(
           `Fusion Successful! Obtained ${result.newArtifact.name} (${result.newArtifact.rarity}) for ${result.cost} PP`,
+          'Fusion',
         );
         this.selectedArtifactIds.clear();
         this.render();
       } else {
-        alert(`Fusion Failed: ${result.reason}`);
+        await alertDialog.alert(`Fusion Failed: ${result.reason}`, 'Fusion');
+      }
+    });
+
+    // Pagination controls
+    const itemsPerPageSelect = this.modal.querySelector('#items-per-page-select') as HTMLSelectElement;
+    itemsPerPageSelect.value = String(this.itemsPerPage);
+    itemsPerPageSelect.addEventListener('change', () => {
+      this.itemsPerPage = itemsPerPageSelect.value === '0' ? 0 : parseInt(itemsPerPageSelect.value, 10);
+      this.currentPage = 1; // Reset to first page when changing items per page
+      this.render();
+    });
+
+    const prevPageBtn = this.modal.querySelector('#prev-page-btn');
+    prevPageBtn?.addEventListener('click', () => {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.render();
+      }
+    });
+
+    const nextPageBtn = this.modal.querySelector('#next-page-btn');
+    nextPageBtn?.addEventListener('click', () => {
+      // Get total pages to check if we can advance
+      const artifacts = this.artifactSystem.getArtifacts();
+      let filteredArtifacts = artifacts;
+      if (this.currentFilter === 'equipped') {
+        filteredArtifacts = artifacts.filter((a) => a.equipped);
+      } else if (this.currentFilter !== 'all') {
+        filteredArtifacts = artifacts.filter((a) => a.rarity === this.currentFilter);
+      }
+      const itemsPerPage = this.itemsPerPage === 0 ? filteredArtifacts.length : this.itemsPerPage;
+      const totalPages = itemsPerPage === 0 ? 1 : Math.ceil(filteredArtifacts.length / itemsPerPage);
+
+      if (this.currentPage < totalPages) {
+        this.currentPage++;
+        this.render();
       }
     });
   }
@@ -171,16 +225,17 @@ export class ArtifactsModal {
     if (bossDialog && bossDialog.style.display !== 'none') {
       bossDialog.style.display = 'none';
     }
+    // Reset to first page when opening modal
+    this.currentPage = 1;
+    document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
+    this.modal.classList.add('show');
     this.render();
-    // Trigger animation
-    requestAnimationFrame(() => {
-      this.modal.classList.add('show');
-    });
   }
 
   public hide(): void {
     this.modal.classList.remove('show');
+    document.body.style.overflow = '';
     // Wait for animation to complete
     setTimeout(() => {
       this.modal.style.display = 'none';
@@ -273,7 +328,50 @@ export class ArtifactsModal {
       return rarityOrder[a.rarity] - rarityOrder[b.rarity];
     });
 
-    container.innerHTML = sortedArtifacts
+    // Pagination logic
+    const totalItems = sortedArtifacts.length;
+    const itemsPerPage = this.itemsPerPage === 0 ? totalItems : this.itemsPerPage;
+    const totalPages = itemsPerPage === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
+
+    // Ensure current page is valid
+    if (this.currentPage > totalPages) {
+      this.currentPage = totalPages || 1;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
+    }
+
+    // Get artifacts for current page
+    const startIndex = itemsPerPage === 0 ? 0 : (this.currentPage - 1) * itemsPerPage;
+    const endIndex = itemsPerPage === 0 ? totalItems : startIndex + itemsPerPage;
+    const paginatedArtifacts = sortedArtifacts.slice(startIndex, endIndex);
+
+    // Update pagination controls
+    const paginationInfo = this.modal.querySelector('#pagination-info');
+    if (paginationInfo) {
+      if (itemsPerPage === 0 || totalPages === 0) {
+        paginationInfo.textContent = `Showing all ${totalItems} items`;
+      } else {
+        paginationInfo.textContent = `Page ${this.currentPage} of ${totalPages} (${totalItems} total)`;
+      }
+    }
+
+    const prevPageBtn = this.modal.querySelector('#prev-page-btn') as HTMLButtonElement;
+    const nextPageBtn = this.modal.querySelector('#next-page-btn') as HTMLButtonElement;
+
+    if (prevPageBtn) {
+      prevPageBtn.disabled = this.currentPage <= 1;
+      prevPageBtn.style.opacity = this.currentPage <= 1 ? '0.5' : '1';
+      prevPageBtn.style.cursor = this.currentPage <= 1 ? 'not-allowed' : 'pointer';
+    }
+
+    if (nextPageBtn) {
+      nextPageBtn.disabled = this.currentPage >= totalPages;
+      nextPageBtn.style.opacity = this.currentPage >= totalPages ? '0.5' : '1';
+      nextPageBtn.style.cursor = this.currentPage >= totalPages ? 'not-allowed' : 'pointer';
+    }
+
+    container.innerHTML = paginatedArtifacts
       .map((artifact) => {
         const color = this.artifactSystem.getRarityColor(artifact.rarity);
         const upgradeCost = this.artifactSystem.getUpgradeCostForDisplay(
@@ -313,12 +411,11 @@ export class ArtifactsModal {
           <div class="artifact-slot-glow" style="background: radial-gradient(circle, ${color}25 0%, transparent 70%);"></div>
           <div class="artifact-slot-icon rarity-${artifact.rarity}" style="background: linear-gradient(135deg, ${color}25, ${color}08); border-color: ${color}40;">
             <div class="artifact-icon-large" style="${artifact.icon.startsWith('/') || artifact.icon.startsWith('http') ? '' : `filter: drop-shadow(0 0 10px ${color});`}">
-              ${
-                artifact.icon.startsWith('/') ||
-                artifact.icon.startsWith('http')
-                  ? `<img src="${resolveArtifactIcon(artifact.icon)}" alt="${artifact.name}" style="filter: drop-shadow(0 0 10px ${color});" />`
-                  : artifact.icon
-              }
+              ${artifact.icon.startsWith('/') ||
+            artifact.icon.startsWith('http')
+            ? `<img src="${resolveArtifactIcon(artifact.icon)}" alt="${artifact.name}" style="filter: drop-shadow(0 0 10px ${color});" />`
+            : artifact.icon
+          }
             </div>
             ${artifact.equipped ? '<div class="equipped-badge">✓</div>' : ''}
             ${isSelected ? '<div class="selected-badge" style="position: absolute; top: -5px; right: -5px; background: #2ecc71; color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">✓</div>' : ''}
@@ -334,30 +431,28 @@ export class ArtifactsModal {
               <span class="level-value">${artifact.level.toString()}/${artifact.maxLevel.toString()}</span>
             </div>
           </div>
-          ${
-            !this.isFusionMode
-              ? `
+          ${!this.isFusionMode
+            ? `
           <div class="artifact-slot-actions">
             <button class="artifact-action-btn equip-btn ${artifact.equipped ? 'active' : ''}" data-id="${artifact.id}" data-action="equip" title="${artifact.equipped ? 'Unequip' : 'Equip'}">
               <span class="btn-icon">${artifact.equipped ? '✓' : '⚔'}</span>
             </button>
-            ${
-              canUpgrade
-                ? `<button class="artifact-action-btn upgrade-btn ${state.points >= upgradeCost ? '' : 'disabled'}" 
+            ${canUpgrade
+              ? `<button class="artifact-action-btn upgrade-btn ${state.points >= upgradeCost ? '' : 'disabled'}" 
                       data-id="${artifact.id}" 
                       data-action="upgrade"
                       ${state.points < upgradeCost ? 'disabled' : ''}
                       title="Upgrade: ${upgradeCost.toLocaleString()}">
                   <span class="btn-icon">⬆</span>
                 </button>`
-                : ''
+              : ''
             }
             <button class="artifact-action-btn sell-btn" data-id="${artifact.id}" data-action="sell" title="Sell for ${sellValue.toLocaleString()} points">
               <span class="btn-icon">💰</span>
             </button>
           </div>
           `
-              : ''
+            : ''
           }
         </div>
       `;
@@ -402,7 +497,7 @@ export class ArtifactsModal {
     } else {
       // Action listeners (Equip/Upgrade/Sell)
       container.querySelectorAll('.artifact-action-btn').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const id = btn.getAttribute('data-id');
           const action = btn.getAttribute('data-action');
@@ -426,11 +521,11 @@ export class ArtifactsModal {
             }
           } else if (action === 'sell') {
             const sellValue = this.artifactSystem.getSellValue(id);
-            if (
-              confirm(
-                `Sell ${this.artifactSystem.getArtifacts().find((a) => a.id === id)?.name} for ${sellValue.toLocaleString()} points?`,
-              )
-            ) {
+            const confirmed = await alertDialog.confirm(
+              `Sell ${this.artifactSystem.getArtifacts().find((a) => a.id === id)?.name} for ${sellValue.toLocaleString()} points?`,
+              'Sell Artifact',
+            );
+            if (confirmed) {
               const pointsGained = this.artifactSystem.sellArtifact(id);
               state.points += pointsGained;
               this.store.setState(state);

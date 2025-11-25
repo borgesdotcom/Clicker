@@ -1,4 +1,5 @@
 import { PerformanceMode } from '../systems/PerformanceModeManager';
+import { SAVE } from '../config/constants';
 
 export interface UserSettings {
   soundEnabled: boolean;
@@ -12,12 +13,13 @@ export interface UserSettings {
   particleQuality: 'high' | 'medium' | 'low';
   enableVisualEffects: boolean;
   screenShakeEnabled: boolean;
+  fontFamily: string;
 }
 
 // Partial type for loading from storage
 type PartialUserSettings = Partial<UserSettings>;
 
-const SETTINGS_KEY = 'alien-clicker-settings';
+const SETTINGS_KEY = SAVE.SETTINGS_KEY;
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Settings {
@@ -50,6 +52,7 @@ export class Settings {
           particleQuality: data.particleQuality ?? 'high',
           enableVisualEffects: data.enableVisualEffects ?? true,
           screenShakeEnabled: data.screenShakeEnabled ?? true,
+          fontFamily: data.fontFamily ?? "'Courier New', 'Courier', monospace",
         };
       }
     } catch (error) {
@@ -71,6 +74,7 @@ export class Settings {
       particleQuality: 'high',
       enableVisualEffects: true,
       screenShakeEnabled: true,
+      fontFamily: "'Courier New', 'Courier', monospace",
     };
   }
 }

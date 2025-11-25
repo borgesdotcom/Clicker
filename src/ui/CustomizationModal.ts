@@ -27,14 +27,20 @@ export class CustomizationModal {
 
   show(): void {
     if (!this.modal) return;
-    this.modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    this.modal.style.display = 'flex';
+    this.modal.classList.add('show');
   }
 
   hide(): void {
     if (!this.modal) return;
-    this.modal.style.display = 'none';
+    this.modal.classList.remove('show');
     document.body.style.overflow = '';
+    setTimeout(() => {
+      if (this.modal) {
+        this.modal.style.display = 'none';
+      }
+    }, 300);
   }
 
   private createModal(): void {
@@ -43,7 +49,6 @@ export class CustomizationModal {
     this.modal.style.display = 'none';
 
     this.modal.innerHTML = `
-      <div class="modal-overlay"></div>
       <div class="modal-content customization-modal-content">
         <div class="modal-header">
           <h2><img src="${images.art}" alt="Customization" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" /> Visual Customization</h2>
@@ -81,11 +86,6 @@ export class CustomizationModal {
       closeBtn.addEventListener('click', () => this.hide());
     }
 
-    // Overlay click
-    const overlay = this.modal.querySelector('.modal-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', () => this.hide());
-    }
 
     // Tab switching
     const tabs = this.modal.querySelectorAll('.customization-tab');

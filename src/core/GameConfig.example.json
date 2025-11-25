@@ -50,7 +50,7 @@
       }
     },
     "unspentPPMultiplier": {
-      "percentagePerPP": 0.25
+      "percentagePerPP": 5
     },
     "costScaling": {
       "exponentialBase": 1.15

@@ -1,6 +1,7 @@
 import type { SoundManager } from '../systems/SoundManager';
 import { i18n, t } from '../core/I18n';
 import type { Language } from '../core/I18n';
+import { alertDialog } from './AlertDialog';
 
 export class SettingsModal {
   private modal: HTMLElement | null = null;
@@ -15,6 +16,7 @@ export class SettingsModal {
   private soundCallback: ((enabled: boolean) => void) | null = null;
   private soundtrackCallback: ((enabled: boolean) => void) | null = null;
   private volumeCallback: ((volume: number) => void) | null = null;
+  private fontFamilyCallback: ((fontFamily: string) => void) | null = null;
   private resetCallback: (() => void) | null = null;
   private creditsModal: any | null = null;
   private graphicsToggle: HTMLButtonElement | null = null;
@@ -24,6 +26,7 @@ export class SettingsModal {
   private lcdFilterToggle: HTMLButtonElement | null = null;
   private soundtrackToggle: HTMLButtonElement | null = null;
   private languageSelect: HTMLSelectElement | null = null;
+  private fontFamilySelect: HTMLSelectElement | null = null;
 
   constructor(soundManager: SoundManager) {
     this.soundManager = soundManager;
@@ -65,6 +68,31 @@ export class SettingsModal {
 
   setVolumeCallback(callback: (volume: number) => void): void {
     this.volumeCallback = callback;
+  }
+
+  setFontFamilyCallback(callback: (fontFamily: string) => void): void {
+    this.fontFamilyCallback = callback;
+  }
+
+  setFontFamily(fontFamily: string): void {
+    if (this.fontFamilySelect && fontFamily) {
+      // Check if the font exists in options before setting
+      const fontOptions = [
+        "'Courier New', 'Courier', monospace",
+        "Arial, sans-serif",
+        "Verdana, sans-serif",
+        "Tahoma, sans-serif",
+        "'Segoe UI', sans-serif",
+        "'Open Sans', sans-serif",
+        "'Roboto', sans-serif",
+      ];
+      const normalizeFont = (font: string) => font.replace(/['"]/g, '').toLowerCase();
+      const fontFamilyNormalized = normalizeFont(fontFamily);
+      const matchedFont = fontOptions.find(f => normalizeFont(f) === fontFamilyNormalized) ?? fontOptions[0];
+      if (matchedFont) {
+        this.fontFamilySelect.value = matchedFont;
+      }
+    }
   }
 
   setResetCallback(callback: () => void): void {
@@ -132,16 +160,34 @@ export class SettingsModal {
     // Modal content
     const content = document.createElement('div');
     content.className = 'modal-content';
-    content.style.maxWidth = '600px';
-    content.style.maxHeight = '85vh';
-    content.style.overflowY = 'auto';
 
-    // Title
+    // Header with title and close button
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    
     const title = document.createElement('h2');
     title.textContent = t('settings.title');
-    title.style.marginBottom = '20px';
-    title.style.textAlign = 'center';
-    content.appendChild(title);
+    title.style.fontFamily = 'var(--font-family)';
+    title.style.color = '#FFFAE5';
+    title.style.textShadow = '2px 2px 0 rgba(0, 0, 0, 1)';
+    header.appendChild(title);
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    const closeImg = document.createElement('img');
+    closeImg.src = '/src/icons/menu/close.png';
+    closeImg.alt = 'Close';
+    closeBtn.appendChild(closeImg);
+    closeBtn.addEventListener('click', () => {
+      this.hide();
+    });
+    header.appendChild(closeBtn);
+    
+    content.appendChild(header);
+
+    // Create modal body wrapper for scrollable content
+    const modalBody = document.createElement('div');
+    modalBody.className = 'modal-body';
 
     // Sound section
     const soundSection = document.createElement('div');
@@ -150,6 +196,9 @@ export class SettingsModal {
     const soundTitle = document.createElement('h3');
     soundTitle.textContent = t('settings.soundSettings');
     soundTitle.style.marginBottom = '15px';
+    soundTitle.style.color = '#FFFAE5';
+    soundTitle.style.fontFamily = 'var(--font-family)';
+    soundTitle.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 1)';
     soundSection.appendChild(soundTitle);
 
     // Sound enabled toggle
@@ -162,6 +211,8 @@ export class SettingsModal {
     const soundLabel = document.createElement('label');
     soundLabel.textContent = t('settings.soundEnabled');
     soundLabel.style.fontSize = '16px';
+    soundLabel.style.color = '#FFFAE5';
+    soundLabel.style.fontFamily = 'var(--font-family)';
 
     const soundToggle = document.createElement('button');
     soundToggle.className = 'modal-button';
@@ -189,9 +240,10 @@ export class SettingsModal {
     const soundHint = document.createElement('div');
     soundHint.textContent = t('settings.soundEnabledHint');
     soundHint.style.fontSize = '12px';
-    soundHint.style.color = '#888';
+    soundHint.style.color = 'rgba(255, 250, 229, 0.6)';
     soundHint.style.marginTop = '5px';
     soundHint.style.marginBottom = '15px';
+    soundHint.style.fontFamily = 'var(--font-family)';
     soundSection.appendChild(soundHint);
 
     // Soundtrack toggle
@@ -204,6 +256,8 @@ export class SettingsModal {
     const soundtrackLabel = document.createElement('label');
     soundtrackLabel.textContent = t('settings.backgroundMusic');
     soundtrackLabel.style.fontSize = '16px';
+    soundtrackLabel.style.color = '#FFFAE5';
+    soundtrackLabel.style.fontFamily = 'var(--font-family)';
 
     this.soundtrackToggle = document.createElement('button');
     this.soundtrackToggle.className = 'modal-button';
@@ -235,9 +289,10 @@ export class SettingsModal {
     const soundtrackHint = document.createElement('div');
     soundtrackHint.textContent = t('settings.backgroundMusicHint');
     soundtrackHint.style.fontSize = '12px';
-    soundtrackHint.style.color = '#888';
+    soundtrackHint.style.color = 'rgba(255, 250, 229, 0.6)';
     soundtrackHint.style.marginTop = '5px';
     soundtrackHint.style.marginBottom = '15px';
+    soundtrackHint.style.fontFamily = 'var(--font-family)';
     soundSection.appendChild(soundtrackHint);
 
     // Volume slider
@@ -249,6 +304,8 @@ export class SettingsModal {
     volumeLabel.style.display = 'block';
     volumeLabel.style.marginBottom = '8px';
     volumeLabel.style.fontSize = '16px';
+    volumeLabel.style.color = '#FFFAE5';
+    volumeLabel.style.fontFamily = 'var(--font-family)';
     volumeContainer.appendChild(volumeLabel);
 
     const sliderRow = document.createElement('div');
@@ -292,7 +349,7 @@ export class SettingsModal {
     volumeContainer.appendChild(sliderRow);
     soundSection.appendChild(volumeContainer);
 
-    content.appendChild(soundSection);
+    modalBody.appendChild(soundSection);
 
     // Language section
     const languageSection = document.createElement('div');
@@ -301,6 +358,9 @@ export class SettingsModal {
     const languageTitle = document.createElement('h3');
     languageTitle.textContent = t('settings.languageSettings');
     languageTitle.style.marginBottom = '15px';
+    languageTitle.style.color = '#FFFAE5';
+    languageTitle.style.fontFamily = 'var(--font-family)';
+    languageTitle.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 1)';
     languageSection.appendChild(languageTitle);
 
     const languageContainer = document.createElement('div');
@@ -312,6 +372,8 @@ export class SettingsModal {
     const languageLabel = document.createElement('label');
     languageLabel.textContent = t('settings.language');
     languageLabel.style.fontSize = '16px';
+    languageLabel.style.color = '#FFFAE5';
+    languageLabel.style.fontFamily = 'var(--font-family)';
 
     this.languageSelect = document.createElement('select');
     this.languageSelect.style.width = '200px';
@@ -368,12 +430,152 @@ export class SettingsModal {
     const languageHint = document.createElement('div');
     languageHint.textContent = t('settings.languageHint');
     languageHint.style.fontSize = '12px';
-    languageHint.style.color = '#888';
+    languageHint.style.color = 'rgba(255, 250, 229, 0.6)';
     languageHint.style.marginTop = '5px';
     languageHint.style.marginBottom = '15px';
+    languageHint.style.fontFamily = 'var(--font-family)';
     languageSection.appendChild(languageHint);
 
-    content.appendChild(languageSection);
+    modalBody.appendChild(languageSection);
+
+    // Accessibility section
+    const accessibilitySection = document.createElement('div');
+    accessibilitySection.style.marginBottom = '25px';
+
+    const accessibilityTitle = document.createElement('h3');
+    accessibilityTitle.textContent = t('settings.accessibilitySettings');
+    accessibilityTitle.style.marginBottom = '15px';
+    accessibilityTitle.style.color = '#FFFAE5';
+    accessibilityTitle.style.fontFamily = 'var(--font-family)';
+    accessibilityTitle.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 1)';
+    accessibilitySection.appendChild(accessibilityTitle);
+
+    // Font family selector
+    const fontFamilyContainer = document.createElement('div');
+    fontFamilyContainer.style.marginBottom = '15px';
+    fontFamilyContainer.style.display = 'flex';
+    fontFamilyContainer.style.alignItems = 'center';
+    fontFamilyContainer.style.justifyContent = 'space-between';
+
+    const fontFamilyLabel = document.createElement('label');
+    fontFamilyLabel.textContent = t('settings.fontFamily');
+    fontFamilyLabel.style.fontSize = '16px';
+    fontFamilyLabel.style.color = '#FFFAE5';
+    fontFamilyLabel.style.fontFamily = 'var(--font-family)';
+
+    this.fontFamilySelect = document.createElement('select');
+    this.fontFamilySelect.style.width = '200px';
+    this.fontFamilySelect.style.padding = '8px';
+    this.fontFamilySelect.style.background = 'var(--bg-rpg-box)';
+    this.fontFamilySelect.style.color = '#FFFAE5';
+    this.fontFamilySelect.style.border = 'var(--border-rpg)';
+    this.fontFamilySelect.style.borderRadius = '0';
+    this.fontFamilySelect.style.fontFamily = 'var(--font-family)';
+    this.fontFamilySelect.style.fontSize = '14px';
+    this.fontFamilySelect.style.cursor = 'pointer';
+    this.fontFamilySelect.style.outline = 'none';
+    this.fontFamilySelect.style.boxShadow = 'var(--shadow-sm)';
+
+    const fontOptions: { value: string; label: string }[] = [
+      { value: "'Courier New', 'Courier', monospace", label: t('settings.fontDefault') },
+      { value: "Arial, sans-serif", label: 'Arial' },
+      { value: "Verdana, sans-serif", label: 'Verdana' },
+      { value: "Tahoma, sans-serif", label: 'Tahoma' },
+      { value: "'Segoe UI', sans-serif", label: 'Segoe UI' },
+      { value: "'Open Sans', sans-serif", label: 'Open Sans' },
+      { value: "'Roboto', sans-serif", label: 'Roboto' },
+    ];
+
+    fontOptions.forEach((font) => {
+      const option = document.createElement('option');
+      option.value = font.value;
+      option.textContent = font.label;
+      option.style.backgroundColor = '#000000';
+      option.style.color = '#FFFAE5';
+      if (this.fontFamilySelect) {
+        this.fontFamilySelect.appendChild(option);
+      }
+    });
+
+    // Set default font family initially
+    if (this.fontFamilySelect) {
+      this.fontFamilySelect.value = "'Courier New', 'Courier', monospace";
+    }
+
+    this.fontFamilySelect.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      const newFont = target.value;
+      // Apply font globally via CSS variable
+      document.documentElement.style.setProperty('--font-family', newFont);
+      if (this.fontFamilyCallback) {
+        this.fontFamilyCallback(newFont);
+      }
+    });
+
+    fontFamilyContainer.appendChild(fontFamilyLabel);
+    fontFamilyContainer.appendChild(this.fontFamilySelect);
+    accessibilitySection.appendChild(fontFamilyContainer);
+
+    // Font family disclaimer
+    const fontFamilyHint = document.createElement('div');
+    fontFamilyHint.innerHTML = `<strong style="color: #ffaa00;">⚠️ ${t('settings.fontFamilyWarning')}</strong>`;
+    fontFamilyHint.style.fontSize = '12px';
+    fontFamilyHint.style.color = '#ffaa00';
+    fontFamilyHint.style.marginTop = '5px';
+    fontFamilyHint.style.marginBottom = '15px';
+    fontFamilyHint.style.padding = '10px';
+    fontFamilyHint.style.background = 'rgba(255, 170, 0, 0.1)';
+    fontFamilyHint.style.border = '1px solid rgba(255, 170, 0, 0.3)';
+    fontFamilyHint.style.fontFamily = 'var(--font-family)';
+    accessibilitySection.appendChild(fontFamilyHint);
+
+    // Screen shake toggle (motion sickness accessibility)
+    const screenShakeContainer = document.createElement('div');
+    screenShakeContainer.style.marginBottom = '10px';
+    screenShakeContainer.style.marginTop = '15px';
+    screenShakeContainer.style.display = 'flex';
+    screenShakeContainer.style.alignItems = 'center';
+    screenShakeContainer.style.justifyContent = 'space-between';
+
+    const screenShakeLabel = document.createElement('label');
+    screenShakeLabel.textContent = t('settings.screenShake');
+    screenShakeLabel.style.fontSize = '16px';
+    screenShakeLabel.style.color = '#FFFAE5';
+    screenShakeLabel.style.fontFamily = 'var(--font-family)';
+
+    this.screenShakeToggle = document.createElement('button');
+    this.screenShakeToggle.className = 'modal-button';
+    this.screenShakeToggle.textContent = t('common.on');
+    this.screenShakeToggle.style.width = '80px';
+    this.screenShakeToggle.style.backgroundColor = '#4CAF50';
+
+    this.screenShakeToggle.addEventListener('click', () => {
+      if (!this.screenShakeToggle) return;
+      const newState = this.screenShakeToggle.textContent === t('common.off');
+      this.screenShakeToggle.textContent = newState
+        ? t('common.on')
+        : t('common.off');
+      this.screenShakeToggle.style.backgroundColor = newState
+        ? '#4CAF50'
+        : '#666';
+      if (this.screenShakeCallback) {
+        this.screenShakeCallback(newState);
+      }
+    });
+
+    screenShakeContainer.appendChild(screenShakeLabel);
+    screenShakeContainer.appendChild(this.screenShakeToggle);
+    accessibilitySection.appendChild(screenShakeContainer);
+
+    const screenShakeHint = document.createElement('div');
+    screenShakeHint.textContent = t('settings.screenShakeHint');
+    screenShakeHint.style.fontSize = '12px';
+    screenShakeHint.style.color = 'rgba(255, 250, 229, 0.6)';
+    screenShakeHint.style.marginTop = '5px';
+    screenShakeHint.style.fontFamily = 'var(--font-family)';
+    accessibilitySection.appendChild(screenShakeHint);
+
+    modalBody.appendChild(accessibilitySection);
 
     // Graphics section
     const graphicsSection = document.createElement('div');
@@ -382,6 +584,9 @@ export class SettingsModal {
     const graphicsTitle = document.createElement('h3');
     graphicsTitle.textContent = t('settings.graphicsSettings');
     graphicsTitle.style.marginBottom = '15px';
+    graphicsTitle.style.color = '#FFFAE5';
+    graphicsTitle.style.fontFamily = 'var(--font-family)';
+    graphicsTitle.style.textShadow = '1px 1px 0 rgba(0, 0, 0, 1)';
     graphicsSection.appendChild(graphicsTitle);
 
     // High graphics toggle
@@ -394,6 +599,8 @@ export class SettingsModal {
     const graphicsLabel = document.createElement('label');
     graphicsLabel.textContent = t('settings.highGraphics');
     graphicsLabel.style.fontSize = '16px';
+    graphicsLabel.style.color = '#FFFAE5';
+    graphicsLabel.style.fontFamily = 'var(--font-family)';
 
     this.graphicsToggle = document.createElement('button');
     this.graphicsToggle.className = 'modal-button';
@@ -420,8 +627,9 @@ export class SettingsModal {
     const graphicsHint = document.createElement('div');
     graphicsHint.textContent = t('settings.highGraphicsHint');
     graphicsHint.style.fontSize = '12px';
-    graphicsHint.style.color = '#888';
+    graphicsHint.style.color = 'rgba(255, 250, 229, 0.6)';
     graphicsHint.style.marginTop = '5px';
+    graphicsHint.style.fontFamily = 'var(--font-family)';
     graphicsSection.appendChild(graphicsHint);
 
     // Ship lasers toggle
@@ -434,6 +642,8 @@ export class SettingsModal {
     const shipLasersLabel = document.createElement('label');
     shipLasersLabel.textContent = t('settings.shipLasers');
     shipLasersLabel.style.fontSize = '16px';
+    shipLasersLabel.style.color = '#FFFAE5';
+    shipLasersLabel.style.fontFamily = 'var(--font-family)';
 
     this.shipLasersToggle = document.createElement('button');
     this.shipLasersToggle.className = 'modal-button';
@@ -462,8 +672,9 @@ export class SettingsModal {
     const shipLasersHint = document.createElement('div');
     shipLasersHint.textContent = t('settings.shipLasersHint');
     shipLasersHint.style.fontSize = '12px';
-    shipLasersHint.style.color = '#888';
+    shipLasersHint.style.color = 'rgba(255, 250, 229, 0.6)';
     shipLasersHint.style.marginTop = '5px';
+    shipLasersHint.style.fontFamily = 'var(--font-family)';
     graphicsSection.appendChild(shipLasersHint);
 
     // Damage numbers toggle
@@ -477,6 +688,8 @@ export class SettingsModal {
     const damageNumbersLabel = document.createElement('label');
     damageNumbersLabel.textContent = t('settings.damageNumbers');
     damageNumbersLabel.style.fontSize = '16px';
+    damageNumbersLabel.style.color = '#FFFAE5';
+    damageNumbersLabel.style.fontFamily = 'var(--font-family)';
 
     this.damageNumbersToggle = document.createElement('button');
     this.damageNumbersToggle.className = 'modal-button';
@@ -505,52 +718,10 @@ export class SettingsModal {
     const damageNumbersHint = document.createElement('div');
     damageNumbersHint.textContent = t('settings.damageNumbersHint');
     damageNumbersHint.style.fontSize = '12px';
-    damageNumbersHint.style.color = '#888';
+    damageNumbersHint.style.color = 'rgba(255, 250, 229, 0.6)';
     damageNumbersHint.style.marginTop = '5px';
+    damageNumbersHint.style.fontFamily = 'var(--font-family)';
     graphicsSection.appendChild(damageNumbersHint);
-
-    // Screen shake toggle
-    const screenShakeContainer = document.createElement('div');
-    screenShakeContainer.style.marginBottom = '10px';
-    screenShakeContainer.style.marginTop = '15px';
-    screenShakeContainer.style.display = 'flex';
-    screenShakeContainer.style.alignItems = 'center';
-    screenShakeContainer.style.justifyContent = 'space-between';
-
-    const screenShakeLabel = document.createElement('label');
-    screenShakeLabel.textContent = t('settings.screenShake');
-    screenShakeLabel.style.fontSize = '16px';
-
-    this.screenShakeToggle = document.createElement('button');
-    this.screenShakeToggle.className = 'modal-button';
-    this.screenShakeToggle.textContent = t('common.on');
-    this.screenShakeToggle.style.width = '80px';
-    this.screenShakeToggle.style.backgroundColor = '#4CAF50';
-
-    this.screenShakeToggle.addEventListener('click', () => {
-      if (!this.screenShakeToggle) return;
-      const newState = this.screenShakeToggle.textContent === t('common.off');
-      this.screenShakeToggle.textContent = newState
-        ? t('common.on')
-        : t('common.off');
-      this.screenShakeToggle.style.backgroundColor = newState
-        ? '#4CAF50'
-        : '#666';
-      if (this.screenShakeCallback) {
-        this.screenShakeCallback(newState);
-      }
-    });
-
-    screenShakeContainer.appendChild(screenShakeLabel);
-    screenShakeContainer.appendChild(this.screenShakeToggle);
-    graphicsSection.appendChild(screenShakeContainer);
-
-    const screenShakeHint = document.createElement('div');
-    screenShakeHint.textContent = t('settings.screenShakeHint');
-    screenShakeHint.style.fontSize = '12px';
-    screenShakeHint.style.color = '#888';
-    screenShakeHint.style.marginTop = '5px';
-    graphicsSection.appendChild(screenShakeHint);
 
     // LCD filter toggle
     const lcdFilterContainer = document.createElement('div');
@@ -563,6 +734,8 @@ export class SettingsModal {
     const lcdFilterLabel = document.createElement('label');
     lcdFilterLabel.textContent = 'LCD Filter';
     lcdFilterLabel.style.fontSize = '16px';
+    lcdFilterLabel.style.color = '#FFFAE5';
+    lcdFilterLabel.style.fontFamily = 'var(--font-family)';
 
     this.lcdFilterToggle = document.createElement('button');
     this.lcdFilterToggle.className = 'modal-button';
@@ -591,11 +764,12 @@ export class SettingsModal {
     const lcdFilterHint = document.createElement('div');
     lcdFilterHint.textContent = 'Subtle retro LCD monitor effect with pixel grid';
     lcdFilterHint.style.fontSize = '12px';
-    lcdFilterHint.style.color = '#888';
+    lcdFilterHint.style.color = 'rgba(255, 250, 229, 0.6)';
     lcdFilterHint.style.marginTop = '5px';
+    lcdFilterHint.style.fontFamily = 'var(--font-family)';
     graphicsSection.appendChild(lcdFilterHint);
 
-    content.appendChild(graphicsSection);
+    modalBody.appendChild(graphicsSection);
 
     // Save Data & Actions Section
     const actionsSection = document.createElement('div');
@@ -605,7 +779,7 @@ export class SettingsModal {
     actionsSection.style.borderTop = '1px solid rgba(255, 255, 255, 0.3)';
 
     const actionsTitle = document.createElement('h3');
-    actionsTitle.textContent = '💾 Save Data & Actions';
+    actionsTitle.textContent = t('settings.saveDataActions');
     actionsTitle.style.marginBottom = '15px';
     actionsTitle.style.color = '#ffffff';
     actionsTitle.style.fontFamily = 'var(--font-family)';
@@ -682,7 +856,7 @@ export class SettingsModal {
     // Reset Save Button
     const resetBtn = document.createElement('button');
     resetBtn.className = 'modal-button matrix-button matrix-button-danger';
-    resetBtn.textContent = '⚠️ Reset Save';
+    resetBtn.textContent = t('settings.resetSaveButton');
     resetBtn.style.width = '100%';
     resetBtn.style.marginBottom = '10px';
     resetBtn.style.background = 'rgba(0, 0, 0, 0.95)';
@@ -695,12 +869,12 @@ export class SettingsModal {
     resetBtn.style.boxShadow =
       '0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(255, 255, 255, 0.15)';
     resetBtn.style.transition = 'all 0.1s linear';
-    resetBtn.addEventListener('click', () => {
-      if (
-        confirm(
-          'Are you sure you want to reset all progress? This cannot be undone.',
-        )
-      ) {
+    resetBtn.addEventListener('click', async () => {
+      const confirmed = await alertDialog.confirm(
+        'Are you sure you want to reset all progress? This cannot be undone.',
+        'Reset Save',
+      );
+      if (confirmed) {
         if (this.resetCallback) {
           this.resetCallback();
         }
@@ -719,28 +893,13 @@ export class SettingsModal {
     });
     actionsSection.appendChild(resetBtn);
 
-    content.appendChild(actionsSection);
+    modalBody.appendChild(actionsSection);
 
-    // Close button
-    const closeButton = document.createElement('button');
-    closeButton.className = 'modal-button';
-    closeButton.textContent = t('common.close');
-    closeButton.style.width = '100%';
-    closeButton.style.marginTop = '20px';
-    closeButton.addEventListener('click', () => {
-      this.hide();
-    });
-    content.appendChild(closeButton);
+    content.appendChild(modalBody);
 
     this.modal.appendChild(content);
     document.body.appendChild(this.modal);
 
-    // Close on background click
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
   }
 
   show(): void {
@@ -765,11 +924,31 @@ export class SettingsModal {
       if (this.languageSelect) {
         this.languageSelect.value = i18n.getLanguage();
       }
+      // Update font family selector - get current font from CSS variable
+      if (this.fontFamilySelect) {
+        const currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim() || "'Courier New', 'Courier', monospace";
+        // Try to match with available options
+        const fontOptions = [
+          "'Courier New', 'Courier', monospace",
+          "Arial, sans-serif",
+          "Verdana, sans-serif",
+          "Tahoma, sans-serif",
+          "'Segoe UI', sans-serif",
+          "'Open Sans', sans-serif",
+          "'Roboto', sans-serif",
+        ];
+        // Normalize quotes for comparison
+        const normalizeFont = (font: string) => font.replace(/['"]/g, '').toLowerCase();
+        const currentFontNormalized = normalizeFont(currentFont);
+        // Find exact match or closest match
+        const matchedFont = fontOptions.find(f => normalizeFont(f) === currentFontNormalized) ?? fontOptions[0];
+        if (matchedFont && this.fontFamilySelect) {
+          this.fontFamilySelect.value = matchedFont;
+        }
+      }
+      document.body.style.overflow = 'hidden';
       this.modal.style.display = 'flex';
-      // Trigger animation
-      requestAnimationFrame(() => {
-        this.modal?.classList.add('show');
-      });
+      this.modal?.classList.add('show');
     }
   }
 
@@ -793,6 +972,7 @@ export class SettingsModal {
     const shipLasersCallback = this.shipLasersCallback;
     const damageNumbersCallback = this.damageNumbersCallback;
     const screenShakeCallback = this.screenShakeCallback;
+    const fontFamilyCallback = this.fontFamilyCallback;
 
     this.createModal();
 
@@ -806,6 +986,8 @@ export class SettingsModal {
       this.damageNumbersCallback = damageNumbersCallback;
     if (screenShakeCallback)
       this.screenShakeCallback = screenShakeCallback;
+    if (fontFamilyCallback)
+      this.fontFamilyCallback = fontFamilyCallback;
 
     // Restore visibility
     if (wasVisible) {
@@ -817,6 +999,7 @@ export class SettingsModal {
   hide(): void {
     if (this.modal) {
       this.modal.classList.remove('show');
+      document.body.style.overflow = '';
       // Wait for animation to complete
       setTimeout(() => {
         if (this.modal) {

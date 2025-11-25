@@ -18,19 +18,20 @@ export class ThankYouModal {
     content.style.maxWidth = '700px';
     content.style.textAlign = 'center';
     content.style.padding = '40px';
+    content.style.background = '#000';
+    content.style.border = '2px solid #FFFAE5';
+    content.style.borderRadius = '0';
 
     // Title (matches modal-header styling)
     const title = document.createElement('h2');
-    title.textContent = '🌟 Thank You for Playing! 🌟';
+    title.textContent = 'THANK YOU FOR PLAYING!';
     title.style.marginBottom = '20px';
-    title.style.color = '#fffae5';
+    title.style.color = '#FFFAE5';
     title.style.fontSize = '32px';
     title.style.fontWeight = 'normal';
-    title.style.textShadow =
-      '2px 2px 0 rgba(0, 0, 0, 1), -1px -1px 0 rgba(0, 0, 0, 0.8)';
-    title.style.fontFamily = 'var(--font-family)';
+    title.style.fontFamily = '"m5x7", "Courier New", monospace';
     title.style.textTransform = 'uppercase';
-    title.style.letterSpacing = '1px';
+    title.style.letterSpacing = '2px';
     content.appendChild(title);
 
     // Thank you message
@@ -38,33 +39,36 @@ export class ThankYouModal {
     message.textContent =
       'Congratulations on your first ascension! Your journey has just begun.';
     message.style.marginBottom = '30px';
-    message.style.color = '#ffffff';
+    message.style.color = '#FFFAE5';
     message.style.fontSize = '18px';
     message.style.lineHeight = '1.6';
+    message.style.fontFamily = '"Courier New", monospace';
     content.appendChild(message);
 
     // Discord section
     const discordSection = document.createElement('div');
     discordSection.style.marginBottom = '30px';
     discordSection.style.padding = '25px';
-    discordSection.style.background = 'rgba(255, 255, 255, 0.05)';
-    discordSection.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+    discordSection.style.background = '#1A122D';
+    discordSection.style.border = '2px solid #FFFAE5';
 
     const discordTitle = document.createElement('h3');
-    discordTitle.textContent = '💬 Join Our Discord Community';
+    discordTitle.textContent = 'JOIN OUR DISCORD COMMUNITY';
     discordTitle.style.marginBottom = '15px';
-    discordTitle.style.color = '#fffae5';
+    discordTitle.style.color = '#FFFAE5';
     discordTitle.style.fontSize = '22px';
-    discordTitle.style.fontFamily = 'var(--font-family)';
+    discordTitle.style.fontFamily = '"m5x7", monospace';
+    discordTitle.style.letterSpacing = '1px';
     discordSection.appendChild(discordTitle);
 
     const discordMessage = document.createElement('p');
     discordMessage.textContent =
       'Help us improve the game! Share your feedback, report bugs, suggest features, and connect with other players.';
     discordMessage.style.marginBottom = '20px';
-    discordMessage.style.color = '#cccccc';
+    discordMessage.style.color = '#ccc';
     discordMessage.style.fontSize = '16px';
     discordMessage.style.lineHeight = '1.5';
+    discordMessage.style.fontFamily = '"Courier New", monospace';
     discordSection.appendChild(discordMessage);
 
     // Discord button (uses modal-button class)
@@ -73,9 +77,25 @@ export class ThankYouModal {
     discordButton.target = '_blank';
     discordButton.rel = 'noopener noreferrer';
     discordButton.className = 'modal-button';
-    discordButton.textContent = '🚀 Join Discord';
+    discordButton.textContent = 'JOIN DISCORD';
     discordButton.style.display = 'inline-block';
     discordButton.style.textDecoration = 'none';
+    discordButton.style.fontFamily = '"m5x7", monospace';
+    discordButton.style.letterSpacing = '1px';
+    discordButton.style.background = '#3B2D5F';
+    discordButton.style.border = '2px solid #FFFAE5';
+    discordButton.style.color = '#FFFAE5';
+    discordButton.style.padding = '10px 20px';
+    discordButton.style.transition = 'all 0.1s';
+
+    discordButton.addEventListener('mouseenter', () => {
+      discordButton.style.background = '#4A3B6F';
+      discordButton.style.transform = 'translateY(-2px)';
+    });
+    discordButton.addEventListener('mouseleave', () => {
+      discordButton.style.background = '#3B2D5F';
+      discordButton.style.transform = 'translateY(0)';
+    });
 
     discordSection.appendChild(discordButton);
     content.appendChild(discordSection);
@@ -83,12 +103,29 @@ export class ThankYouModal {
     // Continue Playing button (uses modal-button class)
     const continueButton = document.createElement('button');
     continueButton.className = 'modal-button';
-    continueButton.textContent = 'Continue Playing';
+    continueButton.textContent = 'CONTINUE PLAYING';
     continueButton.style.display = 'block';
     continueButton.style.width = '100%';
     continueButton.style.marginTop = '20px';
-    continueButton.style.fontSize = '18px';
+    continueButton.style.fontSize = '20px';
     continueButton.style.padding = '15px 30px';
+    continueButton.style.fontFamily = '"m5x7", monospace';
+    continueButton.style.letterSpacing = '1px';
+    continueButton.style.background = '#FFFAE5';
+    continueButton.style.border = '2px solid #FFFAE5';
+    continueButton.style.color = '#1A122D';
+    continueButton.style.fontWeight = 'bold';
+    continueButton.style.cursor = 'pointer';
+    continueButton.style.transition = 'all 0.1s';
+
+    continueButton.addEventListener('mouseenter', () => {
+      continueButton.style.background = '#fff';
+      continueButton.style.transform = 'translateY(-2px)';
+    });
+    continueButton.addEventListener('mouseleave', () => {
+      continueButton.style.background = '#FFFAE5';
+      continueButton.style.transform = 'translateY(0)';
+    });
 
     continueButton.addEventListener('click', (e) => {
       e.preventDefault();
@@ -153,4 +190,3 @@ export class ThankYouModal {
     return this.modal?.style.display !== 'none';
   }
 }
-

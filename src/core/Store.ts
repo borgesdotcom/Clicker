@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { GameState } from '../types';
+import { UI_THROTTLE } from '../config/constants';
 
 export class Store {
   private state: GameState;
@@ -26,7 +27,7 @@ export class Store {
           this.pendingNotify = false;
         }
       }
-    }, 30); // Reduced from 50ms to 30ms for more responsive UI
+    }, UI_THROTTLE.STORE_NOTIFICATION_INTERVAL);
   }
 
   /**

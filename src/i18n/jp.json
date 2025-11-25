@@ -31,7 +31,7 @@
     "startButton": "了解！"
   },
   "settings": {
-    "title": "⚙️ 設定",
+    "title": "設定",
     "soundSettings": "サウンド設定",
     "graphicsSettings": "グラフィック設定",
     "languageSettings": "言語設定",
@@ -50,13 +50,17 @@
     "screenShakeHint": "迫力ある瞬間に画面揺れ効果を有効化",
     "lcdFilter": "LCDフィルター",
     "lcdFilterHint": "レトロLCDモニター風の微細なピクセルグリッド効果",
-    "saveDataActions": "💾 セーブデータとアクション",
+    "saveDataActions": "セーブデータとアクション",
     "exportSave": "データを書き出す",
     "importSave": "データを読み込む",
-    "resetSaveButton": "⚠️ セーブリセット",
+    "resetSaveButton": "セーブリセット",
     "resetConfirm": "本当に全ての進行状況をリセットしますか？元に戻せません。",
     "language": "言語:",
-    "languageHint": "ゲームの言語を変更"
+    "languageHint": "ゲームの言語を変更",
+    "accessibilitySettings": "アクセシビリティ設定",
+    "fontFamily": "フォント:",
+    "fontDefault": "デフォルト (Courier New)",
+    "fontFamilyWarning": "⚠️ 警告: フォントを変更すると一部のUI要素が壊れる可能性があります。ゲームはデフォルトフォントを想定して設計されています。"
   },
   "hud": {
     "points": "ムーニーズ",
@@ -278,7 +282,21 @@
     "screenShakeFix": "画面シェイク無効オプションがボス戦で正しく機能するように修正。",
     "omegaFilter": "オメガコア（ボス100）の黄色フィルター強度を軽減。",
     "rainbowLaser": "レインボーレーザーのレンダリングを最適化してスムーズなゲームプレイを実現。",
-    "tipSpace": "ボス戦中にスペースを押し続けて、視覚効果を回避しながら継続的なダメージを与えましょう！"
+    "tipSpace": "ボス戦中にスペースを押し続けて、視覚効果を回避しながら継続的なダメージを与えましょう！",
+    "v120Title": "バージョン1.20.0の新機能",
+    "qualityOfLife": "使いやすさの改善",
+    "artifactNotification": "新しいアーティファクト通知 – アーティファクトボタンがモーダルを自動的に開く代わりに光るようになりました。",
+    "bossEffectFix": "ボスの視覚効果が適切にクリーンアップされない問題を修正しました。",
+    "v121Title": "バージョン1.21.0の新機能",
+    "accessibility": "アクセシビリティの改善",
+    "accessibilityFont": "視覚障害のあるプレイヤーのためのフォントカスタマイズオプションを追加。",
+    "accessibilityScreenShake": "乗り物酔いに対応するため、画面シェイクオプションをアクセシビリティ設定に移動。",
+    "hudUpdates": "HUDの更新",
+    "hudImprovements": "収入の内訳と視覚的フィードバックが改善されたHUD。",
+    "newContent": "新コンテンツ",
+    "newBossLevel5": "レベル5に新しいボス戦闘を追加 – ユニークな挑戦に備えよう！",
+    "optimizations": "パフォーマンスの最適化",
+    "generalOptimizations": "ゲーム全体の一般的なパフォーマンス改善とコード最適化。"
   },
   "upgrades": {
     "main": {

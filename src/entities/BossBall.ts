@@ -8,10 +8,11 @@ import {
   BOSS_SPRITE_TINY_TYRANT,
   PixelGrid,
 } from '../render/AlienSprites';
+import { COMBAT } from '../config/constants';
 
 export class BossBall {
   private flashTime = 0;
-  private flashDuration = 0.15;
+  private flashDuration = COMBAT.FLASH_DURATION;
   public currentHp: number;
   public maxHp: number;
   private breakAnimTime = 0;
@@ -431,7 +432,7 @@ export class BossBall {
     const bobY = Math.sin(this.pulseTime) * (this.radius * 0.05);
 
     // Void Construct RGB Split Effect
-    if (this.variant === 2 && this.glitchTime > 0) {
+    if (this.variant === 3 && this.glitchTime > 0) {
       // Red channel offset
       this.drawPixelSprite(
         ctx,
@@ -531,11 +532,11 @@ export class BossBall {
       ctx.translate(x, y);
 
       // Apply variant specific styles
-      if (this.variant === 2) {
+      if (this.variant === 3) {
         // Void
         ctx.strokeStyle = 'rgba(0, 255, 255, ' + crackOpacity + ')';
         ctx.lineWidth = 2;
-      } else if (this.variant === 3) {
+      } else if (this.variant === 4) {
         // Omega
         ctx.strokeStyle = 'rgba(255, 255, 0, ' + crackOpacity + ')';
         ctx.shadowColor = '#ff0000';
@@ -594,7 +595,7 @@ export class BossBall {
 
     // Phase color shift
     let mainColor = this.color;
-    if (this.phase === 3 && this.variant === 3)
+    if (this.phase === 3 && this.variant === 4)
       mainColor = this.getRandomColor(); // Omega Core chaos
 
     for (let r = 0; r < rows; r++) {
@@ -951,7 +952,7 @@ export class BossBall {
     }
 
     // Omega Core Arcs - Enhanced
-    if (this.variant === 3) {
+    if (this.variant === 4) {
       // Add massive energy aura
       const energyGlow = ctx.createRadialGradient(x, y, radius * 0.3, x, y, radius * 2.5);
       energyGlow.addColorStop(0, 'rgba(255, 255, 0, 0.3)');
@@ -1032,67 +1033,11 @@ export class BossBall {
         ctx.restore();
       });
 
-      // Central energy core
-      const pulseSize = 20 + Math.sin(this.pulseTime * 4) * 8;
-      const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, pulseSize);
-      coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      coreGradient.addColorStop(0.3, 'rgba(255, 255, 0, 1)');
-      coreGradient.addColorStop(0.6, 'rgba(255, 150, 0, 0.9)');
-      coreGradient.addColorStop(1, 'rgba(255, 0, 0, 0.5)');
-
-      ctx.fillStyle = coreGradient;
-      ctx.shadowColor = '#ffff00';
-      ctx.shadowBlur = 30;
-      ctx.beginPath();
-      ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Energy spikes radiating from core
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2 + this.pulseTime;
-        const length = radius * 0.4 * (1 + Math.sin(this.pulseTime * 3 + i) * 0.3);
-        const startX = x + Math.cos(angle) * pulseSize;
-        const startY = y + Math.sin(angle) * pulseSize;
-        const endX = x + Math.cos(angle) * length;
-        const endY = y + Math.sin(angle) * length;
-
-        const spikeGradient = ctx.createLinearGradient(startX, startY, endX, endY);
-        spikeGradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
-        spikeGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-
-        ctx.strokeStyle = spikeGradient;
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#ffff00';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
-      }
+      // Central energy core - REMOVED to reduce lag
+      // Energy spikes radiating from core - REMOVED to reduce lag
     }
 
-    // Omega Core Lightning - Enhanced and more frequent
-    if (this.variant === 3 && Math.random() < 0.3) {
-      const lightningCount = 2 + Math.floor(Math.random() * 2);
-      for (let i = 0; i < lightningCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = radius * 0.9;
-        const midAngle = angle + (Math.random() - 0.5) * 0.5;
-        const midDist = dist * 0.5;
-
-        const colors = ['#ffff00', '#ff8800', '#ff0000'];
-        ctx.strokeStyle = colors[Math.floor(Math.random() * colors.length)] || '#ffff00';
-        ctx.lineWidth = 2 + Math.random() * 2;
-        ctx.shadowColor = ctx.strokeStyle;
-        ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + Math.cos(midAngle) * midDist, y + Math.sin(midAngle) * midDist);
-        ctx.lineTo(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-      }
-    }
+    // Omega Core Lightning - REMOVED to reduce lag
 
     ctx.restore();
   }

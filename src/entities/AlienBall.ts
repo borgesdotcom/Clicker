@@ -2,16 +2,17 @@ import type { Draw } from '../render/Draw';
 import type { Vec2, BallColor } from '../types';
 import { ColorManager } from '../math/ColorManager';
 import { getSpriteForType, PixelGrid } from '../render/AlienSprites';
+import { COMBAT, VISUAL } from '../config/constants';
 
 export class AlienBall {
   private flashTime = 0;
-  private flashDuration = 0.15;
+  private flashDuration = COMBAT.FLASH_DURATION;
   public currentHp: number;
   public maxHp: number;
   private breakAnimTime = 0;
-  private breakAnimDuration = 0.4;
+  private breakAnimDuration = COMBAT.BREAK_ANIMATION_DURATION;
   private deformationTime = 0;
-  private deformationDuration = 0.15; // Snappy, quick animation
+  private deformationDuration = COMBAT.DEFORMATION_DURATION; // Snappy, quick animation
   private deformationDirection: Vec2 = { x: 0, y: 0 };
   private deformationIntensity = 0; // Store intensity for combo scaling
   private isBeamDeformation = false; // Whether this is a continuous beam deformation
@@ -21,16 +22,16 @@ export class AlienBall {
   private lifetime = 0; // Track how long the alien has been alive
   private speechBubbleText = ''; // Full text to display
   private speechBubbleDisplayedText = ''; // Currently displayed text (for typing animation)
-  private speechBubbleShowTime = 15; // Show speech bubble after 15 seconds (much rarer)
+  private speechBubbleShowTime = VISUAL.SPEECH_BUBBLE_DELAY; // Show speech bubble after delay
   private speechBubbleVisible = false; // Whether speech bubble should be visible
   private speechBubbleHideTime = 0; // Time when speech bubble should start hiding
-  private speechBubbleDuration = 8; // How long to show the bubble after typing completes (seconds)
+  private speechBubbleDuration = VISUAL.SPEECH_BUBBLE_DURATION; // How long to show the bubble after typing completes (seconds)
   private speechBubbleCooldown = 0; // Time until next speech bubble can appear
-  private speechBubbleCooldownDuration = 30; // Cooldown between speech bubbles (seconds) - much longer for rarity
+  private speechBubbleCooldownDuration = VISUAL.SPEECH_BUBBLE_COOLDOWN; // Cooldown between speech bubbles (seconds) - much longer for rarity
   private typingProgress = 0; // Current typing progress (0-1)
   private typingSpeed = 0.015; // Speed of typing animation (slower - chars per frame)
   private speechBubbleSide: 'left' | 'right' = 'left'; // Which side to show the bubble on
-  private speechBubbleChance = 0.15; // 15% chance to speak even after cooldown (makes it much rarer)
+  private speechBubbleChance = VISUAL.SPEECH_BUBBLE_CHANCE; // 15% chance to speak even after cooldown (makes it much rarer)
 
   // New visual effects
   protected shakeTime = 0;

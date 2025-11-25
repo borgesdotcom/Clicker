@@ -1,6 +1,7 @@
 import type { AscensionSystem } from '../systems/AscensionSystem';
 import type { Store } from '../core/Store';
 import { images } from '../assets/images';
+import { Config } from '../core/GameConfig';
 
 export class AscensionModal {
   private modal: HTMLElement;
@@ -19,7 +20,7 @@ export class AscensionModal {
 
   private createModal(): HTMLElement {
     const modal = document.createElement('div');
-    modal.className = 'modal ascension-modal';
+    modal.className = 'ascension-modal';
     modal.style.display = 'none';
     modal.innerHTML = `
       <div class="modal-content ascension-content">
@@ -28,38 +29,32 @@ export class AscensionModal {
           <button class="modal-close" id="ascension-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="ascension-info">
-          <div class="ascension-description">
-            <p>Ascend to a higher plane of existence. You will lose all progress except:</p>
-            <ul>
-              <li>Achievements</li>
-              <li>Statistics</li>
-              <li>Prestige Upgrades</li>
-            </ul>
-            <div class="ascension-info-box">
-              <p class="ascension-info-title">How Prestige Points Work:</p>
-              <p style="margin: 5px 0; font-size: 14px;"><strong>Base PP:</strong> Earned using square root scaling - you always get points for ascending past level 99!</p>
-              <p style="margin: 5px 0; font-size: 14px;"><strong>Bonus PP:</strong> Earn <strong>2x bonus</strong> for levels beyond your previous best level!</p>
-              <p style="margin: 5px 0; font-size: 13px; color: rgba(255, 255, 255, 0.6);">To double your PP, reach roughly 4x your previous level progress (square root scaling)</p>
-              <div style="margin-top: 10px; font-size: 13px;">
-                <p style="margin: 5px 0; color: #ffffff; font-weight: bold;">Current Level: <span id="current-level-display">0</span></p>
-                <p style="margin: 5px 0; color: #ffffff; font-weight: bold;">Previous Best Level: <span id="previous-best-level">0</span></p>
-              </div>
+          <div class="ascension-stats">
+            <div class="stat-item">
+              <span class="stat-label">Current PP:</span>
+              <strong id="prestige-current">0</strong>
             </div>
-            <div class="ascension-info-box">
-              <p class="ascension-info-title">Unspent Prestige Points Bonus:</p>
-              <p style="margin: 5px 0; font-size: 14px;">Each <strong>unspent Prestige Point gives +0.25% income</strong> to all point sources!</p>
-              <p style="margin: 5px 0; font-size: 13px; color: rgba(255, 255, 255, 0.6);">This applies to clicks, kills, and passive generation.</p>
-              <p style="margin: 10px 0 0 0; font-size: 13px; color: #ffffff; font-weight: bold;">Current Income Bonus: <span id="unspent-pp-bonus">+0%</span></p>
+            <div class="stat-item">
+              <span class="stat-label">Gain:</span>
+              <strong id="prestige-gain">0</strong> PP
+              <span style="font-size: 11px; color: rgba(255, 250, 229, 0.6); margin-left: 8px;">
+                (<span id="prestige-base">0</span> base + <span id="prestige-achievement-bonus">0</span> achievements + <span id="prestige-bonus">0</span> bonus)
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Unspent Bonus:</span>
+              <strong id="unspent-pp-bonus">+0%</strong> income
             </div>
           </div>
-          <div class="ascension-rewards">
-            <div class="prestige-points-display">
-              <div class="prestige-current">Current: <span id="prestige-current">0</span> PP</div>
-              <div class="prestige-gain">
-                <div style="margin-bottom: 5px;">Total Gain: <span id="prestige-gain">0</span> PP</div>
-                <div style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin-left: 10px;">Base: <span id="prestige-base">0</span> PP</div>
-                <div style="font-size: 13px; color: #ffffff; margin-left: 10px; font-weight: bold;">Bonus: <span id="prestige-bonus">0</span> PP</div>
-              </div>
+          <div class="ascension-preserved">
+            <div style="font-size: 12px; color: #fffae5; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+              Preserved After Ascension:
+            </div>
+            <div style="display: flex; gap: 20px; font-size: 12px; color: #fffae5; flex-wrap: wrap;">
+              <span>Achievements</span>
+              <span>Statistics</span>
+              <span>Prestige Upgrades</span>
+              <span>Artifacts</span>
             </div>
           </div>
         </div>
@@ -81,19 +76,16 @@ export class AscensionModal {
       this.hide();
     });
 
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
+    // Remove overlay click to close - only X button closes now
 
     const ascendBtn = this.modal.querySelector('#ascend-btn');
-    ascendBtn?.addEventListener('click', () => {
-      if (
-        confirm(
-          'Are you sure you want to ascend? All non-permanent progress will be reset!',
-        )
-      ) {
+    ascendBtn?.addEventListener('click', async () => {
+      const { alertDialog } = await import('./AlertDialog');
+      const confirmed = await alertDialog.confirm(
+        'Are you sure you want to ascend? All non-permanent progress will be reset!',
+        'Ascend',
+      );
+      if (confirmed) {
         this.onAscend();
         this.hide();
       }
@@ -147,17 +139,9 @@ export class AscensionModal {
     const gainPP = document.getElementById('prestige-gain');
     const basePP = document.getElementById('prestige-base');
     const bonusPP = document.getElementById('prestige-bonus');
-    const previousBestLevel = document.getElementById('previous-best-level');
-    const currentLevelDisplay = document.getElementById(
-      'current-level-display',
-    );
 
     if (currentPP) {
       currentPP.textContent = state.prestigePoints.toString();
-    }
-
-    if (currentLevelDisplay) {
-      currentLevelDisplay.textContent = state.level.toString();
     }
 
     // Get breakdown of PP gain
@@ -174,19 +158,21 @@ export class AscensionModal {
       basePP.textContent = breakdown.base.toString();
     }
 
-    if (bonusPP) {
-      bonusPP.textContent = breakdown.bonus.toString();
+    const achievementBonusPP = document.getElementById('prestige-achievement-bonus');
+    if (achievementBonusPP) {
+      achievementBonusPP.textContent = breakdown.achievementBonus.toString();
     }
 
-    if (previousBestLevel) {
-      previousBestLevel.textContent = breakdown.previousBest.toString();
+    if (bonusPP) {
+      bonusPP.textContent = breakdown.bonus.toString();
     }
 
     // Update unspent PP bonus display
     const unspentPPBonus = document.getElementById('unspent-pp-bonus');
     if (unspentPPBonus) {
       const unspentPP = state.prestigePoints ?? 0;
-      const bonusPercent = (unspentPP * 0.25).toFixed(1);
+      const percentagePerPP = Config.ascension.unspentPPMultiplier.percentagePerPP;
+      const bonusPercent = (unspentPP * percentagePerPP).toFixed(1);
       unspentPPBonus.textContent = `+${bonusPercent}%`;
     }
 
@@ -230,15 +216,14 @@ export class AscensionModal {
       }
     }
 
+    document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
-    // Trigger animation
-    requestAnimationFrame(() => {
-      this.modal.classList.add('show');
-    });
+    this.modal.classList.add('show');
   }
 
   hide(): void {
     this.modal.classList.remove('show');
+    document.body.style.overflow = '';
     // Wait for animation to complete
     setTimeout(() => {
       this.modal.style.display = 'none';
@@ -253,23 +238,15 @@ export class AscensionModal {
     const gainPP = document.getElementById('prestige-gain');
     const basePP = document.getElementById('prestige-base');
     const bonusPP = document.getElementById('prestige-bonus');
-    const previousBestLevel = document.getElementById('previous-best-level');
-    const currentLevelDisplay = document.getElementById(
-      'current-level-display',
-    );
 
     if (currentPP) {
       currentPP.textContent = state.prestigePoints.toString();
     }
 
-    if (currentLevelDisplay) {
-      currentLevelDisplay.textContent = state.level.toString();
-    }
-
     // Update breakdown
     const breakdown =
       this.ascensionSystem.calculatePrestigePointsBreakdown(state);
-    const totalGain = breakdown.base + breakdown.bonus;
+    const totalGain = breakdown.base + breakdown.achievementBonus + breakdown.bonus;
 
     if (gainPP) {
       gainPP.textContent = totalGain.toString();
@@ -279,19 +256,21 @@ export class AscensionModal {
       basePP.textContent = breakdown.base.toString();
     }
 
-    if (bonusPP) {
-      bonusPP.textContent = breakdown.bonus.toString();
+    const achievementBonusPP = document.getElementById('prestige-achievement-bonus');
+    if (achievementBonusPP) {
+      achievementBonusPP.textContent = breakdown.achievementBonus.toString();
     }
 
-    if (previousBestLevel) {
-      previousBestLevel.textContent = breakdown.previousBest.toString();
+    if (bonusPP) {
+      bonusPP.textContent = breakdown.bonus.toString();
     }
 
     // Update unspent PP bonus display
     const unspentPPBonus = document.getElementById('unspent-pp-bonus');
     if (unspentPPBonus) {
       const unspentPP = state.prestigePoints ?? 0;
-      const bonusPercent = (unspentPP * 0.25).toFixed(1);
+      const percentagePerPP = Config.ascension.unspentPPMultiplier.percentagePerPP;
+      const bonusPercent = (unspentPP * percentagePerPP).toFixed(1);
       unspentPPBonus.textContent = `+${bonusPercent}%`;
     }
 

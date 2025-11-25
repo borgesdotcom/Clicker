@@ -409,7 +409,7 @@ const DEFAULT_CONFIG: GameConfigData = {
       comboPauseUnlock: { cost: 30 },
     },
     unspentPPMultiplier: {
-      percentagePerPP: 0.25, // 0.25% per unspent PP
+      percentagePerPP: 5, // 5% per unspent PP
     },
     costScaling: {
       exponentialBase: 1.15,

@@ -18,7 +18,7 @@
     "japanese": "Japonés"
   },
   "settings": {
-    "title": "⚙️ Configuración",
+    "title": "Configuración",
     "soundSettings": "Configuración de Audio",
     "graphicsSettings": "Configuración de Gráficos",
     "languageSettings": "Configuración de Idioma",
@@ -36,7 +36,11 @@
     "screenShake": "Vibración de Pantalla:",
     "screenShakeHint": "Desactivar para prevenir mareos",
     "language": "Idioma:",
-    "languageHint": "Cambiar el idioma del juego"
+    "languageHint": "Cambiar el idioma del juego",
+    "accessibilitySettings": "Configuración de Accesibilidad",
+    "fontFamily": "Fuente:",
+    "fontDefault": "Predeterminada (Courier New)",
+    "fontFamilyWarning": "⚠️ ADVERTENCIA: Cambiar la fuente puede romper algunos elementos de la interfaz. El juego fue diseñado pensando en la fuente predeterminada."
   },
   "hud": {
     "points": "Moonies",
@@ -278,7 +282,21 @@
     "screenShakeFix": "La opción de desactivar temblor de pantalla ahora funciona correctamente durante peleas de jefes.",
     "omegaFilter": "Reducida intensidad del filtro amarillo de Omega Core (Boss 100).",
     "rainbowLaser": "Renderizado del láser arcoíris optimizado para jugabilidad más fluida.",
-    "tipSpace": "¡Intenta mantener Espacio durante peleas de jefes para daño sostenido mientras esquivas efectos visuales!"
+    "tipSpace": "¡Intenta mantener Espacio durante peleas de jefes para daño sostenido mientras esquivas efectos visuales!",
+    "v120Title": "Novedades de la Versión 1.20.0",
+    "qualityOfLife": "Mejoras de Calidad de Vida",
+    "artifactNotification": "Nueva notificación de artefacto – el botón de artefactos ahora brilla en lugar de abrir el modal automáticamente.",
+    "bossEffectFix": "Corregido efectos visuales de jefes que a veces no se limpiaban correctamente.",
+    "v121Title": "Novedades de la Versión 1.21.0",
+    "accessibility": "Mejoras de Accesibilidad",
+    "accessibilityFont": "Opción de personalización de fuente añadida para jugadores con dificultades visuales.",
+    "accessibilityScreenShake": "Opción de vibración de pantalla movida a configuración de accesibilidad para ayudar con el mareo por movimiento.",
+    "hudUpdates": "Actualizaciones del HUD",
+    "hudImprovements": "HUD mejorado con mejor desglose de ingresos y retroalimentación visual mejorada.",
+    "newContent": "Nuevo Contenido",
+    "newBossLevel5": "¡Nuevo encuentro de jefe añadido en el nivel 5 – prepárate para un desafío único!",
+    "optimizations": "Optimizaciones de Rendimiento",
+    "generalOptimizations": "Mejoras generales de rendimiento y optimizaciones de código en todo el juego."
   },
   "upgrades": {
     "main": {

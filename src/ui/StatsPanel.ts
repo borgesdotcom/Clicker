@@ -2,6 +2,7 @@
 import type { GameState } from '../types';
 import type { UpgradeSystem } from '../systems/UpgradeSystem';
 import { images } from '../assets/images';
+import { SAVE } from '../config/constants';
 
 export class StatsPanel {
   private modalElement: HTMLElement | null = null;
@@ -26,15 +27,9 @@ export class StatsPanel {
   private createModal(): void {
     // Create modal
     this.modalElement = document.createElement('div');
-    this.modalElement.className = 'modal stats-modal';
+    this.modalElement.className = 'stats-modal';
     this.modalElement.style.display = 'none';
 
-    // Close on background click
-    this.modalElement.addEventListener('click', (e) => {
-      if (e.target === this.modalElement) {
-        this.hide();
-      }
-    });
 
     // Modal content
     const content = document.createElement('div');
@@ -82,19 +77,18 @@ export class StatsPanel {
 
   public show(): void {
     if (this.modalElement) {
+      document.body.style.overflow = 'hidden';
       this.modalElement.style.display = 'flex';
       this.isOpen = true;
       this.render();
-      // Trigger animation
-      requestAnimationFrame(() => {
-        this.modalElement?.classList.add('show');
-      });
+      this.modalElement?.classList.add('show');
     }
   }
 
   public hide(): void {
     if (this.modalElement) {
       this.modalElement.classList.remove('show');
+      document.body.style.overflow = '';
       // Wait for animation to complete
       setTimeout(() => {
         this.modalElement!.style.display = 'none';
@@ -114,7 +108,7 @@ export class StatsPanel {
     if (!container) return;
 
     // Get state from somewhere - for now we'll get it from the game
-    const stateStr = localStorage.getItem('alien-clicker-save');
+    const stateStr = localStorage.getItem(SAVE.STORAGE_KEY);
     if (!stateStr) return;
 
     const state = JSON.parse(stateStr) as GameState;

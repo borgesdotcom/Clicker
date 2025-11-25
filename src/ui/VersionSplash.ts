@@ -25,7 +25,7 @@ export class VersionSplash {
     }
 
     // Returning user - check version
-    const currentVersion = '1.11.0-beta';
+    const currentVersion = '1.21.0';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -42,14 +42,15 @@ export class VersionSplash {
     const bossIcon = generateIconUrl(BOSS_SPRITE_COLOSSUS, '#ff00ff', 48);
 
     this.overlay = document.createElement('div');
-    this.overlay.className = 'version-splash';
+    this.overlay.className = 'tutorial-modal';
     this.overlay.innerHTML = `
-      <div class="version-splash-content">
-        <div class="version-splash-header">
-          <h1>${i18n.t('tutorialSplash.welcome')}</h1>
-          <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">${i18n.t('tutorialSplash.subtitle')}</p>
+      <div class="modal-content tutorial-modal-content">
+        <div class="modal-header tutorial-modal-header">
+          <h2>${i18n.t('tutorialSplash.welcome')}</h2>
+          <button class="modal-close" id="tutorial-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
-        <div class="version-splash-body" style="padding: 20px 30px;">
+        <div class="modal-body tutorial-modal-body">
+
           <div class="tutorial-steps">
             <!-- Step 1: Click to Attack -->
             <div class="tutorial-step">
@@ -95,85 +96,84 @@ export class VersionSplash {
               </div>
             </div>
           </div>
+          <button class="tutorial-start-btn">${i18n.t('tutorialSplash.startButton')}</button>
         </div>
-        <button class="version-splash-close">${i18n.t('tutorialSplash.startButton')}</button>
       </div>
     `;
 
     document.body.appendChild(this.overlay);
+    document.body.style.overflow = 'hidden';
+    this.overlay.style.display = 'flex';
+    this.overlay.classList.add('show');
 
-    const closeBtn = this.overlay.querySelector('.version-splash-close');
+    const closeBtn = this.overlay.querySelector('#tutorial-close');
+    const startBtn = this.overlay.querySelector('.tutorial-start-btn');
     closeBtn?.addEventListener('click', () => {
+      this.hide();
+    });
+    startBtn?.addEventListener('click', () => {
       this.hide();
     });
   }
 
   private showVersionSplash(_version: string): void {
     this.overlay = document.createElement('div');
-    this.overlay.className = 'version-splash';
+    this.overlay.className = 'tutorial-modal';
     this.overlay.innerHTML = `
-      <div class="version-splash-content">
-        <div class="version-splash-header">
-          <h1>🎮 Welcome to BOBBLE</h1>
-          <div class="version-badge">${i18n.t('versionSplash.welcome')}</div>
+      <div class="modal-content tutorial-modal-content">
+        <div class="modal-header tutorial-modal-header">
+          <h2>Welcome to BOBBLE</h2>
+          <button class="modal-close" id="version-close"><img src="/src/icons/menu/close.png" alt="Close" /></button>
         </div>
-        <div class="version-splash-body">
-          <h2>🆕 ${i18n.t('versionSplash.v111Title')}</h2>
+        <div class="modal-body tutorial-modal-body">
+          <h2 style="text-align: center; color: #FFFAE5; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 1px;">${i18n.t('versionSplash.v121Title')}</h2>
           <div class="changelog-section">
-            <h3>⌨️ ${i18n.t('versionSplash.newControl')}</h3>
+            <h3>${i18n.t('versionSplash.accessibility')}</h3>
             <ul>
-              <li>🎯 ${i18n.t('versionSplash.holdSpace')}</li>
-              <li>${i18n.t('versionSplash.rateLimit')}</li>
-              <li>${i18n.t('versionSplash.sustainedCombat')}</li>
+              <li>${i18n.t('versionSplash.accessibilityFont')}</li>
+              <li>${i18n.t('versionSplash.accessibilityScreenShake')}</li>
+            </ul>
+            <h3 style="margin-top: 15px;">${i18n.t('versionSplash.hudUpdates')}</h3>
+            <ul>
+              <li>${i18n.t('versionSplash.hudImprovements')}</li>
+            </ul>
+            <h3 style="margin-top: 15px;">${i18n.t('versionSplash.newContent')}</h3>
+            <ul>
+              <li>${i18n.t('versionSplash.newBossLevel5')}</li>
+            </ul>
+            <h3 style="margin-top: 15px;">${i18n.t('versionSplash.optimizations')}</h3>
+            <ul>
+              <li>${i18n.t('versionSplash.generalOptimizations')}</li>
             </ul>
           </div>
-
-          <div class="changelog-section">
-            <h3>🎨 ${i18n.t('versionSplash.enhancedTutorial')}</h3>
-            <ul>
-              <li>✨ ${i18n.t('versionSplash.beautifulUI')}</li>
-              <li>🌈 ${i18n.t('versionSplash.animatedBorders')}</li>
-              <li>💡 ${i18n.t('versionSplash.clearerVisual')}</li>
-              <li>📱 ${i18n.t('versionSplash.responsive')}</li>
-            </ul>
-          </div>
-
-          <div class="changelog-section">
-            <h3>🐛 ${i18n.t('versionSplash.bugFixes')}</h3>
-            <ul>
-              <li>🎭 ${i18n.t('versionSplash.tinyTyrantFix')}</li>
-              <li>⚡ ${i18n.t('versionSplash.powerupPerf')}</li>
-              <li>🎬 ${i18n.t('versionSplash.screenShakeFix')}</li>
-              <li>🌈 ${i18n.t('versionSplash.omegaFilter')}</li>
-              <li>🚀 ${i18n.t('versionSplash.rainbowLaser')}</li>
-            </ul>
-          </div>
-
-          <div class="version-footer" style="margin-top: 25px; padding: 15px; background: rgba(102, 204, 255, 0.05); border-radius: 8px;">
-            <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #aaa;">
-              <strong style="color: #ffffff; text-shadow: 0 0 5px rgba(102, 204, 255, 0.5);">💡 Tip:</strong> ${i18n.t('versionSplash.tipSpace')}
-            </p>
-          </div>
+          <button class="tutorial-start-btn">${i18n.t('versionSplash.startPlaying')}</button>
         </div>
-        <button class="version-splash-close">${i18n.t('versionSplash.startPlaying')}</button>
       </div>
     `;
 
     document.body.appendChild(this.overlay);
+    document.body.style.overflow = 'hidden';
+    this.overlay.style.display = 'flex';
+    this.overlay.classList.add('show');
 
-    const closeBtn = this.overlay.querySelector('.version-splash-close');
+    const closeBtn = this.overlay.querySelector('#version-close');
+    const startBtn = this.overlay.querySelector('.tutorial-start-btn');
     closeBtn?.addEventListener('click', () => {
+      this.hide();
+    });
+    startBtn?.addEventListener('click', () => {
       this.hide();
     });
   }
 
   private hide(): void {
     if (this.overlay) {
-      this.overlay.classList.add('fade-out');
+      this.overlay.classList.remove('show');
+      document.body.style.overflow = '';
       setTimeout(() => {
         this.overlay?.remove();
         this.overlay = null;
-      }, 500);
+      }, 300);
     }
   }
 }
