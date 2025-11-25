@@ -965,10 +965,9 @@ export class Shop {
       }
 
       // Simplified cost display - just show the number
-      // Don't show quantity text for Max mode to prevent container size changes
       cost.textContent = this.formatNumber(displayCost);
-      // Only show quantity for specific quantities (x5, x10), not for Max
-      if (this.buyQuantity !== 'max' && displayQuantity > 1) {
+      // Show quantity for all modes (x5, x10, and Max)
+      if (displayQuantity > 1) {
         const quantitySpan = document.createElement('span');
         quantitySpan.className = 'upgrade-quantity-text';
         quantitySpan.textContent = ` (×${displayQuantity})`;
