@@ -1384,6 +1384,17 @@ export class Game {
       gameContainer.style.backgroundRepeat = 'repeat';
       gameContainer.style.backgroundSize = 'auto';
       gameContainer.style.backgroundColor = '#000';
+      
+      // Also set as CSS custom property on document root for shop panel to use
+      document.documentElement.style.setProperty('--bg-gif-url', backgroundUrl);
+      
+      // Also update shop panel background directly
+      const shopPanel = document.getElementById('shop-panel');
+      if (shopPanel) {
+        shopPanel.style.backgroundImage = backgroundUrl;
+        shopPanel.style.backgroundRepeat = 'repeat';
+        shopPanel.style.backgroundSize = 'auto';
+      }
 
       console.log(
         'Background updated by level:',

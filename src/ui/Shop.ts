@@ -19,6 +19,7 @@ export class Shop {
   private lastAffordability: Map<string, boolean> = new Map();
   private currentTab: 'available' | 'owned' = 'available';
   private buttonCache: Map<string, HTMLButtonElement> = new Map();
+  private costCache: Map<string, HTMLElement> = new Map(); // Cache cost elements for updates
   private soundManager: { playPurchase: () => void } | null = null;
   private missionSystem: { trackUpgrade: () => void } | null = null;
   private ascensionSystem: {
@@ -664,6 +665,8 @@ export class Shop {
       const upgrades = this.upgradeSystem.getUpgrades();
       for (const upgrade of upgrades) {
         const button = this.buttonCache.get(upgrade.id);
+        const costElement = this.costCache.get(upgrade.id);
+        
         if (button) {
           // Calculate affordability based on current buyQuantity setting
           const canAfford = this.calculateBulkAffordability(upgrade, state);
@@ -677,6 +680,11 @@ export class Shop {
           } else {
             button.classList.add('disabled');
           }
+        }
+        
+        // Update cost and quantity display
+        if (costElement) {
+          this.updateCostDisplay(upgrade, state, costElement);
         }
       }
 
@@ -733,6 +741,75 @@ export class Shop {
     this.activeTooltips.clear();
   }
 
+  private updateCostDisplay(
+    upgrade: UpgradeConfig,
+    state: GameState,
+    costElement: HTMLElement,
+  ): void {
+    // Calculate cost for the exact requested quantity
+    const requestedQty = this.buyQuantity === 'max' ? 0 : this.buyQuantity;
+
+    let displayCost = 0;
+    let displayQuantity = 1;
+
+    if (this.buyQuantity === 'max') {
+      // For MAX: calculate affordable quantity and cost
+      const currentLevel = upgrade.getLevel(state);
+      const firstUpgradeCost = upgrade.getCost(currentLevel);
+
+      // First check if we can afford at least one upgrade
+      if (state.points < firstUpgradeCost) {
+        // Can't afford even one - show cost of one
+        displayCost = firstUpgradeCost;
+        displayQuantity = 1;
+      } else {
+        // Can afford at least one - calculate how many
+        const { totalCost, quantity } = this.calculateBulkCost(
+          upgrade,
+          state,
+        );
+        displayCost = totalCost;
+        displayQuantity = quantity;
+      }
+    } else {
+      // For specific quantity: calculate cost for EXACT requested quantity
+      const currentLevel = upgrade.getLevel(state);
+      let tempLevel = currentLevel;
+      const upgradeId = upgrade.id;
+      const affectsSelfCost = upgradeId === 'cosmicKnowledge';
+
+      // Create temporary state for self-affecting upgrades
+      const tempState = { ...state };
+
+      for (let i = 0; i < requestedQty; i++) {
+        const cost = upgrade.getCost(tempLevel);
+        displayCost += cost;
+        tempLevel++;
+
+        // Update temp state for self-affecting upgrades
+        if (affectsSelfCost) {
+          if (upgradeId === 'cosmicKnowledge') {
+            tempState.cosmicKnowledgeLevel = tempLevel;
+          }
+        }
+      }
+
+      displayQuantity = requestedQty;
+    }
+
+    // Update cost display - clear existing content first
+    costElement.innerHTML = '';
+    costElement.textContent = this.formatNumber(displayCost);
+    
+    // Show quantity for all modes (x5, x10, and Max)
+    if (displayQuantity > 1) {
+      const quantitySpan = document.createElement('span');
+      quantitySpan.className = 'upgrade-quantity-text';
+      quantitySpan.textContent = ` (×${displayQuantity})`;
+      costElement.appendChild(quantitySpan);
+    }
+  }
+
   private setBuyButtonContent(
     buttonElement: HTMLButtonElement,
     _displayQuantity: number,
@@ -768,6 +845,7 @@ export class Shop {
 
     // Clear button cache for fresh render
     this.buttonCache.clear();
+    this.costCache.clear();
 
     // Don't render special upgrades box in old UI
     if (!this.useOldUI) {
@@ -965,14 +1043,7 @@ export class Shop {
       }
 
       // Simplified cost display - just show the number
-      cost.textContent = this.formatNumber(displayCost);
-      // Show quantity for all modes (x5, x10, and Max)
-      if (displayQuantity > 1) {
-        const quantitySpan = document.createElement('span');
-        quantitySpan.className = 'upgrade-quantity-text';
-        quantitySpan.textContent = ` (×${displayQuantity})`;
-        cost.appendChild(quantitySpan);
-      }
+      this.updateCostDisplay(upgrade, state, cost);
 
       // Create button with image instead of text
       const button = new Button('', () => {
@@ -990,6 +1061,7 @@ export class Shop {
       this.setBuyButtonContent(buttonElement, displayQuantity);
 
       this.buttonCache.set(upgrade.id, buttonElement);
+      this.costCache.set(upgrade.id, cost); // Cache cost element for updates
 
       footer.appendChild(cost);
       footer.appendChild(buttonElement);

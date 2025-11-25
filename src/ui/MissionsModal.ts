@@ -66,8 +66,11 @@ export class MissionsModal {
   public show(): void {
     document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
-    this.modal.classList.add('show');
     this.renderMissions();
+    // Use requestAnimationFrame to ensure display is set before animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   public hide(): void {

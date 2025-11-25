@@ -531,8 +531,11 @@ svg {
 #shop-panel {
   width: 320px;
   min-width: 320px;
-  background: #3B2D5F;
+  background-color: #3B2D5F;
+  background-image: var(--bg-gif-url, none);
   background-size: auto;
+  background-repeat: repeat;
+  background-position: 0 0;
   border-left: 3px solid #FFFAE5;
   padding: 20px;
   overflow-y: auto;
@@ -5639,7 +5642,25 @@ svg {
   #shop-panel.desktop-collapsed {
     width: 50px !important;
     min-width: 50px !important;
-    overflow: hidden;
+    overflow: hidden !important;
+    background-color: #3B2D5F !important;
+    background-image: var(--bg-gif-url, none) !important;
+    background-size: auto !important;
+    background-repeat: repeat !important;
+    background-position: 0 0 !important;
+    border-left: 3px solid #FFFAE5 !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure pseudo-elements don't block background image */
+  #shop-panel.desktop-collapsed::before {
+    background: transparent !important;
+    z-index: 1 !important;
+  }
+  
+  #shop-panel.desktop-collapsed::after {
+    background: transparent !important;
+    z-index: 0 !important;
   }
 
   #shop-panel.desktop-collapsed h2,
@@ -5648,8 +5669,30 @@ svg {
   #shop-panel.desktop-collapsed #reset-container,
   #shop-panel.desktop-collapsed .buy-quantity-selector,
   #shop-panel.desktop-collapsed #credits-share-button,
-  #shop-panel.desktop-collapsed #discord-button {
-    display: none;
+  #shop-panel.desktop-collapsed #discord-button,
+  #shop-panel.desktop-collapsed .special-upgrades-box,
+  #shop-panel.desktop-collapsed .upgrade-item-container,
+  #shop-panel.desktop-collapsed .upgrade-item,
+  #shop-panel.desktop-collapsed .auto-buy-toggle,
+  #shop-panel.desktop-collapsed #shop-actions-container,
+  #shop-panel.desktop-collapsed .tooltip {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Hide all direct children except the toggle button */
+  #shop-panel.desktop-collapsed > *:not(.desktop-shop-toggle) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Ensure toggle button stays visible */
+  #shop-panel.desktop-collapsed .desktop-shop-toggle {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   #shop-panel.desktop-collapsed .desktop-shop-toggle {
@@ -7611,13 +7654,15 @@ svg {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(0, 0, 0, 0);
   z-index: 10000;
   display: none;
   flex-direction: column;
   overflow: hidden;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease-out, background 0.3s ease-out;
 }
 
 .alert-dialog {
@@ -7769,6 +7814,70 @@ svg {
 .customization-modal.show,
 .stats-modal.show {
   display: flex;
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.95);
+  animation: fullscreenModalFadeIn 0.3s ease-out;
+}
+
+.tutorial-modal.show .modal-content,
+.achievements-modal.show .modal-content,
+.artifacts-modal.show .modal-content,
+.missions-modal.show .modal-content,
+.game-info-modal.show .modal-content,
+.settings-modal.show .modal-content,
+.credits-modal.show .modal-content,
+.customization-modal.show .modal-content,
+.stats-modal.show .modal-content {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: fullscreenModalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Closing animation */
+.achievements-modal:not(.show),
+.artifacts-modal:not(.show),
+.missions-modal:not(.show),
+.game-info-modal:not(.show),
+.settings-modal:not(.show),
+.credits-modal:not(.show),
+.customization-modal:not(.show),
+.stats-modal:not(.show) {
+  opacity: 0;
+  background: rgba(0, 0, 0, 0);
+}
+
+.achievements-modal:not(.show) .modal-content,
+.artifacts-modal:not(.show) .modal-content,
+.missions-modal:not(.show) .modal-content,
+.game-info-modal:not(.show) .modal-content,
+.settings-modal:not(.show) .modal-content,
+.credits-modal:not(.show) .modal-content,
+.customization-modal:not(.show) .modal-content,
+.stats-modal:not(.show) .modal-content {
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+}
+
+@keyframes fullscreenModalFadeIn {
+  from {
+    opacity: 0;
+    background: rgba(0, 0, 0, 0);
+  }
+  to {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.95);
+  }
+}
+
+@keyframes fullscreenModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .tutorial-modal-content,
@@ -7794,6 +7903,7 @@ svg {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
   position: relative;
 }
 

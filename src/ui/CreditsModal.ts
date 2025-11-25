@@ -54,7 +54,7 @@ export class CreditsModal {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
     const closeImg = document.createElement('img');
-    closeImg.src = '/src/icons/menu/close.png';
+    closeImg.src = images.menu.close;
     closeImg.alt = 'Close';
     closeBtn.appendChild(closeImg);
     closeBtn.addEventListener('click', () => {
@@ -685,7 +685,12 @@ export class CreditsModal {
     if (this.modal) {
       document.body.style.overflow = 'hidden';
       this.modal.style.display = 'flex';
-      this.modal.classList.add('show');
+      // Use requestAnimationFrame to ensure display is set before animation
+      requestAnimationFrame(() => {
+        if (this.modal) {
+          this.modal.classList.add('show');
+        }
+      });
     }
   }
 

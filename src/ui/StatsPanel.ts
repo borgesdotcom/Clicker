@@ -81,7 +81,10 @@ export class StatsPanel {
       this.modalElement.style.display = 'flex';
       this.isOpen = true;
       this.render();
-      this.modalElement?.classList.add('show');
+      // Use requestAnimationFrame to ensure display is set before animation
+      requestAnimationFrame(() => {
+        this.modalElement?.classList.add('show');
+      });
     }
   }
 

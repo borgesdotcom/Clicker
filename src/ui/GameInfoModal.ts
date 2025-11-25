@@ -68,7 +68,10 @@ export class GameInfoModal {
     this.renderTab('combat');
     document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
-    this.modal.classList.add('show');
+    // Use requestAnimationFrame to ensure display is set before animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   hide(): void {

@@ -229,8 +229,11 @@ export class ArtifactsModal {
     this.currentPage = 1;
     document.body.style.overflow = 'hidden';
     this.modal.style.display = 'flex';
-    this.modal.classList.add('show');
     this.render();
+    // Use requestAnimationFrame to ensure display is set before animation
+    requestAnimationFrame(() => {
+      this.modal.classList.add('show');
+    });
   }
 
   public hide(): void {
