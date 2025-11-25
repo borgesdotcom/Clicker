@@ -799,13 +799,18 @@ export class Shop {
 
     // Update cost display - clear existing content first
     costElement.innerHTML = '';
-    costElement.textContent = this.formatNumber(displayCost);
+    const costText = document.createTextNode(this.formatNumber(displayCost));
+    costElement.appendChild(costText);
     
     // Show quantity for all modes (x5, x10, and Max)
     if (displayQuantity > 1) {
+      // Add explicit space before quantity indicator
+      const spaceText = document.createTextNode(' ');
+      costElement.appendChild(spaceText);
+      
       const quantitySpan = document.createElement('span');
       quantitySpan.className = 'upgrade-quantity-text';
-      quantitySpan.textContent = ` (×${displayQuantity})`;
+      quantitySpan.textContent = `(×${displayQuantity})`;
       costElement.appendChild(quantitySpan);
     }
   }
