@@ -378,6 +378,7 @@ export class CreditsModal {
       <span style="color: #999; font-size: 14px;">Built with TypeScript, HTML5 Canvas, and lots of Coffee</span><br><br>
       <strong style="color: #FFFAE5; font-family: 'm5x7', monospace; font-size: 20px;">Special Thanks</strong><br>
       <span style="color: #999; font-size: 14px;">To all players and the incremental games community!</span>
+      <span style="color: #0000; font-size: 8px;">[incrementaldb_verification: PersistentVirtual55]</span>
     `;
     creditsText.style.lineHeight = '1.8';
     creditsSection.appendChild(creditsText);
