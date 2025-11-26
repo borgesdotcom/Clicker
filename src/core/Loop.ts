@@ -5,41 +5,47 @@ export class Loop {
   private readonly fixedDt = 1 / 60; // Standard 60 FPS for smooth gameplay
   private isVisible = true;
   private animationFrameId: number | null = null;
+  private timeoutId: number | null = null;
+  private readonly targetFps = 60;
+  private readonly targetFrameTime = 1000 / this.targetFps; // ~16.67ms for 60fps
 
   constructor(
     private update: (dt: number) => void,
     private render: () => void,
     private onFrameEnd?: (frameStart: number) => void,
-    private onBackgroundProgress?: (elapsedSeconds: number) => void,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _onBackgroundProgress?: (elapsedSeconds: number) => void, // Kept for backward compatibility, not used since game runs continuously
   ) {
-    // Handle visibility changes to pause simulation when hidden
+    // Handle visibility changes - switch between requestAnimationFrame and setTimeout
     document.addEventListener('visibilitychange', () => {
+      const wasVisible = this.isVisible;
       this.isVisible = !document.hidden;
 
       if (this.running) {
-        if (this.isVisible) {
-          // Tab became visible - grant offline progress and resume
-          const now = performance.now();
-          const elapsed = Math.max(0, (now - this.lastTime) / 1000);
-          // Cap offline catch-up to avoid huge jumps on very long absences
-          const cappedElapsed = Math.min(elapsed, 60);
-          if (this.onBackgroundProgress && cappedElapsed > 0) {
-            this.onBackgroundProgress(cappedElapsed);
+        if (this.isVisible && !wasVisible) {
+          // Tab became visible - switch from setTimeout to requestAnimationFrame
+          if (this.timeoutId !== null) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
           }
-          this.lastTime = now;
+          this.lastTime = performance.now();
           this.accumulator = 0;
-          // Only start loop if not already running (prevent accumulation)
+          // Start requestAnimationFrame loop if not already running
           if (this.animationFrameId === null) {
             this.animationFrameId = requestAnimationFrame(this.loop);
           }
-        } else {
-          // Tab became hidden - cancel pending animation frame to prevent accumulation
+        } else if (!this.isVisible && wasVisible) {
+          // Tab became hidden - switch from requestAnimationFrame to setTimeout
           if (this.animationFrameId !== null) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
           }
-          // Pause updates completely to avoid backlog
+          this.lastTime = performance.now();
           this.accumulator = 0;
+          // Start setTimeout loop if not already running
+          if (this.timeoutId === null) {
+            this.timeoutId = window.setTimeout(this.timeoutLoop, this.targetFrameTime);
+          }
         }
       }
     });
@@ -50,17 +56,28 @@ export class Loop {
     this.running = true;
     this.lastTime = performance.now();
 
-    if (this.isVisible && this.animationFrameId === null) {
-      this.animationFrameId = requestAnimationFrame(this.loop);
+    // Use requestAnimationFrame if visible, setTimeout if hidden
+    if (this.isVisible) {
+      if (this.animationFrameId === null) {
+        this.animationFrameId = requestAnimationFrame(this.loop);
+      }
+    } else {
+      if (this.timeoutId === null) {
+        this.timeoutId = window.setTimeout(this.timeoutLoop, this.targetFrameTime);
+      }
     }
   }
 
   stop(): void {
     this.running = false;
-    // Cancel any pending animation frame
+    // Cancel any pending animation frame or timeout
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
+    }
+    if (this.timeoutId !== null) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
     }
   }
 
@@ -70,6 +87,30 @@ export class Loop {
 
     if (!this.running) return;
 
+    this.processFrame(currentTime);
+
+    // Continue requestAnimationFrame loop if visible and not already scheduled
+    if (this.isVisible && this.animationFrameId === null) {
+      this.animationFrameId = requestAnimationFrame(this.loop);
+    }
+  };
+
+  private timeoutLoop = (): void => {
+    // Clear the timeout ID since this frame is now executing
+    this.timeoutId = null;
+
+    if (!this.running) return;
+
+    const currentTime = performance.now();
+    this.processFrame(currentTime);
+
+    // Continue setTimeout loop if hidden and not already scheduled
+    if (!this.isVisible && this.timeoutId === null) {
+      this.timeoutId = window.setTimeout(this.timeoutLoop, this.targetFrameTime);
+    }
+  };
+
+  private processFrame(currentTime: number): void {
     const frameStart = currentTime;
     const deltaTime = Math.min((currentTime - this.lastTime) / 1000, 0.1);
     this.lastTime = currentTime;
@@ -95,11 +136,5 @@ export class Loop {
     if (this.onFrameEnd) {
       this.onFrameEnd(frameStart);
     }
-
-    // Only continue requestAnimationFrame loop if visible (paused when hidden)
-    // Only schedule if not already scheduled (prevent accumulation)
-    if (this.isVisible && this.animationFrameId === null) {
-      this.animationFrameId = requestAnimationFrame(this.loop);
-    }
-  };
+  }
 }
