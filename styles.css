@@ -3325,11 +3325,242 @@ svg {
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 0 4px rgba(255, 255, 255, 0.5);
 }
 
-.ascension-upgrades {
-  padding: 25px 30px;
-  border-bottom: none;
+.ascension-content-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  padding: 15px 20px;
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
+  background: #000000;
+}
+
+.ship-hull-section {
+  padding: 15px 20px;
+  border-right: 2px solid #3B2D5F;
+  background: #000000;
+  flex-shrink: 0;
+  min-width: 350px;
+  max-width: 400px;
+  overflow-y: visible;
+}
+
+.ship-hull-section h3 {
+  color: #FFFAE5;
+  margin-bottom: 8px;
+  font-size: 16px;
+  text-shadow: none;
+  letter-spacing: 1px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #3B2D5F;
+  font-family: var(--font-family);
+}
+
+.ship-hull-description {
+  color: #fffae5;
+  font-size: 11px;
+  margin-bottom: 10px;
+  opacity: 0.8;
+  text-align: center;
+  font-family: var(--font-family);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 1),
+    -1px -1px 0 rgba(0, 0, 0, 1);
+}
+
+.ship-hull-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.ship-hull-card {
+  position: relative;
+  background: var(--bg-rpg-box);
+  border: var(--border-rpg);
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.1s linear;
+  min-width: 70px;
+  max-width: 80px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.ship-hull-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity 0.1s linear;
+  z-index: 0;
+}
+
+.ship-hull-card.purchasable:hover::before {
+  opacity: 1;
+}
+
+.ship-hull-card.purchasable:hover {
+  border-color: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    inset 0 0 8px rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.95);
+}
+
+.ship-hull-card.owned {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.98);
+  cursor: default;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ship-hull-card.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.9);
+  filter: grayscale(0.5);
+}
+
+.ship-hull-card>* {
+  position: relative;
+  z-index: 1;
+}
+
+.ship-hull-image-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3px;
+}
+
+.ship-hull-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  transition: transform 0.1s linear;
+}
+
+.ship-hull-card.purchasable:hover .ship-hull-image {
+  transform: scale(1.1);
+}
+
+.ship-hull-checkmark {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-rpg-box);
+  border: var(--border-rpg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFAE5;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: var(--font-family);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 1),
+    -1px -1px 0 rgba(0, 0, 0, 1);
+  z-index: 2;
+}
+
+.ship-hull-level {
+  color: #FFFAE5;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-family);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 1),
+    -1px -1px 0 rgba(0, 0, 0, 1);
+}
+
+.ship-hull-multiplier {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: var(--font-family);
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.5),
+    1px 1px 0 rgba(0, 0, 0, 1),
+    -1px -1px 0 rgba(0, 0, 0, 1);
+}
+
+.ship-hull-cost {
+  color: #FFFAE5;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 3px 6px;
+  background: var(--bg-rpg-box);
+  border: var(--border-rpg);
+  font-family: var(--font-family);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 1),
+    -1px -1px 0 rgba(0, 0, 0, 1);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ship-hull-card.purchasable .ship-hull-cost {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 1);
+  background: rgba(0, 0, 0, 0.95);
+}
+
+.ship-hull-card.purchasable:hover .ship-hull-cost {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    inset 0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+.ship-hull-cost.owned-text {
+  color: #FFFAE5;
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.98);
+}
+
+.ascension-upgrades {
+  padding: 15px 20px;
+  border-bottom: none;
+  flex: 1;
+  overflow-y: visible;
   min-height: 0;
   background: #000000;
 }
@@ -3352,8 +3583,8 @@ svg {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
-  max-height: 400px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .prestige-upgrade-card {
@@ -4771,9 +5002,11 @@ svg {
   margin-top: auto;
   padding-top: 8px;
   border-top: var(--border-rpg);
-  z-index: 1;
-  position: relative;
-  flex-shrink: 0;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  align-items: stretch;
+  overflow: visible;
+  width: 100%;
 }
 
 .artifact-action-btn {
@@ -4788,7 +5021,7 @@ svg {
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   font-family: var(--font-family);
   font-weight: bold;
   color: #fffae5;
@@ -4798,6 +5031,8 @@ svg {
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .artifact-action-btn::before {
@@ -4834,9 +5069,26 @@ svg {
   filter: drop-shadow(0 0 4px currentColor);
 }
 
+.btn-text {
+  font-size: 10px;
+  line-height: 1.2;
+  z-index: 1;
+  position: relative;
+  font-family: var(--font-family);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  filter: drop-shadow(0 0 4px currentColor);
+  white-space: nowrap;
+  overflow: visible;
+  padding: 0 2px;
+}
+
 .artifact-action-btn.equip-btn {
   border-color: rgba(255, 255, 255, 0.8);
   color: #fffae5;
+  min-width: 60px;
+  flex: 1.2;
 }
 
 .artifact-action-btn.equip-btn:hover {
@@ -5387,16 +5639,93 @@ svg {
     min-height: 28px;
   }
 
+  .ascension-content-wrapper {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 15px;
+  }
+
+  .ship-hull-section {
+    padding: 10px 15px;
+    border-right: none;
+    border-bottom: 2px solid #3B2D5F;
+    min-width: auto;
+    max-width: none;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .ship-hull-section h3 {
+    font-size: 14px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+
+  .ship-hull-description {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .ship-hull-row {
+    gap: 6px;
+    padding: 8px 0;
+  }
+
+  .ship-hull-card {
+    min-width: 60px;
+    max-width: 65px;
+    padding: 6px;
+    gap: 3px;
+  }
+
+  .ship-hull-image-wrapper {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 2px;
+  }
+
+  .ship-hull-level {
+    font-size: 9px;
+  }
+
+  .ship-hull-multiplier {
+    font-size: 10px;
+  }
+
+  .ship-hull-cost {
+    font-size: 8px;
+    padding: 2px 4px;
+  }
+
+  .ascension-upgrades {
+    padding: 10px 15px;
+    min-height: 150px;
+  }
+
+  .prestige-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+
   .level-value {
     font-size: 11px;
   }
 
   .artifact-action-btn {
-    padding: 7px 5px;
+    padding: 7px 8px;
+    min-width: 50px;
+  }
+
+  .artifact-action-btn.equip-btn {
+    min-width: 60px;
   }
 
   .btn-icon {
     font-size: 14px;
+  }
+
+  .btn-text {
+    font-size: 9px;
   }
 
   .artifacts-modal-content,

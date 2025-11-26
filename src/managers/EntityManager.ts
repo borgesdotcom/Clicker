@@ -17,6 +17,7 @@ export interface EntityManagerDependencies {
     getState: () => {
       level: number;
       shipsCount: number;
+      prestigeUpgrades?: Record<string, number>;
     };
   };
 }
@@ -94,6 +95,8 @@ export class EntityManager {
       0.4;
 
     const ships: Ship[] = [];
+    // Get ship hull level from prestige upgrades
+    const shipHullLevel = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
     for (let i = 0; i < state.shipsCount; i++) {
       // Random angle for each ship instead of perfect circle
       const angle = Math.random() * Math.PI * 2;
@@ -101,7 +104,8 @@ export class EntityManager {
       // Random radius for each ship
       const randomRadius =
         orbitRadius * (0.7 + Math.random() * 0.6); // 70% to 130% of base radius
-      ships.push(new Ship(angle, cx, cy, randomRadius, isMain));
+      // Apply hull to all ships
+      ships.push(new Ship(angle, cx, cy, randomRadius, isMain, shipHullLevel));
     }
 
     if (this.callbacks.onShipsCreated) {

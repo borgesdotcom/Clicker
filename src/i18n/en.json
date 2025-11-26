@@ -196,6 +196,10 @@
     "claimReward": "Claim Reward",
     "noActive": "No active mission"
   },
+  "artifacts": {
+    "equip": "Equip",
+    "unequip": "Unequip"
+  },
   "stats": {
     "title": "📊 Statistics",
     "totalClicks": "Total Clicks",
@@ -285,6 +289,12 @@
     "bossEffectFix": "Fixed boss visual effects sometimes not cleaning up properly.",
     "v121Title": "What's New in 1.21.0",
     "beta200Title": "What's New in Beta 2.0.0",
+    "beta210Title": "What's New in Beta 2.1.0",
+    "shipHullUpgrades": "Ship Hull Upgrades",
+    "shipHullShort": "Upgrade your ship hulls in the Ascension shop! Each level doubles base damage and boosts Damage Amplifier effectiveness.",
+    "shipHullDesc": "<strong>New Ship Hull System</strong> – Upgrade your ship hulls in the Ascension shop to double base damage per level! Each hull level provides a 2x damage multiplier (Level 1 = 2x, Level 2 = 4x, etc.).",
+    "shipHullVisual": "All ships in your fleet now use the upgraded hull design, giving your entire armada a powerful visual and statistical boost.",
+    "shipHullDamage": "When a hull upgrade is active, your Damage Amplifier upgrade increases by +2 per level instead of +1, making hull upgrades incredibly powerful!",
     "upcomingContent": "Upcoming Content Drops",
     "contentNov26": "<strong>November 26:</strong> +100 levels of new content",
     "contentNov27": "<strong>November 27:</strong> +100 levels of new content",

@@ -196,6 +196,10 @@
     "claimReward": "Reivindicar Recompensa",
     "noActive": "Nenhuma missão ativa"
   },
+  "artifacts": {
+    "equip": "Equipar",
+    "unequip": "Desequipar"
+  },
   "stats": {
     "title": "📊 Estatísticas",
     "totalClicks": "Total de Cliques",
@@ -285,6 +289,12 @@
     "bossEffectFix": "Corrigido efeitos visuais de boss às vezes não sendo limpos corretamente.",
     "v121Title": "Novidades da Versão 1.21.0",
     "beta200Title": "Novidades da Beta 2.0.0",
+    "beta210Title": "Novidades da Beta 2.1.0",
+    "shipHullUpgrades": "Upgrades de Casco de Nave",
+    "shipHullShort": "Atualize os cascos das suas naves na loja de Ascensão! Cada nível dobra o dano base e aumenta a eficácia do Amplificador de Dano.",
+    "shipHullDesc": "<strong>Novo Sistema de Casco de Nave</strong> – Atualize os cascos das suas naves na loja de Ascensão para dobrar o dano base por nível! Cada nível de casco fornece um multiplicador de dano de 2x (Nível 1 = 2x, Nível 2 = 4x, etc.).",
+    "shipHullVisual": "Todas as naves na sua frota agora usam o design de casco atualizado, dando à sua armada inteira um poderoso impulso visual e estatístico.",
+    "shipHullDamage": "Quando um upgrade de casco está ativo, seu upgrade de Amplificador de Dano aumenta em +2 por nível ao invés de +1, tornando os upgrades de casco incrivelmente poderosos!",
     "upcomingContent": "Lançamentos de Conteúdo Futuros",
     "contentNov26": "<strong>26 de Novembro:</strong> +100 níveis de novo conteúdo",
     "contentNov27": "<strong>27 de Novembro:</strong> +100 níveis de novo conteúdo",

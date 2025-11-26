@@ -15,6 +15,7 @@ export class UpgradeSystem {
     getXPMultiplier: (state: GameState) => number;
     getSpeedMultiplier: (state: GameState) => number;
     getUnspentPPMultiplier: (state: GameState) => number;
+    getShipHullMultiplier: (state: GameState) => number;
   } | null = null;
 
   private artifactSystem: {
@@ -42,6 +43,7 @@ export class UpgradeSystem {
     getXPMultiplier: (state: GameState) => number;
     getSpeedMultiplier: (state: GameState) => number;
     getUnspentPPMultiplier: (state: GameState) => number;
+    getShipHullMultiplier: (state: GameState) => number;
   }): void {
     this.ascensionSystem = ascensionSystem;
   }
@@ -472,10 +474,22 @@ export class UpgradeSystem {
   private getBaseDamage(state: GameState): number {
     this.updateSubUpgradesFromState(state);
     // Damage Amplifier: +1 damage per level (level 1 = 1 damage, level 2 = 2 damage, etc.)
-    let damage = this.basePoints + state.pointMultiplierLevel;
-
-    // Apply unspent prestige points multiplier (1% per unspent PP)
+    // But if ship hull is active, it increases by +2 per level instead
+    let damagePerLevel = 1;
     if (this.ascensionSystem) {
+      const hullLevel = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
+      if (hullLevel > 0) {
+        damagePerLevel = 2; // Double the increase per level when hull is active
+      }
+    }
+    let damage = this.basePoints + state.pointMultiplierLevel * damagePerLevel;
+
+    // Apply ship hull multiplier (doubles base damage per level)
+    if (this.ascensionSystem) {
+      const hullMultiplier = this.ascensionSystem.getShipHullMultiplier(state);
+      damage *= hullMultiplier;
+      
+      // Apply unspent prestige points multiplier (1% per unspent PP)
       const unspentPPMultiplier =
         this.ascensionSystem.getUnspentPPMultiplier(state);
       damage *= unspentPPMultiplier;

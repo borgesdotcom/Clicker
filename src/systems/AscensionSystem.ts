@@ -147,6 +147,16 @@ export class AscensionSystem {
           state.prestigeUpgrades?.combo_pause_unlock ?? 0,
         effect: 'Unlocks Combo Pause skill (15min duration, 1hr cooldown)',
       },
+      {
+        id: 'prestige_ship_hull',
+        name: 'Ship Hull',
+        description: 'Upgrade ship hull to double base damage',
+        cost: Config.ascension.upgrades.shipSkin.costPerLevel,
+        maxLevel: Config.ascension.upgrades.shipSkin.maxLevel,
+        getCurrentLevel: (state) =>
+          state.prestigeUpgrades?.prestige_ship_hull ?? 0,
+        effect: 'Doubles base damage per level',
+      },
     ];
   }
 
@@ -285,7 +295,18 @@ export class AscensionSystem {
   getDamageMultiplier(state: GameState): number {
     const level = state.prestigeUpgrades?.prestige_damage ?? 0;
     const multiplierPerLevel = Config.ascension.upgrades.damage.multiplierPerLevel;
-    return 1 + level * multiplierPerLevel;
+    
+    // If ship hull is active, double the multiplier per level
+    const hullLevel = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
+    const hullMultiplier = hullLevel > 0 ? 2 : 1;
+    
+    return 1 + level * multiplierPerLevel * hullMultiplier;
+  }
+
+  getShipHullMultiplier(state: GameState): number {
+    const level = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
+    // Each level doubles the base damage: level 1 = 2x, level 2 = 4x, level 3 = 8x, etc.
+    return Math.pow(2, level);
   }
 
   getPointsMultiplier(state: GameState): number {
@@ -365,6 +386,16 @@ export class AscensionSystem {
 
     const currentLevel = upgrade.getCurrentLevel(state);
     if (currentLevel >= upgrade.maxLevel) return Infinity;
+
+    // Special cost scaling for ship hull: 1, 100, 200, 300, 400
+    if (upgradeId === 'prestige_ship_hull') {
+      if (currentLevel === 0) return 10;
+      if (currentLevel === 1) return 100;
+      if (currentLevel === 2) return 250;
+      if (currentLevel === 3) return 500;
+      if (currentLevel === 4) return 1000;
+      return Infinity;
+    }
 
     // Scale cost based on current level: baseCost * (exponentialBase ^ currentLevel)
     // This makes each level progressively more expensive

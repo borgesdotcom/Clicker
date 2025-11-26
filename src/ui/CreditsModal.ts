@@ -93,7 +93,7 @@ export class CreditsModal {
     gameInfoSection.appendChild(gameDesc);
 
     const version = document.createElement('p');
-    version.textContent = 'Release beta2.0.0';
+    version.textContent = 'Release beta2.1.0';
     version.style.fontSize = '12px';
     version.style.color = '#999';
     version.style.fontFamily = 'monospace';

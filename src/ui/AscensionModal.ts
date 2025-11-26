@@ -3,6 +3,18 @@ import type { Store } from '../core/Store';
 import { images } from '../assets/images';
 import { Config } from '../core/GameConfig';
 
+// Map ship hull levels to images
+const getShipHullImage = (level: number): string | null => {
+  const shipHullMap: Record<number, string> = {
+    1: images.ships.ship_1,
+    2: images.ships.ship_2,
+    3: images.ships.ship_3,
+    4: images.ships.ship_4,
+    5: images.ships.ship_5,
+  };
+  return shipHullMap[level] || null;
+};
+
 export class AscensionModal {
   private modal: HTMLElement;
   private onAscend: () => void;
@@ -58,9 +70,16 @@ export class AscensionModal {
             </div>
           </div>
         </div>
-        <div class="ascension-upgrades">
-          <h3>Prestige Upgrades</h3>
-          <div id="prestige-upgrades-grid" class="prestige-grid"></div>
+        <div class="ascension-content-wrapper">
+          <div class="ship-hull-section">
+            <h3>Ship Hull Upgrades</h3>
+            <div class="ship-hull-description">Upgrade your ship hull to double base damage per level</div>
+            <div id="ship-hull-row" class="ship-hull-row"></div>
+          </div>
+          <div class="ascension-upgrades">
+            <h3>Prestige Upgrades</h3>
+            <div id="prestige-upgrades-grid" class="prestige-grid"></div>
+          </div>
         </div>
         <div class="ascension-actions">
           <button id="ascend-btn" class="ascension-btn ascend-confirm">ASCEND NOW</button>
@@ -91,6 +110,40 @@ export class AscensionModal {
       }
     });
 
+    // Event delegation for ship hull upgrades (special row)
+    const shipHullRow = this.modal.querySelector('#ship-hull-row');
+    if (shipHullRow) {
+      shipHullRow.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const shipCard = target.closest('.ship-hull-card') as HTMLElement;
+        if (shipCard) {
+          const targetLevel = parseInt(shipCard.getAttribute('data-hull-level') || '0');
+          if (targetLevel > 0) {
+            e.stopPropagation();
+            const state = this.store.getState();
+            const currentLevel = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
+            
+            // Only allow buying the next level
+            if (targetLevel === currentLevel + 1) {
+              // Check if we can afford it
+              const cost = this.ascensionSystem.getUpgradeCost('prestige_ship_hull', state);
+              if (state.prestigePoints >= cost) {
+                if (this.ascensionSystem.buyPrestigeUpgrade(state, 'prestige_ship_hull')) {
+                  this.store.setState(state);
+                  this.updateShipHullRow();
+                  this.updatePrestigeUpgrades();
+                  // Recreate ships to show new hull
+                  if (window.game) {
+                    (window.game as any).createShips?.();
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     // Use event delegation for upgrade cards to prevent issues with re-rendering
     const grid = this.modal.querySelector('#prestige-upgrades-grid');
     if (grid) {
@@ -117,16 +170,29 @@ export class AscensionModal {
 
     // Subscribe to store updates to refresh prestige upgrades (throttled)
     let updateTimeout: number | null = null;
+    let lastPrestigePoints = 0;
+    let lastHullLevel = 0;
     this.store.subscribe(() => {
       if (this.modal.style.display !== 'none') {
-        // Throttle updates to prevent flickering
-        if (updateTimeout !== null) {
-          clearTimeout(updateTimeout);
+        const state = this.store.getState();
+        const currentPP = state.prestigePoints ?? 0;
+        const currentHullLevel = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
+        
+        // Only update if values actually changed to prevent flickering
+        if (currentPP !== lastPrestigePoints || currentHullLevel !== lastHullLevel) {
+          lastPrestigePoints = currentPP;
+          lastHullLevel = currentHullLevel;
+          
+          // Throttle updates to prevent flickering
+          if (updateTimeout !== null) {
+            clearTimeout(updateTimeout);
+          }
+          updateTimeout = window.setTimeout(() => {
+            this.updateShipHullRow();
+            this.updatePrestigeUpgrades();
+            updateTimeout = null;
+          }, 50); // 50ms throttle
         }
-        updateTimeout = window.setTimeout(() => {
-          this.updatePrestigeUpgrades();
-          updateTimeout = null;
-        }, 50); // 50ms throttle
       }
     });
   }
@@ -181,6 +247,7 @@ export class AscensionModal {
     if (grid) {
       grid.innerHTML = ''; // Clear on show to ensure clean state
     }
+    this.updateShipHullRow();
     this.updatePrestigeUpgrades();
 
     // Check if can ascend
@@ -281,8 +348,11 @@ export class AscensionModal {
     if (!grid) return;
 
     const upgrades = this.ascensionSystem.getUpgrades();
+    
+    // Filter out ship hull upgrade (it's displayed separately)
+    const regularUpgrades = upgrades.filter(u => u.id !== 'prestige_ship_hull');
 
-    for (const upgrade of upgrades) {
+    for (const upgrade of regularUpgrades) {
       const currentLevel = upgrade.getCurrentLevel(state);
       const actualCost = this.ascensionSystem.getUpgradeCost(upgrade.id, state);
       const canAfford = state.prestigePoints >= actualCost;
@@ -310,7 +380,16 @@ export class AscensionModal {
 
       if (!nameEl || !levelEl || !costEl) {
         // First time rendering - set innerHTML
+        // Add ship hull image if this is the ship hull upgrade
+        const shipHullImage = upgrade.id === 'prestige_ship_hull' && currentLevel > 0 
+          ? getShipHullImage(currentLevel) 
+          : null;
+        const imageHtml = shipHullImage 
+          ? `<div class="prestige-upgrade-image" style="text-align: center; margin-bottom: 8px;"><img src="${shipHullImage}" alt="Ship Hull ${currentLevel}" style="max-width: 64px; max-height: 64px; image-rendering: pixelated;" /></div>`
+          : '';
+        
         card.innerHTML = `
+          ${imageHtml}
           <div class="prestige-upgrade-name">${upgrade.name}</div>
           <div class="prestige-upgrade-level">Level: ${currentLevel.toString()} / ${upgrade.maxLevel.toString()}</div>
           <div class="prestige-upgrade-desc">${upgrade.description}</div>
@@ -334,6 +413,34 @@ export class AscensionModal {
         if (costEl.textContent !== costText) {
           costEl.textContent = costText;
         }
+        
+        // Update ship hull image if this is the ship hull upgrade
+        if (upgrade.id === 'prestige_ship_hull' && currentLevel > 0) {
+          const imageEl = card.querySelector('.prestige-upgrade-image');
+          const shipHullImage = getShipHullImage(currentLevel);
+          if (shipHullImage) {
+            if (!imageEl) {
+              const newImageEl = document.createElement('div');
+              newImageEl.className = 'prestige-upgrade-image';
+              newImageEl.style.textAlign = 'center';
+              newImageEl.style.marginBottom = '8px';
+              const img = document.createElement('img');
+              img.src = shipHullImage;
+              img.alt = `Ship Hull ${currentLevel}`;
+              img.style.maxWidth = '64px';
+              img.style.maxHeight = '64px';
+              img.style.imageRendering = 'pixelated';
+              newImageEl.appendChild(img);
+              card.insertBefore(newImageEl, card.firstChild);
+            } else {
+              const img = imageEl.querySelector('img');
+              if (img && img.src !== shipHullImage) {
+                img.src = shipHullImage;
+                img.alt = `Ship Hull ${currentLevel}`;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -342,6 +449,119 @@ export class AscensionModal {
     existingCards.forEach((card) => {
       const upgradeId = card.getAttribute('data-upgrade-id');
       if (!upgrades.find((u) => u.id === upgradeId)) {
+        card.remove();
+      }
+    });
+  }
+
+  private updateShipHullRow(): void {
+    const state = this.store.getState();
+    const row = this.modal.querySelector('#ship-hull-row');
+    if (!row) return;
+
+    const currentLevel = state.prestigeUpgrades?.prestige_ship_hull ?? 0;
+    const maxLevel = 5;
+
+    // Store existing cards to avoid flickering
+    const existingCards = new Map<number, HTMLElement>();
+    row.querySelectorAll('.ship-hull-card').forEach((card) => {
+      const level = parseInt(card.getAttribute('data-hull-level') || '0');
+      if (level > 0) {
+        existingCards.set(level, card as HTMLElement);
+      }
+    });
+
+    for (let level = 1; level <= maxLevel; level++) {
+      let shipCard = existingCards.get(level);
+      const isNew = !shipCard;
+
+      if (isNew) {
+        shipCard = document.createElement('div');
+        shipCard.className = 'ship-hull-card';
+        shipCard.setAttribute('data-hull-level', level.toString());
+        row.appendChild(shipCard);
+      }
+
+      // Ensure shipCard is defined before using it
+      if (!shipCard) continue;
+
+      const isOwned = level <= currentLevel;
+      const isNext = level === currentLevel + 1;
+      
+      // Calculate cost for this specific level
+      let cost = 0;
+      if (level === 1) {
+        cost = 1;
+      } else if (level === 2) {
+        cost = 100;
+      } else if (level === 3) {
+        cost = 200;
+      } else if (level === 4) {
+        cost = 300;
+      } else if (level === 5) {
+        cost = 400;
+      }
+      
+      const canAfford = state.prestigePoints >= cost;
+
+      // Update classes
+      shipCard.className = 'ship-hull-card';
+      if (isOwned) {
+        shipCard.classList.add('owned');
+      } else if (isNext && canAfford) {
+        shipCard.classList.add('purchasable');
+      } else {
+        shipCard.classList.add('locked');
+      }
+
+      // Only update innerHTML if it's new or if state changed
+      if (isNew) {
+        const shipImage = getShipHullImage(level);
+        const multiplier = Math.pow(2, level);
+        
+        shipCard.innerHTML = `
+          <div class="ship-hull-image-wrapper">
+            ${shipImage ? `<img src="${shipImage}" alt="Hull ${level}" class="ship-hull-image" />` : ''}
+            ${isOwned ? '<div class="ship-hull-checkmark">✓</div>' : ''}
+          </div>
+          <div class="ship-hull-level">Level ${level}</div>
+          <div class="ship-hull-multiplier">${multiplier}x Damage</div>
+          ${!isOwned ? `<div class="ship-hull-cost">${cost} PP</div>` : '<div class="ship-hull-cost owned-text">OWNED</div>'}
+        `;
+      } else {
+        // Update only the parts that might change
+        const checkmark = shipCard.querySelector('.ship-hull-checkmark');
+        const costEl = shipCard.querySelector('.ship-hull-cost');
+        
+        if (isOwned && !checkmark) {
+          const imageWrapper = shipCard.querySelector('.ship-hull-image-wrapper');
+          if (imageWrapper) {
+            const checkmarkDiv = document.createElement('div');
+            checkmarkDiv.className = 'ship-hull-checkmark';
+            checkmarkDiv.textContent = '✓';
+            imageWrapper.appendChild(checkmarkDiv);
+          }
+        } else if (!isOwned && checkmark) {
+          checkmark.remove();
+        }
+        
+        if (costEl) {
+          if (isOwned) {
+            costEl.className = 'ship-hull-cost owned-text';
+            costEl.textContent = 'OWNED';
+          } else {
+            costEl.className = 'ship-hull-cost';
+            costEl.textContent = `${cost} PP`;
+          }
+        }
+      }
+    }
+
+    // Remove any extra cards
+    const allCards = row.querySelectorAll('.ship-hull-card');
+    allCards.forEach((card) => {
+      const level = parseInt(card.getAttribute('data-hull-level') || '0');
+      if (level < 1 || level > maxLevel) {
         card.remove();
       }
     });

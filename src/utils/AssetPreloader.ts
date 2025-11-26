@@ -68,6 +68,9 @@ export class AssetPreloader {
 
     // Ship GIF
     imageUrls.push(shipGifSrc);
+    
+    // Ship hull images
+    Object.values(images.ships).forEach((url) => imageUrls.push(url));
 
     // Collect all sound URLs
     soundUrls.push(

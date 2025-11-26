@@ -26,7 +26,7 @@ export class VersionSplash {
     }
 
     // Returning user - check version
-    const currentVersion = 'beta2.0.0';
+    const currentVersion = 'beta2.1.0';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -121,6 +121,8 @@ export class VersionSplash {
   }
 
   private showVersionSplash(_version: string): void {
+    const isBeta210 = _version === 'beta2.1.0';
+    
     this.overlay = document.createElement('div');
     this.overlay.className = 'tutorial-modal';
     this.overlay.innerHTML = `
@@ -130,8 +132,19 @@ export class VersionSplash {
           <button class="modal-close" id="version-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="modal-body tutorial-modal-body">
-          <h2 style="text-align: center; color: #FFFAE5; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 1px;">${i18n.t('versionSplash.beta200Title')}</h2>
+          <h2 style="text-align: center; color: #FFFAE5; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 1px;">${isBeta210 ? i18n.t('versionSplash.beta210Title') : i18n.t('versionSplash.beta200Title')}</h2>
           <div class="changelog-section">
+            ${isBeta210 ? `
+            <h3 style="color: #66CCFF; margin-top: 20px; text-align: center;">${i18n.t('versionSplash.shipHullUpgrades')}</h3>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; flex-wrap: wrap;">
+              <img src="${images.ships.ship_1}" alt="Ship Hull 1" style="width: 64px; height: 64px; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(102, 204, 255, 0.6));" />
+              <img src="${images.ships.ship_2}" alt="Ship Hull 2" style="width: 64px; height: 64px; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(102, 204, 255, 0.6));" />
+              <img src="${images.ships.ship_3}" alt="Ship Hull 3" style="width: 64px; height: 64px; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(102, 204, 255, 0.6));" />
+              <img src="${images.ships.ship_4}" alt="Ship Hull 4" style="width: 64px; height: 64px; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(102, 204, 255, 0.6));" />
+              <img src="${images.ships.ship_5}" alt="Ship Hull 5" style="width: 64px; height: 64px; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(102, 204, 255, 0.6));" />
+            </div>
+            <p style="margin-top: 10px; line-height: 1.5; text-align: center; color: #fffae5;">${i18n.t('versionSplash.shipHullShort')}</p>
+            ` : `
             <h3 style="color: #ffaa00; margin-top: 20px;">${i18n.t('versionSplash.upcomingContent')}</h3>
             <ul>
               <li>${i18n.t('versionSplash.contentNov26')}</li>
@@ -143,6 +156,7 @@ export class VersionSplash {
             <div style="margin-top: 15px; padding: 12px; background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.3); border-radius: 4px; font-size: 13px; color: #ffaa00;">
               <strong>${i18n.t('versionSplash.resetRecommendation')}</strong>
             </div>
+            `}
           </div>
           <button class="tutorial-start-btn">${i18n.t('versionSplash.startPlaying')}</button>
         </div>

@@ -30,6 +30,11 @@ import hitmarker from '@/icons/hitmarker.png';
 
 // Ship icons
 import orbitalSatellite from '@/icons/ships/orbital.png';
+import ship1 from '@/icons/ships/ship_1.png';
+import ship2 from '@/icons/ships/ship_2.png';
+import ship3 from '@/icons/ships/ship_3.png';
+import ship4 from '@/icons/ships/ship_4.png';
+import ship5 from '@/icons/ships/ship_5.png';
 
 // Artifact icons
 import artifactRustyCoil from '@/icons/artifacts/rusty_coil.png';
@@ -402,6 +407,13 @@ export const images = {
   art,
   hitmarker,
   satellite: orbitalSatellite,
+  ships: {
+    ship_1: ship1,
+    ship_2: ship2,
+    ship_3: ship3,
+    ship_4: ship4,
+    ship_5: ship5,
+  },
   artifacts: {
     rusty_coil: artifactRustyCoil,
     baisc_targeting_system: artifactBasicTargeting,

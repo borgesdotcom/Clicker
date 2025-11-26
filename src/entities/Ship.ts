@@ -2,6 +2,7 @@ import type { Draw } from '../render/Draw';
 import type { Vec2 } from '../types';
 // Import ship GIF image using Vite's asset handling
 import shipGifSrc from '@/animations/littleships.gif';
+import { images } from '../assets/images';
 
 // Load ship GIF image
 let shipImage: HTMLImageElement | null = null;
@@ -27,11 +28,46 @@ if (typeof window !== 'undefined') {
   loadShipImage();
 }
 
+// Cache for ship hull images
+const shipHullImages: Map<number, HTMLImageElement> = new Map();
+const shipHullImagesLoaded: Map<number, boolean> = new Map();
+
+const loadShipHullImage = (level: number): HTMLImageElement | null => {
+  if (shipHullImagesLoaded.get(level) && shipHullImages.has(level)) {
+    return shipHullImages.get(level) || null;
+  }
+
+  const shipHullMap: Record<number, string> = {
+    1: images.ships.ship_1,
+    2: images.ships.ship_2,
+    3: images.ships.ship_3,
+    4: images.ships.ship_4,
+    5: images.ships.ship_5,
+  };
+
+  const src = shipHullMap[level];
+  if (!src) return null;
+
+  const img = new Image();
+  img.onload = () => {
+    shipHullImagesLoaded.set(level, true);
+    shipHullImages.set(level, img);
+  };
+  img.onerror = () => {
+    console.error(`Failed to load ship hull ${level}`);
+    shipHullImagesLoaded.set(level, false);
+  };
+  img.src = src;
+  shipHullImages.set(level, img);
+  return img;
+};
+
 export class Ship {
   public x = 0;
   public y = 0;
   private rotationSpeed: number; // Fixed rotation speed per ship
   private enginePulse = Math.random() * Math.PI * 2; // Animation offset for engine glow
+  private shipHullLevel: number = 0; // 0 = default, 1-5 = ship hulls
 
   public isBuffed = false;
 
@@ -41,7 +77,9 @@ export class Ship {
     private centerY: number,
     private orbitRadius: number,
     public isMainShip = false,
+    shipHullLevel: number = 0,
   ) {
+    this.shipHullLevel = shipHullLevel;
     // Give each ship a fixed, slow rotation speed
     this.rotationSpeed = isMainShip ? 0.15 : 0.1 + Math.random() * 0.1; // 0.1 to 0.2 for non-main ships
     this.updatePosition();
@@ -138,12 +176,26 @@ export class Ship {
       loadShipImage();
     }
 
+    // Use ship hull if available (for all ships)
+    let currentShipImage: HTMLImageElement | null = null;
+    if (this.shipHullLevel > 0) {
+      const hullImage = loadShipHullImage(this.shipHullLevel);
+      if (hullImage && (hullImage.complete || shipHullImagesLoaded.get(this.shipHullLevel))) {
+        currentShipImage = hullImage;
+      }
+    }
+
+    // Fallback to default ship image if no hull is available
+    if (!currentShipImage) {
+      currentShipImage = shipImage;
+    }
+
     // Use canvas rendering for better performance (GIF will show first frame only)
     // This is much faster than DOM overlay elements when there are many ships
     if (
-      shipImage &&
-      (shipImage.complete || shipImageLoaded) &&
-      shipImage.naturalWidth > 0
+      currentShipImage &&
+      (currentShipImage.complete || (currentShipImage === shipImage ? shipImageLoaded : shipHullImagesLoaded.get(this.shipHullLevel))) &&
+      currentShipImage.naturalWidth > 0
     ) {
       ctx.save();
 
@@ -155,12 +207,12 @@ export class Ship {
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle + Math.PI); // Rotate so ship faces correct direction
 
-      // Draw the ship GIF (first frame only - for performance)
-      const drawSize = size * 1.1; // Make GIF a bit bigger for visibility
+      // Draw the ship image
+      const drawSize = size * 1.1; // Make image a bit bigger for visibility
 
       // Always draw the original ship image without color customization
       ctx.drawImage(
-        shipImage,
+        currentShipImage,
         -drawSize / 2,
         -drawSize / 2,
         drawSize,

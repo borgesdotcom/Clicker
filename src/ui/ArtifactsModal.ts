@@ -2,6 +2,7 @@ import type { ArtifactSystem } from '../systems/ArtifactSystem';
 import type { Store } from '../core/Store';
 import { images, resolveArtifactIcon } from '../assets/images';
 import { alertDialog } from './AlertDialog';
+import { i18n } from '../core/I18n';
 
 export class ArtifactsModal {
   private modal: HTMLElement;
@@ -437,8 +438,8 @@ export class ArtifactsModal {
           ${!this.isFusionMode
             ? `
           <div class="artifact-slot-actions">
-            <button class="artifact-action-btn equip-btn ${artifact.equipped ? 'active' : ''}" data-id="${artifact.id}" data-action="equip" title="${artifact.equipped ? 'Unequip' : 'Equip'}">
-              <span class="btn-icon">${artifact.equipped ? '✓' : '⚔'}</span>
+            <button class="artifact-action-btn equip-btn ${artifact.equipped ? 'active' : ''}" data-id="${artifact.id}" data-action="equip" title="${artifact.equipped ? i18n.t('artifacts.unequip') : i18n.t('artifacts.equip')}">
+              <span class="btn-text">${artifact.equipped ? i18n.t('artifacts.unequip') : i18n.t('artifacts.equip')}</span>
             </button>
             ${canUpgrade
               ? `<button class="artifact-action-btn upgrade-btn ${state.points >= upgradeCost ? '' : 'disabled'}" 

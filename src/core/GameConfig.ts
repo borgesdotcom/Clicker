@@ -130,6 +130,10 @@ export interface AscensionConfig {
     comboPauseUnlock: {
       cost: number;
     };
+    shipSkin: {
+      costPerLevel: number;
+      maxLevel: number;
+    };
   };
   unspentPPMultiplier: {
     percentagePerPP: number; // Percentage income boost per unspent PP (e.g., 0.25 = 0.25%)
@@ -407,6 +411,7 @@ const DEFAULT_CONFIG: GameConfigData = {
       comboDuration: { costPerLevel: 4, maxLevel: 25, secondsPerLevel: 1 },
       autoBuyUnlock: { cost: 50 },
       comboPauseUnlock: { cost: 30 },
+      shipSkin: { costPerLevel: 1, maxLevel: 5 },
     },
     unspentPPMultiplier: {
       percentagePerPP: 5, // 5% per unspent PP
