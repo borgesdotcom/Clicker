@@ -6,6 +6,7 @@ export interface LaserConfig {
   target: Vec2;
   damage: number;
   isCrit?: boolean;
+  isPerfectPrecision?: boolean;
   color?: string;
   width?: number;
   isFromShip?: boolean;
@@ -18,6 +19,7 @@ export class Laser {
   public hasHit = false;
   public damage!: number;
   public isCrit = false;
+  public isPerfectPrecision = false;
   public color = '#fff';
   public width = 2.5;
   public isFromShip = false;
@@ -40,6 +42,7 @@ export class Laser {
     this.target = config.target;
     this.damage = config.damage;
     this.isCrit = config.isCrit ?? false;
+    this.isPerfectPrecision = config.isPerfectPrecision ?? false;
     this.color = config.color ?? '#fff';
     this.width = config.width ?? 2.5;
     this.isFromShip = config.isFromShip ?? false;

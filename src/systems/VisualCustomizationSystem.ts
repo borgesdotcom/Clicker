@@ -643,7 +643,18 @@ export class VisualCustomizationSystem {
 
   getLaserThemeId(state?: GameState): string {
     // Check for special upgrades that override laser theme (priority order)
-    if (state) {
+    if (state && state.subUpgrades) {
+      // Void Essence Core - very expensive late-game upgrade, highest priority
+      // Uses purple color from CombatManager, return default to avoid theme override
+      if (state.subUpgrades['void_essence_core']) {
+        return 'default_laser';
+      }
+      // Photon amplifier - uses yellow color from CombatManager
+      // Must be checked to override any rainbow themes from other upgrades
+      if (state.subUpgrades['photon_amplifier']) {
+        // Photon amplifier uses yellow color from CombatManager, return default to avoid theme override
+        return 'default_laser';
+      }
       // Check for upgrades that should trigger specific laser themes
       if (state.subUpgrades['chaos_emeralds']) {
         return 'rainbow_laser';
@@ -667,8 +678,6 @@ export class VisualCustomizationSystem {
         return 'rainbow_laser'; // Nebula = rainbow colors
       } else if (state.subUpgrades['cosmic_battery']) {
         return 'rainbow_laser'; // Cosmic = rainbow
-      } else if (state.subUpgrades['photon_amplifier']) {
-        return 'rainbow_laser'; // Photon = rainbow
       } else if (state.subUpgrades['warp_core']) {
         return 'rainbow_laser'; // Warp = rainbow
       } else if (state.subUpgrades['laser_focusing']) {

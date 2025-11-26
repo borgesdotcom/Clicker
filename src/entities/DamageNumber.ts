@@ -5,6 +5,7 @@ export interface DamageNumberConfig {
   y: number;
   damage: number;
   isCrit: boolean;
+  customColor?: string;
 }
 
 export class DamageNumber {
@@ -38,7 +39,11 @@ export class DamageNumber {
     this.x = config.x + (Math.random() - 0.5) * 40;
     this.y = config.y + (Math.random() - 0.5) * 20;
     this.text = this.formatDamage(config.damage);
-    this.color = config.isCrit ? '#ffff00' : '#ffffff';
+    if (config.customColor) {
+      this.color = config.customColor;
+    } else {
+      this.color = config.isCrit ? '#ffff00' : '#ffffff';
+    }
     this.life = 1.0;
     this.maxLife = 1.0;
     this.vy = -120;

@@ -30,6 +30,7 @@ export class DamageNumberSystem {
     y: number,
     damage: number,
     isCrit: boolean = false,
+    _customColor?: string,
   ): void {
     // Don't spawn if disabled (performance)
     if (!this.enabled) return;
@@ -55,7 +56,7 @@ export class DamageNumberSystem {
     }
 
     const number = this.damageNumberPool.acquire();
-    number.init({ x, y, damage, isCrit });
+    number.init({ x, y, damage, isCrit, customColor: _customColor });
   }
 
   update(dt: number): void {

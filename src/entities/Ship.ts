@@ -33,6 +33,8 @@ export class Ship {
   private rotationSpeed: number; // Fixed rotation speed per ship
   private enginePulse = Math.random() * Math.PI * 2; // Animation offset for engine glow
 
+  public isBuffed = false;
+
   constructor(
     public angle: number,
     private centerX: number,
@@ -99,6 +101,37 @@ export class Ship {
   draw(drawer: Draw): void {
     const ctx = drawer.getContext();
     const size = this.isMainShip ? 20 : 14; // Match increased sizes for 2D fallback
+
+    // Draw buff effect (spectre/orbs) if active
+    if (this.isBuffed) {
+      ctx.save();
+      // Orbiting orbs effect
+      const time = Date.now() / 500;
+      const orbRadius = size * 1.5;
+
+      for (let i = 0; i < 3; i++) {
+        const orbAngle = time + (i * Math.PI * 2) / 3;
+        const orbX = this.x + Math.cos(orbAngle) * orbRadius;
+        const orbY = this.y + Math.sin(orbAngle) * orbRadius;
+
+        ctx.fillStyle = '#00ffff';
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Spectre glow
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 15;
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, size * 1.2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Try to load image if not already loaded
     if (!shipImageLoaded && !shipImage) {

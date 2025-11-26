@@ -284,6 +284,14 @@
     "artifactNotification": "New artifact notification – artifacts button now glows instead of auto-opening modal.",
     "bossEffectFix": "Fixed boss visual effects sometimes not cleaning up properly.",
     "v121Title": "What's New in 1.21.0",
+    "beta200Title": "What's New in Beta 2.0.0",
+    "upcomingContent": "Upcoming Content Drops",
+    "contentNov26": "<strong>November 26:</strong> +100 levels of new content",
+    "contentNov27": "<strong>November 27:</strong> +100 levels of new content",
+    "contentNov28": "<strong>November 28:</strong> +100 levels of new content",
+    "majorRefactor": "Major Game Refactor",
+    "refactorDescription": "The game has undergone a deep refactoring to improve performance, stability, and code quality. Many systems have been optimized and restructured.",
+    "resetRecommendation": "⚠️ We recommend resetting your game in the Settings menu for the best experience with the new version.",
     "accessibility": "Accessibility Improvements",
     "accessibilityFont": "Font customization option added for players with vision difficulties.",
     "accessibilityScreenShake": "Screen shake option moved to accessibility settings to help with motion sickness.",
@@ -362,6 +370,21 @@
         "description": "Increase point gain by 15%",
         "flavor": "These crystals make the aliens make a very satisfying *pop* sound when destroyed."
       },
+      "amplified_resonance": {
+        "name": "Amplified Resonance Core",
+        "description": "1.5x damage multiplier",
+        "flavor": "Harmonic resonance amplifies every shot. The aliens feel the vibration... right before they explode."
+      },
+      "quantum_network_matrix": {
+        "name": "Quantum Network Matrix",
+        "description": "2x damage, additional connection network",
+        "flavor": "Quantum entanglement creates a third connection network. Three paths of destruction, triple the chaos."
+      },
+      "enhanced_combat_matrix": {
+        "name": "Enhanced Combat Matrix",
+        "description": "+50% attack damage",
+        "flavor": "Advanced targeting systems and power conduits amplify every shot. Precision meets raw power."
+      },
       "coffee_machine": {
         "name": "Crew Coffee Machine",
         "description": "Passive point generation +50/sec",
@@ -384,13 +407,83 @@
       },
       "overclocked_reactors": {
         "name": "Overclocked Reactors",
-        "description": "Gain 25% more points per hit",
+        "description": "Gain 50% more points per hit",
         "flavor": "Overclock reactors beyond safety limits. Defense emergencies require... creative solutions."
       },
       "ship_swarm": {
         "name": "Swarm Intelligence Protocol",
-        "description": "Ships coordinate attacks for +20% damage",
+        "description": "Ships coordinate attacks for 2x damage",
         "flavor": "Fleet coordinates synchronized attacks. The aliens never stand a chance. Especially these ones."
+      },
+      "fleet_synergy_matrix": {
+        "name": "Fleet Synergy Matrix",
+        "description": "+50% damage, +3% crit chance",
+        "flavor": "Advanced coordination protocols maximize fleet efficiency. Every shot counts, every hit matters."
+      },
+      "quantum_fleet_sync": {
+        "name": "Quantum Fleet Synchronization",
+        "description": "Fleet damage x2, faster connection network",
+        "flavor": "Quantum entanglement synchronizes the entire fleet. Every ship moves as one, every shot amplified."
+      },
+      "stellar_fusion_core": {
+        "name": "Stellar Fusion Core",
+        "description": "1.5x damage, enhanced laser systems",
+        "flavor": "Harness the power of a star. Every shot burns with stellar intensity, every impact a supernova."
+      },
+      "hyper_network_accelerator": {
+        "name": "Hyper Network Accelerator",
+        "description": "1.5x damage, +25% connection speed, orange network, crits enabled",
+        "flavor": "Overclock the network to extreme speeds. Orange energy flows faster, hits harder, and sometimes... explodes."
+      },
+      "fleet_omega_core": {
+        "name": "Fleet Omega Core",
+        "description": "Fleet damage x2.5",
+        "flavor": "The ultimate fleet coordination system. Every ship becomes a weapon of mass destruction."
+      },
+      "critical_mastery": {
+        "name": "Critical Strike Mastery",
+        "description": "Critical damage x2",
+        "flavor": "Master the art of the perfect strike. Every critical hit becomes a devastating blow."
+      },
+      "dual_network_expansion": {
+        "name": "Dual Network Expansion",
+        "description": "Adds two additional connection networks",
+        "flavor": "Expand the network to five simultaneous connections. The aliens never see it coming... from five directions at once."
+      },
+      "network_white_glow": {
+        "name": "Network White Glow",
+        "description": "+15% connection speed, white network with glow",
+        "flavor": "Purify the network energy. White light flows faster, cleaner, more devastating."
+      },
+      "crimson_network_protocol": {
+        "name": "Crimson Network Protocol",
+        "description": "Adds three additional connection networks, all nets turn red",
+        "flavor": "The network bleeds crimson. Three more connections, all painted in the color of destruction."
+      },
+      "void_essence_core": {
+        "name": "Void Essence Core",
+        "description": "2.5x damage, enhanced laser systems",
+        "flavor": "Harness the power of the void itself. Lasers burn with purple energy, tearing through reality itself."
+      },
+      "orbital_satellite": {
+        "name": "Orbital Command Satellite",
+        "description": "Deploy a satellite. Ships near it deal 2x damage",
+        "flavor": "Big Brother is watching... and helping you destroy aliens."
+      },
+      "rapid_fire_satellite": {
+        "name": "Rapid Fire Satellite Array",
+        "description": "Satellite fires missiles 2x faster",
+        "flavor": "More missiles, more destruction. Simple math."
+      },
+      "cosmic_synergy_matrix": {
+        "name": "Cosmic Synergy Matrix",
+        "description": "+50% damage, +50% XP",
+        "flavor": "Perfect harmony between destruction and knowledge. Every kill teaches, every lesson destroys."
+      },
+      "fleet_xp_synergy": {
+        "name": "Fleet XP Synergy",
+        "description": "+3% XP per ship",
+        "flavor": "Each ship in the fleet contributes to collective learning. More ships, more knowledge, more power."
       },
       "neural_link": {
         "name": "Neural Link Interface",
@@ -562,6 +655,11 @@
         "description": "Critical chance +5%, Critical damage x1.5",
         "flavor": "Every hit finds the perfect weak point. Perfection achieved."
       },
+      "knowledge_power_conversion": {
+        "name": "Knowledge Power Conversion",
+        "description": "+3% damage per XP Boost level",
+        "flavor": "Knowledge becomes power. Every level of understanding amplifies your destructive potential."
+      },
       "infinite_knowledge": {
         "name": "Infinite Knowledge Core",
         "description": "XP gain x2.5, Knowledge transcends limits",
@@ -674,7 +772,7 @@
       },
       "akashic_records": {
         "name": "Akashic Records Access",
-        "description": "XP x10, Retain all knowledge between lives",
+        "description": "XP +50%, Retain all knowledge between lives",
         "flavor": "Access the universal library. Read the manual."
       },
       "void_heart": {

@@ -429,6 +429,12 @@ export class Hud {
     this.dpsFullDisplay.className = 'combat-stat';
     this.combatStatsContainer.appendChild(this.dpsFullDisplay);
 
+    // Crit Chance display
+    const critChanceDisplay = document.createElement('div');
+    critChanceDisplay.id = 'crit-chance-display';
+    critChanceDisplay.className = 'combat-stat';
+    this.combatStatsContainer.appendChild(critChanceDisplay);
+
     // Append income to points display container
     pointsDisplay.appendChild(this.totalIncomeDisplay);
     pointsDisplay.appendChild(this.combatStatsContainer);
@@ -519,9 +525,21 @@ export class Hud {
       this.lastStatsText.totalIncome = totalIncomeText;
     }
 
-    // Update always visible combat stats (only DPS)
+    // Update always visible combat stats (DPS, Attack Speed, Crit Chance)
     if (this.dpsFullDisplay) {
       this.dpsFullDisplay.textContent = `${t('hud.dps')}: ${NumberFormatter.format(dps)}`;
+    }
+
+    // Update attack speed display
+    const attackSpeedDisplay = document.getElementById('attack-speed-display');
+    if (attackSpeedDisplay && attackSpeed !== undefined && attackSpeed !== null && attackSpeed > 0) {
+      attackSpeedDisplay.textContent = `${t('hud.attackSpeed')}: ${attackSpeed.toFixed(2)} ${t('hud.shotsPerSec')}`;
+    }
+
+    // Update crit chance display
+    const critChanceDisplay = document.getElementById('crit-chance-display');
+    if (critChanceDisplay && critChance !== undefined && critChance !== null) {
+      critChanceDisplay.textContent = `${t('hud.critChance')}: ${critChance.toFixed(1)}%`;
     }
 
     // Enhanced UI: Update income breakdown with combat stats

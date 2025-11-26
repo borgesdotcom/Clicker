@@ -133,6 +133,60 @@ export class Game {
   private shakeAmount = 0;
   private ascensionAnimationTime = 0;
   private isAscensionAnimating = false;
+  private swarmConnectionFromIndex = 0;
+  private swarmConnectionToIndex = 1;
+  private swarmConnectionProgress = 0; // 0 to 1 for smooth animation
+  private swarmVisitedShips: Set<number> = new Set(); // Track visited ships to ensure complete cycle
+  private swarmPreviousFromIndex = -1; // Track previous source to prevent bouncing back
+
+  // Second connection for Fleet Synergy Matrix
+  private swarmConnection2FromIndex = 0;
+  private swarmConnection2ToIndex = 1;
+  private swarmConnection2Progress = 0; // 0 to 1 for smooth animation
+  private swarm2VisitedShips: Set<number> = new Set(); // Track visited ships for second connection
+  private swarm2PreviousFromIndex = -1; // Track previous source for second connection
+
+  // Third connection for Quantum Network Matrix
+  private swarmConnection3FromIndex = 0;
+  private swarmConnection3ToIndex = 1;
+  private swarmConnection3Progress = 0; // 0 to 1 for smooth animation
+  private swarm3VisitedShips: Set<number> = new Set(); // Track visited ships for third connection
+  private swarm3PreviousFromIndex = -1; // Track previous source for third connection
+
+  // Fourth connection for Dual Network Expansion (level 55)
+  private swarmConnection4FromIndex = 0;
+  private swarmConnection4ToIndex = 1;
+  private swarmConnection4Progress = 0; // 0 to 1 for smooth animation
+  private swarm4VisitedShips: Set<number> = new Set(); // Track visited ships for fourth connection
+  private swarm4PreviousFromIndex = -1; // Track previous source for fourth connection
+
+  // Fifth connection for Dual Network Expansion (level 55)
+  private swarmConnection5FromIndex = 0;
+  private swarmConnection5ToIndex = 1;
+  private swarmConnection5Progress = 0; // 0 to 1 for smooth animation
+  private swarm5VisitedShips: Set<number> = new Set(); // Track visited ships for fifth connection
+  private swarm5PreviousFromIndex = -1; // Track previous source for fifth connection
+
+  // Sixth connection for Crimson Network Protocol (level 90)
+  private swarmConnection6FromIndex = 0;
+  private swarmConnection6ToIndex = 1;
+  private swarmConnection6Progress = 0; // 0 to 1 for smooth animation
+  private swarm6VisitedShips: Set<number> = new Set(); // Track visited ships for sixth connection
+  private swarm6PreviousFromIndex = -1; // Track previous source for sixth connection
+
+  // Seventh connection for Crimson Network Protocol (level 90)
+  private swarmConnection7FromIndex = 0;
+  private swarmConnection7ToIndex = 1;
+  private swarmConnection7Progress = 0; // 0 to 1 for smooth animation
+  private swarm7VisitedShips: Set<number> = new Set(); // Track visited ships for seventh connection
+  private swarm7PreviousFromIndex = -1; // Track previous source for seventh connection
+
+  // Eighth connection for Crimson Network Protocol (level 90)
+  private swarmConnection8FromIndex = 0;
+  private swarmConnection8ToIndex = 1;
+  private swarmConnection8Progress = 0; // 0 to 1 for smooth animation
+  private swarm8VisitedShips: Set<number> = new Set(); // Track visited ships for eighth connection
+  private swarm8PreviousFromIndex = -1; // Track previous source for eighth connection
 
   // Active Skill States
   private midasActive = false;
@@ -146,6 +200,27 @@ export class Game {
   private spaceKeyHeld = false;
   private spaceAttackCooldown = 0;
   private readonly SPACE_ATTACK_RATE = COMBAT.SPACE_ATTACK_RATE;
+
+  // Satellite logic
+  private satelliteAngle = 0;
+  private readonly SATELLITE_ORBIT_SPEED = 0.5;
+  private readonly SATELLITE_ORBIT_RADIUS = 250;
+  private satelliteMissileTimer = 0;
+  private readonly SATELLITE_MISSILE_INTERVAL = 5; // 5 seconds
+  private satelliteMissiles: Array<{
+    x: number;
+    y: number;
+    targetX: number;
+    targetY: number;
+    startX: number;
+    startY: number;
+    progress: number;
+    damage: number;
+    speed: number; // Individual missile speed
+    curveDirection: number; // Direction of curve (-1 to 1, determines left/right curve)
+    curveAmount: number; // Amount of curve (0.2 to 0.5)
+  }> = [];
+  private satelliteImage: HTMLImageElement | null = null;
 
   // Debug controls
   private gameSpeed = 1.0;
@@ -244,6 +319,10 @@ export class Game {
     });
     this.upgradeSystem = new UpgradeSystem();
     this.laserSystem = new LaserSystem();
+
+    // Load satellite image
+    this.satelliteImage = new Image();
+    this.satelliteImage.src = 'src/icons/ships/orbital.png';
 
     // Initialize particle system with performance settings
     const perfSettings = this.performanceModeManager.getSettings();
@@ -533,14 +612,14 @@ export class Game {
     this.shop.setMissionSystem(this.missionSystem);
     this.shop.setAscensionSystem(this.ascensionSystem);
     this.shop.setUseOldUI(this.userSettings.useOldShopUI);
-    
+
     // Load old stylesheet if setting is enabled
     if (this.userSettings.useOldShopUI) {
       import('./utils/stylesheetLoader').then(({ toggleOldStylesheet }) => {
         toggleOldStylesheet(true);
       });
     }
-    
+
     this.shop.setOnPurchase(() => {
       this.handleUpgradePurchase();
     });
@@ -1384,10 +1463,10 @@ export class Game {
       gameContainer.style.backgroundRepeat = 'repeat';
       gameContainer.style.backgroundSize = 'auto';
       gameContainer.style.backgroundColor = '#000';
-      
+
       // Also set as CSS custom property on document root for shop panel to use
       document.documentElement.style.setProperty('--bg-gif-url', backgroundUrl);
-      
+
       // Also update shop panel background directly
       const shopPanel = document.getElementById('shop-panel');
       if (shopPanel) {
@@ -1745,9 +1824,257 @@ export class Game {
   // createBoss() removed - now handled by BossManager.createBoss()
 
   private createShips(): void {
+    const previousShipCount = this.ships.length;
     this.ships = this.entityManager.createShips(this.ships);
     const state = this.store.getState();
     this.autoFireSystem.setShipCount(state.shipsCount);
+
+    // If ships were added, stagger all existing ships to prevent synchronization
+    // This ensures lasers stay visually separate even after buying new ships
+    if (state.shipsCount > previousShipCount) {
+      this.autoFireSystem.staggerExistingShips();
+      // Reset swarm connections to start from different ships
+      this.resetSwarmConnections();
+    }
+  }
+
+  private resetSwarmConnections(): void {
+    // Reset first swarm connection (Swarm Intelligence Protocol)
+    this.swarmConnectionProgress = 0;
+    this.swarmVisitedShips.clear();
+    this.swarmPreviousFromIndex = -1;
+
+    // Start from ship 0
+    if (this.ships.length >= 2) {
+      this.swarmConnectionFromIndex = 0;
+      // Find closest ship to start with
+      const fromShip = this.ships[0];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 1; i < this.ships.length; i++) {
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnectionToIndex = closestIndex !== -1 ? closestIndex : 1;
+      }
+    }
+
+    // Reset second swarm connection (Fleet Synergy Matrix)
+    this.swarmConnection2Progress = 0;
+    this.swarm2VisitedShips.clear();
+    this.swarm2PreviousFromIndex = -1;
+
+    // Start from ship 1 (or 0 if only 1 ship)
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(1, this.ships.length - 1);
+      this.swarmConnection2FromIndex = startIndex;
+      // Find closest ship to start with (avoiding first connection start)
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0) continue; // Avoid same ship and first connection start
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnection2ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
+
+    // Reset third swarm connection (Quantum Network Matrix)
+    this.swarmConnection3Progress = 0;
+    this.swarm3VisitedShips.clear();
+    this.swarm3PreviousFromIndex = -1;
+
+    // Start from ship 2 (or appropriate index if fewer ships)
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(2, this.ships.length - 1);
+      this.swarmConnection3FromIndex = startIndex;
+      // Find closest ship to start with (avoiding other connection starts)
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0 || i === 1) continue; // Avoid same ship and other connection starts
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        // Fallback to any available ship if none found
+        if (closestIndex === -1) {
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i !== startIndex) {
+              closestIndex = i;
+              break;
+            }
+          }
+        }
+        this.swarmConnection3ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
+
+    // Reset fourth and fifth swarm connections (Dual Network Expansion)
+    this.swarmConnection4Progress = 0;
+    this.swarm4VisitedShips.clear();
+    this.swarm4PreviousFromIndex = -1;
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(3, this.ships.length - 1);
+      this.swarmConnection4FromIndex = startIndex;
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0 || i === 1 || i === 2) continue;
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnection4ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
+
+    this.swarmConnection5Progress = 0;
+    this.swarm5VisitedShips.clear();
+    this.swarm5PreviousFromIndex = -1;
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(4, this.ships.length - 1);
+      this.swarmConnection5FromIndex = startIndex;
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3) continue;
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnection5ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
+
+    // Reset sixth, seventh, and eighth swarm connections (Crimson Network Protocol)
+    this.swarmConnection6Progress = 0;
+    this.swarm6VisitedShips.clear();
+    this.swarm6PreviousFromIndex = -1;
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(5, this.ships.length - 1);
+      this.swarmConnection6FromIndex = startIndex;
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3 || i === 4) continue;
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnection6ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
+
+    this.swarmConnection7Progress = 0;
+    this.swarm7VisitedShips.clear();
+    this.swarm7PreviousFromIndex = -1;
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(6, this.ships.length - 1);
+      this.swarmConnection7FromIndex = startIndex;
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3 || i === 4 || i === 5) continue;
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnection7ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
+
+    this.swarmConnection8Progress = 0;
+    this.swarm8VisitedShips.clear();
+    this.swarm8PreviousFromIndex = -1;
+    if (this.ships.length >= 2) {
+      const startIndex = Math.min(7, this.ships.length - 1);
+      this.swarmConnection8FromIndex = startIndex;
+      const fromShip = this.ships[startIndex];
+      if (fromShip) {
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+        for (let i = 0; i < this.ships.length; i++) {
+          if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3 || i === 4 || i === 5 || i === 6) continue;
+          const toShip = this.ships[i];
+          if (toShip) {
+            const dx = toShip.x - fromShip.x;
+            const dy = toShip.y - fromShip.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          }
+        }
+        this.swarmConnection8ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+      }
+    }
   }
 
   private setupInput(): void {
@@ -2009,11 +2336,8 @@ export class Game {
       targetEntity.radius,
     );
 
-    // Small ships (shipIndex > 0) cannot crit - use non-crit visuals only
-    const laserVisuals =
-      shipIndex > 0
-        ? this.getLaserVisualsNoCrit(state)
-        : this.getLaserVisuals(state);
+    // All ships can now crit - use crit visuals for all
+    const laserVisuals = this.getLaserVisuals(state);
 
     const laserThemeId = this.combatManager.getLaserThemeId(state);
 
@@ -2021,8 +2345,11 @@ export class Game {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.laserSystem.lastBeamThemeId = laserThemeId;
 
+    // No satellite buff - removed
+    const finalDamage = damage;
+
     // Mark laser as from ship so it can be hidden for performance
-    this.laserSystem.spawnLaser(origin, hitPoint, damage, {
+    this.laserSystem.spawnLaser(origin, hitPoint, finalDamage, {
       ...laserVisuals,
       isFromShip: true,
     });
@@ -2036,6 +2363,7 @@ export class Game {
 
   private getLaserVisuals(state: import('./types').GameState): {
     isCrit: boolean;
+    isPerfectPrecision: boolean;
     color: string;
     width: number;
   } {
@@ -2044,6 +2372,7 @@ export class Game {
 
   private getLaserVisualsNoCrit(state: import('./types').GameState): {
     isCrit: boolean;
+    isPerfectPrecision: boolean;
     color: string;
     width: number;
   } {
@@ -2056,6 +2385,7 @@ export class Game {
     isFromShip: boolean = false,
     hitDirection?: Vec2,
     isBeam?: boolean,
+    isPerfectPrecision: boolean = false,
   ): void {
     // Notify tutorial system of click/damage
     if (!isFromShip && !isBeam) {
@@ -2073,6 +2403,7 @@ export class Game {
       state,
       targetEntity instanceof EnhancedAlienBall || targetEntity instanceof AlienBall ? targetEntity : undefined,
       isBeam,
+      isPerfectPrecision,
     );
 
     const finalDamage = processedResult.finalDamage;
@@ -2348,14 +2679,14 @@ export class Game {
 
     // At level 100, can only gain XP after defeating the boss
     let blockedLevel = this.bossManager.getBlockedBossLevel();
-    
+
     // Fix: If player has already passed the blocked boss level, clear the block
     // This handles cases where player levels up past the boss (e.g., gaining too much XP at once)
     if (blockedLevel !== null && state.level > blockedLevel) {
       this.bossManager.clearBlockedState();
       blockedLevel = null;
     }
-    
+
     if (state.level === 100 && blockedLevel === 100) {
       bonusXP = 0; // No XP until boss is defeated
     } else if (blockedLevel !== null) {
@@ -2366,7 +2697,7 @@ export class Game {
 
     let leveledUp = false;
     let newLevel = state.level;
-    
+
     // Allow leveling if not blocked, or if player has already passed the blocked level
     if (blockedLevel === null || (blockedLevel !== null && state.level > blockedLevel)) {
       while (state.experience >= ColorManager.getExpRequired(state.level)) {
@@ -2381,7 +2712,7 @@ export class Game {
         // after calculating prestige points.
 
         leveledUp = true;
-        
+
         // If we leveled past a blocked boss level, clear the block
         if (blockedLevel !== null && state.level > blockedLevel) {
           this.bossManager.clearBlockedState();
@@ -2463,28 +2794,20 @@ export class Game {
     bossXP *= upgradeBonus;
 
     bossXP = Math.max(1, Math.floor(bossXP));
-
-    // Special handling for level 100 boss - limit XP to only allow leveling to 101-105
-    if (state.level === 100) {
-      // Calculate XP needed to reach level 105 from level 100
-      let xpNeededFor105 = 0;
-      for (let level = 100; level < 105; level++) {
-        xpNeededFor105 += ColorManager.getExpRequired(level);
-      }
-
-      // Calculate how much XP the player currently has towards next level
-      const currentXPProgress = state.experience;
-
-      // Limit boss XP so total XP doesn't exceed what's needed for level 105
-      const maxAllowedXP = Math.max(0, xpNeededFor105 - currentXPProgress);
-      bossXP = Math.min(bossXP, maxAllowedXP);
-    }
-
     state.experience += bossXP;
 
     // Check if artifact was found
     let artifactFound = false;
-    if (Math.random() < 0.5) {
+
+    // Level 5 boss on first run (before first ascension) always drops an artifact
+    const isFirstRun = state.prestigeLevel === 0;
+    const isLevel5Boss = defeatedBossLevel === 5;
+    const guaranteedArtifact = isFirstRun && isLevel5Boss;
+
+    // 100% chance for level 5 boss on first run, otherwise 50% chance
+    const artifactChance = guaranteedArtifact ? 1.0 : 0.5;
+
+    if (Math.random() < artifactChance) {
       this.artifactSystem.generateArtifact();
       artifactFound = true;
 
@@ -2492,24 +2815,44 @@ export class Game {
       this.triggerArtifactNotification();
     }
 
-    // Limit leveling after level 100 boss defeat
-    const maxLevelAfterBoss = state.level === 100 ? 105 : Infinity;
+    // Special handling for level 100 boss: Force player to level 105
+    if (defeatedBossLevel === 100) {
+      // Calculate total XP needed to reach level 105 from current level
+      let totalXPNeeded = 0;
+      for (let level = state.level; level < 105; level++) {
+        totalXPNeeded += ColorManager.getExpRequired(level);
+      }
+      
+      // Set experience to exactly what's needed for level 105
+      state.experience = totalXPNeeded;
+      
+      // Level up to 105
+      while (state.level < 105) {
+        const expRequired = ColorManager.getExpRequired(state.level);
+        if (state.experience >= expRequired) {
+          state.experience -= expRequired;
+          state.level++;
+          this.store.updateMaxLevel();
+          this.updateBackgroundByLevel(state.level);
+        } else {
+          break; // Safety break
+        }
+      }
+    } else {
+      // Normal leveling logic for other bosses
+      while (state.experience >= ColorManager.getExpRequired(state.level)) {
+        const expRequired = ColorManager.getExpRequired(state.level);
+        state.experience -= expRequired;
+        state.level++;
+        this.store.updateMaxLevel();
 
-    while (
-      state.experience >= ColorManager.getExpRequired(state.level) &&
-      state.level < maxLevelAfterBoss
-    ) {
-      const expRequired = ColorManager.getExpRequired(state.level);
-      state.experience -= expRequired;
-      state.level++;
-      this.store.updateMaxLevel();
+        // Update background immediately when level changes
+        this.updateBackgroundByLevel(state.level);
 
-      // Update background immediately when level changes
-      this.updateBackgroundByLevel(state.level);
-
-      // Note: highestLevelReached is NOT updated here - it only tracks the highest level
-      // from PREVIOUS ascensions, not the current run. It's updated in performAscension()
-      // after calculating prestige points.
+        // Note: highestLevelReached is NOT updated here - it only tracks the highest level
+        // from PREVIOUS ascensions, not the current run. It's updated in performAscension()
+        // after calculating prestige points.
+      }
     }
 
     this.store.setState(state);
@@ -2777,6 +3120,130 @@ export class Game {
     // Use getReadonlyState for performance (avoids cloning)
     const state = this.store.getReadonlyState();
 
+    // Update satellite
+    if (state.subUpgrades['orbital_satellite']) {
+      this.satelliteAngle += dt * this.SATELLITE_ORBIT_SPEED;
+
+      // Calculate satellite position
+      const centerX = this.canvas.getCenterX();
+      const centerY = this.canvas.getCenterY();
+      const satX = centerX + Math.cos(this.satelliteAngle) * this.SATELLITE_ORBIT_RADIUS;
+      const satY = centerY + Math.sin(this.satelliteAngle) * this.SATELLITE_ORBIT_RADIUS;
+
+      // Satellite Missile Logic - Launch 3 missiles from satellite
+      // Rapid Fire Satellite Array: 2x faster firing rate
+      const missileTimerMultiplier = state.subUpgrades?.['rapid_fire_satellite'] ? 2 : 1;
+      this.satelliteMissileTimer += dt * missileTimerMultiplier;
+      if (this.satelliteMissileTimer >= this.SATELLITE_MISSILE_INTERVAL) {
+        this.satelliteMissileTimer = 0;
+
+        // Calculate 30x damage (based on click damage for consistency)
+        const mode = this.mode === 'transition' ? 'normal' : this.mode;
+        const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+        const missileDamage = clickDamage * 30;
+
+        // Spawn 3 missiles from satellite with varied paths for "rain of missiles" effect
+        const baseSpeed = 0.8;
+        for (let i = 0; i < 3; i++) {
+          // Each missile targets the center but with different trajectories
+          const targetX = centerX;
+          const targetY = centerY;
+
+          // Vary speed for staggered arrival (rain effect)
+          const speedVariation = 0.7 + (i * 0.15); // 0.7, 0.85, 1.0
+          const missileSpeed = baseSpeed * speedVariation;
+
+          // Each missile curves in a different direction and amount
+          // Curve direction: -1 (left curve), 0 (straight), 1 (right curve)
+          // Vary between -1 and 1 for different curve directions
+          const curveDirection = (i - 1) * 0.8; // -0.8, 0, 0.8
+          
+          // Curve amount: varies from 0.2 to 0.5 for different arc heights
+          const curveAmount = 0.2 + (i * 0.15); // 0.2, 0.35, 0.5
+
+          this.satelliteMissiles.push({
+            x: satX,
+            y: satY,
+            startX: satX,
+            startY: satY,
+            targetX,
+            targetY,
+            progress: 0,
+            damage: missileDamage,
+            speed: missileSpeed,
+            curveDirection,
+            curveAmount,
+          });
+        }
+      }
+    } else {
+      // Clear missiles if upgrade not owned
+      this.satelliteMissileTimer = 0;
+      this.satelliteMissiles = [];
+    }
+
+    // Update missiles
+    for (let i = this.satelliteMissiles.length - 1; i >= 0; i--) {
+      const missile = this.satelliteMissiles[i];
+      if (!missile) {
+        this.satelliteMissiles.splice(i, 1);
+        continue;
+      }
+
+      missile.progress += dt * missile.speed; // Individual missile speed
+
+      if (missile.progress >= 1) {
+        // Missile hit target
+        this.handleDamage(missile.damage, true, false, undefined, true);
+
+        // Spawn meteor-style explosion particles
+        if (this.userSettings.highGraphics) {
+          this.particleSystem.spawnParticles({
+            x: missile.targetX,
+            y: missile.targetY,
+            count: 8, // Reduced from 30 (explosion) to match meteor style
+            color: '#ffaa00', // Golden/Orange like meteors
+            spread: Math.PI * 2,
+            speed: 300, // Fast burst for sparks
+            size: 3,
+            life: 0.5, // Short life
+            glow: true,
+            style: 'spark', // Meteor spark style
+          });
+        }
+
+        this.satelliteMissiles.splice(i, 1);
+      } else {
+        // Update missile position using varied quadratic bezier curves for "rain" effect
+        const t = missile.progress;
+        const t1 = 1 - t;
+
+        // Calculate direction from start to target
+        const dx = missile.targetX - missile.startX;
+        const dy = missile.targetY - missile.startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Midpoint of the path
+        const midX = (missile.startX + missile.targetX) / 2;
+        const midY = (missile.startY + missile.targetY) / 2;
+        
+        // Perpendicular direction (rotate 90 degrees) - normalized
+        const perpX = -dy / distance;
+        const perpY = dx / distance;
+        
+        // Apply curve direction and amount for varied paths
+        // curveDirection determines left (-) or right (+) curve
+        // curveAmount determines how much the curve is
+        const curveOffset = distance * missile.curveAmount * missile.curveDirection;
+        const controlX = midX + perpX * curveOffset;
+        const controlY = midY + perpY * curveOffset;
+
+        // Quadratic bezier curve formula - creates varied arc paths
+        missile.x = t1 * t1 * missile.startX + 2 * t1 * t * controlX + t * t * missile.targetX;
+        missile.y = t1 * t1 * missile.startY + 2 * t1 * t * controlY + t * t * missile.targetY;
+      }
+    }
+
     // Update combo pause skill
     if (this.comboPauseActive) {
       this.comboPauseDuration -= dt;
@@ -3016,8 +3483,9 @@ export class Game {
         isCrit: boolean,
         isFromShip: boolean,
         hitDirection?: Vec2,
+        isPerfectPrecision?: boolean,
       ) => {
-        this.handleDamage(damage, isCrit, isFromShip, hitDirection);
+        this.handleDamage(damage, isCrit, isFromShip, hitDirection, false, isPerfectPrecision);
       },
     );
 
@@ -3172,13 +3640,11 @@ export class Game {
     }
     this.autoFireSystem.update(
       dt,
-      true, // Auto-fire always enabled for non-main ships
+      true, // Auto-fire always enabled for all ships (including main ship)
       effectiveCooldown,
       (shipIndex) => {
-        if (shipIndex > 0) {
-          return this.fireSingleShip(shipIndex);
-        }
-        return false;
+        // All ships (including main ship at index 0) can auto-attack
+        return this.fireSingleShip(shipIndex);
       },
     );
 
@@ -3205,6 +3671,1205 @@ export class Game {
         this.store.setState({ autoBuyEnabled: false });
       }
       this.autoBuyTimer = 0;
+    }
+
+    // Update swarm connection animation (2 times per second = every 0.5 seconds)
+    const hasSwarm = state.subUpgrades?.['ship_swarm'] && this.ships.length >= 2;
+    const hasFleetSynergy = state.subUpgrades?.['fleet_synergy_matrix'] && this.ships.length >= 2;
+    const hasQuantumNetwork = state.subUpgrades?.['quantum_network_matrix'] && this.ships.length >= 2;
+    const hasDualNetworkExpansion = state.subUpgrades?.['dual_network_expansion'] && this.ships.length >= 2;
+    const hasNetworkWhiteGlow = state.subUpgrades?.['network_white_glow'] ?? false;
+    const hasCrimsonNetwork = state.subUpgrades?.['crimson_network_protocol'] && this.ships.length >= 2;
+
+    if (hasSwarm) {
+      // Initialize visited ships set with starting ship
+      if (this.swarmVisitedShips.size === 0) {
+        // First connection always starts from ship 0
+        this.swarmConnectionFromIndex = 0;
+        this.swarmVisitedShips.add(this.swarmConnectionFromIndex);
+        // Find closest ship to start with (avoiding other connection starting points)
+        const fromShip = this.ships[this.swarmConnectionFromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 1; i < this.ships.length; i++) {
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          if (closestIndex !== -1) {
+            this.swarmConnectionToIndex = closestIndex;
+          } else {
+            this.swarmConnectionToIndex = 1;
+          }
+        }
+      }
+
+      // Animate connection progress smoothly
+      // Quantum Fleet Sync makes it faster (5x speed instead of 3x)
+      // Hyper Network Accelerator adds 25% speed boost
+      let connectionSpeed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connectionSpeed *= 1.25; // +25% speed boost
+      }
+      this.swarmConnectionProgress += dt * connectionSpeed;
+
+      if (this.swarmConnectionProgress >= 1.0) {
+        // Connection complete - award points and show animation
+        const receivingShip = this.ships[this.swarmConnectionToIndex];
+        if (receivingShip) {
+          // Calculate 5x click damage as points
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+
+          // Hyper Network Accelerator: Check for crit (5% base crit chance)
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5; // 5% crit chance
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+
+          // Add points to player
+          this.store.addPoints(pointsReward);
+
+          // Show points animation above the receiving ship
+          // White for non-crit, yellow for crit (handled by DamageNumber system)
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(
+            shipPos.x,
+            shipPos.y - 20, // Slightly above the ship
+            pointsReward,
+            isCrit, // Can crit if Hyper Network Accelerator is owned
+          );
+        }
+
+        // Connection complete, find next closest ship
+        this.swarmConnectionProgress = 0;
+        this.swarmPreviousFromIndex = this.swarmConnectionFromIndex; // Remember where we came from
+        this.swarmConnectionFromIndex = this.swarmConnectionToIndex;
+
+        // Mark the target ship as visited
+        this.swarmVisitedShips.add(this.swarmConnectionToIndex);
+
+        // Check if we've visited all ships (complete cycle)
+        const allShipsVisited = this.swarmVisitedShips.size >= this.ships.length;
+
+        // Find closest ship that hasn't been visited yet (or all have been visited, start new cycle)
+        const fromShip = this.ships[this.swarmConnectionFromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          // If all ships have been visited, reset and start a new cycle
+          if (allShipsVisited) {
+            this.swarmVisitedShips.clear();
+            this.swarmVisitedShips.add(this.swarmConnectionFromIndex); // Current ship is the start of new cycle
+            this.swarmPreviousFromIndex = -1; // Reset previous tracking for new cycle
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip: same ship or previous source (prevent bouncing back)
+            if (i === this.swarmConnectionFromIndex) continue;
+            if (i === this.swarmPreviousFromIndex) continue;
+
+            // Only connect to ships that haven't been visited in this cycle
+            if (this.swarmVisitedShips.has(i)) continue;
+
+            // Skip ships that are currently being targeted by other connections
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (hasDualNetworkExpansion && (i === this.swarmConnection4ToIndex || i === this.swarmConnection5ToIndex)) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          // If no unvisited ships found (shouldn't happen, but safety check)
+          if (closestIndex === -1) {
+            // Find any ship that's not the current or previous, and not targeted by other connections
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnectionFromIndex && i !== this.swarmPreviousFromIndex) {
+                // Skip ships targeted by other connections in fallback
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (hasDualNetworkExpansion && (i === this.swarmConnection4ToIndex || i === this.swarmConnection5ToIndex)) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (closestIndex !== -1) {
+            this.swarmConnectionToIndex = closestIndex;
+          } else {
+            // Ultimate fallback: just use next ship
+            this.swarmConnectionToIndex = (this.swarmConnectionFromIndex + 1) % this.ships.length;
+          }
+        }
+      }
+    } else {
+      // Reset if upgrade not owned or not enough ships
+      this.swarmConnectionProgress = 0;
+      this.swarmConnectionFromIndex = 0;
+      this.swarmConnectionToIndex = 1;
+      this.swarmPreviousFromIndex = -1;
+      this.swarmVisitedShips.clear();
+    }
+
+    // Second connection for Fleet Synergy Matrix
+    if (hasFleetSynergy) {
+      // Initialize visited ships set with starting ship for second connection
+      if (this.swarm2VisitedShips.size === 0) {
+        // Start from a different ship than the first connection to create visual variety
+        // Use ship 1 if available, otherwise ship 0
+        this.swarmConnection2FromIndex = this.ships.length > 1 ? 1 : 0;
+        this.swarm2VisitedShips.add(this.swarmConnection2FromIndex);
+        // Find closest ship to start with (avoiding first connection's starting point)
+        const fromShip = this.ships[this.swarmConnection2FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip the same ship and the first connection's starting ship
+            if (i === this.swarmConnection2FromIndex || i === this.swarmConnectionFromIndex) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          if (closestIndex !== -1) {
+            this.swarmConnection2ToIndex = closestIndex;
+          } else {
+            // Fallback: use next available ship
+            this.swarmConnection2ToIndex = this.swarmConnection2FromIndex === 0 ? 1 : 0;
+          }
+        }
+      }
+
+      // Animate second connection progress smoothly (slightly offset timing)
+      // Quantum Fleet Sync makes it faster (5x speed instead of 3x)
+      // Hyper Network Accelerator adds 25% speed boost
+      // Network White Glow adds 15% speed boost
+      let connection2Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection2Speed *= 1.25; // +25% speed boost
+      }
+      if (hasNetworkWhiteGlow) {
+        connection2Speed *= 1.15; // +15% speed boost
+      }
+      this.swarmConnection2Progress += dt * connection2Speed;
+
+      if (this.swarmConnection2Progress >= 1.0) {
+        // Connection complete - award points and show animation
+        const receivingShip = this.ships[this.swarmConnection2ToIndex];
+        if (receivingShip) {
+          // Calculate 5x click damage as points
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+
+          // Hyper Network Accelerator: Check for crit (5% base crit chance)
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5; // 5% crit chance
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+
+          // Add points to player
+          this.store.addPoints(pointsReward);
+
+          // Show points animation above the receiving ship
+          // White for non-crit, yellow for crit (handled by DamageNumber system)
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(
+            shipPos.x,
+            shipPos.y - 20, // Slightly above the ship
+            pointsReward,
+            isCrit, // Can crit if Hyper Network Accelerator is owned
+          );
+        }
+
+        // Connection complete, find next closest ship
+        this.swarmConnection2Progress = 0;
+        this.swarm2PreviousFromIndex = this.swarmConnection2FromIndex;
+        this.swarmConnection2FromIndex = this.swarmConnection2ToIndex;
+
+        // Mark the target ship as visited
+        this.swarm2VisitedShips.add(this.swarmConnection2ToIndex);
+
+        // Check if we've visited all ships (complete cycle)
+        const allShipsVisited = this.swarm2VisitedShips.size >= this.ships.length;
+
+        // Find closest ship that hasn't been visited yet
+        const fromShip = this.ships[this.swarmConnection2FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          // If all ships have been visited, reset and start a new cycle
+          if (allShipsVisited) {
+            this.swarm2VisitedShips.clear();
+            this.swarm2VisitedShips.add(this.swarmConnection2FromIndex);
+            this.swarm2PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip: same ship or previous source
+            if (i === this.swarmConnection2FromIndex) continue;
+            if (i === this.swarm2PreviousFromIndex) continue;
+
+            // Only connect to ships that haven't been visited in this cycle
+            if (this.swarm2VisitedShips.has(i)) continue;
+
+            // Skip ships that are currently being targeted by other connections
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (hasDualNetworkExpansion && (i === this.swarmConnection4ToIndex || i === this.swarmConnection5ToIndex)) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          // If no unvisited ships found
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection2FromIndex && i !== this.swarm2PreviousFromIndex) {
+                // Also skip ships targeted by other connections in fallback
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (hasDualNetworkExpansion && (i === this.swarmConnection4ToIndex || i === this.swarmConnection5ToIndex)) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (closestIndex !== -1) {
+            this.swarmConnection2ToIndex = closestIndex;
+          } else {
+            this.swarmConnection2ToIndex = (this.swarmConnection2FromIndex + 1) % this.ships.length;
+          }
+        }
+      }
+    } else {
+      // Reset second connection if upgrade not owned
+      this.swarmConnection2Progress = 0;
+      this.swarmConnection2FromIndex = 0;
+      this.swarmConnection2ToIndex = 1;
+      this.swarm2PreviousFromIndex = -1;
+      this.swarm2VisitedShips.clear();
+    }
+
+    // Third connection for Quantum Network Matrix
+    if (hasQuantumNetwork) {
+      // Initialize visited ships set with starting ship for third connection
+      if (this.swarm3VisitedShips.size === 0) {
+        // Start from a different ship than the first two connections to create visual variety
+        // Use ship 2 if available, otherwise find the first available ship
+        if (this.ships.length > 2) {
+          this.swarmConnection3FromIndex = 2;
+        } else if (this.ships.length > 1) {
+          // If only 2 ships, use ship 1 (first connection uses 0, second uses 1)
+          this.swarmConnection3FromIndex = 1;
+        } else {
+          this.swarmConnection3FromIndex = 0;
+        }
+        this.swarm3VisitedShips.add(this.swarmConnection3FromIndex);
+        // Find closest ship to start with (avoiding first and second connection's starting points)
+        const fromShip = this.ships[this.swarmConnection3FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip the same ship and other connections' starting ships
+            if (i === this.swarmConnection3FromIndex ||
+              i === this.swarmConnectionFromIndex ||
+              i === this.swarmConnection2FromIndex) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          if (closestIndex !== -1) {
+            this.swarmConnection3ToIndex = closestIndex;
+          } else {
+            // Fallback: use first available ship that's not the starting ship
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection3FromIndex) {
+                this.swarmConnection3ToIndex = i;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Animate third connection progress smoothly
+      // Quantum Fleet Sync makes it faster (5x speed instead of 3x)
+      // Hyper Network Accelerator adds 25% speed boost
+      // Network White Glow adds 15% speed boost
+      let connection3Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection3Speed *= 1.25; // +25% speed boost
+      }
+      if (hasNetworkWhiteGlow) {
+        connection3Speed *= 1.15; // +15% speed boost
+      }
+      this.swarmConnection3Progress += dt * connection3Speed;
+
+      if (this.swarmConnection3Progress >= 1.0) {
+        // Connection complete - award points and show animation
+        const receivingShip = this.ships[this.swarmConnection3ToIndex];
+        if (receivingShip) {
+          // Calculate 5x click damage as points
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+
+          // Hyper Network Accelerator: Check for crit (5% base crit chance)
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5; // 5% crit chance
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+
+          // Add points to player
+          this.store.addPoints(pointsReward);
+
+          // Show points animation above the receiving ship
+          // White for non-crit, yellow for crit (handled by DamageNumber system)
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(
+            shipPos.x,
+            shipPos.y - 20, // Slightly above the ship
+            pointsReward,
+            isCrit, // Can crit if Hyper Network Accelerator is owned
+          );
+        }
+
+        // Connection complete, find next closest ship
+        this.swarmConnection3Progress = 0;
+        this.swarm3PreviousFromIndex = this.swarmConnection3FromIndex;
+        this.swarmConnection3FromIndex = this.swarmConnection3ToIndex;
+
+        // Mark the target ship as visited
+        this.swarm3VisitedShips.add(this.swarmConnection3ToIndex);
+
+        // Check if we've visited all ships (complete cycle)
+        const allShipsVisited = this.swarm3VisitedShips.size >= this.ships.length;
+
+        // Find closest ship that hasn't been visited yet
+        const fromShip = this.ships[this.swarmConnection3FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          // If all ships have been visited, reset and start a new cycle
+          if (allShipsVisited) {
+            this.swarm3VisitedShips.clear();
+            this.swarm3VisitedShips.add(this.swarmConnection3FromIndex);
+            this.swarm3PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip: same ship or previous source
+            if (i === this.swarmConnection3FromIndex) continue;
+            if (i === this.swarm3PreviousFromIndex) continue;
+
+            // Only connect to ships that haven't been visited in this cycle
+            if (this.swarm3VisitedShips.has(i)) continue;
+
+            // Skip ships that are currently being targeted by other connections
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasDualNetworkExpansion && (i === this.swarmConnection4ToIndex || i === this.swarmConnection5ToIndex)) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          // If no unvisited ships found
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection3FromIndex && i !== this.swarm3PreviousFromIndex) {
+                // Also skip ships targeted by other connections in fallback
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasDualNetworkExpansion && (i === this.swarmConnection4ToIndex || i === this.swarmConnection5ToIndex)) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (closestIndex !== -1) {
+            this.swarmConnection3ToIndex = closestIndex;
+          } else {
+            this.swarmConnection3ToIndex = (this.swarmConnection3FromIndex + 1) % this.ships.length;
+          }
+        }
+      }
+    } else {
+      // Reset third connection if upgrade not owned
+      this.swarmConnection3Progress = 0;
+      this.swarmConnection3FromIndex = 0;
+      this.swarmConnection3ToIndex = 1;
+      this.swarm3PreviousFromIndex = -1;
+      this.swarm3VisitedShips.clear();
+    }
+
+    // Fourth connection for Dual Network Expansion (level 55)
+    if (hasDualNetworkExpansion) {
+      // Initialize visited ships set with starting ship for fourth connection
+      if (this.swarm4VisitedShips.size === 0) {
+        // Start from ship 3 (or appropriate index)
+        const startIndex = Math.min(3, this.ships.length - 1);
+        this.swarmConnection4FromIndex = startIndex;
+        this.swarm4VisitedShips.add(this.swarmConnection4FromIndex);
+        // Find closest ship to start with (avoiding other connection starting points)
+        const fromShip = this.ships[this.swarmConnection4FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip the same ship and other connection starting points
+            if (i === startIndex || i === 0 || i === 1 || i === 2) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          // Fallback to any available ship
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== startIndex) {
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+          this.swarmConnection4ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+        }
+      }
+
+      // Animate fourth connection progress smoothly
+      let connection4Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection4Speed *= 1.25;
+      }
+      if (hasNetworkWhiteGlow) {
+        connection4Speed *= 1.15; // +15% speed boost
+      }
+      this.swarmConnection4Progress += dt * connection4Speed;
+
+      if (this.swarmConnection4Progress >= 1.0) {
+        // Connection complete - award points and show animation
+        const receivingShip = this.ships[this.swarmConnection4ToIndex];
+        if (receivingShip) {
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+
+          // Hyper Network Accelerator: Check for crit
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5;
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+
+          this.store.addPoints(pointsReward);
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(
+            shipPos.x,
+            shipPos.y - 20,
+            pointsReward,
+            isCrit,
+          );
+        }
+
+        // Connection complete, find next closest ship
+        this.swarmConnection4Progress = 0;
+        this.swarm4PreviousFromIndex = this.swarmConnection4FromIndex;
+        this.swarmConnection4FromIndex = this.swarmConnection4ToIndex;
+        this.swarm4VisitedShips.add(this.swarmConnection4ToIndex);
+
+        const allShipsVisited = this.swarm4VisitedShips.size >= this.ships.length;
+        const fromShip = this.ships[this.swarmConnection4FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          if (allShipsVisited) {
+            this.swarm4VisitedShips.clear();
+            this.swarm4VisitedShips.add(this.swarmConnection4FromIndex);
+            this.swarm4PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === this.swarmConnection4FromIndex) continue;
+            if (i === this.swarm4PreviousFromIndex) continue;
+            if (this.swarm4VisitedShips.has(i)) continue;
+
+            // Skip ships that are currently being targeted by other connections
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (i === this.swarmConnection5ToIndex) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection4FromIndex && i !== this.swarm4PreviousFromIndex) {
+                // Also skip ships targeted by other connections in fallback
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (i === this.swarmConnection5ToIndex) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          this.swarmConnection4ToIndex = closestIndex !== -1 ? closestIndex : (this.swarmConnection4FromIndex + 1) % this.ships.length;
+        }
+      }
+    } else {
+      // Reset fourth connection if upgrade not owned
+      this.swarmConnection4Progress = 0;
+      this.swarmConnection4FromIndex = 0;
+      this.swarmConnection4ToIndex = 1;
+      this.swarm4PreviousFromIndex = -1;
+      this.swarm4VisitedShips.clear();
+    }
+
+    // Fifth connection for Dual Network Expansion (level 55)
+    if (hasDualNetworkExpansion) {
+      // Initialize visited ships set with starting ship for fifth connection
+      if (this.swarm5VisitedShips.size === 0) {
+        // Start from ship 4 (or appropriate index)
+        const startIndex = Math.min(4, this.ships.length - 1);
+        this.swarmConnection5FromIndex = startIndex;
+        this.swarm5VisitedShips.add(this.swarmConnection5FromIndex);
+        // Find closest ship to start with (avoiding other connection starting points)
+        const fromShip = this.ships[this.swarmConnection5FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            // Skip the same ship and other connection starting points
+            if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          // Fallback to any available ship
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== startIndex) {
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+          this.swarmConnection5ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+        }
+      }
+
+      // Animate fifth connection progress smoothly
+      let connection5Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection5Speed *= 1.25;
+      }
+      if (hasNetworkWhiteGlow) {
+        connection5Speed *= 1.15; // +15% speed boost
+      }
+      this.swarmConnection5Progress += dt * connection5Speed;
+
+      if (this.swarmConnection5Progress >= 1.0) {
+        // Connection complete - award points and show animation
+        const receivingShip = this.ships[this.swarmConnection5ToIndex];
+        if (receivingShip) {
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+
+          // Hyper Network Accelerator: Check for crit
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5;
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+
+          this.store.addPoints(pointsReward);
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(
+            shipPos.x,
+            shipPos.y - 20,
+            pointsReward,
+            isCrit,
+          );
+        }
+
+        // Connection complete, find next closest ship
+        this.swarmConnection5Progress = 0;
+        this.swarm5PreviousFromIndex = this.swarmConnection5FromIndex;
+        this.swarmConnection5FromIndex = this.swarmConnection5ToIndex;
+        this.swarm5VisitedShips.add(this.swarmConnection5ToIndex);
+
+        const allShipsVisited = this.swarm5VisitedShips.size >= this.ships.length;
+        const fromShip = this.ships[this.swarmConnection5FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          if (allShipsVisited) {
+            this.swarm5VisitedShips.clear();
+            this.swarm5VisitedShips.add(this.swarmConnection5FromIndex);
+            this.swarm5PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === this.swarmConnection5FromIndex) continue;
+            if (i === this.swarm5PreviousFromIndex) continue;
+            if (this.swarm5VisitedShips.has(i)) continue;
+
+            // Skip ships that are currently being targeted by other connections
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (i === this.swarmConnection4ToIndex) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection5FromIndex && i !== this.swarm5PreviousFromIndex) {
+                // Also skip ships targeted by other connections in fallback
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (i === this.swarmConnection4ToIndex) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          this.swarmConnection5ToIndex = closestIndex !== -1 ? closestIndex : (this.swarmConnection5FromIndex + 1) % this.ships.length;
+        }
+      }
+    } else {
+      // Reset fifth connection if upgrade not owned
+      this.swarmConnection5Progress = 0;
+      this.swarmConnection5FromIndex = 0;
+      this.swarmConnection5ToIndex = 1;
+      this.swarm5PreviousFromIndex = -1;
+      this.swarm5VisitedShips.clear();
+    }
+
+    // Sixth, seventh, and eighth connections for Crimson Network Protocol (level 90)
+    // Sixth connection
+    if (hasCrimsonNetwork) {
+      if (this.swarm6VisitedShips.size === 0) {
+        const startIndex = Math.min(5, this.ships.length - 1);
+        this.swarmConnection6FromIndex = startIndex;
+        this.swarm6VisitedShips.add(this.swarmConnection6FromIndex);
+        const fromShip = this.ships[this.swarmConnection6FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3 || i === 4) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== startIndex) {
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+          this.swarmConnection6ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+        }
+      }
+
+      let connection6Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection6Speed *= 1.25;
+      }
+      if (hasNetworkWhiteGlow) {
+        connection6Speed *= 1.15;
+      }
+      this.swarmConnection6Progress += dt * connection6Speed;
+
+      if (this.swarmConnection6Progress >= 1.0) {
+        const receivingShip = this.ships[this.swarmConnection6ToIndex];
+        if (receivingShip) {
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5;
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+          this.store.addPoints(pointsReward);
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(shipPos.x, shipPos.y - 20, pointsReward, isCrit);
+        }
+
+        this.swarmConnection6Progress = 0;
+        this.swarm6PreviousFromIndex = this.swarmConnection6FromIndex;
+        this.swarmConnection6FromIndex = this.swarmConnection6ToIndex;
+        this.swarm6VisitedShips.add(this.swarmConnection6ToIndex);
+
+        const allShipsVisited = this.swarm6VisitedShips.size >= this.ships.length;
+        const fromShip = this.ships[this.swarmConnection6FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          if (allShipsVisited) {
+            this.swarm6VisitedShips.clear();
+            this.swarm6VisitedShips.add(this.swarmConnection6FromIndex);
+            this.swarm6PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === this.swarmConnection6FromIndex) continue;
+            if (i === this.swarm6PreviousFromIndex) continue;
+            if (this.swarm6VisitedShips.has(i)) continue;
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (i === this.swarmConnection4ToIndex) continue;
+            if (i === this.swarmConnection5ToIndex) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection6FromIndex && i !== this.swarm6PreviousFromIndex) {
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (i === this.swarmConnection4ToIndex) continue;
+                if (i === this.swarmConnection5ToIndex) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection7ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          this.swarmConnection6ToIndex = closestIndex !== -1 ? closestIndex : (this.swarmConnection6FromIndex + 1) % this.ships.length;
+        }
+      }
+    } else {
+      this.swarmConnection6Progress = 0;
+      this.swarmConnection6FromIndex = 0;
+      this.swarmConnection6ToIndex = 1;
+      this.swarm6PreviousFromIndex = -1;
+      this.swarm6VisitedShips.clear();
+    }
+
+    // Seventh connection
+    if (hasCrimsonNetwork) {
+      if (this.swarm7VisitedShips.size === 0) {
+        const startIndex = Math.min(6, this.ships.length - 1);
+        this.swarmConnection7FromIndex = startIndex;
+        this.swarm7VisitedShips.add(this.swarmConnection7FromIndex);
+        const fromShip = this.ships[this.swarmConnection7FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3 || i === 4 || i === 5) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== startIndex) {
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+          this.swarmConnection7ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+        }
+      }
+
+      let connection7Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection7Speed *= 1.25;
+      }
+      if (hasNetworkWhiteGlow) {
+        connection7Speed *= 1.15;
+      }
+      this.swarmConnection7Progress += dt * connection7Speed;
+
+      if (this.swarmConnection7Progress >= 1.0) {
+        const receivingShip = this.ships[this.swarmConnection7ToIndex];
+        if (receivingShip) {
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5;
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+          this.store.addPoints(pointsReward);
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(shipPos.x, shipPos.y - 20, pointsReward, isCrit);
+        }
+
+        this.swarmConnection7Progress = 0;
+        this.swarm7PreviousFromIndex = this.swarmConnection7FromIndex;
+        this.swarmConnection7FromIndex = this.swarmConnection7ToIndex;
+        this.swarm7VisitedShips.add(this.swarmConnection7ToIndex);
+
+        const allShipsVisited = this.swarm7VisitedShips.size >= this.ships.length;
+        const fromShip = this.ships[this.swarmConnection7FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          if (allShipsVisited) {
+            this.swarm7VisitedShips.clear();
+            this.swarm7VisitedShips.add(this.swarmConnection7FromIndex);
+            this.swarm7PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === this.swarmConnection7FromIndex) continue;
+            if (i === this.swarm7PreviousFromIndex) continue;
+            if (this.swarm7VisitedShips.has(i)) continue;
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (i === this.swarmConnection4ToIndex) continue;
+            if (i === this.swarmConnection5ToIndex) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection8ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection7FromIndex && i !== this.swarm7PreviousFromIndex) {
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (i === this.swarmConnection4ToIndex) continue;
+                if (i === this.swarmConnection5ToIndex) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection8ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          this.swarmConnection7ToIndex = closestIndex !== -1 ? closestIndex : (this.swarmConnection7FromIndex + 1) % this.ships.length;
+        }
+      }
+    } else {
+      this.swarmConnection7Progress = 0;
+      this.swarmConnection7FromIndex = 0;
+      this.swarmConnection7ToIndex = 1;
+      this.swarm7PreviousFromIndex = -1;
+      this.swarm7VisitedShips.clear();
+    }
+
+    // Eighth connection
+    if (hasCrimsonNetwork) {
+      if (this.swarm8VisitedShips.size === 0) {
+        const startIndex = Math.min(7, this.ships.length - 1);
+        this.swarmConnection8FromIndex = startIndex;
+        this.swarm8VisitedShips.add(this.swarmConnection8FromIndex);
+        const fromShip = this.ships[this.swarmConnection8FromIndex];
+        if (fromShip && this.ships.length > 1) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === startIndex || i === 0 || i === 1 || i === 2 || i === 3 || i === 4 || i === 5 || i === 6) continue;
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== startIndex) {
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+          this.swarmConnection8ToIndex = closestIndex !== -1 ? closestIndex : (startIndex === 0 ? 1 : 0);
+        }
+      }
+
+      let connection8Speed = state.subUpgrades?.['quantum_fleet_sync'] ? 5 : 3;
+      if (state.subUpgrades?.['hyper_network_accelerator']) {
+        connection8Speed *= 1.25;
+      }
+      if (hasNetworkWhiteGlow) {
+        connection8Speed *= 1.15;
+      }
+      this.swarmConnection8Progress += dt * connection8Speed;
+
+      if (this.swarmConnection8Progress >= 1.0) {
+        const receivingShip = this.ships[this.swarmConnection8ToIndex];
+        if (receivingShip) {
+          const mode = this.mode === 'transition' ? 'normal' : this.mode;
+          const clickDamage = this.combatManager.calculateClickDamage(state, mode);
+          let pointsReward = clickDamage * 5;
+          let isCrit = false;
+          if (state.subUpgrades?.['hyper_network_accelerator']) {
+            const critChance = 5;
+            if (Math.random() * 100 < critChance) {
+              isCrit = true;
+              const critMultiplier = this.upgradeSystem.getCritMultiplier(state);
+              pointsReward *= critMultiplier;
+            }
+          }
+          this.store.addPoints(pointsReward);
+          const shipPos = receivingShip.getFrontPosition();
+          this.damageNumberSystem.spawnDamageNumber(shipPos.x, shipPos.y - 20, pointsReward, isCrit);
+        }
+
+        this.swarmConnection8Progress = 0;
+        this.swarm8PreviousFromIndex = this.swarmConnection8FromIndex;
+        this.swarmConnection8FromIndex = this.swarmConnection8ToIndex;
+        this.swarm8VisitedShips.add(this.swarmConnection8ToIndex);
+
+        const allShipsVisited = this.swarm8VisitedShips.size >= this.ships.length;
+        const fromShip = this.ships[this.swarmConnection8FromIndex];
+        if (fromShip) {
+          let closestIndex = -1;
+          let closestDistance = Infinity;
+
+          if (allShipsVisited) {
+            this.swarm8VisitedShips.clear();
+            this.swarm8VisitedShips.add(this.swarmConnection8FromIndex);
+            this.swarm8PreviousFromIndex = -1;
+          }
+
+          for (let i = 0; i < this.ships.length; i++) {
+            if (i === this.swarmConnection8FromIndex) continue;
+            if (i === this.swarm8PreviousFromIndex) continue;
+            if (this.swarm8VisitedShips.has(i)) continue;
+            if (i === this.swarmConnectionToIndex) continue;
+            if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+            if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+            if (i === this.swarmConnection4ToIndex) continue;
+            if (i === this.swarmConnection5ToIndex) continue;
+            if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex)) continue;
+
+            const toShip = this.ships[i];
+            if (toShip) {
+              const dx = toShip.x - fromShip.x;
+              const dy = toShip.y - fromShip.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+              }
+            }
+          }
+
+          if (closestIndex === -1) {
+            for (let i = 0; i < this.ships.length; i++) {
+              if (i !== this.swarmConnection8FromIndex && i !== this.swarm8PreviousFromIndex) {
+                if (i === this.swarmConnectionToIndex) continue;
+                if (hasFleetSynergy && i === this.swarmConnection2ToIndex) continue;
+                if (hasQuantumNetwork && i === this.swarmConnection3ToIndex) continue;
+                if (i === this.swarmConnection4ToIndex) continue;
+                if (i === this.swarmConnection5ToIndex) continue;
+                if (hasCrimsonNetwork && (i === this.swarmConnection6ToIndex || i === this.swarmConnection7ToIndex)) continue;
+                closestIndex = i;
+                break;
+              }
+            }
+          }
+
+          this.swarmConnection8ToIndex = closestIndex !== -1 ? closestIndex : (this.swarmConnection8FromIndex + 1) % this.ships.length;
+        }
+      }
+    } else {
+      this.swarmConnection8Progress = 0;
+      this.swarmConnection8FromIndex = 0;
+      this.swarmConnection8ToIndex = 1;
+      this.swarm8PreviousFromIndex = -1;
+      this.swarm8VisitedShips.clear();
     }
 
     if (this.shakeTime > 0) {
@@ -3286,6 +4951,7 @@ export class Game {
   }
 
   private render(): void {
+    const state = this.store.getState();
     this.renderManager.render(
       {
         ball: this.ball,
@@ -3298,6 +4964,73 @@ export class Game {
         powerUpSystem: this.powerUpSystem,
         customizationSystem: this.customizationSystem,
         store: this.store,
+        swarmConnection: state.subUpgrades?.['ship_swarm'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnectionFromIndex,
+            toIndex: this.swarmConnectionToIndex,
+            progress: this.swarmConnectionProgress,
+          }
+          : null,
+        swarmConnection2: state.subUpgrades?.['fleet_synergy_matrix'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection2FromIndex,
+            toIndex: this.swarmConnection2ToIndex,
+            progress: this.swarmConnection2Progress,
+          }
+          : null,
+        swarmConnection3: state.subUpgrades?.['quantum_network_matrix'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection3FromIndex,
+            toIndex: this.swarmConnection3ToIndex,
+            progress: this.swarmConnection3Progress,
+          }
+          : null,
+        swarmConnection4: state.subUpgrades?.['dual_network_expansion'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection4FromIndex,
+            toIndex: this.swarmConnection4ToIndex,
+            progress: this.swarmConnection4Progress,
+          }
+          : null,
+        swarmConnection5: state.subUpgrades?.['dual_network_expansion'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection5FromIndex,
+            toIndex: this.swarmConnection5ToIndex,
+            progress: this.swarmConnection5Progress,
+          }
+          : null,
+        swarmConnection6: state.subUpgrades?.['crimson_network_protocol'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection6FromIndex,
+            toIndex: this.swarmConnection6ToIndex,
+            progress: this.swarmConnection6Progress,
+          }
+          : null,
+        swarmConnection7: state.subUpgrades?.['crimson_network_protocol'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection7FromIndex,
+            toIndex: this.swarmConnection7ToIndex,
+            progress: this.swarmConnection7Progress,
+          }
+          : null,
+        swarmConnection8: state.subUpgrades?.['crimson_network_protocol'] && this.ships.length >= 2
+          ? {
+            fromIndex: this.swarmConnection8FromIndex,
+            toIndex: this.swarmConnection8ToIndex,
+            progress: this.swarmConnection8Progress,
+          }
+          : null,
+        satellite: state.subUpgrades['orbital_satellite']
+          ? {
+            x: this.canvas.getCenterX() + Math.cos(this.satelliteAngle) * this.SATELLITE_ORBIT_RADIUS,
+            y: this.canvas.getCenterY() + Math.sin(this.satelliteAngle) * this.SATELLITE_ORBIT_RADIUS,
+            angle: this.satelliteAngle,
+            image: this.satelliteImage,
+            missiles: this.satelliteMissiles,
+            targetX: this.canvas.getCenterX(),
+            targetY: this.canvas.getCenterY(),
+          }
+          : null,
       },
       {
         mode: this.mode,

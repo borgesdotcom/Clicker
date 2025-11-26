@@ -1331,7 +1331,12 @@ export class EnhancedAlienBall extends AlienBall {
 }
 
 export function selectEnemyType(level: number): EnemyType {
-  // Always allow all enemy archetypes from level 1.
+  // Special aliens only appear after level 6
+  // Before level 6, only normal aliens spawn
+  if (level < 6) {
+    return 'normal';
+  }
+
   // Keep the core probabilities but bias scout/tank/healer based on level.
   const rand = Math.random();
 

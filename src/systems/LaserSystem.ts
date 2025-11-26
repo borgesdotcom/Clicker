@@ -136,6 +136,7 @@ export class LaserSystem {
     damage: number,
     upgrades?: {
       isCrit?: boolean;
+      isPerfectPrecision?: boolean;
       color?: string;
       width?: number;
       isFromShip?: boolean;
@@ -202,6 +203,7 @@ export class LaserSystem {
       target,
       damage,
       isCrit: upgrades?.isCrit,
+      isPerfectPrecision: upgrades?.isPerfectPrecision,
       color: upgrades?.color,
       width: upgrades?.width,
       isFromShip,
@@ -217,6 +219,7 @@ export class LaserSystem {
       isCrit: boolean,
       isFromShip: boolean,
       hitDirection?: Vec2,
+      isPerfectPrecision?: boolean,
     ) => void,
   ): void {
     if (this.beamMode && onHit) {
@@ -236,7 +239,7 @@ export class LaserSystem {
         const dx = laser.target.x - laser.origin.x;
         const dy = laser.target.y - laser.origin.y;
         const hitDirection: Vec2 = { x: dx, y: dy };
-        onHit(laser.damage, laser.isCrit, laser.isFromShip, hitDirection);
+        onHit(laser.damage, laser.isCrit, laser.isFromShip, hitDirection, laser.isPerfectPrecision);
       }
 
       // Remove laser only after animation completes (allows visual to finish)

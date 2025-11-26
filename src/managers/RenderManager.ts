@@ -31,7 +31,7 @@ export interface RenderManagerDependencies {
 export interface RenderEntities {
   ball?: { draw: (draw: Draw) => void; currentHp: number } | null;
   bossBall?: { draw: (draw: Draw) => void; currentHp: number } | null;
-  ships: Array<{ draw: (draw: Draw) => void }>;
+  ships: Array<{ draw: (draw: Draw) => void; x: number; y: number; getPosition: () => { x: number; y: number } }>;
   particleSystem: {
     getParticleCount: () => number;
     draw: (draw: Draw) => void;
@@ -62,6 +62,35 @@ export interface RenderEntities {
   store: {
     getReadonlyState: () => any;
   };
+  swarmConnection?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection2?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection3?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection4?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection5?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection6?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection7?: { fromIndex: number; toIndex: number; progress: number } | null;
+  swarmConnection8?: { fromIndex: number; toIndex: number; progress: number } | null;
+  satellite?: {
+    x: number;
+    y: number;
+    angle: number;
+    image: HTMLImageElement | null;
+    missiles: Array<{
+      x: number;
+      y: number;
+      targetX: number;
+      targetY: number;
+      startX: number;
+      startY: number;
+      progress: number;
+      damage: number;
+      speed: number;
+      curveDirection: number;
+      curveAmount: number;
+    }>;
+    targetX: number;
+    targetY: number;
+  } | null;
 }
 
 /**
@@ -190,6 +219,11 @@ export class RenderManager {
       entities.bossBall.draw(this.deps.draw);
     }
 
+    // Render satellite (before ships)
+    if (entities.satellite) {
+      this.renderSatellite(ctx, entities.satellite);
+    }
+
     // Render ships (batch by entity type)
     // Use 2D canvas rendering for ships (better performance than DOM overlays)
     const gameState = entities.store.getReadonlyState();
@@ -200,6 +234,109 @@ export class RenderManager {
       // Store visuals for ship to use (for fallback triangle rendering)
       (ship as any).customVisuals = visuals;
       ship.draw(this.deps.draw);
+    }
+
+    // Render swarm connections
+    if (entities.swarmConnection && entities.ships.length > entities.swarmConnection.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection.toIndex];
+      if (fromShip && toShip) {
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    if (entities.swarmConnection2 && entities.ships.length > entities.swarmConnection2.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection2.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection2.toIndex];
+      if (fromShip && toShip) {
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection2.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    if (entities.swarmConnection3 && entities.ships.length > entities.swarmConnection3.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection3.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection3.toIndex];
+      if (fromShip && toShip) {
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection3.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    if (entities.swarmConnection4 && entities.ships.length > entities.swarmConnection4.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection4.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection4.toIndex];
+      if (fromShip && toShip) {
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection4.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    if (entities.swarmConnection5 && entities.ships.length > entities.swarmConnection5.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection5.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection5.toIndex];
+      if (fromShip && toShip) {
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection5.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    // Render sixth swarm connection line if active
+    if (entities.swarmConnection6 && entities.ships.length > entities.swarmConnection6.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection6.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection6.toIndex];
+      if (fromShip && toShip) {
+        const gameState = entities.store.getReadonlyState();
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection6.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    // Render seventh swarm connection line if active
+    if (entities.swarmConnection7 && entities.ships.length > entities.swarmConnection7.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection7.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection7.toIndex];
+      if (fromShip && toShip) {
+        const gameState = entities.store.getReadonlyState();
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection7.progress, useGreen, useOrange, useWhite, useRed);
+      }
+    }
+
+    // Render eighth swarm connection line if active
+    if (entities.swarmConnection8 && entities.ships.length > entities.swarmConnection8.toIndex) {
+      const fromShip = entities.ships[entities.swarmConnection8.fromIndex];
+      const toShip = entities.ships[entities.swarmConnection8.toIndex];
+      if (fromShip && toShip) {
+        const gameState = entities.store.getReadonlyState();
+        const useGreen = gameState.subUpgrades?.['quantum_fleet_sync'] ?? false;
+        const useOrange = gameState.subUpgrades?.['hyper_network_accelerator'] ?? false;
+        const useWhite = gameState.subUpgrades?.['network_white_glow'] ?? false;
+        const useRed = gameState.subUpgrades?.['crimson_network_protocol'] ?? false;
+        this.renderSwarmConnection(ctx, fromShip, toShip, entities.swarmConnection8.progress, useGreen, useOrange, useWhite, useRed);
+      }
     }
 
     // Render UI elements
@@ -296,6 +433,185 @@ export class RenderManager {
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, this.deps.canvas.getWidth(), this.deps.canvas.getHeight());
+  }
+
+  /**
+   * Render swarm connection line between ships with smooth animation
+   */
+  private renderSwarmConnection(
+    ctx: CanvasRenderingContext2D,
+    fromShip: { x: number; y: number },
+    toShip: { x: number; y: number },
+    progress: number,
+    useGreen: boolean = false,
+    useOrange: boolean = false,
+    useWhite: boolean = false,
+    useRed: boolean = false,
+  ): void {
+    ctx.save();
+
+    const dx = toShip.x - fromShip.x;
+    const dy = toShip.y - fromShip.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 0.1) {
+      ctx.restore();
+      return;
+    }
+
+    const currentX = fromShip.x + dx * progress;
+    const currentY = fromShip.y + dy * progress;
+
+    const gradient = ctx.createLinearGradient(fromShip.x, fromShip.y, currentX, currentY);
+
+    let baseColor = '51, 153, 255';
+    if (useRed) {
+      baseColor = '255, 0, 0';
+    } else if (useWhite) {
+      baseColor = '255, 255, 255';
+    } else if (useOrange) {
+      baseColor = '255, 165, 0';
+    } else if (useGreen) {
+      baseColor = '51, 255, 51';
+    }
+
+    gradient.addColorStop(0, `rgba(${baseColor}, 0.8)`);
+    gradient.addColorStop(0.7, `rgba(${baseColor}, 1.0)`);
+    gradient.addColorStop(1, `rgba(${baseColor}, 0.9)`);
+
+    ctx.shadowBlur = (useRed || useWhite) ? 12 : 8;
+    ctx.shadowColor = `rgba(${baseColor}, ${(useRed || useWhite) ? 0.8 : 0.6})`;
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = (useRed || useWhite) ? 2.5 : 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(fromShip.x, fromShip.y);
+    ctx.lineTo(currentX, currentY);
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(fromShip.x, fromShip.y);
+    ctx.lineTo(currentX, currentY);
+    ctx.stroke();
+
+    if (progress > 0.1) {
+      let tipColor = '51, 153, 255';
+      if (useRed) {
+        tipColor = '255, 0, 0';
+      } else if (useWhite) {
+        tipColor = '255, 255, 255';
+      } else if (useOrange) {
+        tipColor = '255, 165, 0';
+      } else if (useGreen) {
+        tipColor = '51, 255, 51';
+      }
+      ctx.fillStyle = `rgba(${tipColor}, 0.9)`;
+      ctx.shadowBlur = (useRed || useWhite) ? 10 : 6;
+      ctx.shadowColor = `rgba(${tipColor}, 0.8)`;
+      ctx.beginPath();
+      ctx.arc(currentX, currentY, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Render orbital satellite with missiles
+   */
+  private renderSatellite(
+    ctx: CanvasRenderingContext2D,
+    satellite: {
+      x: number;
+      y: number;
+      angle: number;
+      image: HTMLImageElement | null;
+      missiles: Array<{
+        x: number;
+        y: number;
+        targetX: number;
+        targetY: number;
+        startX: number;
+        startY: number;
+        progress: number;
+        damage: number;
+        speed: number;
+        curveDirection: number;
+        curveAmount: number;
+      }>;
+      targetX: number;
+      targetY: number;
+    },
+  ): void {
+    ctx.save();
+
+    // Render missiles
+    for (const missile of satellite.missiles) {
+      ctx.save();
+
+      // Missile body (white)
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(missile.x, missile.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Missile core (bright white)
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(missile.x, missile.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Draw satellite entity
+    ctx.translate(satellite.x, satellite.y);
+
+    // Rotate to face the alien
+    const dx = satellite.targetX - satellite.x;
+    const dy = satellite.targetY - satellite.y;
+    const angleToTarget = Math.atan2(dy, dx);
+    ctx.rotate(angleToTarget + Math.PI / 2);
+
+    if (satellite.image && satellite.image.complete && satellite.image.naturalWidth > 0) {
+      const size = 40;
+      ctx.drawImage(satellite.image, -size / 2, -size / 2, size, size);
+    } else {
+      // Fallback procedural drawing
+      ctx.fillStyle = '#888888';
+      ctx.fillRect(-10, -10, 20, 20);
+
+      ctx.fillStyle = '#0044aa';
+      ctx.fillRect(-25, -8, 15, 16);
+      ctx.fillRect(10, -8, 15, 16);
+
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -20);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, -20, 3, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (Math.floor(Date.now() / 500) % 2 === 0) {
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(0, -20, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
   }
 }
 

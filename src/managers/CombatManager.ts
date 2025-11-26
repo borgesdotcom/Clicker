@@ -55,13 +55,13 @@ export class CombatManager {
     hitDirection?: Vec2;
     isBeam: boolean;
   } = {
-    damage: 0,
-    isCrit: false,
-    isFromShip: false,
-    clickDamage: 0,
-    hitDirection: undefined,
-    isBeam: false,
-  };
+      damage: 0,
+      isCrit: false,
+      isFromShip: false,
+      clickDamage: 0,
+      hitDirection: undefined,
+      isBeam: false,
+    };
 
   private deps: CombatManagerDependencies;
   private callbacks: CombatManagerCallbacks;
@@ -158,98 +158,151 @@ export class CombatManager {
    */
   getLaserVisuals(state: GameState): {
     isCrit: boolean;
+    isPerfectPrecision: boolean;
     color: string;
     width: number;
   } {
-    let color = this.deps.customizationSystem.getLaserColor(state, false);
     let width = 1.5;
     let isCrit = false;
+    let isPerfectPrecision = false;
+
+    // Set default color - will be overridden by upgrades or crits
+    let color = this.deps.customizationSystem.getLaserColor(state, false);
 
     let critChance = this.deps.upgradeSystem.getCritChance(state);
     critChance += this.deps.powerUpSystem.getCritChanceBonus() * 100;
     if (Math.random() * 100 < critChance) {
       isCrit = true;
+      this.callbacks.onCriticalHit();
+
+      // Perfect Precision: 5% chance on top of crit lasers (not on all lasers)
+      // This applies to both main ship clicks and fleet ships
+      if (state.subUpgrades?.['perfect_precision'] && Math.random() < 0.05) {
+        isPerfectPrecision = true;
+
+        // Void Essence Core overrides Perfect Precision color (highest priority)
+        if (state.subUpgrades && state.subUpgrades['void_essence_core']) {
+          color = '#9d00ff'; // Bright purple/violet
+          width = 2.0;
+        } else {
+          color = '#ff00ff'; // Magenta/purple for Perfect Precision crits
+          width = 2.5; // Thicker than normal crits
+        }
+
+        return { isCrit, isPerfectPrecision, color, width };
+      }
+
+      // Normal crit - Void Essence Core overrides crit color (highest priority)
       color = '#ffff00';
       width = 2.0;
-      this.callbacks.onCriticalHit();
-      return { isCrit, color, width };
+
+      return { isCrit, isPerfectPrecision, color, width };
     }
 
-    // Apply special upgrade visual effects to lasers (priority order - most powerful first)
-    // Legendary tier upgrades
-    if (state.subUpgrades['cosmic_ascension']) {
-      color = '#00ffff';
-      width = 2.2;
-    } else if (state.subUpgrades['reality_anchor']) {
-      color = '#ffffff';
-      width = 2.1;
-    } else if (state.subUpgrades['infinity_gauntlet']) {
-      color = '#ff1493';
-      width = 2.15;
-    } else if (state.subUpgrades['meaning_of_life']) {
-      color = '#00ffff';
+    // Non-crit: Apply special upgrade visual effects (priority order - most powerful first)
+
+    // 1. Meaning of Life (1Q) - Highest priority
+    if (state.subUpgrades['meaning_of_life']) {
+      color = '#00ffff'; // Cyan
       width = 2.0;
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      color = '#ff0044';
+    }
+    // 2. Cosmic Ascension (120B)
+    else if (state.subUpgrades['cosmic_ascension']) {
+      color = '#00ffff'; // Cyan
+      width = 2.2;
+    }
+    // 3. Heart of the Galaxy (90B)
+    else if (state.subUpgrades['heart_of_galaxy']) {
+      color = '#ff0044'; // Red/Pink
       width = 1.95;
-    } else if (state.subUpgrades['singularity_core']) {
-      color = '#000000';
+    }
+    // 4. Void Essence Core (90B)
+    else if (state.subUpgrades['void_essence_core']) {
+      color = '#9d00ff'; // Bright purple/violet
+      width = 2.0;
+    }
+    // 5. Singularity Power Core (24B)
+    else if (state.subUpgrades['singularity_core']) {
+      color = '#000000'; // Black
       width = 2.25;
     }
-    // Epic tier upgrades
-    else if (state.subUpgrades['antimatter_rounds']) {
-      color = '#ff00ff';
+    // 6. Hyper-Dimensional Reactor (10B)
+    else if (state.subUpgrades['hyper_reactor']) {
+      color = '#ff0080'; // Pink
+      width = 1.8;
+    }
+    // 7. Reality Anchor (9.6B)
+    else if (state.subUpgrades['reality_anchor']) {
+      color = '#ffffff'; // White
+      width = 2.1;
+    }
+    // 8. Photon Wave Amplifier (7.2B)
+    else if (state.subUpgrades['photon_amplifier']) {
+      color = '#ffff00'; // Yellow
+      width = 2.1;
+    }
+    // 9. Stellar Fusion Core (80M)
+    else if (state.subUpgrades['stellar_fusion_core']) {
+      color = '#00ccff'; // Light Blue
+      width = 1.8;
+    }
+    // 10. Nebula Energy Harvester (75M)
+    else if (state.subUpgrades['nebula_harvester']) {
+      color = '#00ffff'; // Cyan
+      width = 1.75;
+    }
+    // 11. Antimatter Cascade Reactor (60M)
+    else if (state.subUpgrades['antimatter_cascade']) {
+      color = '#ff00aa'; // Pink/Magenta
       width = 1.85;
-    } else if (state.subUpgrades['photon_amplifier']) {
-      color = '#00ffff';
-      width = 1.9;
-    } else if (state.subUpgrades['stellar_forge']) {
-      color = '#ffaa00';
+    }
+    // 12. Stellar Forge (30M)
+    else if (state.subUpgrades['stellar_forge']) {
+      color = '#ffaa00'; // Orange
       width = 1.95;
-    } else if (state.subUpgrades['hyper_reactor']) {
-      color = '#ff0080';
-      width = 1.8;
-    } else if (state.subUpgrades['dark_matter_engine']) {
-      color = '#4b0082';
-      width = 1.9;
-    } else if (state.subUpgrades['antimatter_cascade']) {
-      color = '#ff00aa';
-      width = 1.85;
-    } else if (state.subUpgrades['quantum_entanglement']) {
-      color = '#00ff88';
+    }
+    // 13. Quantum Entanglement Core (20M)
+    else if (state.subUpgrades['quantum_entanglement']) {
+      color = '#00ff88'; // Green/Cyan
       width = 1.75;
-    } else if (state.subUpgrades['plasma_matrix']) {
-      color = '#ff4400';
+    }
+    // 14. Plasma Energy Matrix (7.5M)
+    else if (state.subUpgrades['plasma_matrix']) {
+      color = '#ff4400'; // Orange/Red
       width = 1.8;
-    } else if (state.subUpgrades['nebula_harvester']) {
-      color = '#00ffff';
-      width = 1.75;
-    } else if (state.subUpgrades['cosmic_battery']) {
-      color = '#4169e1';
+    }
+    // 15. Seven Chaos Emeralds (1M)
+    else if (state.subUpgrades['chaos_emeralds']) {
+      color = '#00ff88'; // Green
+      width = 1.65;
+    }
+    // 16. Infinity Gauntlet (800k)
+    else if (state.subUpgrades['infinity_gauntlet']) {
+      color = '#ff1493'; // Deep Pink
+      width = 2.15;
+    }
+    // 17. Void Energy Channeling (200k)
+    else if (state.subUpgrades['void_channeling']) {
+      color = '#00ffff'; // Cyan
       width = 1.7;
     }
-    // Rare tier upgrades
+    // 18. Antimatter Ammunition (50k)
+    else if (state.subUpgrades['antimatter_rounds']) {
+      color = '#ff00ff'; // Magenta
+      width = 1.85;
+    }
+    // 19. Overclocked Reactors (10k)
+    else if (state.subUpgrades['overclocked_reactors']) {
+      color = '#ff6600'; // Orange
+      width = 1.7;
+    }
+    // 20. Laser Focusing Crystals (1k)
     else if (state.subUpgrades['laser_focusing']) {
-      color = '#ff6600';
-      width = 1.65;
-    } else if (state.subUpgrades['warp_core']) {
-      color = '#00ffff';
-      width = 1.7;
-    } else if (state.subUpgrades['chaos_emeralds']) {
-      color = '#00ff88';
-      width = 1.65;
-    } else if (state.subUpgrades['void_channeling']) {
-      color = '#00ffff';
-      width = 1.7;
-    } else if (state.subUpgrades['nanobots']) {
-      color = '#00ff00';
-      width = 1.6;
-    } else if (state.subUpgrades['nuclear_reactor']) {
-      color = '#ffff00';
+      color = '#ff6600'; // Orange
       width = 1.65;
     }
 
-    return { isCrit, color, width };
+    return { isCrit, isPerfectPrecision, color, width };
   }
 
   /**
@@ -257,83 +310,147 @@ export class CombatManager {
    */
   getLaserVisualsNoCrit(state: GameState): {
     isCrit: boolean;
+    isPerfectPrecision: boolean;
     color: string;
     width: number;
   } {
     // Small ships cannot crit - always return non-crit visuals
-    let color = this.deps.customizationSystem.getLaserColor(state, false);
     let width = 1.5;
+    let isCrit = false;
+    let isPerfectPrecision = false;
 
     // Apply special upgrade visual effects (same priority order as main ship)
-    if (state.subUpgrades['cosmic_ascension']) {
-      color = '#00ffff';
-      width = 2.2;
-    } else if (state.subUpgrades['reality_anchor']) {
-      color = '#ffffff';
-      width = 2.1;
-    } else if (state.subUpgrades['infinity_gauntlet']) {
-      color = '#ff1493';
-      width = 2.15;
-    } else if (state.subUpgrades['meaning_of_life']) {
-      color = '#00ffff';
+    // Set default color - will be overridden by upgrades
+    let color = this.deps.customizationSystem.getLaserColor(state, false);
+
+    // Check for Perfect Precision (now works on ships too)
+    if (state.subUpgrades?.['perfect_precision']) {
+      let critChance = this.deps.upgradeSystem.getCritChance(state);
+      critChance += this.deps.powerUpSystem.getCritChanceBonus() * 100;
+
+      // Ships inherit player crit chance for this specific mechanic
+      if (Math.random() * 100 < critChance) {
+        // 5% chance on top of "crit" to trigger Perfect Precision
+        if (Math.random() < 0.05) {
+          isCrit = true;
+          isPerfectPrecision = true;
+
+          // Void Essence Core overrides Perfect Precision color (highest priority)
+          if (state.subUpgrades && state.subUpgrades['void_essence_core']) {
+            color = '#9d00ff'; // Bright purple/violet
+            width = 2.0;
+          } else {
+            color = '#ff00ff'; // Magenta/purple for Perfect Precision crits
+            width = 2.5; // Thicker than normal crits
+          }
+
+          return { isCrit, isPerfectPrecision, color, width };
+        }
+      }
+    }
+
+    // 1. Meaning of Life (1Q) - Highest priority
+    if (state.subUpgrades['meaning_of_life']) {
+      color = '#00ffff'; // Cyan
       width = 2.0;
-    } else if (state.subUpgrades['heart_of_galaxy']) {
-      color = '#ff0044';
+    }
+    // 2. Cosmic Ascension (120B)
+    else if (state.subUpgrades['cosmic_ascension']) {
+      color = '#00ffff'; // Cyan
+      width = 2.2;
+    }
+    // 3. Heart of the Galaxy (90B)
+    else if (state.subUpgrades['heart_of_galaxy']) {
+      color = '#ff0044'; // Red/Pink
       width = 1.95;
-    } else if (state.subUpgrades['singularity_core']) {
-      color = '#000000';
+    }
+    // 4. Void Essence Core (90B)
+    else if (state.subUpgrades['void_essence_core']) {
+      color = '#9d00ff'; // Bright purple/violet
+      width = 2.0;
+    }
+    // 5. Singularity Power Core (24B)
+    else if (state.subUpgrades['singularity_core']) {
+      color = '#000000'; // Black
       width = 2.25;
-    } else if (state.subUpgrades['antimatter_rounds']) {
-      color = '#ff00ff';
+    }
+    // 6. Hyper-Dimensional Reactor (10B)
+    else if (state.subUpgrades['hyper_reactor']) {
+      color = '#ff0080'; // Pink
+      width = 1.8;
+    }
+    // 7. Reality Anchor (9.6B)
+    else if (state.subUpgrades['reality_anchor']) {
+      color = '#ffffff'; // White
+      width = 2.1;
+    }
+    // 8. Photon Wave Amplifier (7.2B)
+    else if (state.subUpgrades['photon_amplifier']) {
+      color = '#ffff00'; // Yellow
+      width = 2.1;
+    }
+    // 9. Stellar Fusion Core (80M)
+    else if (state.subUpgrades['stellar_fusion_core']) {
+      color = '#00ccff'; // Light Blue
+      width = 1.8;
+    }
+    // 10. Nebula Energy Harvester (75M)
+    else if (state.subUpgrades['nebula_harvester']) {
+      color = '#00ffff'; // Cyan
+      width = 1.75;
+    }
+    // 11. Antimatter Cascade Reactor (60M)
+    else if (state.subUpgrades['antimatter_cascade']) {
+      color = '#ff00aa'; // Pink/Magenta
       width = 1.85;
-    } else if (state.subUpgrades['photon_amplifier']) {
-      color = '#00ffff';
-      width = 1.9;
-    } else if (state.subUpgrades['stellar_forge']) {
-      color = '#ffaa00';
+    }
+    // 12. Stellar Forge (30M)
+    else if (state.subUpgrades['stellar_forge']) {
+      color = '#ffaa00'; // Orange
       width = 1.95;
-    } else if (state.subUpgrades['hyper_reactor']) {
-      color = '#ff0080';
+    }
+    // 13. Quantum Entanglement Core (20M)
+    else if (state.subUpgrades['quantum_entanglement']) {
+      color = '#00ff88'; // Green/Cyan
+      width = 1.75;
+    }
+    // 14. Plasma Energy Matrix (7.5M)
+    else if (state.subUpgrades['plasma_matrix']) {
+      color = '#ff4400'; // Orange/Red
       width = 1.8;
-    } else if (state.subUpgrades['dark_matter_engine']) {
-      color = '#4b0082';
-      width = 1.9;
-    } else if (state.subUpgrades['antimatter_cascade']) {
-      color = '#ff00aa';
+    }
+    // 15. Seven Chaos Emeralds (1M)
+    else if (state.subUpgrades['chaos_emeralds']) {
+      color = '#00ff88'; // Green
+      width = 1.65;
+    }
+    // 16. Infinity Gauntlet (800k)
+    else if (state.subUpgrades['infinity_gauntlet']) {
+      color = '#ff1493'; // Deep Pink
+      width = 2.15;
+    }
+    // 17. Void Energy Channeling (200k)
+    else if (state.subUpgrades['void_channeling']) {
+      color = '#00ffff'; // Cyan
+      width = 1.7;
+    }
+    // 18. Antimatter Ammunition (50k)
+    else if (state.subUpgrades['antimatter_rounds']) {
+      color = '#ff00ff'; // Magenta
       width = 1.85;
-    } else if (state.subUpgrades['quantum_entanglement']) {
-      color = '#00ff88';
-      width = 1.75;
-    } else if (state.subUpgrades['plasma_matrix']) {
-      color = '#ff4400';
-      width = 1.8;
-    } else if (state.subUpgrades['nebula_harvester']) {
-      color = '#00ffff';
-      width = 1.75;
-    } else if (state.subUpgrades['cosmic_battery']) {
-      color = '#4169e1';
+    }
+    // 19. Overclocked Reactors (10k)
+    else if (state.subUpgrades['overclocked_reactors']) {
+      color = '#ff6600'; // Orange
       width = 1.7;
-    } else if (state.subUpgrades['laser_focusing']) {
-      color = '#ff6600';
-      width = 1.65;
-    } else if (state.subUpgrades['warp_core']) {
-      color = '#00ffff';
-      width = 1.7;
-    } else if (state.subUpgrades['chaos_emeralds']) {
-      color = '#00ff88';
-      width = 1.65;
-    } else if (state.subUpgrades['void_channeling']) {
-      color = '#00ffff';
-      width = 1.7;
-    } else if (state.subUpgrades['nanobots']) {
-      color = '#00ff00';
-      width = 1.6;
-    } else if (state.subUpgrades['nuclear_reactor']) {
-      color = '#ffff00';
+    }
+    // 20. Laser Focusing Crystals (1k)
+    else if (state.subUpgrades['laser_focusing']) {
+      color = '#ff6600'; // Orange
       width = 1.65;
     }
 
-    return { isCrit: false, color, width };
+    return { isCrit: false, isPerfectPrecision: false, color, width };
   }
 
   /**
@@ -393,24 +510,17 @@ export class CombatManager {
   }
 
   /**
-   * Apply perfect precision bonus if triggered
+   * Apply perfect precision bonus if triggered (now only on crit lasers)
+   * This method is kept for backward compatibility but Perfect Precision
+   * is now handled in getLaserVisuals() which checks it on top of crits
    */
-  applyPerfectPrecision(damage: number, state: GameState): {
+  applyPerfectPrecision(damage: number, _state: GameState): {
     finalDamage: number;
     isCrit: boolean;
     triggered: boolean;
   } {
-    // Perfect precision: 5% chance for 10x damage (only for main ship clicks)
-    if (state.subUpgrades['perfect_precision']) {
-      if (Math.random() < 0.05) {
-        return {
-          finalDamage: damage * 10,
-          isCrit: true, // Mark as crit for visual effects
-          triggered: true,
-        };
-      }
-    }
-
+    // Perfect Precision is now handled in getLaserVisuals() - this is legacy code
+    // Kept for backward compatibility but should not be used for new logic
     return { finalDamage: damage, isCrit: false, triggered: false };
   }
 
@@ -425,26 +535,20 @@ export class CombatManager {
     state: GameState,
     alienBall?: AlienBall | EnhancedAlienBall,
     isBeam?: boolean,
+    isPerfectPrecision?: boolean,
   ): {
     finalDamage: number;
     isCrit: boolean;
     perfectPrecisionTriggered: boolean;
   } {
     let finalDamage = baseDamage;
-    let perfectPrecisionTriggered = false;
+    let perfectPrecisionTriggered = isPerfectPrecision ?? false;
 
-    // Apply perfect precision bonus (only for main ship clicks, not auto-fire)
-    if (!isFromShip && !isBeam) {
-      const precisionResult = this.applyPerfectPrecision(baseDamage, state);
-      if (precisionResult.triggered) {
-        finalDamage = precisionResult.finalDamage;
-        isCrit = true; // Mark as crit for visual effects
-        perfectPrecisionTriggered = true;
-      }
-    }
-
-    // Apply critical damage multiplier (only if not from Perfect Precision, which already gives 10x)
-    if (isCrit && !perfectPrecisionTriggered) {
+    // Apply Perfect Precision: 10x damage (only applies to crit lasers)
+    if (perfectPrecisionTriggered && isCrit) {
+      finalDamage *= 10;
+    } else if (isCrit) {
+      // Apply normal critical damage multiplier (only if not Perfect Precision)
       const critMultiplier = this.deps.upgradeSystem.getCritMultiplier(state);
       finalDamage *= critMultiplier;
     }

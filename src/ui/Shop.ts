@@ -508,9 +508,16 @@ export class Shop {
   }
 
   private checkForDiscoveries(state: GameState): boolean {
-    // Initialize discoveredUpgrades if not present
+    // Initialize discoveredUpgrades if not present - mark all main upgrades as discovered
     if (!state.discoveredUpgrades) {
-      state.discoveredUpgrades = { ship: true };
+      state.discoveredUpgrades = {};
+      // Mark all main upgrades as discovered (they're always visible)
+      const upgrades = this.upgradeSystem.getUpgrades();
+      for (const upgrade of upgrades) {
+        if (upgrade.id !== 'misc') {
+          state.discoveredUpgrades[upgrade.id] = true;
+        }
+      }
     }
 
     // Early exit: If player has very few points, skip discovery checks
@@ -523,21 +530,12 @@ export class Shop {
     const upgrades = this.upgradeSystem.getUpgrades();
     const allSubUpgrades = this.upgradeSystem.getSubUpgrades();
 
-    // Check main upgrades
+    // Check main upgrades - always mark as discovered (main upgrades always visible)
     for (const upgrade of upgrades) {
       if (upgrade.id === 'misc') continue;
 
-      // Skip if already discovered or already purchased
-      if (state.discoveredUpgrades[upgrade.id] || upgrade.getLevel(state) > 0) {
-        if (upgrade.getLevel(state) > 0) {
-          state.discoveredUpgrades[upgrade.id] = true;
-        }
-        continue;
-      }
-
-      // Check if player has 75% of the cost
-      const cost = upgrade.getCost(upgrade.getLevel(state));
-      if (state.points >= cost * 0.75) {
+      // Main upgrades are always visible, so always mark as discovered
+      if (!state.discoveredUpgrades[upgrade.id]) {
         state.discoveredUpgrades[upgrade.id] = true;
         discoveredNew = true;
       }
@@ -845,7 +843,14 @@ export class Shop {
     // Discovery check is now done in scheduleRender for automatic updates
     // Just ensure it's initialized here
     if (!state.discoveredUpgrades) {
-      state.discoveredUpgrades = { ship: true };
+      state.discoveredUpgrades = {};
+      // Mark all main upgrades as discovered (they're always visible)
+      const upgrades = this.upgradeSystem.getUpgrades();
+      for (const upgrade of upgrades) {
+        if (upgrade.id !== 'misc') {
+          state.discoveredUpgrades[upgrade.id] = true;
+        }
+      }
     }
 
     // Clear button cache for fresh render
@@ -918,17 +923,11 @@ export class Shop {
     this.container.appendChild(specialBox);
     }
 
-    // Render main upgrades (exclude R&D category and undiscovered upgrades)
+    // Render main upgrades (exclude R&D category - main upgrades always visible)
     for (const upgrade of upgrades) {
       if (upgrade.id === 'misc') continue;
 
-      // Only show if discovered OR already purchased
-      if (
-        !state.discoveredUpgrades?.[upgrade.id] &&
-        upgrade.getLevel(state) === 0
-      ) {
-        continue;
-      }
+      // Main upgrades are always visible (no discovery required)
 
       // Create individual floating container for each upgrade item
       const itemContainer = document.createElement('div');
@@ -1612,11 +1611,16 @@ export class Shop {
       return priorityA - priorityB;
     });
 
-    // Ensure ship upgrade is always discovered
+    // Mark all main upgrades as discovered (they're always visible)
     if (!currentState.discoveredUpgrades) {
       currentState.discoveredUpgrades = {};
     }
-    currentState.discoveredUpgrades['ship'] = true;
+    const allMainUpgrades = this.upgradeSystem.getUpgrades();
+    for (const upgrade of allMainUpgrades) {
+      if (upgrade.id !== 'misc') {
+        currentState.discoveredUpgrades[upgrade.id] = true;
+      }
+    }
 
     // Check main upgrades in priority order
     // Buy the first affordable upgrade in priority order (not the cheapest)
@@ -1627,29 +1631,7 @@ export class Shop {
       // Get fresh state for each upgrade check (state may have changed)
       currentState = this.store.getState();
 
-      // Auto-discover upgrades if player has 75% of the cost (same as manual discovery)
-      const currentLevel = upgrade.getLevel(currentState);
-      const cost = upgrade.getCost(currentLevel);
-      const discoveryThreshold = cost * 0.75;
-
-      if (
-        !currentState.discoveredUpgrades?.[upgrade.id] &&
-        currentLevel === 0
-      ) {
-        // Auto-discover if player has 75% of cost
-        if (currentState.points >= discoveryThreshold) {
-          if (!currentState.discoveredUpgrades) {
-            currentState.discoveredUpgrades = {};
-          }
-          currentState.discoveredUpgrades[upgrade.id] = true;
-          this.store.setState(currentState);
-          // Refresh state after discovery
-          currentState = this.store.getState();
-        } else {
-          // Skip if not discovered and can't afford discovery threshold
-          continue;
-        }
-      }
+      // Main upgrades are always available (no discovery required)
 
       // Check if we can afford at least one
       // Use canBuy to check, but also verify points directly as a safety check

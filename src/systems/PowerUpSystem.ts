@@ -76,6 +76,8 @@ export class PowerUpSystem {
   private activeBuffs: ActiveBuff[] = [];
   private spawnTimer = 0;
   private spawnInterval = 180; // Spawn every 180 seconds (3 minutes) - very rare like Cookie Clicker
+  private lastPowerUpTime = -60; // Track when last powerup was spawned/collected, start at -60 to allow first spawn
+  private powerUpCooldown = 60; // 1 minute cooldown between powerups
   private canvasWidth: number;
   private canvasHeight: number;
   private onPowerUpSpawnCallback: ((type: PowerUpType) => void) | null = null;
@@ -100,10 +102,16 @@ export class PowerUpSystem {
   public update(dt: number): void {
     // Update spawn timer - power-ups spawn very rarely (like Cookie Clicker golden cookies)
     this.spawnTimer += dt;
-    if (this.spawnTimer >= this.spawnInterval && this.powerUps.length < 2) {
+    this.lastPowerUpTime += dt; // Update cooldown timer
+    
+    // Check if cooldown has passed (at least 1 minute since last powerup)
+    const cooldownPassed = this.lastPowerUpTime >= this.powerUpCooldown;
+    
+    if (this.spawnTimer >= this.spawnInterval && this.powerUps.length < 2 && cooldownPassed) {
       // Only allow max 2 power-ups on screen at once to keep them special
       this.spawnRandomPowerUp();
       this.spawnTimer = 0;
+      this.lastPowerUpTime = 0; // Reset cooldown when spawning
     }
 
     // Update power-ups and remove inactive ones in-place (O(n) instead of O(n²) with filter)
@@ -137,6 +145,11 @@ export class PowerUpSystem {
   }
 
   private spawnRandomPowerUp(): void {
+    // Check if cooldown has passed (at least 1 minute since last powerup)
+    if (this.lastPowerUpTime < this.powerUpCooldown) {
+      return; // Cannot spawn, cooldown not ready
+    }
+
     const types: PowerUpType[] = [
       'points',
       'damage',
@@ -161,6 +174,9 @@ export class PowerUpSystem {
       maxLifetime: 15,
       pulseTime: 0,
     });
+
+    // Reset cooldown when spawning
+    this.lastPowerUpTime = 0;
 
     // Trigger spawn callback
     if (this.onPowerUpSpawnCallback) {
@@ -499,6 +515,7 @@ export class PowerUpSystem {
     if (closestPowerUp) {
       closestPowerUp.active = false;
       this.activateBuff(closestPowerUp.type);
+      this.lastPowerUpTime = 0; // Reset cooldown when collecting a powerup
       return closestPowerUp.type;
     }
 
@@ -569,7 +586,12 @@ export class PowerUpSystem {
     return this.activeBuffs;
   }
 
-  public spawnAt(x: number, y: number, type?: PowerUpType): void {
+  public spawnAt(x: number, y: number, type?: PowerUpType): boolean {
+    // Check if cooldown has passed (at least 1 minute since last powerup)
+    if (this.lastPowerUpTime < this.powerUpCooldown) {
+      return false; // Cannot spawn, cooldown not ready
+    }
+
     const types: PowerUpType[] = [
       'points',
       'damage',
@@ -596,9 +618,14 @@ export class PowerUpSystem {
       pulseTime: 0,
     });
 
+    // Reset cooldown when spawning
+    this.lastPowerUpTime = 0;
+
     // Trigger spawn callback
     if (this.onPowerUpSpawnCallback) {
       this.onPowerUpSpawnCallback(powerUpType);
     }
+
+    return true; // Successfully spawned
   }
 }

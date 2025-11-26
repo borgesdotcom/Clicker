@@ -31,6 +31,62 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
     },
   },
   {
+    id: 'amplified_resonance',
+    name: 'Amplified Resonance Core',
+    description: '1.5x damage multiplier',
+    flavor:
+      'Harmonic resonance amplifies every shot. The aliens feel the vibration... right before they explode.',
+    cost: 700000,
+    owned: false,
+    requires: (state) => state.pointMultiplierLevel >= 15,
+    isVisible: (state) => state.pointMultiplierLevel >= 15,
+    buy: (state) => {
+      state.subUpgrades['amplified_resonance'] = true;
+    },
+  },
+  {
+    id: 'quantum_network_matrix',
+    name: 'Quantum Network Matrix',
+    description: '2x damage, additional connection network',
+    flavor:
+      'Quantum entanglement creates a third connection network. Three paths of destruction, triple the chaos.',
+    cost: 50000000,
+    owned: false,
+    requires: (state) => state.pointMultiplierLevel >= 30,
+    isVisible: (state) => state.pointMultiplierLevel >= 30,
+    buy: (state) => {
+      state.subUpgrades['quantum_network_matrix'] = true;
+    },
+  },
+  {
+    id: 'enhanced_combat_matrix',
+    name: 'Enhanced Combat Matrix',
+    description: '+50% attack damage',
+    flavor:
+      'Advanced targeting systems and power conduits amplify every shot. Precision meets raw power.',
+    cost: 200000000,
+    owned: false,
+    requires: (state) => state.pointMultiplierLevel >= 40,
+    isVisible: (state) => state.pointMultiplierLevel >= 40,
+    buy: (state) => {
+      state.subUpgrades['enhanced_combat_matrix'] = true;
+    },
+  },
+  {
+    id: 'void_essence_core',
+    name: 'Void Essence Core',
+    description: '2.5x damage, enhanced laser systems',
+    flavor:
+      'Harness the power of the void itself. Lasers burn with purple energy, tearing through reality itself.',
+    cost: 5000000000,
+    owned: false,
+    requires: (state) => state.pointMultiplierLevel >= 50,
+    isVisible: (state) => state.pointMultiplierLevel >= 50,
+    buy: (state) => {
+      state.subUpgrades['void_essence_core'] = true;
+    },
+  },
+  {
     id: 'coffee_machine',
     name: 'Crew Coffee Machine',
     description: 'Passive point generation +50/sec',
@@ -72,6 +128,62 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
       state.subUpgrades['lucky_dice'] = true;
     },
   },
+  {
+    id: 'critical_mastery',
+    name: 'Critical Strike Mastery',
+    description: 'Critical damage x2',
+    flavor:
+      'Master the art of the perfect strike. Every critical hit becomes a devastating blow.',
+    cost: 600000000,
+    owned: false,
+    requires: (state) => state.critChanceLevel >= 20,
+    isVisible: (state) => state.critChanceLevel >= 20,
+    buy: (state) => {
+      state.subUpgrades['critical_mastery'] = true;
+    },
+  },
+  {
+    id: 'dual_network_expansion',
+    name: 'Dual Network Expansion',
+    description: 'Adds two additional connection networks',
+    flavor:
+      'Expand the network to five simultaneous connections. The aliens never see it coming... from five directions at once.',
+    cost: 5000000000,
+    owned: false,
+    requires: (state) => state.level >= 55,
+    isVisible: (state) => state.level >= 55,
+    buy: (state) => {
+      state.subUpgrades['dual_network_expansion'] = true;
+    },
+  },
+  {
+    id: 'network_white_glow',
+    name: 'Network White Glow',
+    description: '+15% connection speed, white network with glow',
+    flavor:
+      'Purify the network energy. White light flows faster, cleaner, more devastating.',
+    cost: 10000000000,
+    owned: false,
+    requires: (state) => state.level >= 60,
+    isVisible: (state) => state.level >= 60,
+    buy: (state) => {
+      state.subUpgrades['network_white_glow'] = true;
+    },
+  },
+  {
+    id: 'crimson_network_protocol',
+    name: 'Crimson Network Protocol',
+    description: 'Adds three additional connection networks, all nets turn red',
+    flavor:
+      'The network bleeds crimson. Three more connections, all painted in the color of destruction.',
+    cost: 50000000000,
+    owned: false,
+    requires: (state) => state.level >= 90,
+    isVisible: (state) => state.level >= 90,
+    buy: (state) => {
+      state.subUpgrades['crimson_network_protocol'] = true;
+    },
+  },
 
   // === MID GAME UPGRADES (Level 10-40) ===
   {
@@ -91,7 +203,7 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
   {
     id: 'overclocked_reactors',
     name: 'Overclocked Reactors',
-    description: 'Gain 25% more points per hit',
+    description: 'Gain 50% more points per hit',
     flavor:
       'Overclock reactors beyond safety limits. Defense emergencies require... creative solutions.',
     cost: 10000,
@@ -105,10 +217,10 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
   {
     id: 'ship_swarm',
     name: 'Swarm Intelligence Protocol',
-    description: 'Ships coordinate attacks for +20% damage',
+    description: 'Ships coordinate attacks for 2x damage',
     flavor:
       'Fleet coordinates synchronized attacks. The aliens never stand a chance. Especially these ones.',
-    cost: 15000,
+    cost: 50000,
     owned: false,
     requires: (state) => state.shipsCount >= 15,
     isVisible: (state) => state.shipsCount >= 15,
@@ -117,12 +229,96 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
     },
   },
   {
+    id: 'fleet_synergy_matrix',
+    name: 'Fleet Synergy Matrix',
+    description: '+50% damage, +3% crit chance',
+    flavor:
+      'Advanced coordination protocols maximize fleet efficiency. Every shot counts, every hit matters.',
+    cost: 100000,
+    owned: false,
+    requires: (state) => state.shipsCount >= 30,
+    isVisible: (state) => state.shipsCount >= 30,
+    buy: (state) => {
+      state.subUpgrades['fleet_synergy_matrix'] = true;
+    },
+  },
+  {
+    id: 'quantum_fleet_sync',
+    name: 'Quantum Fleet Synchronization',
+    description: 'Fleet damage x2, faster connection network',
+    flavor:
+      'Quantum entanglement synchronizes the entire fleet. Every ship moves as one, every shot amplified.',
+    cost: 2000000,
+    owned: false,
+    requires: (state) => state.shipsCount >= 40,
+    isVisible: (state) => state.shipsCount >= 40,
+    buy: (state) => {
+      state.subUpgrades['quantum_fleet_sync'] = true;
+    },
+  },
+  {
+    id: 'stellar_fusion_core',
+    name: 'Stellar Fusion Core',
+    description: '1.5x damage, enhanced laser systems',
+    flavor:
+      'Harness the power of a star. Every shot burns with stellar intensity, every impact a supernova.',
+    cost: 70000000,
+    owned: false,
+    requires: (state) => state.shipsCount >= 50,
+    isVisible: (state) => state.shipsCount >= 50,
+    buy: (state) => {
+      state.subUpgrades['stellar_fusion_core'] = true;
+    },
+  },
+  {
+    id: 'hyper_network_accelerator',
+    name: 'Hyper Network Accelerator',
+    description: '1.5x damage, +25% connection speed, orange network, crits enabled',
+    flavor:
+      'Overclock the network to extreme speeds. Orange energy flows faster, hits harder, and sometimes... explodes.',
+    cost: 200000000,
+    owned: false,
+    requires: (state) => state.shipsCount >= 60,
+    isVisible: (state) => state.shipsCount >= 60,
+    buy: (state) => {
+      state.subUpgrades['hyper_network_accelerator'] = true;
+    },
+  },
+  {
+    id: 'fleet_omega_core',
+    name: 'Fleet Omega Core',
+    description: 'Fleet damage x2.5',
+    flavor:
+      'The ultimate fleet coordination system. Every ship becomes a weapon of mass destruction.',
+    cost: 1000000000,
+    owned: false,
+    requires: (state) => state.shipsCount >= 60,
+    isVisible: (state) => state.shipsCount >= 60,
+    buy: (state) => {
+      state.subUpgrades['fleet_omega_core'] = true;
+    },
+  },
+  {
+    id: 'fleet_xp_synergy',
+    name: 'Fleet XP Synergy',
+    description: '+3% XP per ship',
+    flavor:
+      'Each ship in the fleet contributes to collective learning. More ships, more knowledge, more power.',
+    cost: 500000000,
+    owned: false,
+    requires: (state) => state.shipsCount >= 50,
+    isVisible: (state) => state.shipsCount >= 50,
+    buy: (state) => {
+      state.subUpgrades['fleet_xp_synergy'] = true;
+    },
+  },
+  {
     id: 'neural_link',
     name: 'Neural Link Interface',
     description: 'Clicking grants 10% bonus points',
     flavor:
       'Neural link directly to your trigger finger. Click faster, eliminate faster. Very efficient.',
-    cost: 25000,
+    cost: 500000,
     owned: false,
     requires: (state) => state.level >= 20,
     isVisible: (state) => state.level >= 20,
@@ -467,6 +663,20 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
     },
   },
   {
+    id: 'cosmic_synergy_matrix',
+    name: 'Cosmic Synergy Matrix',
+    description: '+50% damage, +50% XP',
+    flavor:
+      'Perfect harmony between destruction and knowledge. Every kill teaches, every lesson destroys.',
+    cost: 50000000000,
+    owned: false,
+    requires: (state) => state.level >= 70,
+    isVisible: (state) => state.level >= 70,
+    buy: (state) => {
+      state.subUpgrades['cosmic_synergy_matrix'] = true;
+    },
+  },
+  {
     id: 'nebula_harvester',
     name: 'Nebula Energy Harvester',
     description: 'Passive generation +5000/sec, XP +50%',
@@ -804,7 +1014,7 @@ export const UPGRADE_DEFINITIONS: SubUpgrade[] = [
   {
     id: 'akashic_records',
     name: 'Akashic Records Access',
-    description: 'XP x10, Retain all knowledge between lives',
+    description: 'XP +50%, Retain all knowledge between lives',
     flavor: "The universe's library card. No late fees.",
     cost: 25000000000,
     owned: false,

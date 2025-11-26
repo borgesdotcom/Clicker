@@ -284,6 +284,14 @@
     "artifactNotification": "Nova notificação de artefato – o botão de artefatos agora brilha em vez de abrir o modal automaticamente.",
     "bossEffectFix": "Corrigido efeitos visuais de boss às vezes não sendo limpos corretamente.",
     "v121Title": "Novidades da Versão 1.21.0",
+    "beta200Title": "Novidades da Beta 2.0.0",
+    "upcomingContent": "Lançamentos de Conteúdo Futuros",
+    "contentNov26": "<strong>26 de Novembro:</strong> +100 níveis de novo conteúdo",
+    "contentNov27": "<strong>27 de Novembro:</strong> +100 níveis de novo conteúdo",
+    "contentNov28": "<strong>28 de Novembro:</strong> +100 níveis de novo conteúdo",
+    "majorRefactor": "Grande Refatoração do Jogo",
+    "refactorDescription": "O jogo passou por uma refatoração profunda para melhorar performance, estabilidade e qualidade do código. Muitos sistemas foram otimizados e reestruturados.",
+    "resetRecommendation": "⚠️ Recomendamos resetar seu jogo no menu de Configurações para a melhor experiência com a nova versão.",
     "accessibility": "Melhorias de Acessibilidade",
     "accessibilityFont": "Opção de personalização de fonte adicionada para jogadores com dificuldades visuais.",
     "accessibilityScreenShake": "Opção de vibração de tela movida para configurações de acessibilidade para ajudar com enjoos de movimento.",
@@ -362,6 +370,16 @@
         "description": "Aumenta o ganho de pontos em 15%",
         "flavor": "Esses cristais fazem os alienígenas fazerem um som *pop* muito satisfatório quando destruídos."
       },
+      "amplified_resonance": {
+        "name": "Núcleo de Ressonância Amplificada",
+        "description": "Multiplicador de dano 1.5x",
+        "flavor": "A ressonância harmônica amplifica cada tiro. Os alienígenas sentem a vibração... logo antes de explodirem."
+      },
+      "quantum_network_matrix": {
+        "name": "Matriz de Rede Quântica",
+        "description": "2x de dano, rede de conexão adicional",
+        "flavor": "O emaranhamento quântico cria uma terceira rede de conexão. Três caminhos de destruição, triplo o caos."
+      },
       "coffee_machine": {
         "name": "Máquina de Café da Tripulação",
         "description": "Geração passiva de pontos +50/seg",
@@ -384,13 +402,38 @@
       },
       "overclocked_reactors": {
         "name": "Reatores Superaquecidos",
-        "description": "Ganhe 25% mais pontos por acerto",
+        "description": "Ganhe 50% mais pontos por acerto",
         "flavor": "Superaqueça reatores além dos limites de segurança. Emergências de defesa requerem... soluções criativas."
       },
       "ship_swarm": {
         "name": "Protocolo de Inteligência de Enxame",
-        "description": "Naves coordenam ataques para +20% de dano",
+        "description": "Naves coordenam ataques para 2x de dano",
         "flavor": "Frota coordena ataques sincronizados. Os alienígenas nunca têm chance. Especialmente estes."
+      },
+      "fleet_synergy_matrix": {
+        "name": "Matriz de Sinergia da Frota",
+        "description": "+50% de dano, +3% de chance crítica",
+        "flavor": "Protocolos avançados de coordenação maximizam a eficiência da frota. Cada tiro conta, cada acerto importa."
+      },
+      "quantum_fleet_sync": {
+        "name": "Sincronização Quântica da Frota",
+        "description": "Dano da frota x2, rede de conexão mais rápida",
+        "flavor": "O emaranhamento quântico sincroniza toda a frota. Cada nave se move como uma, cada tiro amplificado."
+      },
+      "stellar_fusion_core": {
+        "name": "Núcleo de Fusão Estelar",
+        "description": "1.5x de dano, sistemas de laser aprimorados",
+        "flavor": "Aproveite o poder de uma estrela. Cada tiro queima com intensidade estelar, cada impacto uma supernova."
+      },
+      "hyper_network_accelerator": {
+        "name": "Acelerador de Rede Hiper",
+        "description": "1.5x de dano, +25% de velocidade de conexão, rede laranja, críticos habilitados",
+        "flavor": "Acelere a rede a velocidades extremas. Energia laranja flui mais rápido, acerta mais forte e às vezes... explode."
+      },
+      "fleet_xp_synergy": {
+        "name": "Sinergia de XP da Frota",
+        "description": "+3% de XP por nave",
+        "flavor": "Cada nave da frota contribui para o aprendizado coletivo. Mais naves, mais conhecimento, mais poder."
       },
       "neural_link": {
         "name": "Interface de Conexão Neural",
@@ -577,6 +620,11 @@
         "description": "Ganho de XP x3",
         "flavor": "Você está aqui. Então está tudo mais. Útil!"
       },
+      "knowledge_power_conversion": {
+        "name": "Conversão de Poder do Conhecimento",
+        "description": "+3% de dano por nível de Bônus de XP",
+        "flavor": "Conhecimento se torna poder. Cada nível de compreensão amplifica seu potencial destrutivo."
+      },
       "answer_to_everything": {
         "name": "Resposta para Tudo",
         "description": "Toda geração passiva x10",
@@ -644,7 +692,7 @@
       },
       "akashic_records": {
         "name": "Acesso aos Registros Akáshicos",
-        "description": "XP x10, Retenha todo conhecimento entre vidas",
+        "description": "XP +50%, Retenha todo conhecimento entre vidas",
         "flavor": "Acesse a biblioteca universal. Leia o manual."
       },
       "void_heart": {

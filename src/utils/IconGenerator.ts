@@ -79,10 +79,23 @@ export class IconGenerator {
       auto_fire: this.createFireIcon(),
       death_pact: this.createSkullIcon(),
       laser_focusing: this.createDiamondIcon(),
+      amplified_resonance: this.createStarIcon(),
       quantum_targeting: this.createTargetIcon(),
       energy_recycling: this.createRecycleIcon(),
       overclocked_reactors: this.createAtomIcon(),
       ship_swarm: this.createSwarmIcon(),
+      fleet_synergy_matrix: this.createSwarmIcon(),
+      quantum_fleet_sync: this.createSwarmIcon(),
+      stellar_fusion_core: this.createStarIcon(),
+      hyper_network_accelerator: this.createSwarmIcon(),
+      fleet_xp_synergy: this.createSwarmIcon(),
+      void_essence_core: this.createCrystalIcon(),
+      orbital_satellite: this.createSatelliteIcon(),
+      rapid_fire_satellite: this.createSatelliteIcon(),
+      cosmic_synergy_matrix: this.createAtomIcon(),
+      quantum_network_matrix: this.createSwarmIcon(),
+      enhanced_combat_matrix: this.createTargetIcon(),
+      knowledge_power_conversion: this.createStarIcon(),
       neural_link: this.createBrainIcon(),
       antimatter_rounds: this.createExplosionIcon(),
       warp_core: this.createWarpIcon(),
@@ -223,6 +236,19 @@ export class IconGenerator {
        <circle cx="16" cy="8" r="2" fill="#66ccff"/>
        <circle cx="12" cy="16" r="2" fill="#66ccff"/>
        <path d="M8 8L12 16M16 8L12 16" stroke="#66ccff" stroke-width="1" opacity="0.4"/>`,
+    );
+  }
+
+  // Satellite icon
+  private static createSatelliteIcon(): string {
+    return this.createSVG(
+      '0 0 24 24',
+      `<rect x="9" y="9" width="6" height="6" fill="#66ccff" rx="1"/>
+       <rect x="3" y="11" width="4" height="2" fill="#66ccff" rx="0.5"/>
+       <rect x="17" y="11" width="4" height="2" fill="#66ccff" rx="0.5"/>
+       <rect x="11" y="3" width="2" height="4" fill="#66ccff" rx="0.5"/>
+       <rect x="11" y="17" width="2" height="4" fill="#66ccff" rx="0.5"/>
+       <circle cx="12" cy="12" r="1.5" fill="#ffffff"/>`,
     );
   }
 

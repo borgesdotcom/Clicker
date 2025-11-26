@@ -26,7 +26,7 @@ export class VersionSplash {
     }
 
     // Returning user - check version
-    const currentVersion = '1.21.0';
+    const currentVersion = 'beta2.0.0';
     const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
     if (lastSeenVersion !== currentVersion) {
@@ -130,25 +130,19 @@ export class VersionSplash {
           <button class="modal-close" id="version-close"><img src="${images.menu.close}" alt="Close" /></button>
         </div>
         <div class="modal-body tutorial-modal-body">
-          <h2 style="text-align: center; color: #FFFAE5; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 1px;">${i18n.t('versionSplash.v121Title')}</h2>
+          <h2 style="text-align: center; color: #FFFAE5; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 1px;">${i18n.t('versionSplash.beta200Title')}</h2>
           <div class="changelog-section">
-            <h3>${i18n.t('versionSplash.accessibility')}</h3>
+            <h3 style="color: #ffaa00; margin-top: 20px;">${i18n.t('versionSplash.upcomingContent')}</h3>
             <ul>
-              <li>${i18n.t('versionSplash.accessibilityFont')}</li>
-              <li>${i18n.t('versionSplash.accessibilityScreenShake')}</li>
+              <li>${i18n.t('versionSplash.contentNov26')}</li>
+              <li>${i18n.t('versionSplash.contentNov27')}</li>
+              <li>${i18n.t('versionSplash.contentNov28')}</li>
             </ul>
-            <h3 style="margin-top: 15px;">${i18n.t('versionSplash.hudUpdates')}</h3>
-            <ul>
-              <li>${i18n.t('versionSplash.hudImprovements')}</li>
-            </ul>
-            <h3 style="margin-top: 15px;">${i18n.t('versionSplash.newContent')}</h3>
-            <ul>
-              <li>${i18n.t('versionSplash.newBossLevel5')}</li>
-            </ul>
-            <h3 style="margin-top: 15px;">${i18n.t('versionSplash.optimizations')}</h3>
-            <ul>
-              <li>${i18n.t('versionSplash.generalOptimizations')}</li>
-            </ul>
+            <h3 style="margin-top: 20px; color: #ff6600;">${i18n.t('versionSplash.majorRefactor')}</h3>
+            <p style="margin-top: 10px; line-height: 1.6;">${i18n.t('versionSplash.refactorDescription')}</p>
+            <div style="margin-top: 15px; padding: 12px; background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.3); border-radius: 4px; font-size: 13px; color: #ffaa00;">
+              <strong>${i18n.t('versionSplash.resetRecommendation')}</strong>
+            </div>
           </div>
           <button class="tutorial-start-btn">${i18n.t('versionSplash.startPlaying')}</button>
         </div>

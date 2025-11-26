@@ -35,8 +35,9 @@ export class AutoFireSystem {
         const didFire = onFire(i);
         if (didFire) {
           // Add random offset when resetting to keep shots desynchronized
-          // Random offset between -30% and +30% of cooldown
-          const randomOffset = (Math.random() - 0.5) * 0.6 * cooldownSec;
+          // Random offset between -80% and +80% of cooldown to prevent synchronization
+          // This ensures lasers stay visually separate even after many cycles
+          const randomOffset = (Math.random() - 0.5) * 1.6 * cooldownSec;
           this.shipTimers[i] = Math.max(0, randomOffset);
         }
         // If didn't fire (no target), keep timer at cooldown so it tries again next frame
