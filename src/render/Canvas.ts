@@ -12,7 +12,10 @@ export class Canvas {
 
   constructor(canvasElement: HTMLCanvasElement) {
     this.canvas = canvasElement;
-    this.dpr = window.devicePixelRatio || 1;
+    // Clamp devicePixelRatio for iframe compatibility (some iframes report incorrect values)
+    // Also handle cases where devicePixelRatio might be 0 or negative
+    const rawDpr = window.devicePixelRatio || 1;
+    this.dpr = Math.max(1, Math.min(rawDpr, 3)); // Clamp between 1 and 3
 
     // Try to initialize WebGL first for maximum performance
     try {
@@ -96,8 +99,14 @@ export class Canvas {
 
   private resize(): void {
     const rect = this.canvas.getBoundingClientRect();
-    const width = rect.width * this.dpr;
-    const height = rect.height * this.dpr;
+    // Ensure we have valid dimensions (important for iframe compatibility)
+    const rectWidth = Math.max(1, rect.width || this.canvas.clientWidth || 0);
+    const rectHeight = Math.max(1, rect.height || this.canvas.clientHeight || 0);
+    
+    // In iframes, devicePixelRatio might be unreliable, so clamp it
+    const safeDpr = Math.max(1, Math.min(this.dpr || 1, 3));
+    const width = Math.ceil(rectWidth * safeDpr);
+    const height = Math.ceil(rectHeight * safeDpr);
 
     if (this.webglRenderer) {
       this.webglRenderer.resize();
@@ -113,11 +122,11 @@ export class Canvas {
       this.offscreenCanvas.height = height;
       // Reset transform and reapply scale
       this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-      this.offscreenCtx.scale(this.dpr, this.dpr);
+      this.offscreenCtx.scale(safeDpr, safeDpr);
     } else if (!this.useWebGL) {
       // Reset transform and reapply scale
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-      this.ctx.scale(this.dpr, this.dpr);
+      this.ctx.scale(safeDpr, safeDpr);
     }
 
     // Update overlay canvas size
@@ -152,15 +161,31 @@ export class Canvas {
     // Use transparent clear so CSS background (animated GIF) shows through
     if (this.useWebGL && this.offscreenCanvas && this.offscreenCtx) {
       // Clear offscreen canvas with transparent
-      this.offscreenCtx.clearRect(
-        0,
-        0,
-        this.offscreenCanvas.width,
-        this.offscreenCanvas.height,
-      );
+      // Use Math.ceil to ensure we clear the entire area, especially important in iframes
+      // Ensure dimensions are valid (defensive check for iframe issues)
+      const offscreenWidth = Math.max(1, Math.ceil(this.offscreenCanvas.width || 0));
+      const offscreenHeight = Math.max(1, Math.ceil(this.offscreenCanvas.height || 0));
+      this.offscreenCtx.clearRect(0, 0, offscreenWidth, offscreenHeight);
+      
+      // Also clear overlay canvas if it exists (critical for iframe compatibility)
+      // This was the main issue - overlay canvas wasn't being cleared at frame start
+      if (this.overlayCanvas && this.overlayCtx) {
+        // Ensure overlay dimensions match main canvas (fixes iframe dimension sync issues)
+        if (this.overlayCanvas.width !== this.canvas.width || this.overlayCanvas.height !== this.canvas.height) {
+          this.overlayCanvas.width = this.canvas.width;
+          this.overlayCanvas.height = this.canvas.height;
+        }
+        const overlayWidth = Math.max(1, Math.ceil(this.overlayCanvas.width || 0));
+        const overlayHeight = Math.max(1, Math.ceil(this.overlayCanvas.height || 0));
+        this.overlayCtx.clearRect(0, 0, overlayWidth, overlayHeight);
+      }
     } else {
       // Clear main 2D canvas with transparent so CSS background shows through
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      // Use Math.ceil to ensure we clear the entire area, especially important in iframes
+      // Ensure dimensions are valid (defensive check for iframe issues)
+      const canvasWidth = Math.max(1, Math.ceil(this.canvas.width || 0));
+      const canvasHeight = Math.max(1, Math.ceil(this.canvas.height || 0));
+      this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     }
   }
 
@@ -274,17 +299,20 @@ export class Canvas {
       }
     }
 
+    // Ensure overlay canvas dimensions match main canvas (important for iframe compatibility)
+    if (this.overlayCanvas.width !== this.canvas.width || this.overlayCanvas.height !== this.canvas.height) {
+      this.overlayCanvas.width = this.canvas.width;
+      this.overlayCanvas.height = this.canvas.height;
+    }
+
     // Copy offscreen canvas to overlay (only if there's content to render)
     // IMPORTANT: Only copy non-background content (text, UI elements)
     // Background should be rendered to WebGL, not overlay
     if (this.overlayCtx && this.overlayCanvas) {
-      // Clear overlay completely (transparent)
-      this.overlayCtx.clearRect(
-        0,
-        0,
-        this.overlayCanvas.width,
-        this.overlayCanvas.height,
-      );
+      // Clear overlay completely (transparent) - use Math.ceil for iframe compatibility
+      const overlayWidth = Math.ceil(this.overlayCanvas.width);
+      const overlayHeight = Math.ceil(this.overlayCanvas.height);
+      this.overlayCtx.clearRect(0, 0, overlayWidth, overlayHeight);
 
       // Only copy text/UI elements from offscreen canvas, NOT the background
       // Background is already rendered to WebGL canvas
@@ -300,21 +328,30 @@ export class Canvas {
   private updateOverlaySize(): void {
     if (this.overlayCanvas && this.useWebGL) {
       const rect = this.canvas.getBoundingClientRect();
-      const width = rect.width * this.dpr;
-      const height = rect.height * this.dpr;
+      // Ensure we have valid dimensions (important for iframe compatibility)
+      const rectWidth = Math.max(1, rect.width || this.canvas.clientWidth || 0);
+      const rectHeight = Math.max(1, rect.height || this.canvas.clientHeight || 0);
+      
+      // In iframes, devicePixelRatio might be unreliable, so clamp it
+      const safeDpr = Math.max(1, Math.min(this.dpr || 1, 3));
+      const width = Math.ceil(rectWidth * safeDpr);
+      const height = Math.ceil(rectHeight * safeDpr);
 
       this.overlayCanvas.width = width;
       this.overlayCanvas.height = height;
 
       // Match CSS size to main canvas
       const canvasStyle = window.getComputedStyle(this.canvas);
-      this.overlayCanvas.style.width = canvasStyle.width || `${rect.width}px`;
+      this.overlayCanvas.style.width = canvasStyle.width || `${rectWidth}px`;
       this.overlayCanvas.style.height =
-        canvasStyle.height || `${rect.height}px`;
+        canvasStyle.height || `${rectHeight}px`;
 
       if (this.overlayCtx) {
         // Reset transform and don't scale (we're drawing at full resolution)
         this.overlayCtx.setTransform(1, 0, 0, 1, 0, 0);
+        // Re-apply image smoothing settings after resize
+        this.overlayCtx.imageSmoothingEnabled = false;
+        this.overlayCtx.imageSmoothingQuality = 'low';
       }
     }
   }

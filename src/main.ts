@@ -3,6 +3,8 @@ import { MobileUI } from './ui/MobileUI';
 import { i18n } from './core/I18n';
 import '../styles.css';
 import { initializeHtmlImages } from './utils/imageLoader';
+import { AssetPreloader } from './utils/AssetPreloader';
+import { LoadingScreen } from './ui/LoadingScreen';
 
 // Extend Window interface for debugging properties
 declare global {
@@ -31,24 +33,54 @@ document.addEventListener('dragover', (e) => {
 });
 
 async function init(): Promise<void> {
-  // Load translations first
-  await i18n.loadTranslations();
+  // Show loading screen
+  const loadingScreen = new LoadingScreen();
+  loadingScreen.show();
 
-  // Set HTML lang attribute
-  document.documentElement.lang = i18n.getLanguage();
+  try {
+    // Load translations first
+    await i18n.loadTranslations();
 
-  // Initialize images in static HTML (including background)
-  initializeHtmlImages();
+    // Set HTML lang attribute
+    document.documentElement.lang = i18n.getLanguage();
 
-  // Wait a bit to ensure DOM is fully ready
-  await new Promise((resolve) => setTimeout(resolve, 0));
+    // Preload all assets
+    const preloader = new AssetPreloader();
+    await preloader.preloadAll((progress) => {
+      loadingScreen.updateProgress(progress.percentage);
+    });
 
-  const game = new Game();
-  const mobileUI = new MobileUI();
-  game.start();
+    // Initialize images in static HTML (including background)
+    initializeHtmlImages();
 
-  window.game = game;
-  window.mobileUI = mobileUI;
+    // Wait a bit to ensure DOM is fully ready
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Hide loading screen and show game
+    loadingScreen.hide();
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.display = 'flex';
+    }
+
+    // Small delay to ensure loading screen fade-out completes
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    const game = new Game();
+    const mobileUI = new MobileUI();
+    game.start();
+
+    window.game = game;
+    window.mobileUI = mobileUI;
+  } catch (error) {
+    console.error('Failed to initialize game:', error);
+    loadingScreen.setText('Failed to load. Please refresh the page.');
+    // Still try to show the game even if some assets failed
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.display = 'flex';
+    }
+  }
 }
 
 if (document.readyState === 'loading') {

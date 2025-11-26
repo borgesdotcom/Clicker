@@ -126,7 +126,9 @@ export class WebGLRenderer {
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.dpr = window.devicePixelRatio || 1;
+    // Clamp devicePixelRatio for iframe compatibility (some iframes report incorrect values)
+    const rawDpr = window.devicePixelRatio || 1;
+    this.dpr = Math.max(1, Math.min(rawDpr, 3)); // Clamp between 1 and 3
 
     // WebGL2 required for performance (shaders use ES 3.0 syntax)
     const gl = canvas.getContext('webgl2', {
@@ -928,10 +930,19 @@ export class WebGLRenderer {
 
   resize(): void {
     const rect = this.canvas.getBoundingClientRect();
-    this.width = rect.width * this.dpr;
-    this.height = rect.height * this.dpr;
+    // Ensure we have valid dimensions (important for iframe compatibility)
+    const rectWidth = Math.max(1, rect.width || this.canvas.clientWidth || 0);
+    const rectHeight = Math.max(1, rect.height || this.canvas.clientHeight || 0);
+    
+    // In iframes, devicePixelRatio might be unreliable, so clamp it
+    const safeDpr = Math.max(1, Math.min(this.dpr || 1, 3));
+    this.width = Math.ceil(rectWidth * safeDpr);
+    this.height = Math.ceil(rectHeight * safeDpr);
+    
     this.canvas.width = this.width;
     this.canvas.height = this.height;
+    
+    // Set viewport to match canvas dimensions exactly (critical for proper clearing)
     this.gl.viewport(0, 0, this.width, this.height);
   }
 
@@ -953,6 +964,10 @@ export class WebGLRenderer {
     const rgb = this.hexToRgb(color);
     // Use alpha 0 for transparent clear (overlay will provide background)
     this.gl.clearColor(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 0.0);
+    
+    // Ensure viewport is set correctly before clearing (important for iframe compatibility)
+    // This ensures we clear the entire canvas, not just a portion
+    this.gl.viewport(0, 0, this.width, this.height);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
   }
 
