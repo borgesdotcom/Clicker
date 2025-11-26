@@ -258,7 +258,11 @@ export class Canvas {
       this.overlayCanvas.style.position = 'absolute';
       this.overlayCanvas.style.top = '0';
       this.overlayCanvas.style.left = '0';
+      // CRITICAL: pointer-events must be none to allow clicks through to main canvas
+      // This is essential for clicking asteroids and power-ups
       this.overlayCanvas.style.pointerEvents = 'none';
+      this.overlayCanvas.style.userSelect = 'none';
+      this.overlayCanvas.style.touchAction = 'none';
       // Layering order (bottom to top):
       // 1. Overlay canvas (z-index: 0) - Background and 2D content
       // 2. WebGL canvas (z-index: 1) - Ships, circles, etc.
@@ -266,6 +270,7 @@ export class Canvas {
       this.overlayCanvas.style.zIndex = '0';
       // Ensure WebGL canvas is above overlay (it's already position: absolute from CSS)
       this.canvas.style.zIndex = '1';
+      this.canvas.style.pointerEvents = 'auto'; // Ensure main canvas receives clicks
 
       // Match main canvas position exactly - overlay must be in same container
       this.canvas.getBoundingClientRect();
@@ -309,6 +314,10 @@ export class Canvas {
     // IMPORTANT: Only copy non-background content (text, UI elements)
     // Background should be rendered to WebGL, not overlay
     if (this.overlayCtx && this.overlayCanvas) {
+      // CRITICAL: Re-enforce pointer-events: none every frame
+      // This ensures the overlay never blocks clicks, even if styles are modified elsewhere
+      this.overlayCanvas.style.pointerEvents = 'none';
+      
       // Clear overlay completely (transparent) - use Math.ceil for iframe compatibility
       const overlayWidth = Math.ceil(this.overlayCanvas.width);
       const overlayHeight = Math.ceil(this.overlayCanvas.height);
@@ -320,6 +329,9 @@ export class Canvas {
       // The offscreen canvas should only have text/UI, not background
       this.overlayCtx.drawImage(this.offscreenCanvas, 0, 0);
     }
+    
+    // Ensure main canvas always receives clicks
+    this.canvas.style.pointerEvents = 'auto';
   }
 
   /**
@@ -345,6 +357,14 @@ export class Canvas {
       this.overlayCanvas.style.width = canvasStyle.width || `${rectWidth}px`;
       this.overlayCanvas.style.height =
         canvasStyle.height || `${rectHeight}px`;
+
+      // CRITICAL: Re-enforce pointer-events: none on resize
+      // This ensures clicks always pass through to the main canvas
+      this.overlayCanvas.style.pointerEvents = 'none';
+      this.overlayCanvas.style.userSelect = 'none';
+      this.overlayCanvas.style.touchAction = 'none';
+      // Ensure main canvas can receive clicks
+      this.canvas.style.pointerEvents = 'auto';
 
       if (this.overlayCtx) {
         // Reset transform and don't scale (we're drawing at full resolution)

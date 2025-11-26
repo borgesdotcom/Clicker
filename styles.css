@@ -257,6 +257,7 @@ svg {
   top: 0;
   left: 0;
   z-index: 1;
+  pointer-events: auto;
   /* GPU acceleration hints - helps browser optimize rendering */
   will-change: transform;
   transform: translateZ(0);
@@ -270,7 +271,9 @@ svg {
   width: 100%;
   height: 100%;
   z-index: 0;
-  pointer-events: none;
+  pointer-events: none !important;
+  user-select: none;
+  touch-action: none;
   display: block;
 }
 
