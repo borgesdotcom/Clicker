@@ -28,6 +28,9 @@ import settings from '@/icons/settings.png';
 import art from '@/icons/art.png';
 import hitmarker from '@/icons/hitmarker.png';
 
+// Ship icons
+import orbitalSatellite from '@/icons/ships/orbital.png';
+
 // Artifact icons
 import artifactRustyCoil from '@/icons/artifacts/rusty_coil.png';
 import artifactBasicTargeting from '@/icons/artifacts/baisc_targeting_system.png';
@@ -398,6 +401,7 @@ export const images = {
   settings,
   art,
   hitmarker,
+  satellite: orbitalSatellite,
   artifacts: {
     rusty_coil: artifactRustyCoil,
     baisc_targeting_system: artifactBasicTargeting,

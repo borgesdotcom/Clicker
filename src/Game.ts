@@ -322,7 +322,7 @@ export class Game {
 
     // Load satellite image
     this.satelliteImage = new Image();
-    this.satelliteImage.src = 'src/icons/ships/orbital.png';
+    this.satelliteImage.src = images.satellite;
 
     // Initialize particle system with performance settings
     const perfSettings = this.performanceModeManager.getSettings();
