@@ -193,8 +193,13 @@ export class CombatManager {
       }
 
       // Normal crit - Void Essence Core overrides crit color (highest priority)
-      color = '#ffff00';
-      width = 2.0;
+      if (state.subUpgrades && state.subUpgrades['void_essence_core']) {
+        color = '#9d00ff'; // Bright purple/violet
+        width = 2.0;
+      } else {
+        color = '#ffff00'; // Yellow for normal crits
+        width = 2.0;
+      }
 
       return { isCrit, isPerfectPrecision, color, width };
     }

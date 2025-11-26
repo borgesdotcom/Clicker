@@ -3399,9 +3399,10 @@ export class Game {
             maxDuration: this.COMBO_PAUSE_DURATION,
           });
         }
-        this.hud.updatePowerUpBuffs(allBuffs);
+        // Pass dt for throttling (use frame interval as dt approximation)
+        const dt = this.HUD_STATS_UPDATE_INTERVAL * (1 / 60); // Approximate dt based on frame interval
+        this.hud.updatePowerUpBuffs(allBuffs, dt);
 
-        // Refresh shop if power-up buffs changed (to update shop display with ⚡ and ⚔️ icons)
         const currentPowerUpCount = activeBuffs.length;
         const hasSpeedBuff = activeBuffs.some((b) => b.type === 'speed');
         const hasDamageBuff = activeBuffs.some((b) => b.type === 'damage');

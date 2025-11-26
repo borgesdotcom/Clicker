@@ -228,10 +228,35 @@ export class Hud {
   }
 
   private lastBuffKeys: string[] = [];
+  private lastBuffDurations: Map<string, number> = new Map(); // Cache durations to avoid unnecessary DOM updates
+  private powerUpBuffsUpdateTimer = 0;
+  private readonly POWERUP_BUFFS_UPDATE_INTERVAL = 0.1; // Update every 100ms instead of every frame
 
   public updatePowerUpBuffs(
     activeBuffs: Array<{ type: string; duration: number; maxDuration: number }>,
+    dt?: number,
   ): void {
+    // Throttle updates to reduce DOM manipulation frequency
+    if (dt !== undefined) {
+      this.powerUpBuffsUpdateTimer += dt;
+      // Only update every 100ms unless buffs changed (structure change)
+      const currentBuffKeys = activeBuffs
+        .map((b) => `${b.type}-${b.maxDuration}`)
+        .sort();
+      const buffsChanged =
+        currentBuffKeys.length !== this.lastBuffKeys.length ||
+        currentBuffKeys.some((key, i) => key !== this.lastBuffKeys[i]);
+      
+      // Always update if structure changed, otherwise throttle
+      if (!buffsChanged && this.powerUpBuffsUpdateTimer < this.POWERUP_BUFFS_UPDATE_INTERVAL) {
+        return;
+      }
+      
+      if (!buffsChanged) {
+        this.powerUpBuffsUpdateTimer = 0;
+      }
+    }
+    
     const container = document.getElementById('powerup-buffs-container');
     if (!container) return;
 
@@ -248,6 +273,7 @@ export class Hud {
     if (activeBuffs.length === 0) {
       container.style.display = 'none';
       this.lastBuffKeys = [];
+      this.lastBuffDurations.clear();
       return;
     }
 
@@ -334,6 +360,7 @@ export class Hud {
       }
     } else {
       // Just update existing elements (update timer and progress bar)
+      // Only update if values actually changed to avoid unnecessary DOM manipulation
       const buffCards = container.querySelectorAll('.powerup-buff-card');
       activeBuffs.forEach((buff, index) => {
         const buffEl = buffCards[index] as HTMLElement;
@@ -343,27 +370,48 @@ export class Hud {
         const percent = (buff.duration / buff.maxDuration) * 100;
         const isLow = buff.duration <= 3;
 
-        // Update timer
-        const timeValue = buffEl.querySelector('.powerup-buff-time-value');
-        if (timeValue) {
-          timeValue.textContent = timeLeft.toString();
-        }
+        // Check if duration changed (only update if different)
+        const lastDuration = this.lastBuffDurations.get(buff.type);
+        const durationChanged = lastDuration === undefined || Math.ceil(lastDuration) !== timeLeft;
+        
+        if (durationChanged) {
+          this.lastBuffDurations.set(buff.type, buff.duration);
+          
+          // Update timer only if changed
+          const timeValue = buffEl.querySelector('.powerup-buff-time-value');
+          if (timeValue && timeValue.textContent !== timeLeft.toString()) {
+            timeValue.textContent = timeLeft.toString();
+          }
 
-        // Update progress bar
-        const barFill = buffEl.querySelector(
-          '.powerup-buff-bar-fill',
-        ) as HTMLElement;
-        if (barFill) {
-          barFill.style.width = `${percent}%`;
-        }
+          // Update progress bar only if changed (round to avoid micro-updates)
+          const barFill = buffEl.querySelector(
+            '.powerup-buff-bar-fill',
+          ) as HTMLElement;
+          if (barFill) {
+            const currentWidth = barFill.style.width;
+            const newWidth = `${Math.round(percent)}%`;
+            if (currentWidth !== newWidth) {
+              barFill.style.width = newWidth;
+            }
+          }
 
-        // Update low state class
-        if (isLow) {
-          buffEl.classList.add('powerup-buff-low');
-        } else {
-          buffEl.classList.remove('powerup-buff-low');
+          // Update low state class only if changed
+          const hasLowClass = buffEl.classList.contains('powerup-buff-low');
+          if (isLow && !hasLowClass) {
+            buffEl.classList.add('powerup-buff-low');
+          } else if (!isLow && hasLowClass) {
+            buffEl.classList.remove('powerup-buff-low');
+          }
         }
       });
+      
+      // Clean up cache for removed buffs
+      const currentTypes = new Set(activeBuffs.map(b => b.type));
+      for (const [type] of this.lastBuffDurations) {
+        if (!currentTypes.has(type)) {
+          this.lastBuffDurations.delete(type);
+        }
+      }
     }
   }
 
