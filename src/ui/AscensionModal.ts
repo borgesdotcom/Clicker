@@ -488,18 +488,21 @@ export class AscensionModal {
       const isOwned = level <= currentLevel;
       const isNext = level === currentLevel + 1;
       
-      // Calculate cost for this specific level
+      // Calculate cost for this specific level using the actual cost calculation
+      // We need to calculate what it would cost to buy this level from (level - 1)
       let cost = 0;
-      if (level === 1) {
-        cost = 1;
-      } else if (level === 2) {
-        cost = 100;
-      } else if (level === 3) {
-        cost = 200;
-      } else if (level === 4) {
-        cost = 300;
-      } else if (level === 5) {
-        cost = 400;
+      if (isNext) {
+        // For the next level, use the actual cost calculation
+        cost = this.ascensionSystem.getUpgradeCost('prestige_ship_hull', state);
+      } else if (!isOwned) {
+        // For future levels, calculate what the cost would be if we were at (level - 1)
+        // Create a temporary state to calculate the cost
+        const tempState = { ...state };
+        if (!tempState.prestigeUpgrades) {
+          tempState.prestigeUpgrades = {};
+        }
+        tempState.prestigeUpgrades.prestige_ship_hull = level - 1;
+        cost = this.ascensionSystem.getUpgradeCost('prestige_ship_hull', tempState);
       }
       
       const canAfford = state.prestigePoints >= cost;
